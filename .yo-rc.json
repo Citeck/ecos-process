@@ -1,0 +1,41 @@
+{
+  "generator-jhipster": {
+    "promptValues": {
+      "packageName": "ru.citeck.ecos.process",
+      "nativeLanguage": "en"
+    },
+    "jhipsterVersion": "5.8.1",
+    "applicationType": "microservice",
+    "baseName": "eproc",
+    "packageName": "ru.citeck.ecos.process",
+    "packageFolder": "ru/citeck/ecos/process",
+    "serverPort": "8098",
+    "authenticationType": "jwt",
+    "cacheProvider": "hazelcast",
+    "enableHibernateCache": false,
+    "websocket": false,
+    "databaseType": "cassandra",
+    "devDatabaseType": "cassandra",
+    "prodDatabaseType": "cassandra",
+    "searchEngine": false,
+    "messageBroker": false,
+    "serviceDiscoveryType": "eureka",
+    "buildTool": "maven",
+    "enableSwaggerCodegen": false,
+    "jwtSecretKey": "NDdmNzQwMjc2M2MzOWVkNTAyNDczZDlmODlmMmZlYTQ5ZGFkZDk3ZTVjNjBmOGMyNjNiNWQ4ZjQ5MTFkZjg1MjExNjQ2YWYyYWE3ZGVlY2JmMDNmOWZhMTJlNjQ3NTEwMjRiMGFhZWU5ZmYzMGVkM2EyZTUzYzQwYTMxN2JkNzE=",
+    "testFrameworks": [],
+    "jhiPrefix": "jhi",
+    "entitySuffix": "",
+    "dtoSuffix": "DTO",
+    "otherModules": [],
+    "enableTranslation": true,
+    "clientPackageManager": "npm",
+    "nativeLanguage": "en",
+    "languages": [
+      "en",
+      "ru"
+    ],
+    "skipClient": true,
+    "skipUserManagement": true
+  }
+}
