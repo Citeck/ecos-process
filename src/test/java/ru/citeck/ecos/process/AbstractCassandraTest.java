@@ -61,7 +61,7 @@ public class AbstractCassandraTest {
     private static void startTestcontainer() {
         CASSANDRA_CONTAINER =
             new GenericContainer("cassandra:3.11.5")
-                .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)))
+                .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(120)))
                 .withExposedPorts(CASSANDRA_TEST_PORT);
 
         CASSANDRA_CONTAINER.start();
