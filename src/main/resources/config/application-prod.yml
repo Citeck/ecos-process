@@ -40,10 +40,10 @@ spring:
       enabled: false
   data:
     cassandra:
-      contactPoints: localhost
+      contactPoints: 127.0.0.1
       protocolVersion: V4
       compression: LZ4
-      keyspaceName: eproc
+      keyspaceName: ecos_process
   mail:
     host: localhost
     port: 25
