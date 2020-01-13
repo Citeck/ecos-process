@@ -12,7 +12,7 @@ timestamps {
           doGenerateSubmoduleConfigurations: false,
           extensions: [],
           submoduleCfg: [],
-          userRemoteConfigs: [[credentialsId: 'bc074014-bab1-4fb0-b5a4-4cfa9ded5e66',url: 'git@bitbucket.org:citeck/ecos-uiserv.git']]
+          userRemoteConfigs: [[credentialsId: 'bc074014-bab1-4fb0-b5a4-4cfa9ded5e66',url: 'git@bitbucket.org:citeck/ecos-process.git']]
         ])
       }
       def project_version = readMavenPom().getVersion().toLowerCase()
@@ -29,7 +29,7 @@ timestamps {
       }
       stage('Push docker image') {
         docker.withRegistry('http://127.0.0.1:8082', '7d800357-2193-4474-b768-5c27b97a1030') {
-          def microserviceImage = "ecos-uiserv"+":"+"${project_version}"
+          def microserviceImage = "ecos-process"+":"+"${project_version}"
           def current_microserviceImage = docker.image("${microserviceImage}")
           current_microserviceImage.push()
         }
