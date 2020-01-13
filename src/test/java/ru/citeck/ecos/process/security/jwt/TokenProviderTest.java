@@ -1,12 +1,12 @@
 package ru.citeck.ecos.process.security.jwt;
 
+import org.junit.jupiter.api.BeforeAll;
 import ru.citeck.ecos.process.security.AuthoritiesConstants;
 
 import java.security.Key;
 import java.util.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,7 +29,7 @@ public class TokenProviderTest {
     private JHipsterProperties jHipsterProperties;
     private TokenProvider tokenProvider;
 
-    @Before
+    @BeforeAll
     public void setup() {
         jHipsterProperties = Mockito.mock(JHipsterProperties.class);
         tokenProvider = new TokenProvider(jHipsterProperties);

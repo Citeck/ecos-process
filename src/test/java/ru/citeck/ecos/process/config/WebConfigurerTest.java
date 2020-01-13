@@ -7,7 +7,8 @@ import io.undertow.Undertow.Builder;
 import io.undertow.UndertowOptions;
 
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.env.MockEnvironment;
@@ -44,7 +45,7 @@ public class WebConfigurerTest {
 
     private JHipsterProperties props;
 
-    @Before
+    @BeforeAll
     public void setup() {
         servletContext = spy(new MockServletContext());
         doReturn(mock(FilterRegistration.Dynamic.class))

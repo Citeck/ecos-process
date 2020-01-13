@@ -43,11 +43,11 @@ ribbon:
 feign:
   hystrix:
     enabled: true
-#    client:
-#        config:
-#            default:
-#                connectTimeout: 5000
-#                readTimeout: 5000
+  # client:
+  #     config:
+  #         default:
+  #             connectTimeout: 5000
+  #             readTimeout: 5000
 
 # See https://github.com/Netflix/Hystrix/wiki/Configuration
 hystrix:
@@ -56,9 +56,9 @@ hystrix:
       execution:
         isolation:
           strategy: SEMAPHORE
-  # See https://github.com/spring-cloud/spring-cloud-netflix/issues/1330
-  #                    thread:
-  #                        timeoutInMilliseconds: 10000
+          # See https://github.com/spring-cloud/spring-cloud-netflix/issues/1330
+          # thread:
+          #     timeoutInMilliseconds: 10000
   shareSecurityContext: true
 
 management:
@@ -102,6 +102,8 @@ management:
         all: true
       percentiles:
         all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
+    tags:
+      application: ${spring.application.name}
     web:
       server:
         auto-time-requests: true
@@ -109,13 +111,31 @@ management:
 spring:
   application:
     name: eproc
+  jmx:
+    enabled: false
   messages:
     basename: i18n/messages
+  main:
+    allow-bean-definition-overriding: true
   mvc:
     favicon:
       enabled: false
+  task:
+    execution:
+      thread-name-prefix: eproc-task-
+      pool:
+        core-size: 2
+        max-size: 50
+        queue-capacity: 10000
+    scheduling:
+      thread-name-prefix: eproc-scheduling-
+      pool:
+        size: 2
   thymeleaf:
     mode: HTML
+  output:
+    ansi:
+      console-available: true
 
 server:
   servlet:
@@ -139,14 +159,14 @@ jhipster:
     core-pool-size: 2
     max-pool-size: 50
     queue-capacity: 10000
-    # By default CORS is disabled. Uncomment to enable.
-    #cors:
-    #allowed-origins: "*"
-    #allowed-methods: "*"
-    #allowed-headers: "*"
-    #exposed-headers: "Authorization,Link,X-Total-Count"
-    #allow-credentials: true
-    #max-age: 1800
+  # By default CORS is disabled. Uncomment to enable.
+  # cors:
+  #     allowed-origins: "*"
+  #     allowed-methods: "*"
+  #     allowed-headers: "*"
+  #     exposed-headers: "Authorization,Link,X-Total-Count"
+  #     allow-credentials: true
+  #     max-age: 1800
   mail:
     from: eproc@localhost
   swagger:

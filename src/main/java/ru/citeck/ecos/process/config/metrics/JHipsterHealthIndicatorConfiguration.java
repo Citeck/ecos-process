@@ -1,4 +1,5 @@
 package ru.citeck.ecos.process.config.metrics;
+
 import com.datastax.driver.core.Session;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.annotation.Bean;
