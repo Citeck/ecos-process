@@ -14,38 +14,38 @@
 # ===================================================================
 
 eureka:
-    client:
-        enabled: false
-    instance:
-        appname: eproc
-        instanceId: eproc:${spring.application.instance-id:${random.value}}
+  client:
+    enabled: false
+  instance:
+    appname: eproc
+    instanceId: eproc:${spring.application.instance-id:${random.value}}
 
 spring:
-    application:
-        name: eproc
-    cache:
-        type: simple
-    data:
-        cassandra:
-            contactPoints: localhost
-            port: 0
-            protocolVersion: V4
-            compression: NONE
-            keyspaceName: cassandra_unit_keyspace
-    mail:
-        host: localhost
-    messages:
-        basename: i18n/messages
-    mvc:
-        favicon:
-            enabled: false
-    thymeleaf:
-        mode: HTML
+  application:
+    name: eproc
+  cache:
+    type: simple
+  data:
+    cassandra:
+      contactPoints: localhost
+      port: 0
+      protocolVersion: V4
+      compression: NONE
+      keyspaceName: cassandra_unit_keyspace
+  mail:
+    host: localhost
+  messages:
+    basename: i18n/messages
+  mvc:
+    favicon:
+      enabled: false
+  thymeleaf:
+    mode: HTML
 
 
 server:
-    port: 10344
-    address: localhost
+  port: 10344
+  address: localhost
 
 # ===================================================================
 # JHipster specific properties
@@ -54,28 +54,28 @@ server:
 # ===================================================================
 
 jhipster:
-    async:
-        core-pool-size: 1
-        max-pool-size: 50
-        queue-capacity: 10000
-    # To test logstash appender
-    logging:
-        logstash:
-            enabled: true
-            host: localhost
-            port: 5000
-            queue-size: 512
-    security:
-        authentication:
-            jwt:
-                # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
-                base64-secret: NDdmNzQwMjc2M2MzOWVkNTAyNDczZDlmODlmMmZlYTQ5ZGFkZDk3ZTVjNjBmOGMyNjNiNWQ4ZjQ5MTFkZjg1MjExNjQ2YWYyYWE3ZGVlY2JmMDNmOWZhMTJlNjQ3NTEwMjRiMGFhZWU5ZmYzMGVkM2EyZTUzYzQwYTMxN2JkNzE=
-                # Token is valid 24 hours
-                token-validity-in-seconds: 86400
-    metrics:
-        logs: # Reports metrics in the logs
-            enabled: true
-            report-frequency: 60 # in seconds
+  async:
+    core-pool-size: 1
+    max-pool-size: 50
+    queue-capacity: 10000
+  # To test logstash appender
+  logging:
+    logstash:
+      enabled: true
+      host: localhost
+      port: 5000
+      queue-size: 512
+  security:
+    authentication:
+      jwt:
+        # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
+        base64-secret: NDdmNzQwMjc2M2MzOWVkNTAyNDczZDlmODlmMmZlYTQ5ZGFkZDk3ZTVjNjBmOGMyNjNiNWQ4ZjQ5MTFkZjg1MjExNjQ2YWYyYWE3ZGVlY2JmMDNmOWZhMTJlNjQ3NTEwMjRiMGFhZWU5ZmYzMGVkM2EyZTUzYzQwYTMxN2JkNzE=
+        # Token is valid 24 hours
+        token-validity-in-seconds: 86400
+  metrics:
+    logs: # Reports metrics in the logs
+      enabled: true
+      report-frequency: 60 # in seconds
 
 # ===================================================================
 # Application specific properties
