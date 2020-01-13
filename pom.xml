@@ -32,6 +32,7 @@
         <!-- These remain empty unless the corresponding profile is active -->
         <profile.swagger />
         <profile.tls />
+        <profile.logToFile />
 
         <spring-boot.version>2.0.8.RELEASE</spring-boot.version>
         <mapstruct.version>1.2.0.Final</mapstruct.version>
@@ -666,7 +667,13 @@
             </build>
             <properties>
                 <!-- default Spring profiles -->
-                <spring.profiles.active>dev${profile.tls}</spring.profiles.active>
+                <spring.profiles.active>dev${profile.tls}${profile.logToFile}</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>logToFile</id>
+            <properties>
+                <profile.logToFile>,logToFile</profile.logToFile>
             </properties>
         </profile>
         <profile>
@@ -719,7 +726,7 @@
             </build>
             <properties>
                 <!-- default Spring profiles -->
-                <spring.profiles.active>prod${profile.swagger}</spring.profiles.active>
+                <spring.profiles.active>prod${profile.swagger}${profile.logToFile}</spring.profiles.active>
             </properties>
         </profile>
         <profile>
@@ -790,7 +797,7 @@
             </build>
             <properties>
                 <!-- default Spring profiles -->
-                <spring.profiles.active>dev,swagger</spring.profiles.active>
+                <spring.profiles.active>dev,swagger${profile.logToFile}</spring.profiles.active>
             </properties>
         </profile>
         <profile>

@@ -4,11 +4,10 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml" />
 
-<!-- The FILE and ASYNC appenders are here as examples for a production configuration -->
-<!--
+    <springProfile name="logToFile">
         <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <fileNamePattern>logs/logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
                 <maxHistory>90</maxHistory>
             </rollingPolicy>
             <encoder>
@@ -18,14 +17,14 @@
         </appender>
 
         <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-            <queueSize>512</queueSize>
+            <queueSize>128</queueSize>
             <appender-ref ref="FILE"/>
         </appender>
 
-        <root level="${logging.level.root}">
+        <root level="INFO">
             <appender-ref ref="ASYNC"/>
         </root>
--->
+    </springProfile>
 
     <logger name="io.netty" level="WARN" />
     <logger name="javax.activation" level="WARN" />
