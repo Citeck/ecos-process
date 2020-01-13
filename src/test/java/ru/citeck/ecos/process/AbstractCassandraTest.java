@@ -40,7 +40,7 @@ public class AbstractCassandraTest {
     private static boolean started = false;
 
     @BeforeAll
-    public static void startServer() throws TTransportException, ConfigurationException, IOException, URISyntaxException {
+    public static void startServer() throws ConfigurationException, IOException, URISyntaxException {
         if (!started) {
             startTestcontainer();
             Cluster cluster = new Cluster.Builder()
@@ -58,7 +58,7 @@ public class AbstractCassandraTest {
         }
     }
 
-    private static void startTestcontainer() throws TTransportException, IOException {
+    private static void startTestcontainer() {
         CASSANDRA_CONTAINER =
             new GenericContainer("cassandra:3.11.5")
                 .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)))
@@ -68,18 +68,21 @@ public class AbstractCassandraTest {
     }
 
     private static void createTestKeyspace(Session session) {
-        String createQuery = "CREATE KEYSPACE " + CASSANDRA_UNIT_KEYSPACE + " WITH replication={'class' : 'SimpleStrategy', 'replication_factor':1}";
+        String createQuery = "CREATE KEYSPACE " + CASSANDRA_UNIT_KEYSPACE
+            + " WITH replication={'class' : 'SimpleStrategy', 'replication_factor':1}";
         session.execute(createQuery);
         String useKeyspaceQuery = "USE " + CASSANDRA_UNIT_KEYSPACE;
         session.execute(useKeyspaceQuery);
     }
 
-    private static void applyScripts(CQLDataLoader dataLoader, String cqlDir, String pattern) throws IOException, URISyntaxException {
+    private static void applyScripts(CQLDataLoader dataLoader,
+                                     String cqlDir,
+                                     String pattern) throws IOException, URISyntaxException {
+
         URL dirUrl = ClassLoader.getSystemResource(cqlDir);
-        if (dirUrl == null) { // protect for empty directory
+        if (dirUrl == null) {
             return;
         }
-
         List<String> scripts = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(dirUrl.toURI()), pattern)) {
             for (Path entry : stream) {
@@ -89,7 +92,12 @@ public class AbstractCassandraTest {
         Collections.sort(scripts);
 
         for (String fileName : scripts) {
-            dataLoader.load(new ClassPathCQLDataSet(cqlDir + fileName, false, false, CASSANDRA_UNIT_KEYSPACE));
+            dataLoader.load(new ClassPathCQLDataSet(
+                cqlDir + fileName,
+                false,
+                false,
+                CASSANDRA_UNIT_KEYSPACE)
+            );
         }
     }
 }
