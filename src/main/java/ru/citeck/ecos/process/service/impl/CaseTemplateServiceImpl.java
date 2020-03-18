@@ -5,16 +5,12 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.citeck.ecos.process.domain.CaseTemplateEntity;
-import ru.citeck.ecos.process.eapps.casetemplate.CaseTemplateDTO;
-import ru.citeck.ecos.process.eapps.casetemplate.ListenModuleChanges;
 import ru.citeck.ecos.process.eapps.casetemplate.aop.TrackChanges;
 import ru.citeck.ecos.process.repository.CaseTemplateRepository;
 import ru.citeck.ecos.process.service.CaseTemplateService;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
