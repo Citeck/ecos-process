@@ -13,4 +13,6 @@ public interface CaseTemplateService {
     CaseTemplateEntity get(String id);
 
     CaseTemplateEntity save(CaseTemplateEntity entity);
+
+    void delete(String id);
 }

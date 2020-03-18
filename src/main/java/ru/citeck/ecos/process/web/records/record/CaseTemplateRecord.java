@@ -30,7 +30,7 @@ public class CaseTemplateRecord implements MetaValue {
     public Object getAttribute(String fieldName, MetaField field) {
         switch (fieldName) {
             case "ecosTypeRef":
-                return ecosTypeRef;
+                return ecosTypeRef.toString();
             case "xmlContent":
                 return Base64.getEncoder().encodeToString(xmlContent);
         }
