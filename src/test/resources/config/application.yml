@@ -24,14 +24,7 @@ spring:
   application:
     name: eproc
   cache:
-    type: simple
-  data:
-    cassandra:
-      contactPoints: 127.0.0.1
-      port: 0
-      protocolVersion: V4
-      compression: NONE
-      keyspaceName: cassandra_unit_keyspace
+    type: none
   mail:
     host: localhost
   main:
@@ -54,7 +47,8 @@ spring:
         size: 1
   thymeleaf:
     mode: HTML
-
+  datasource:
+    url: jdbc:mongo://localhost:27017/eprocess
 server:
   port: 10344
   address: localhost

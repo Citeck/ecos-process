@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.web.rest.errors;
 
 import org.junit.jupiter.api.BeforeEach;
-import ru.citeck.ecos.process.AbstractCassandraTest;
 import ru.citeck.ecos.process.EprocApp;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see ExceptionTranslator
  */
 @SpringBootTest(classes = EprocApp.class)
-public class ExceptionTranslatorIT extends AbstractCassandraTest {
+public class ExceptionTranslatorIT {
 
     @Autowired
     private ExceptionTranslatorTestController controller;
