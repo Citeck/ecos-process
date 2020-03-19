@@ -7,11 +7,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import ru.citeck.ecos.records2.RecordRef;
 
-@Document(collection = "caseTemplate")
+@Document(collection = "case_template")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CaseTemplateEntity {
+public class CaseTemplate {
 
     @Id
     private String id;

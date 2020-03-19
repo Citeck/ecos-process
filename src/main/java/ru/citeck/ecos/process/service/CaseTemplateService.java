@@ -1,18 +1,17 @@
 package ru.citeck.ecos.process.service;
 
-import ru.citeck.ecos.process.domain.CaseTemplateEntity;
+import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
 
-import java.util.Arrays;
 import java.util.Set;
 
 public interface CaseTemplateService {
-    Set<CaseTemplateEntity> getAll(Set<String> ids);
+    Set<CaseTemplateDto> getAll(Set<String> ids);
 
-    Set<CaseTemplateEntity> getAll();
+    Set<CaseTemplateDto> getAll();
 
-    CaseTemplateEntity get(String id);
+    CaseTemplateDto get(String id);
 
-    CaseTemplateEntity save(CaseTemplateEntity entity);
+    CaseTemplateDto save(CaseTemplateDto entity);
 
     void delete(String id);
 }

@@ -1,4 +1,4 @@
-package casetemplate.process.cmmm
+package emtypes.process.cmmn
 
 import kotlin.Unit
 import kotlin.jvm.functions.Function1
@@ -36,23 +36,32 @@ return new ModuleController<Module, Unit>() {
         try {
 
             Module module = new Module()
-            module.setId(getMenuId(data))
+            module.setId(getId(file, data))
             module.setXmlData(data)
             return module
+//           parse content -> get moduleId param
+//           or generate 'PATH_FROM_TEMPLATES/filename' without extension
 
         } catch (ParserConfigurationException | IOException | SAXException e) {
-            log.error("Menu reading error. File: " + file.getPath(), e)
+            log.error("Module data reading error. File: " + file.getPath(), e)
             throw new RuntimeException(e)
         }
     }
 
-    private String getMenuId(byte[] data) throws ParserConfigurationException, IOException, SAXException {
+    private String getId(EcosFile file, byte[] data) throws ParserConfigurationException, IOException, SAXException {
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance()
         DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder()
         Document document = docBuilder.parse(new ByteArrayInputStream(data))
 
-        return document.getElementsByTagName("id").item(0).getTextContent()
+        String moduleId = document.getElementsByTagName("cmmn:case")["ns8:moduleId"];
+        if (moduleId == null ) {
+            String filepath = file.path.toString();
+            String filename = file.name;
+            String formattedFilepath = filepath.substring(filepath.indexOf("case/templates")+1);
+            String formattedFilename = filename.substring(0, filepath.indexOf("."));
+            return formattedFilepath + "/" + formattedFilename;
+        }
     }
 
     @Override

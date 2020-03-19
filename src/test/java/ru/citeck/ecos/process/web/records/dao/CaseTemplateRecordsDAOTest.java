@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.citeck.ecos.process.EprocApp;
-import ru.citeck.ecos.process.domain.CaseTemplateEntity;
+import ru.citeck.ecos.process.domain.CaseTemplate;
 import ru.citeck.ecos.process.repository.CaseTemplateRepository;
 import ru.citeck.ecos.records2.RecordRef;
 
@@ -40,7 +40,7 @@ public class CaseTemplateRecordsDAOTest {
 
     @Test
     void queryCaseTemplate() throws Exception {
-        CaseTemplateEntity caseTemplate = new CaseTemplateEntity("testId",
+        CaseTemplate caseTemplate = new CaseTemplate("testId",
             RecordRef.create("emodel@type", "testTypeId"), "test-content".getBytes());
         String xmlContentBase64Str = Base64.getEncoder().encodeToString(caseTemplate.getXmlContent());
         caseTemplateRepository.save(caseTemplate);
@@ -63,9 +63,9 @@ public class CaseTemplateRecordsDAOTest {
 
     @Test
     void queryAllCaseTemplates() throws Exception {
-        CaseTemplateEntity caseTemplate = new CaseTemplateEntity("testId",
+        CaseTemplate caseTemplate = new CaseTemplate("testId",
             RecordRef.create("emodel@type", "testTypeId"), "test-content".getBytes());
-        CaseTemplateEntity caseTemplate2 = new CaseTemplateEntity("testId2",
+        CaseTemplate caseTemplate2 = new CaseTemplate("testId2",
             RecordRef.create("emodel@type", "testTypeId"), "test-content2".getBytes());
 
         String xmlContentBase64Str = Base64.getEncoder().encodeToString(caseTemplate.getXmlContent());
@@ -90,9 +90,9 @@ public class CaseTemplateRecordsDAOTest {
             .andExpect(jsonPath("$.hasMore", is(false)))
             .andExpect(jsonPath("$.errors", is(empty())))
             .andExpect(jsonPath("$.records[0].id", is(MICROSERVICE_PREFIX + MICROSERVICE_PREFIX_DIVIDER +
-                CASE_TEMPLATE_DAO_ID + ID_DIVIDER + Mockito.anyString())))
+                CASE_TEMPLATE_DAO_ID + ID_DIVIDER + caseTemplate.getId())))
             .andExpect(jsonPath("$.records[1].id", is(MICROSERVICE_PREFIX + MICROSERVICE_PREFIX_DIVIDER +
-                CASE_TEMPLATE_DAO_ID + ID_DIVIDER + Mockito.anyString())))
+                CASE_TEMPLATE_DAO_ID + ID_DIVIDER + caseTemplate2.getId())))
             .andExpect(jsonPath("$.records[0].attributes.ecosTypeRef", is(caseTemplate.getEcosTypeRef().toString())))
             .andExpect(jsonPath("$.records[1].attributes.ecosTypeRef", is(caseTemplate2.getEcosTypeRef().toString())))
             .andExpect(jsonPath("$.records[0].attributes.xmlContent", is(xmlContentBase64Str)))

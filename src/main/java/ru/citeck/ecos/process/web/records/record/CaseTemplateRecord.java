@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.web.records.record;
 
 import lombok.Data;
-import ru.citeck.ecos.process.domain.CaseTemplateEntity;
+import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaValue;
@@ -15,10 +15,10 @@ public class CaseTemplateRecord implements MetaValue {
     private final RecordRef ecosTypeRef;
     private final byte[] xmlContent;
 
-    public CaseTemplateRecord(CaseTemplateEntity entity) {
-        this.ecosTypeRef = entity.getEcosTypeRef();
-        this.xmlContent = entity.getXmlContent();
-        this.id = entity.getId();
+    public CaseTemplateRecord(CaseTemplateDto dto) {
+        this.ecosTypeRef = dto.getEcosTypeRef();
+        this.xmlContent = dto.getXmlContent();
+        this.id = dto.getId();
     }
 
     @Override

@@ -3,8 +3,8 @@ package ru.citeck.ecos.process.web.records.dao;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.citeck.ecos.process.domain.CaseTemplateEntity;
 import ru.citeck.ecos.process.service.CaseTemplateService;
+import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
 import ru.citeck.ecos.process.web.records.record.CaseTemplateRecord;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
@@ -33,7 +33,7 @@ public class CaseTemplateRecordsDAO extends LocalRecordsDAO
     public final String id = "case-template";
 
     private static final String LANGUAGE_EMPTY = "";
-    private static final CaseTemplateRecord EMPTY_RECORD = new CaseTemplateRecord(new CaseTemplateEntity());
+    private static final CaseTemplateRecord EMPTY_RECORD = new CaseTemplateRecord(new CaseTemplateDto());
 
     private final CaseTemplateService caseTemplateService;
 
