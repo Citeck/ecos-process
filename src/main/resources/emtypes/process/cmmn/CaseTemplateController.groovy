@@ -55,12 +55,21 @@ return new ModuleController<Module, Unit>() {
         Document document = docBuilder.parse(new ByteArrayInputStream(data))
 
         String moduleId = document.getElementsByTagName("cmmn:case")["ns8:moduleId"];
-        if (moduleId == null ) {
+        if (moduleId == null && file.path != null && file.name != null) {
             String filepath = file.path.toString();
             String filename = file.name;
-            String formattedFilepath = filepath.substring(filepath.indexOf("case/templates")+1);
-            String formattedFilename = filename.substring(0, filepath.indexOf("."));
-            return formattedFilepath + "/" + formattedFilename;
+            int prefix = filepath.indexOf("case/templates")
+
+            if (filename.isEmpty()) {
+                throw new RuntimeException("Cannot receive module. Cannot get/generate name for it.")
+            }
+
+            if (prefix != -1) {
+                String formattedFilepath = filepath.substring(prefix + 1);
+                return formattedFilepath + "/" + filename;
+            } else if (prefix == -1) {
+                return filename;
+            }
         }
     }
 

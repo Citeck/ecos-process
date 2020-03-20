@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.apps.module.handler.EcosModuleHandler;
 import ru.citeck.ecos.apps.module.handler.ModuleMeta;
 import ru.citeck.ecos.apps.module.handler.ModuleWithMeta;
-import ru.citeck.ecos.process.service.mapper.CaseTemplateMapper;
 import ru.citeck.ecos.process.service.CaseTemplateService;
 import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
 
@@ -24,7 +23,6 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
     private static final String CASE_TEMPLATE_TYPE = "process/cmmn";
 
     private final CaseTemplateService caseTemplateService;
-    private final CaseTemplateMapper caseTemplateMapper;
 
     private Consumer<CaseTemplateDto> changesListener;
 
