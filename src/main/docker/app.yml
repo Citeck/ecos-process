@@ -8,22 +8,7 @@ services:
       - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka
       - SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config
-      - SPRING_DATA_CASSANDRA_CONTACTPOINTS=eproc-cassandra
       - JHIPSTER_SLEEP=30 # gives time for other services to boot before the application
-  eproc-cassandra:
-    extends:
-      file: cassandra-cluster.yml
-      service: eproc-cassandra
-  eproc-cassandra-node:
-    image: cassandra:3.11.5
-    environment:
-      - CASSANDRA_SEEDS=eproc-cassandra
-  eproc-cassandra-migration:
-    extends:
-      file: cassandra-migration.yml
-      service: eproc-cassandra-migration
-    environment:
-      - CREATE_KEYSPACE_SCRIPT=create-keyspace-prod.cql
   jhipster-registry:
     extends:
       file: jhipster-registry.yml

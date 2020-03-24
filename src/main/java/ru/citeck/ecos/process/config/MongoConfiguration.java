@@ -1,0 +1,61 @@
+package ru.citeck.ecos.process.config;
+
+import com.github.mongobee.Mongobee;
+import io.github.jhipster.domain.util.JSR310DateConverters;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.*;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.List;
+
+@Configuration
+@EnableMongoRepositories("ru.citeck.ecos.process.repository")
+@Profile("!test")
+public class MongoConfiguration {
+
+    private static final String MONGO_CHANGELOG_PACKAGE = "ru.citeck.ecos.process.mongo.changelog";
+
+    @Value("${spring.data.mongodb.uri}")
+    private String mongoDBURI;
+
+    @Bean
+    @Primary
+    @ConfigurationProperties(prefix = "spring.data.mongodb")
+    public DataSource domainDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean
+    public Mongobee mongobee() {
+        Mongobee runner = new Mongobee(mongoDBURI);
+        runner.setChangeLogsScanPackage(MONGO_CHANGELOG_PACKAGE);
+        return runner;
+    }
+
+    @Bean
+    public MongoCustomConversions customConversions() {
+        List<Converter<?, ?>> converters = new ArrayList<>();
+        converters.add(JSR310DateConverters.DateToZonedDateTimeConverter.INSTANCE);
+        converters.add(JSR310DateConverters.ZonedDateTimeToDateConverter.INSTANCE);
+        return new MongoCustomConversions(converters);
+    }
+
+    @Bean
+    public LocalValidatorFactoryBean localValidatorFactoryBean() {
+        return new LocalValidatorFactoryBean();
+    }
+
+    @Bean
+    public ValidatingMongoEventListener validatingMongoEventListener(LocalValidatorFactoryBean localValidatorFactoryBean) {
+        return new ValidatingMongoEventListener(localValidatorFactoryBean);
+    }
+}

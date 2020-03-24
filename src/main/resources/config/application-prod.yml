@@ -18,6 +18,7 @@ logging:
     ROOT: INFO
     ru.citeck.ecos.process: INFO
     io.github.jhipster: INFO
+    org.mongodb.driver: WARN
 
 eureka:
   instance:

@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.web.rest;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.citeck.ecos.process.AbstractCassandraTest;
 import ru.citeck.ecos.process.EprocApp;
 import ru.citeck.ecos.process.web.rest.vm.LoggerVM;
 import ch.qos.logback.classic.AsyncAppender;
@@ -25,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see LogsResource
  */
 @SpringBootTest(classes = EprocApp.class)
-public class LogsResourceIntTest extends AbstractCassandraTest {
+public class LogsResourceIntTest {
 
     private MockMvc restLogsMockMvc;
 

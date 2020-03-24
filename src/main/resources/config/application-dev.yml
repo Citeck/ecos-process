@@ -18,6 +18,7 @@ logging:
     ROOT: DEBUG
     io.github.jhipster: DEBUG
     ru.citeck.ecos.process: DEBUG
+    org.mongodb.driver: WARN
 
 eureka:
   instance:
@@ -42,12 +43,6 @@ spring:
   jackson:
     serialization:
       indent-output: true
-  data:
-    cassandra:
-      contactPoints: 127.0.0.1
-      protocolVersion: V4
-      compression: LZ4
-      keyspaceName: ecos_process
   mail:
     host: localhost
     port: 25
