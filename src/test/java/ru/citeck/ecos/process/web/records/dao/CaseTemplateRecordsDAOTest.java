@@ -51,13 +51,13 @@ public class CaseTemplateRecordsDAOTest {
             .content("{\n" +
                 "    \"record\": \"case-template@testId\",\n" +
                 "    \"attributes\": [\n" +
-                "        \"ecosTypeRef\",\n" +
+                "        \"typeRef\",\n" +
                 "        \"xmlContent\"\n" +
                 "    ]\n" +
                 "}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id", is(CASE_TEMPLATE_DAO_ID + ID_DIVIDER + caseTemplate.getId())))
-            .andExpect(jsonPath("$.attributes.ecosTypeRef", is(caseTemplate.getEcosTypeRef().toString())))
+            .andExpect(jsonPath("$.attributes.typeRef", is(caseTemplate.getTypeRef().toString())))
             .andExpect(jsonPath("$.attributes.xmlContent", is(xmlContentBase64Str)));
     }
 
@@ -81,7 +81,7 @@ public class CaseTemplateRecordsDAOTest {
                 "        \"sourceId\": \"case-template\"\n" +
                 "    },\n" +
                 "    \"attributes\": {\n" +
-                "        \"ecosTypeRef\": \"ecosTypeRef\",\n" +
+                "        \"typeRef\": \"typeRef\",\n" +
                 "        \"xmlContent\": \"xmlContent\"\n" +
                 "    }\n" +
                 "}\n"))
@@ -93,8 +93,8 @@ public class CaseTemplateRecordsDAOTest {
                 CASE_TEMPLATE_DAO_ID + ID_DIVIDER + caseTemplate.getId())))
             .andExpect(jsonPath("$.records[1].id", is(MICROSERVICE_PREFIX + MICROSERVICE_PREFIX_DIVIDER +
                 CASE_TEMPLATE_DAO_ID + ID_DIVIDER + caseTemplate2.getId())))
-            .andExpect(jsonPath("$.records[0].attributes.ecosTypeRef", is(caseTemplate.getEcosTypeRef().toString())))
-            .andExpect(jsonPath("$.records[1].attributes.ecosTypeRef", is(caseTemplate2.getEcosTypeRef().toString())))
+            .andExpect(jsonPath("$.records[0].attributes.typeRef", is(caseTemplate.getTypeRef().toString())))
+            .andExpect(jsonPath("$.records[1].attributes.typeRef", is(caseTemplate2.getTypeRef().toString())))
             .andExpect(jsonPath("$.records[0].attributes.xmlContent", is(xmlContentBase64Str)))
             .andExpect(jsonPath("$.records[1].attributes.xmlContent", is(xmlContent2Base64Str)));
 

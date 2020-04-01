@@ -16,7 +16,7 @@ public class CaseTemplate {
     @Id
     private String id;
 
-    private RecordRef ecosTypeRef;
+    private RecordRef typeRef;
 
     private byte[] xmlContent;
 }

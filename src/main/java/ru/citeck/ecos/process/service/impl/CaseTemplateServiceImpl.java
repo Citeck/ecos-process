@@ -6,15 +6,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.citeck.ecos.process.domain.CaseTemplate;
-import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
-import ru.citeck.ecos.process.aop.eapps.listener.TrackChanges;
-import ru.citeck.ecos.process.service.mapper.CaseTemplateMapper;
+import ru.citeck.ecos.process.dto.CaseTemplateDto;
+import ru.citeck.ecos.process.exception.ResourceNotFoundException;
 import ru.citeck.ecos.process.repository.CaseTemplateRepository;
 import ru.citeck.ecos.process.service.CaseTemplateService;
+import ru.citeck.ecos.process.service.mapper.CaseTemplateMapper;
 
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +24,7 @@ public class CaseTemplateServiceImpl implements CaseTemplateService {
 
     private final CaseTemplateRepository repository;
     private final CaseTemplateMapper mapper;
+    private Consumer<CaseTemplateDto> changesListener;
 
     @Override
     public Set<CaseTemplateDto> getAll(@NonNull Set<String> ids) {
@@ -43,24 +45,30 @@ public class CaseTemplateServiceImpl implements CaseTemplateService {
     public CaseTemplateDto get(@NonNull String id) {
         Optional<CaseTemplate> optional = repository.findById(id);
         if (!optional.isPresent()) {
-            throw new RuntimeException("Case template not found by id: " + id);
+            throw new ResourceNotFoundException("Case template", "id", id);
         }
         return mapper.entityToDto(optional.get());
     }
 
-    @TrackChanges
     @Transactional
     @Override
     public CaseTemplateDto save(@NonNull CaseTemplateDto dto) {
         dto.setId(null);
         CaseTemplate received = mapper.dtoToEntity(dto);
         CaseTemplate persisted = repository.save(received);
-        return mapper.entityToDto(persisted);
+        CaseTemplateDto resultDto = mapper.entityToDto(persisted);
+        changesListener.accept(resultDto);
+        return resultDto;
     }
 
     @Transactional
     @Override
     public void delete(@NonNull String id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    public void setChangesListener(Consumer<CaseTemplateDto> changesListener) {
+        this.changesListener = changesListener;
     }
 }

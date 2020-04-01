@@ -8,7 +8,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.citeck.ecos.process.domain.ProcessDefinition;
 import ru.citeck.ecos.process.repository.ProcessDefinitionRepository;
-import ru.citeck.ecos.process.service.dto.ProcessDefinitionDto;
+import ru.citeck.ecos.process.dto.ProcessDefinitionDto;
 import ru.citeck.ecos.process.service.impl.ProcessDefinitionServiceImpl;
 import ru.citeck.ecos.process.service.mapper.ProcessDefinitionMapper;
 

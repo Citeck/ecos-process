@@ -3,11 +3,13 @@ package ru.citeck.ecos.process.service.impl;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.citeck.ecos.process.domain.ProcessDefinitionRevision;
+import ru.citeck.ecos.process.exception.ResourceNotFoundException;
 import ru.citeck.ecos.process.repository.ProcessDefinitionRevisionRepository;
 import ru.citeck.ecos.process.service.ProcessDefinitionRevisionService;
-import ru.citeck.ecos.process.service.dto.ProcessDefinitionRevisionDto;
+import ru.citeck.ecos.process.dto.ProcessDefinitionRevisionDto;
 import ru.citeck.ecos.process.service.mapper.ProcessDefinitionRevisionMapper;
 
 import java.util.Optional;
@@ -15,7 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class ProcessDefinitionRevisionServiceImpl implements ProcessDefinitionRevisionService {
 
@@ -33,13 +35,13 @@ public class ProcessDefinitionRevisionServiceImpl implements ProcessDefinitionRe
     public ProcessDefinitionRevisionDto getById(@NonNull UUID id) {
         Optional<ProcessDefinitionRevision> optional = processDefinitionRevisionRepository.findById(id);
         if (!optional.isPresent()) {
-            throw new RuntimeException("Process definition not found with id: " + id);
+            throw new ResourceNotFoundException("Process definition", "id", id);
         }
         return mapper.entityToDto(optional.get());
     }
 
     @Override
-    public Set<ProcessDefinitionRevisionDto> getAllByProcessDefinitionId(String processDefinitionId) {
+    public Set<ProcessDefinitionRevisionDto> getAllByProcessDefinitionId(@NonNull String processDefinitionId) {
         return processDefinitionRevisionRepository
             .findProcessDefinitionRevisionsByProcessDefinitionId(processDefinitionId)
             .stream()
@@ -49,7 +51,7 @@ public class ProcessDefinitionRevisionServiceImpl implements ProcessDefinitionRe
 
     @Transactional
     @Override
-    public ProcessDefinitionRevisionDto save(ProcessDefinitionRevisionDto dto) {
+    public ProcessDefinitionRevisionDto save(@NonNull ProcessDefinitionRevisionDto dto) {
         ProcessDefinitionRevision created = new ProcessDefinitionRevision(dto.getData(), dto.getProcessDefinitionId());
         ProcessDefinitionRevision saved = processDefinitionRevisionRepository.save(created);
         return mapper.entityToDto(saved);
@@ -57,7 +59,7 @@ public class ProcessDefinitionRevisionServiceImpl implements ProcessDefinitionRe
 
     @Transactional
     @Override
-    public void delete(UUID id) {
+    public void delete(@NonNull UUID id) {
         processDefinitionRevisionRepository.deleteById(id);
     }
 }

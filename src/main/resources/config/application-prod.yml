@@ -19,6 +19,7 @@ logging:
     ru.citeck.ecos.process: INFO
     io.github.jhipster: INFO
     org.mongodb.driver: WARN
+    jdk.event.security: WARN
 
 eureka:
   instance:
@@ -144,3 +145,8 @@ jhipster:
 # ===================================================================
 
 # application:
+
+spring.rabbitmq:
+  host: localhost
+  username: admin
+  password: admin

@@ -8,19 +8,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Document(collection = "process_definitions")
+@Document(collection = "process")
 @Data
-public class ProcessDefinition {
+public class Process {
 
     @Id
-    private String id;
+    private UUID id = UUID.randomUUID();
 
     private Integer tenant;
+
+    private String record;
+
+    @DBRef
+    private UUID revisionId;
+
+    @DBRef
+    private UUID definitionRevId;
 
     private LocalDateTime created = LocalDateTime.now();
 
     private LocalDateTime modified;
 
-    @DBRef
-    private UUID revisionId;
+    private boolean active;
+
 }

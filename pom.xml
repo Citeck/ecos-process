@@ -377,8 +377,8 @@
         </dependency>
 
         <dependency>
-            <groupId>ru.citeck.ecos</groupId>
-            <artifactId>ecos-apps-lib-spring</artifactId>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit</artifactId>
         </dependency>
 
         <dependency>

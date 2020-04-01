@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.service.dto;
+package ru.citeck.ecos.process.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
