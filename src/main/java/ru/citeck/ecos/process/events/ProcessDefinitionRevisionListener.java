@@ -21,7 +21,7 @@ public class ProcessDefinitionRevisionListener extends AbstractMongoEventListene
     @Override
     public void onBeforeConvert(BeforeConvertEvent<ProcessDefinitionRevision> event) {
         processDefinitionRevisionRepository
-            .findProcessDefinitionRevisionsByProcessDefinitionId(event.getSource().getProcessDefinitionId())
+            .findProcessDefinitionRevisionsByProcessDefinitionId(event.getSource().getProcessDefinition().getId())
             .stream()
             .max(Comparator.comparingInt(ProcessDefinitionRevision::getVersion))
             .ifPresent(rev -> {

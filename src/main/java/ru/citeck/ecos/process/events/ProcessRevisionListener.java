@@ -21,7 +21,7 @@ public class ProcessRevisionListener extends AbstractMongoEventListener<ProcessR
     @Override
     public void onBeforeConvert(BeforeConvertEvent<ProcessRevision> event) {
         processRevisionRepository
-            .findProcessRevisionsByProcessId(event.getSource().getProcessId())
+            .findProcessRevisionsByProcessId(event.getSource().getProcess().getId())
             .stream()
             .max(Comparator.comparingInt(ProcessRevision::getVersion))
             .ifPresent(rev -> {

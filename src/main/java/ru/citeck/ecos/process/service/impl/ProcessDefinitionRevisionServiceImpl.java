@@ -5,8 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import ru.citeck.ecos.process.domain.ProcessDefinition;
 import ru.citeck.ecos.process.domain.ProcessDefinitionRevision;
 import ru.citeck.ecos.process.exception.ResourceNotFoundException;
+import ru.citeck.ecos.process.repository.ProcessDefinitionRepository;
 import ru.citeck.ecos.process.repository.ProcessDefinitionRevisionRepository;
 import ru.citeck.ecos.process.service.ProcessDefinitionRevisionService;
 import ru.citeck.ecos.process.dto.ProcessDefinitionRevisionDto;
@@ -23,6 +26,7 @@ public class ProcessDefinitionRevisionServiceImpl implements ProcessDefinitionRe
 
     private final ProcessDefinitionRevisionRepository processDefinitionRevisionRepository;
     private final ProcessDefinitionRevisionMapper mapper;
+    private final ProcessDefinitionRepository definitionRepository;
 
     @Override
     public Set<ProcessDefinitionRevisionDto> getAll() {
@@ -52,7 +56,17 @@ public class ProcessDefinitionRevisionServiceImpl implements ProcessDefinitionRe
     @Transactional
     @Override
     public ProcessDefinitionRevisionDto save(@NonNull ProcessDefinitionRevisionDto dto) {
-        ProcessDefinitionRevision created = new ProcessDefinitionRevision(dto.getData(), dto.getProcessDefinitionId());
+        ProcessDefinitionRevision created = new ProcessDefinitionRevision();
+
+        created.setData(dto.getData());
+        
+        String pdId = dto.getProcessDefinitionId();
+        if (!StringUtils.isEmpty(pdId)) {
+            ProcessDefinition pd = definitionRepository.findById(pdId)
+                .orElseThrow(() -> new ResourceNotFoundException("Process definition", "id", pdId));
+            created.setProcessDefinition(pd);
+        }
+
         ProcessDefinitionRevision saved = processDefinitionRevisionRepository.save(created);
         return mapper.entityToDto(saved);
     }

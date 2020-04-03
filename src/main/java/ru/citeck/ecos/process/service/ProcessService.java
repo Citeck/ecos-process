@@ -11,7 +11,7 @@ public interface ProcessService {
 
     Set<ProcessDto> getAll();
 
-    ProcessDto update(ProcessDto dto);
+    Set<ProcessDto> getAll(Set<UUID> uuids);
 
     ProcessDto save(ProcessDto dto);
 
