@@ -9,7 +9,7 @@ import ru.citeck.ecos.apps.module.handler.EcosModuleHandler;
 import ru.citeck.ecos.apps.module.handler.ModuleMeta;
 import ru.citeck.ecos.apps.module.handler.ModuleWithMeta;
 import ru.citeck.ecos.process.service.CaseTemplateService;
-import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
+import ru.citeck.ecos.process.dto.CaseTemplateDto;
 
 import java.util.Collections;
 import java.util.function.Consumer;
@@ -17,14 +17,11 @@ import java.util.function.Consumer;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplateDto>,
-    ModuleChangesListener<CaseTemplateDto> {
+public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplateDto> {
 
     private static final String CASE_TEMPLATE_TYPE = "process/cmmn";
 
     private final CaseTemplateService caseTemplateService;
-
-    private Consumer<CaseTemplateDto> changesListener;
 
     @Override
     public void deployModule(@NotNull CaseTemplateDto caseTemplateDTO) {
@@ -35,6 +32,7 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
     @NotNull
     @Override
     public ModuleWithMeta<CaseTemplateDto> getModuleMeta(@NotNull CaseTemplateDto dto) {
+        log.info("Case template get module meta");
         return new ModuleWithMeta<>(dto, new ModuleMeta(dto.getId(), Collections.emptyList()));
     }
 
@@ -46,17 +44,12 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
 
     @Override
     public void listenChanges(@NotNull Consumer<CaseTemplateDto> consumer) {
-        this.changesListener = consumer;
+        this.caseTemplateService.setChangesListener(consumer);
     }
 
     @Nullable
     @Override
     public ModuleWithMeta<CaseTemplateDto> prepareToDeploy(@NotNull CaseTemplateDto caseTemplateDTO) {
         return getModuleMeta(caseTemplateDTO);
-    }
-
-    @Override
-    public void perform(CaseTemplateDto dto) {
-        changesListener.accept(dto);
     }
 }

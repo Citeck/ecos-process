@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.service;
 
-import ru.citeck.ecos.process.service.dto.ProcessDefinitionRevisionDto;
+import ru.citeck.ecos.process.dto.ProcessDefinitionRevisionDto;
 
 import java.util.Set;
 import java.util.UUID;

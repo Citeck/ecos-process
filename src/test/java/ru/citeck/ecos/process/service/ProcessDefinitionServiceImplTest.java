@@ -7,8 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.citeck.ecos.process.domain.ProcessDefinition;
+import ru.citeck.ecos.process.domain.ProcessDefinitionRevision;
 import ru.citeck.ecos.process.repository.ProcessDefinitionRepository;
-import ru.citeck.ecos.process.service.dto.ProcessDefinitionDto;
+import ru.citeck.ecos.process.dto.ProcessDefinitionDto;
+import ru.citeck.ecos.process.repository.ProcessDefinitionRevisionRepository;
 import ru.citeck.ecos.process.service.impl.ProcessDefinitionServiceImpl;
 import ru.citeck.ecos.process.service.mapper.ProcessDefinitionMapper;
 
@@ -29,9 +31,12 @@ public class ProcessDefinitionServiceImplTest {
     @MockBean
     private ProcessDefinitionMapper mapper;
 
+    @MockBean
+    private ProcessDefinitionRevisionRepository definitionRevisionRepository;
+
     @BeforeEach
     void setUp() {
-        processDefinitionService = new ProcessDefinitionServiceImpl(repository, mapper);
+        processDefinitionService = new ProcessDefinitionServiceImpl(repository, mapper, definitionRevisionRepository);
     }
 
     @Test
@@ -39,19 +44,19 @@ public class ProcessDefinitionServiceImplTest {
         //  arrange
         UUID revId = UUID.randomUUID();
 
+        ProcessDefinitionRevision pdr = new ProcessDefinitionRevision();
+
         ProcessDefinition receivedEntity = new ProcessDefinition();
         receivedEntity.setId("procDefId");
-        receivedEntity.setCreated(null);
         receivedEntity.setModified(null);
         receivedEntity.setTenant(1);
-        receivedEntity.setRevisionId(revId);
+        receivedEntity.setDefinitionRevision(pdr);
 
         ProcessDefinition savedEntity = new ProcessDefinition();
         savedEntity.setId("NEW_RANDOM_GENERATED_UUID");
-        savedEntity.setCreated(LocalDateTime.of(2020, 3, 19, 19, 40));
         savedEntity.setModified(savedEntity.getCreated());
         savedEntity.setTenant(1);
-        savedEntity.setRevisionId(revId);
+        savedEntity.setDefinitionRevision(pdr);
 
         ProcessDefinitionDto dto = new ProcessDefinitionDto("procDefId", 1, revId);
         ProcessDefinitionDto savedDto = new ProcessDefinitionDto("NEW_RANDOM_GENERATED_UUID", 1, revId);
@@ -74,30 +79,30 @@ public class ProcessDefinitionServiceImplTest {
     @Test
     void testSaveWithUpdateFlow() {
         //  arrange
-        UUID revId = UUID.randomUUID();
         UUID updatedRevId = UUID.randomUUID();
+
+        ProcessDefinitionRevision pdr = new ProcessDefinitionRevision();
 
         ProcessDefinition receivedEntity = new ProcessDefinition();
         receivedEntity.setId("procDefId");
-        receivedEntity.setCreated(null);
         receivedEntity.setModified(null);
         receivedEntity.setTenant(1);
-        receivedEntity.setRevisionId(revId);
+        receivedEntity.setDefinitionRevision(pdr);
 
         ProcessDefinition storedEntity = new ProcessDefinition();
         storedEntity.setId("procDefId");
-        storedEntity.setCreated(LocalDateTime.of(2020, 3, 19, 19, 40));
         storedEntity.setModified(LocalDateTime.of(2020, 4, 10, 19, 40));
         storedEntity.setTenant(1);
-        storedEntity.setRevisionId(revId);
+        storedEntity.setDefinitionRevision(pdr);
 
-        ProcessDefinitionDto dto = new ProcessDefinitionDto("procDefId", 1, revId);
+        ProcessDefinitionDto dto = new ProcessDefinitionDto("procDefId", 1, pdr.getId());
         ProcessDefinitionDto savedDto = new ProcessDefinitionDto("procDefId", 2, updatedRevId);
 
         when(repository.findById(dto.getId())).thenReturn(Optional.of(storedEntity));
         when(mapper.dtoToEntity(dto)).thenReturn(receivedEntity);
         when(repository.save(storedEntity)).thenReturn(storedEntity);
         when(mapper.entityToDto(storedEntity)).thenReturn(savedDto);
+        when(definitionRevisionRepository.findById(pdr.getId())).thenReturn(Optional.of(pdr));
 
         //  act
         ProcessDefinitionDto resultDto = processDefinitionService.save(dto);

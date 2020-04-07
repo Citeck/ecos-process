@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,30 +8,33 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Document(collection = "process_definition")
+@Document(collection = "process_revision")
 @Getter
 @NoArgsConstructor
-public class ProcessDefinition {
+public class ProcessRevision {
 
     @Id
-    @Setter
-    private String id;
+    private UUID id = UUID.randomUUID();
 
     @Setter
-    private Integer tenant;
-
-    private LocalDateTime created = LocalDateTime.now();
-
-    @Setter
-    private LocalDateTime modified;
+    private byte[] data;
 
     @DBRef
     @Setter
-    private ProcessDefinitionRevision definitionRevision;
+    private Process process;
 
-    public ProcessDefinition(Integer tenant, ProcessDefinitionRevision definitionRevision) {
-        this.tenant = tenant;
-        this.definitionRevision = definitionRevision;
+    private LocalDateTime created = LocalDateTime.now();
+
+    /**
+     * Setter only for autoincrement value of revision version
+     */
+    @Setter
+    private Integer version = -1;
+
+    public ProcessRevision(byte[] data, Process process) {
+        this.data = data;
+        this.process = process;
     }
 }

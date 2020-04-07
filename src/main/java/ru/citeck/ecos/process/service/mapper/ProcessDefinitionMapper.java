@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.process.domain.ProcessDefinition;
-import ru.citeck.ecos.process.service.dto.ProcessDefinitionDto;
+import ru.citeck.ecos.process.dto.ProcessDefinitionDto;
 
 @Component
 @RequiredArgsConstructor

@@ -197,3 +197,13 @@ jhipster:
 # ===================================================================
 
 # application:
+
+ecos-app:
+  id: ecos-process
+  version: 1.0.0
+  name: ECOS Process
+
+spring.rabbitmq:
+  host: rabbitmq
+  username: admin
+  password: admin

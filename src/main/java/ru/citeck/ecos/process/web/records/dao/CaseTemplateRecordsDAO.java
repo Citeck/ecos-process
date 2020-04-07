@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.process.service.CaseTemplateService;
-import ru.citeck.ecos.process.service.dto.CaseTemplateDto;
+import ru.citeck.ecos.process.dto.CaseTemplateDto;
 import ru.citeck.ecos.process.web.records.record.CaseTemplateRecord;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.value.MetaField;

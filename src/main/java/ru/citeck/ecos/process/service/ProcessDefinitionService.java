@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.service;
 
-import ru.citeck.ecos.process.service.dto.ProcessDefinitionDto;
+import ru.citeck.ecos.process.dto.ProcessDefinitionDto;
 
 import java.util.Set;
 
