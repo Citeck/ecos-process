@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.apps.module.handler.EcosModuleHandler;
 import ru.citeck.ecos.apps.module.handler.ModuleMeta;
 import ru.citeck.ecos.apps.module.handler.ModuleWithMeta;
-import ru.citeck.ecos.process.service.CaseTemplateService;
-import ru.citeck.ecos.process.dto.CaseTemplateDto;
+import ru.citeck.ecos.process.dto.NewProcessDefDto;
+import ru.citeck.ecos.process.service.ProcessDefService;
 
 import java.util.Collections;
 import java.util.function.Consumer;
@@ -21,18 +21,26 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
 
     private static final String CASE_TEMPLATE_TYPE = "process/cmmn";
 
-    private final CaseTemplateService caseTemplateService;
+    private final ProcessDefService processService;
 
     @Override
     public void deployModule(@NotNull CaseTemplateDto caseTemplateDTO) {
+
         log.info("Case template module received: " + caseTemplateDTO.getId());
-        caseTemplateService.save(caseTemplateDTO);
+
+        NewProcessDefDto newProcessDefDto = new NewProcessDefDto();
+        newProcessDefDto.setType("cmmn");
+        newProcessDefDto.setData(caseTemplateDTO.getXmlContent());
+        newProcessDefDto.setEcosTypeRef(caseTemplateDTO.getTypeRef());
+        newProcessDefDto.setFormat("xml");
+        newProcessDefDto.setId(caseTemplateDTO.getId());
+
+        processService.uploadProcDef(newProcessDefDto);
     }
 
     @NotNull
     @Override
     public ModuleWithMeta<CaseTemplateDto> getModuleMeta(@NotNull CaseTemplateDto dto) {
-        log.info("Case template get module meta");
         return new ModuleWithMeta<>(dto, new ModuleMeta(dto.getId(), Collections.emptyList()));
     }
 
@@ -44,7 +52,7 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
 
     @Override
     public void listenChanges(@NotNull Consumer<CaseTemplateDto> consumer) {
-        this.caseTemplateService.setChangesListener(consumer);
+
     }
 
     @Nullable

@@ -1,20 +1,19 @@
 package ru.citeck.ecos.process.service;
 
-import ru.citeck.ecos.process.dto.ProcessDto;
+import ru.citeck.ecos.process.dto.NewProcessInstanceDto;
+import ru.citeck.ecos.process.dto.ProcessInstanceDto;
+import ru.citeck.ecos.process.dto.ProcessStateDto;
+import ru.citeck.ecos.records2.RecordRef;
 
-import java.util.Set;
 import java.util.UUID;
 
 public interface ProcessService {
 
-    ProcessDto getById(UUID id);
+    NewProcessInstanceDto createProcessInstance(RecordRef recordRef, UUID procDefRevId);
 
-    Set<ProcessDto> getAll();
+    ProcessInstanceDto getInstanceById(UUID id);
 
-    Set<ProcessDto> getAll(Set<UUID> uuids);
+    ProcessStateDto updateStateData(UUID prevStateId, byte[] data);
 
-    ProcessDto save(ProcessDto dto);
-
-    void delete(UUID id);
-
+    ProcessStateDto getProcessState(String procType, UUID procId);
 }

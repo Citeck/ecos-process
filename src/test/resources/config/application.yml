@@ -48,7 +48,7 @@ spring:
   thymeleaf:
     mode: HTML
   datasource:
-    url: jdbc:mongo://localhost:27017/eprocess
+    url: jdbc:mongo://localhost:27017/eproc
 server:
   port: 10344
   address: localhost

@@ -1,6 +1,5 @@
 package emtypes.process.cmmn
 
-
 import kotlin.Unit
 import kotlin.jvm.functions.Function1
 import org.jetbrains.annotations.NotNull
@@ -36,7 +35,6 @@ return new ModuleController<Module, Unit>() {
 
     private Module readModule(EcosFile file) {
 
-        log.info("READ: " + file.name);
         byte[] data = file.readAsBytes()
 
         try {
@@ -44,17 +42,12 @@ return new ModuleController<Module, Unit>() {
             Module module = new Module()
 
             Node caseNode = getCaseNode(data)
-//
-            String moduleId = getModuleId(caseNode, file);
-//            log.info("MODULE_ID: " + moduleId)
-            module.setId(moduleId)
-//            module.setId("123")
-//
-            RecordRef typeRef = getCaseEcosType(caseNode)
-//            log.info("TYPE_REF: " + typeRef.toString())
-            module.setTypeRef(typeRef);
 
-//            module.setId(getId(file, data))
+            String moduleId = getModuleId(caseNode, file)
+            module.setId(moduleId)
+            RecordRef typeRef = getCaseEcosType(caseNode)
+            module.setTypeRef(typeRef)
+
             module.setXmlContent(data)
             return module
 
@@ -68,8 +61,8 @@ return new ModuleController<Module, Unit>() {
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance()
         DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder()
         Document document = docBuilder.parse(new ByteArrayInputStream(data))
-        NodeList nodeList = document.getElementsByTagName("cmmn:case");
-        return nodeList.item(0);
+        NodeList nodeList = document.getElementsByTagName("cmmn:case")
+        return nodeList.item(0)
     }
 
     private String getId(EcosFile file, byte[] data) throws ParserConfigurationException, IOException, SAXException {
@@ -77,20 +70,17 @@ return new ModuleController<Module, Unit>() {
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance()
         DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder()
         Document document = docBuilder.parse(new ByteArrayInputStream(data))
-        NodeList nodeList = document.getElementsByTagName("cmmn:case");
+        NodeList nodeList = document.getElementsByTagName("cmmn:case")
         String moduleId = nodeList.item(0).getAttribute("ns8:moduleId").toString()
 
-//        log.info(nodeList.item(0).hasAttributes().toString())
-//        log.info(nodeList.item(0).getNodeName().toString())
-//        log.info(nodeList.item(0).getAttribute("ns8:moduleId").toString())
         log.info(moduleId)
 
         if (moduleId != null && !moduleId.isEmpty() && file.path != null && file.name != null) {
 
-            log.info("GET_ID_fp: " + file.path);
-            log.info("GET_ID_fn: " + file.name);
+            log.info("GET_ID_fp: " + file.path)
+            log.info("GET_ID_fn: " + file.name)
 
-            String filepath = file.path.toString();
+            String filepath = file.path.toString()
             int prefix = filepath.indexOf("case/templates")
 
             if (file.name.isEmpty()) {
@@ -98,8 +88,8 @@ return new ModuleController<Module, Unit>() {
             }
 
             if (prefix != -1) {
-                String formattedFilepath = filepath.substring(prefix + 1);
-                return formattedFilepath + "/" + filename;
+                String formattedFilepath = filepath.substring(prefix + 1)
+                return formattedFilepath + "/" + filename
             }
         }
         return file.name;
@@ -132,15 +122,13 @@ return new ModuleController<Module, Unit>() {
             value = value.replaceAll("workspace-SpacesStore-", "")
             return RecordRef.create("emodel", "type", value)
         }
-        return RecordRef.EMPTY;
+        return RecordRef.EMPTY
     }
 
     @Override
     void write(@NotNull EcosFile root, Module module, Unit config) {
 
-        log.info("WRITING: " + module.getId());
         String name = FileUtils.getValidName(module.getId())
-        log.info("WRITING: " + name);
 
         root.createFile(name, (Function1<OutputStream, Unit>) {
             OutputStream out -> out.write(module.getXmlContent())

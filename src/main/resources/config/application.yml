@@ -111,12 +111,12 @@ management:
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mongo://localhost:27017/eprocess
+    url: jdbc:mongo://localhost:27017/eproc
   application:
     name: eproc
   data:
     mongodb:
-      uri: mongodb://localhost:27017/eprocess
+      uri: mongodb://localhost:27017/eproc
   jmx:
     enabled: false
   messages:
