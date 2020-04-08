@@ -20,7 +20,7 @@ public class GetProcStateExecutor implements CommandExecutor<GetProcState> {
     public GetProcStateResp execute(GetProcState getProcState) {
 
         UUID procStateId = UUID.fromString(getProcState.getProcStateId());
-        ProcessStateDto procState = processService.getProcessState(getProcState.getProcType(), procStateId);
+        ProcessStateDto procState = processService.getProcStateByStateId(getProcState.getProcType(), procStateId);
 
         if (procState == null) {
             return null;

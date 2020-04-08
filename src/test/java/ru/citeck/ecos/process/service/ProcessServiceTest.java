@@ -16,6 +16,8 @@ import ru.citeck.ecos.process.service.commands.finddef.FindProcDef;
 import ru.citeck.ecos.process.service.commands.finddef.FindProcDefResp;
 import ru.citeck.ecos.process.service.commands.getprocdefrev.GetProcDefRev;
 import ru.citeck.ecos.process.service.commands.getprocdefrev.GetProcDefRevResp;
+import ru.citeck.ecos.process.service.commands.getprocstate.GetProcState;
+import ru.citeck.ecos.process.service.commands.getprocstate.GetProcStateResp;
 import ru.citeck.ecos.process.service.commands.updateprocstate.UpdateProcState;
 import ru.citeck.ecos.process.service.commands.updateprocstate.UpdateProcStateResp;
 import ru.citeck.ecos.records2.RecordRef;
@@ -82,5 +84,12 @@ public class ProcessServiceTest {
         assertNotNull(newStateResp);
         assertFalse(StringUtils.isBlank(newStateResp.getProcStateId()));
         assertEquals(1, newStateResp.getVersion());
+
+        GetProcStateResp getProcStateResp = commandsService.executeSync(new GetProcState("cmmn", newStateResp.getProcStateId()))
+            .getResultAs(GetProcStateResp.class);
+
+        assertNotNull(getProcStateResp);
+        assertEquals(1, getProcStateResp.getVersion());
+        assertArrayEquals(stateData, getProcStateResp.getStateData());
     }
 }

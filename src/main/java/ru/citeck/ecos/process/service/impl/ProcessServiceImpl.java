@@ -15,7 +15,6 @@ import ru.citeck.ecos.process.repository.ProcessStateRepository;
 import ru.citeck.ecos.process.service.ProcessService;
 import ru.citeck.ecos.records2.RecordRef;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -105,10 +104,18 @@ public class ProcessServiceImpl implements ProcessService {
     }
 
     @Override
-    public ProcessStateDto getProcessState(String procType, UUID procId) {
+    public ProcessStateDto getProcStateByProcId(String procType, UUID procId) {
 
         return processRepo.findById(new EntityUuid(tenantService.getCurrent(), procId))
             .map(ProcessInstanceEntity::getState)
+            .map(this::stateToDto)
+            .orElse(null);
+    }
+
+    @Override
+    public ProcessStateDto getProcStateByStateId(String procType, UUID procStateId) {
+
+        return processStateRepo.findById(new EntityUuid(tenantService.getCurrent(), procStateId))
             .map(this::stateToDto)
             .orElse(null);
     }

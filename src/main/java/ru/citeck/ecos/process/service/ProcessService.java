@@ -15,5 +15,7 @@ public interface ProcessService {
 
     ProcessStateDto updateStateData(UUID prevStateId, byte[] data);
 
-    ProcessStateDto getProcessState(String procType, UUID procId);
+    ProcessStateDto getProcStateByProcId(String procType, UUID procId);
+
+    ProcessStateDto getProcStateByStateId(String procType, UUID procStateId);
 }
