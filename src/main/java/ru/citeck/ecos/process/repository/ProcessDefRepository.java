@@ -13,4 +13,6 @@ public interface ProcessDefRepository extends MongoRepository<ProcessDefEntity, 
     Optional<ProcessDefEntity> findFirstByProcTypeAndEcosTypeRef(String type, String ecosTypeRef);
 
     Optional<ProcessDefEntity> findFirstByProcTypeAndExtId(String type, String extId);
+
+    Optional<ProcessDefEntity> findFirstByProcTypeAndAlfType(String type, String alfType);
 }

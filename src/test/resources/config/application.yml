@@ -93,3 +93,7 @@ jhipster:
 # ===================================================================
 
 # application:
+
+eproc:
+  ecos-records:
+    force-local-mode: true

@@ -5,22 +5,13 @@ import kotlin.jvm.functions.Function1
 import org.jetbrains.annotations.NotNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.thymeleaf.util.StringUtils
-import org.w3c.dom.Document
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList
-import org.xml.sax.SAXException
 import ru.citeck.ecos.apps.module.controller.ModuleController
 import ru.citeck.ecos.commons.io.file.EcosFile
-import ru.citeck.ecos.commons.utils.FileUtils
-import ru.citeck.ecos.records2.RecordRef
 
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.ParserConfigurationException
+import java.util.function.Function
 import java.util.stream.Collectors
 
-return new ModuleController<Module, Unit>() {
+class CaseTemplateController implements ModuleController<CaseTemplateController.Module, Unit> {
 
     private static final Logger log = LoggerFactory.getLogger(ModuleController.class)
 
@@ -29,115 +20,45 @@ return new ModuleController<Module, Unit>() {
 
         return root.findFiles("**.xml")
             .stream()
-            .map(this.&readModule)
+            .map(new Function<EcosFile, Module>() {
+                @Override
+                Module apply(EcosFile module) {
+                    return readModule(root, module)
+                }
+            })
             .collect(Collectors.toList())
     }
 
-    private Module readModule(EcosFile file) {
+    private static Module readModule(EcosFile root, EcosFile file) {
 
-        byte[] data = file.readAsBytes()
+        String path = root.getPath()
+            .relativize(file.getPath())
+            .toString()
+            .replace("\\", "/")
 
-        try {
-
-            Module module = new Module()
-
-            Node caseNode = getCaseNode(data)
-
-            String moduleId = getModuleId(caseNode, file)
-            module.setId(moduleId)
-            RecordRef typeRef = getCaseEcosType(caseNode)
-            module.setTypeRef(typeRef)
-
-            module.setXmlContent(data)
-            return module
-
-        } catch (ParserConfigurationException | IOException | SAXException e) {
-            log.error("Module data reading error. File: " + file.getPath(), e)
-            throw new RuntimeException(e)
-        }
-    }
-
-    private Node getCaseNode(byte[] data) {
-        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance()
-        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder()
-        Document document = docBuilder.parse(new ByteArrayInputStream(data))
-        NodeList nodeList = document.getElementsByTagName("cmmn:case")
-        return nodeList.item(0)
-    }
-
-    private String getId(EcosFile file, byte[] data) throws ParserConfigurationException, IOException, SAXException {
-
-        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance()
-        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder()
-        Document document = docBuilder.parse(new ByteArrayInputStream(data))
-        NodeList nodeList = document.getElementsByTagName("cmmn:case")
-        String moduleId = nodeList.item(0).getAttribute("ns8:moduleId").toString()
-
-        log.info(moduleId)
-
-        if (moduleId != null && !moduleId.isEmpty() && file.path != null && file.name != null) {
-
-            log.info("GET_ID_fp: " + file.path)
-            log.info("GET_ID_fn: " + file.name)
-
-            String filepath = file.path.toString()
-            int prefix = filepath.indexOf("case/templates")
-
-            if (file.name.isEmpty()) {
-                throw new RuntimeException("Cannot receive module. Cannot get/generate name for it.")
-            }
-
-            if (prefix != -1) {
-                String formattedFilepath = filepath.substring(prefix + 1)
-                return formattedFilepath + "/" + filename
-            }
-        }
-        return file.name;
-    }
-
-    private String getModuleId(Node node, EcosFile file) {
-        String moduleId = node.getAttribute("ns8:moduleId").toString()
-
-        if (!StringUtils.isEmpty(moduleId) && file.path != null && file.name != null) {
-
-            String filepath = file.path.toString();
-            int prefix = filepath.indexOf("case/templates")
-
-            if (file.name.isEmpty()) {
-                throw new RuntimeException("Cannot receive module. Cannot get/generate name for it.")
-            }
-
-            if (prefix != -1) {
-                String formattedFilepath = filepath.substring(prefix + 1)
-                return formattedFilepath + "/" + file.name
-            }
-        }
-        return file.name
-    }
-
-    private RecordRef getCaseEcosType(Node node) {
-
-        String value =  node.getAttribute("ns8:caseEcosType").toString()
-        if (!StringUtils.isEmpty(value)) {
-            value = value.replaceAll("workspace-SpacesStore-", "")
-            return RecordRef.create("emodel", "type", value)
-        }
-        return RecordRef.EMPTY
+        return new Module(path, file.readAsBytes())
     }
 
     @Override
     void write(@NotNull EcosFile root, Module module, Unit config) {
 
-        String name = FileUtils.getValidName(module.getId())
-
-        root.createFile(name, (Function1<OutputStream, Unit>) {
-            OutputStream out -> out.write(module.getXmlContent())
+        root.createFile(module.getFilePath(), (Function1<OutputStream, Unit>) {
+            OutputStream out -> out.write(module.getData())
         })
     }
 
     static class Module {
-        String id
-        RecordRef typeRef
-        byte[] xmlContent
+
+        String filePath
+        byte[] data
+
+        Module(String path, byte[] data) {
+            this.filePath = path
+            this.data = data
+        }
+
+        Module() {}
     }
 }
+
+return new CaseTemplateController()

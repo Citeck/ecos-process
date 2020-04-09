@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cmmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI" xmlns:di="http://www.omg.org/spec/CMMN/20151109/DI" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL" xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" targetNamespace="http://www.citeck.ru/ecos/case/cmmn/1.0">
+    <cmmn:case             xmlns:ns8="http://www.citeck.ru/ecos/case/cmmn/1.0" ns8:caseEcosType="emodel/type@adwdawddwawdaw" name="1c2b1498-7583-4c37-a956-2a749cd2f81e" id="id-1" ns8:elementTypes="case-tasks,documents,completeness-levels,subcases,events,case-roles" ns8:caseType="{http://www.citeck.ru/model/content/idocs/1.0}idocsidocs">
+        <cmmn:casePlanModel autoComplete="true" name="Case plan model awewq" id="id-4" ns8:completnessLevels="workspace-SpacesStore-cl-passport-rus,workspace-SpacesStore-cl-foundDoc-charter,workspace-SpacesStore-cl-foundDoc-ceOrder,workspace-SpacesStore-cl-foundDoc-attScan,workspace-SpacesStore-cl-foundDoc-innScan,workspace-SpacesStore-cl-foundDoc-ogrnScan,workspace-SpacesStore-cl-foundDoc-egrul,workspace-SpacesStore-cl-foundDoc-orgCard">
+            <cmmn:planItem definitionRef="id-5" id="id-6">
+                <cmmn:entryCriterion sentryRef="id-8" id="id-9"/>
+                <cmmn:exitCriterion sentryRef="id-11" id="id-12"/>
+            </cmmn:planItem>
+            <cmmn:planItem definitionRef="id-13" id="id-14">
+                <cmmn:entryCriterion sentryRef="id-28" id="id-29"/>
+                <cmmn:exitCriterion sentryRef="id-31" id="id-32"/>
+            </cmmn:planItem>
+            <cmmn:planItem definitionRef="id-26" id="id-27"/>
+            <cmmn:planItem definitionRef="id-33" id="id-34">
+                <cmmn:entryCriterion sentryRef="id-38" id="id-39"/>
+                <cmmn:exitCriterion sentryRef="id-41" id="id-42"/>
+            </cmmn:planItem>
+            <cmmn:planItem definitionRef="id-36" id="id-37"/>
+            <cmmn:planItem definitionRef="id-43" id="id-44"/>
+            <cmmn:sentry id="id-8" ns8:originalEvent="case-created">
+                <cmmn:planItemOnPart id="id-7" ns8:sourceId="id-1" ns8:nodeType="{http://www.citeck.ru/model/icaseEvent/1.0}caseCreated">
+                    <cmmn:standardEvent>create</cmmn:standardEvent>
+                </cmmn:planItemOnPart>
+            </cmmn:sentry>
+            <cmmn:sentry id="id-11" ns8:originalEvent="stage-children-stopped">
+                <cmmn:planItemOnPart sourceRef="id-6" id="id-10" ns8:sourceId="id-5" ns8:title="Новый" ns8:nodeType="{http://www.citeck.ru/model/icaseEvent/1.0}stageChildrenStopped">
+                    <cmmn:standardEvent>complete</cmmn:standardEvent>
+                </cmmn:planItemOnPart>
+            </cmmn:sentry>
+            <cmmn:sentry id="id-28" ns8:originalEvent="user-action">
+                <cmmn:planItemOnPart sourceRef="id-27" id="id-25" ns8:sourceId="id-1" ns8:nodeType="{http://www.citeck.ru/model/iEvent/1.0}userAction" ns8:title="case.action.start-approval">
+                    <cmmn:standardEvent>occur</cmmn:standardEvent>
+                </cmmn:planItemOnPart>
+                <cmmn:ifPart>
+                    <cmmn:condition>&lt;!CDATA[&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+                        &lt;conditionsList&gt;
+                        &lt;conditions&gt;
+                        &lt;condition&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/condition/1.0"&gt;ns2:evaluate-script&lt;/type&gt;
+                        &lt;properties&gt;
+                        &lt;property&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/condition/1.0"&gt;ns2:evaluate-script.script&lt;/type&gt;
+                        &lt;value&gt;caseStatusService.getStatus(document) != 'on-approval'&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/attribute/1.0"&gt;ns2:isDocument&lt;/type&gt;
+                        &lt;value&gt;false&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/attribute/1.0"&gt;ns2:isContainer&lt;/type&gt;
+                        &lt;value&gt;false&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;/properties&gt;
+                        &lt;/condition&gt;
+                        &lt;/conditions&gt;
+                        &lt;/conditionsList&gt;
+                        ]]&gt;</cmmn:condition>
+                </cmmn:ifPart>
+            </cmmn:sentry>
+            <cmmn:sentry id="id-31" ns8:originalEvent="stage-children-stopped">
+                <cmmn:planItemOnPart sourceRef="id-14" id="id-30" ns8:sourceId="id-13" ns8:title="Согласование" ns8:nodeType="{http://www.citeck.ru/model/icaseEvent/1.0}stageChildrenStopped">
+                    <cmmn:standardEvent>complete</cmmn:standardEvent>
+                </cmmn:planItemOnPart>
+            </cmmn:sentry>
+            <cmmn:sentry id="id-38" ns8:originalEvent="user-action">
+                <cmmn:planItemOnPart sourceRef="id-37" id="id-35" ns8:sourceId="id-1" ns8:nodeType="{http://www.citeck.ru/model/iEvent/1.0}userAction" ns8:title="case.action.close-case">
+                    <cmmn:standardEvent>occur</cmmn:standardEvent>
+                </cmmn:planItemOnPart>
+                <cmmn:ifPart>
+                    <cmmn:condition>&lt;!CDATA[&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+                        &lt;conditionsList&gt;
+                        &lt;conditions&gt;
+                        &lt;condition&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/condition/1.0"&gt;ns2:evaluate-script&lt;/type&gt;
+                        &lt;properties&gt;
+                        &lt;property&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/condition/1.0"&gt;ns2:evaluate-script.script&lt;/type&gt;
+                        &lt;value&gt;event.parent.properties['lc:state'] == 'Not started'&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/attribute/1.0"&gt;ns2:isDocument&lt;/type&gt;
+                        &lt;value&gt;false&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                        &lt;type xmlns:ns2="http://www.citeck.ru/model/attribute/1.0"&gt;ns2:isContainer&lt;/type&gt;
+                        &lt;value&gt;false&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;/properties&gt;
+                        &lt;/condition&gt;
+                        &lt;/conditions&gt;
+                        &lt;/conditionsList&gt;
+                        ]]&gt;</cmmn:condition>
+                </cmmn:ifPart>
+            </cmmn:sentry>
+            <cmmn:sentry id="id-41" ns8:originalEvent="stage-children-stopped">
+                <cmmn:planItemOnPart sourceRef="id-34" id="id-40" ns8:sourceId="id-33" ns8:title="Закрытие" ns8:nodeType="{http://www.citeck.ru/model/icaseEvent/1.0}stageChildrenStopped">
+                    <cmmn:standardEvent>complete</cmmn:standardEvent>
+                </cmmn:planItemOnPart>
+            </cmmn:sentry>
+            <cmmn:stage xmlns:ns9="http://www.citeck.ru/model/activity/1.0" xmlns:ns10="http://www.citeck.ru/model/invariants/1.0" xmlns:ns11="http://www.citeck.ru/model/attribute/1.0" xmlns:ns12="http://www.citeck.ru/model/lifecycle/1.0" autoComplete="true" name="13f9aa8b-78c0-4824-ad00-59e4332b891b" id="id-5" ns9:actualEndDate="2019-06-18T16:26:05.566+03:00" ns9:manualStopped="false" ns10:isDraft="false" ns9:manualStarted="false" ns9:index="0" ns9:autoEvents="true" ns8:startCompletnessLevels="" ns11:isDocument="false" ns12:state="Completed" ns10:canReturnToDraft="false" ns9:typeVersion="1" ns9:repeatable="true" ns11:isContainer="false" ns9:actualStartDate="2019-06-18T16:26:05.561+03:00" ns8:stopCompletnessLevels="" ns8:title="Новый"/>
+            <cmmn:stage xmlns:ns9="http://www.citeck.ru/model/activity/1.0" xmlns:ns10="http://www.citeck.ru/model/invariants/1.0" xmlns:ns11="http://www.citeck.ru/model/attribute/1.0" xmlns:ns12="http://www.citeck.ru/model/lifecycle/1.0" autoComplete="true" name="95583e0e-ac7c-4d0f-a0e3-88f904b55699" id="id-13" ns9:actualEndDate="" ns9:manualStopped="false" ns10:isDraft="false" ns9:manualStarted="false" ns9:index="2" ns9:autoEvents="false" ns8:startCompletnessLevels="" ns11:isDocument="false" ns12:state="Not started" ns10:canReturnToDraft="false" ns9:typeVersion="1" ns8:caseStatus="on-approval" ns9:repeatable="true" ns11:isContainer="false" ns9:actualStartDate="" ns8:stopCompletnessLevels="" ns8:title="Согласование">
+                <cmmn:planItem definitionRef="id-15" id="id-16">
+                    <cmmn:entryCriterion sentryRef="id-18" id="id-19"/>
+                </cmmn:planItem>
+                <cmmn:planItem definitionRef="id-20" id="id-21">
+                    <cmmn:entryCriterion sentryRef="id-23" id="id-24"/>
+                </cmmn:planItem>
+                <cmmn:sentry id="id-18" ns8:originalEvent="activity-started">
+                    <cmmn:planItemOnPart sourceRef="id-14" id="id-17" ns8:sourceId="id-13" ns8:title="Согласование" ns8:nodeType="{http://www.citeck.ru/model/icaseEvent/1.0}activityStartedEvent">
+                        <cmmn:standardEvent>start</cmmn:standardEvent>
+                    </cmmn:planItemOnPart>
+                </cmmn:sentry>
+                <cmmn:sentry id="id-23" ns8:originalEvent="activity-stopped">
+                    <cmmn:planItemOnPart sourceRef="id-16" id="id-22" ns8:sourceId="id-15" ns8:title="Согласование" ns8:nodeType="{http://www.citeck.ru/model/icaseEvent/1.0}activityStoppedEvent">
+                        <cmmn:standardEvent>complete</cmmn:standardEvent>
+                    </cmmn:planItemOnPart>
+                </cmmn:sentry>
+                <cmmn:processTask xmlns:ns13="http://www.citeck.ru/model/workflow/confirm/1.0" xmlns:ns14="http://www.citeck.ru/model/icaseTask/1.0" isBlocking="true" name="1f4a9cbe-b3e5-489e-aec6-d22050a0d529" id="id-15" ns9:actualEndDate="" ns9:manualStopped="false" ns9:manualStarted="true" ns13:confirmersPermission="Consumer" ns9:index="0" ns14:workflowInstanceId="" ns13:terminateOnReject="false" ns13:resubmitOnNewVersion="true" ns8:startCompletnessLevels="" ns9:typeVersion="1" ns13:terminateOnPartialConfirms="false" ns11:isContainer="false" ns13:hasMandatoryConfirmers="false" ns8:nodeType="{http://www.citeck.ru/model/icaseTask/1.0}confirmTask" ns8:confirmers="id-3" ns10:isDraft="false" ns14:workflowDefinitionName="activiti$confirm-stage" ns9:autoEvents="true" ns9:plannedEndDate="2018-12-13T08:17:47.400+03:00" ns12:state="Not started" ns11:isDocument="false" ns10:canReturnToDraft="false" ns13:canConfirmWithComments="false" ns9:repeatable="true" ns9:actualStartDate="" ns13:skipCorrectTask="false" ns14:priority="2" ns8:stopCompletnessLevels="" ns8:title="Согласование"/>
+                <cmmn:task isBlocking="false" name="ba27c9bb-2928-472a-9a74-65d5786cc0a4" id="id-20" ns9:actualEndDate="" ns9:manualStopped="false" ns10:isDraft="false" ns9:manualStarted="false" ns9:index="1" ns9:autoEvents="true" ns8:startCompletnessLevels="" ns11:isDocument="false" ns12:state="Not started" ns10:canReturnToDraft="false" ns9:typeVersion="1" ns8:actionCaseStatus="approved" ns9:repeatable="true" ns11:isContainer="false" ns9:actualStartDate="" ns8:stopCompletnessLevels="" ns8:nodeType="{http://www.citeck.ru/model/action/1.0}set-case-status" ns8:title="Статус: Согласован"/>
+            </cmmn:stage>
+            <cmmn:userEventListener id="id-26"/>
+            <cmmn:stage xmlns:ns9="http://www.citeck.ru/model/activity/1.0" xmlns:ns10="http://www.citeck.ru/model/invariants/1.0" xmlns:ns11="http://www.citeck.ru/model/attribute/1.0" xmlns:ns12="http://www.citeck.ru/model/lifecycle/1.0" autoComplete="false" name="b1fda53b-ef41-4586-96d8-bb59bb9a46d7" id="id-33" ns9:actualEndDate="" ns9:manualStopped="true" ns10:isDraft="false" ns9:manualStarted="true" ns9:index="3" ns9:autoEvents="false" ns8:startCompletnessLevels="" ns11:isDocument="false" ns12:state="Not started" ns10:canReturnToDraft="false" ns9:typeVersion="1" ns8:caseStatus="closed-m" ns9:repeatable="true" ns11:isContainer="false" ns9:actualStartDate="" ns8:stopCompletnessLevels="" ns8:title="Закрыт"/>
+            <cmmn:userEventListener id="id-36"/>
+            <cmmn:task xmlns:ns9="http://www.citeck.ru/model/action/1.0" xmlns:ns10="http://www.citeck.ru/model/activity/1.0" xmlns:ns11="http://www.citeck.ru/model/invariants/1.0" xmlns:ns12="http://www.citeck.ru/model/attribute/1.0" xmlns:ns13="http://www.citeck.ru/model/lifecycle/1.0" isBlocking="false" name="74d0f4fc-bbcc-40a7-ad63-7060e943ccea" id="id-43" ns9:execute-script.script="caseActivityService.reset(document);" ns10:manualStopped="false" ns11:isDraft="false" ns10:manualStarted="true" ns10:index="999999" ns10:autoEvents="false" ns8:startCompletnessLevels="" ns12:isDocument="false" ns13:state="Not started" ns11:canReturnToDraft="false" ns10:typeVersion="1" ns10:repeatable="true" ns12:isContainer="false" ns8:stopCompletnessLevels="" ns8:nodeType="{http://www.citeck.ru/model/action/1.0}execute-script" ns8:title="Reset"/>
+        </cmmn:casePlanModel>
+        <cmmn:caseRoles>
+            <cmmn:role name="Инициатор" id="id-2" ns8:roleVarName="initiator" ns8:roleAssignees="admin" ns8:roleScript="var initiator = (document.assocs['idocs:initiator'] || [])[0]; if (!initiator) initiator = document.properties['cm:creator']; initiator" ns8:isReferenceRole="false" ns8:nodeType="{http://www.citeck.ru/model/icaseRole/1.0}scriptRole"/>
+            <cmmn:role name="Ответственный" id="id-3" ns8:roleVarName="responsible" ns8:roleAssignees="admin" ns8:roleScript="document.assocs['ecos:responsible']" ns8:isReferenceRole="false" ns8:nodeType="{http://www.citeck.ru/model/icaseRole/1.0}scriptRole"/>
+        </cmmn:caseRoles>
+    </cmmn:case>
+</cmmn:definitions>

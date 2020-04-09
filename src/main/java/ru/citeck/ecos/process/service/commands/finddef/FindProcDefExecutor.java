@@ -21,7 +21,8 @@ public class FindProcDefExecutor implements CommandExecutor<FindProcDef> {
 
         Optional<ProcessDefRevDto> optProcDef = processDefService.findProcDef(
             findProcDef.getProcType(),
-            findProcDef.getEcosTypeRef()
+            findProcDef.getEcosTypeRef(),
+            findProcDef.getAlfTypes()
         );
 
         if (!optProcDef.isPresent()) {

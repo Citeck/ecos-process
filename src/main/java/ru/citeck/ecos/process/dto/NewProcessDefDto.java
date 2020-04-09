@@ -11,6 +11,7 @@ public class NewProcessDefDto {
     private String id;
     private String type;
     private String format;
+    private String alfType;
     private RecordRef ecosTypeRef;
     private byte[] data;
 }
