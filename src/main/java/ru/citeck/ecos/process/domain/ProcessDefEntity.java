@@ -15,14 +15,16 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @NoArgsConstructor
 @CompoundIndexes({
-    @CompoundIndex(name = "proc_def_proc_type_ext_id_idx", def = "{'procType' : 1, 'extId': 1}"),
-    @CompoundIndex(name = "proc_def_proc_type_ecos_type_idx", def = "{'procType' : 1, 'ecosTypeRef': 1}"),
-    @CompoundIndex(name = "proc_def_proc_type_alf_type_idx", def = "{'procType' : 1, 'alfType': 1}"),
+    @CompoundIndex(name = "proc_def_proc_type_ext_id_idx", def = "{'tenant': 1, 'procType' : 1, 'extId': 1}"),
+    @CompoundIndex(name = "proc_def_proc_type_ecos_type_idx", def = "{'tenant': 1, 'procType' : 1, 'ecosTypeRef': 1}"),
+    @CompoundIndex(name = "proc_def_proc_type_alf_type_idx", def = "{'tenant': 1, 'procType' : 1, 'alfType': 1}"),
 })
 public class ProcessDefEntity {
 
     @Id
     private EntityUuid id;
+
+    private int tenant;
 
     /**
      * Engine type (cmmn)
