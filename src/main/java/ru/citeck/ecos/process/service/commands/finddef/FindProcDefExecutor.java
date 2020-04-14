@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
 import ru.citeck.ecos.process.dto.ProcessDefRevDto;
 import ru.citeck.ecos.process.service.ProcessDefService;
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.util.Optional;
 
@@ -19,10 +20,12 @@ public class FindProcDefExecutor implements CommandExecutor<FindProcDef> {
     @Override
     public FindProcDefResp execute(FindProcDef findProcDef) {
 
-        Optional<ProcessDefRevDto> optProcDef = processDefService.findProcDef(
-            findProcDef.getProcType(),
-            findProcDef.getEcosTypeRef(),
-            findProcDef.getAlfTypes()
+        Optional<ProcessDefRevDto> optProcDef = RemoteRecordsUtils.runAsSystem(() ->
+            processDefService.findProcDef(
+                findProcDef.getProcType(),
+                findProcDef.getEcosTypeRef(),
+                findProcDef.getAlfTypes()
+            )
         );
 
         if (!optProcDef.isPresent()) {

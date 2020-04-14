@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
 import ru.citeck.ecos.process.dto.ProcessStateDto;
 import ru.citeck.ecos.process.service.ProcessService;
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.util.UUID;
 
@@ -20,7 +21,9 @@ public class GetProcStateExecutor implements CommandExecutor<GetProcState> {
     public GetProcStateResp execute(GetProcState getProcState) {
 
         UUID procStateId = UUID.fromString(getProcState.getProcStateId());
-        ProcessStateDto procState = processService.getProcStateByStateId(getProcState.getProcType(), procStateId);
+        ProcessStateDto procState = RemoteRecordsUtils.runAsSystem(() ->
+            processService.getProcStateByStateId(getProcState.getProcType(), procStateId)
+        );
 
         if (procState == null) {
             return null;

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
 import ru.citeck.ecos.process.dto.ProcessDefRevDto;
 import ru.citeck.ecos.process.service.ProcessDefService;
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -21,7 +22,9 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
     public GetProcDefRevResp execute(GetProcDefRev findProcDef) {
 
         UUID revId = UUID.fromString(findProcDef.getProcDefRevId());
-        Optional<ProcessDefRevDto> optDefRev = processDefService.getProcessDefRev(findProcDef.getProcType(), revId);
+        Optional<ProcessDefRevDto> optDefRev = RemoteRecordsUtils.runAsSystem(() ->
+            processDefService.getProcessDefRev(findProcDef.getProcType(), revId)
+        );
 
         if (!optDefRev.isPresent()) {
             return null;
