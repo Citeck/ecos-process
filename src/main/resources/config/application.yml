@@ -207,3 +207,8 @@ spring.rabbitmq:
   host: rabbitmq
   username: admin
   password: admin
+
+jobs:
+  execute-timer-commands-job:
+    delay-after-fail-millis: 600000
+    rate-millis: 60000
