@@ -1,11 +1,13 @@
 package ru.citeck.ecos.process.dto;
 
 import lombok.Data;
+import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Data
+@ToString(exclude = "stateData")
 public class NewProcessInstanceDto extends ProcessInstanceDto {
 
     @NotNull
