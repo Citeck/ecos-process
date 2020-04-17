@@ -1,29 +1,31 @@
 package ru.citeck.ecos.process.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.Id;
 
 import java.time.Instant;
 
+@Data
 @Document(collection = "timer")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @CompoundIndexes({
-    @CompoundIndex(name = "id_tnt_active_triggerTime", def = "{'id.tnt': 1, 'active': -1, 'triggerTime': 1}"),
-    @CompoundIndex(name = "id_id", def = "{'id.id': 1}")
+    @CompoundIndex(
+        name = "timer_active_triggerTime_idx",
+        def = "{'active': -1, 'triggerTime': 1}"
+    )
 })
 public class TimerEntity {
+
+    @Id
     private EntityUuid id;
+
     private Integer retryCounter = 0;
     private Instant triggerTime;
-    private Boolean active = true;
-    private TimerCommandEntity command;
+    private boolean active = true;
+    private String command;
     private String result;
 }

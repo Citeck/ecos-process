@@ -9,10 +9,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import ru.citeck.ecos.commands.dto.CommandResult;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.EprocApp;
 import ru.citeck.ecos.process.domain.EntityUuid;
-import ru.citeck.ecos.process.domain.TimerCommandEntity;
 import ru.citeck.ecos.process.domain.TimerEntity;
 import ru.citeck.ecos.process.dto.TimerCommandDto;
 import ru.citeck.ecos.process.dto.TimerDto;
@@ -24,7 +24,6 @@ import ru.citeck.ecos.process.service.commands.createtimer.CreateTimerCommandRes
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -97,7 +96,7 @@ public class TimerServiceImplTest {
         commandDto.setId(commandId);
         commandDto.setTargetApp(targetApp);
         commandDto.setType(type);
-        commandDto.setBody(Json.getMapper().read(body));
+        commandDto.setBody(Json.getMapper().read(body, ObjectData.class));
 
         CreateTimerCommand createTimerCommand = new CreateTimerCommand();
 
@@ -120,124 +119,21 @@ public class TimerServiceImplTest {
         assertEquals(saved.getTimerId(), entity.getId().getId().toString());
 
         assertEquals(triggerTime, entity.getTriggerTime());
-        assertTrue(entity.getActive());
-        assertNotNull(entity.getCommand());
-        assertEquals(commandId, entity.getCommand().getId());
-        assertEquals(targetApp, entity.getCommand().getTargetApp());
-        assertEquals(type, entity.getCommand().getType());
-        assertEquals(body, entity.getCommand().getBody());
+        assertTrue(entity.isActive());
+
+        TimerCommandDto timerCommandDto = Json.getMapper().read(entity.getCommand(), TimerCommandDto.class);
+
+        assertNotNull(timerCommandDto);
+        assertEquals(commandId, timerCommandDto.getId());
+        assertEquals(targetApp, timerCommandDto.getTargetApp());
+        assertEquals(type, timerCommandDto.getType());
+        assertEquals(new ObjectData(body), timerCommandDto.getBody());
         assertNull(entity.getResult());
     }
 
     @Test
-    public void findFirstActiveTimerByTenant_timerExists_triggerTimerBeforeActive() {
-        UUID id = UUID.randomUUID();
-        int tenant = 5;
-        int retryCount = 10;
-        Instant now = Instant.now();
-        Instant triggerTime = now.minus(10, ChronoUnit.MINUTES);
-        Boolean active = Boolean.TRUE;
-
-        String commandId = "id";
-        String targetApp = "targetApp";
-        String type = "type";
-        String body = "{\"body\":\"body\"}";
-        TimerCommandEntity timerCommandEntity = new TimerCommandEntity();
-        timerCommandEntity.setId(commandId);
-        timerCommandEntity.setTargetApp(targetApp);
-        timerCommandEntity.setType(type);
-        timerCommandEntity.setBody(body);
-
-        TimerEntity entity = new TimerEntity();
-        entity.setId(new EntityUuid(tenant, id));
-        entity.setRetryCounter(retryCount);
-        entity.setTriggerTime(triggerTime);
-        entity.setActive(active);
-        entity.setCommand(timerCommandEntity);
-
-        timerRepository.save(entity);
-
-        Optional<TimerDto> foundOpt = timerService.findFirstActiveTimerByTenant(tenant);
-        assertTrue(foundOpt.isPresent());
-
-        TimerDto found = foundOpt.get();
-        assertEquals(id, found.getId());
-        assertEquals(retryCount, found.getRetryCounter());
-        assertEquals(triggerTime, found.getTriggerTime());
-        assertEquals(active, found.isActive());
-        assertNotNull(found.getCommand());
-        assertEquals(commandId, found.getCommand().getId());
-        assertEquals(targetApp, found.getCommand().getTargetApp());
-        assertEquals(type, found.getCommand().getType());
-        assertEquals(Json.getMapper().read(body), found.getCommand().getBody());
-    }
-
-    @Test
-    public void findFirstActiveTimerByTenant_timerExists_triggerTimerAfterActive() {
-        UUID id = UUID.randomUUID();
-        int tenant = 5;
-        int retryCount = 10;
-        Instant now = Instant.now();
-        Instant triggerTime = now.plus(10, ChronoUnit.MINUTES);
-        Boolean active = Boolean.TRUE;
-
-        String commandId = "id";
-        String targetApp = "targetApp";
-        String type = "type";
-        String body = "{\"body\":\"body\"}";
-        TimerCommandEntity timerCommandEntity = new TimerCommandEntity();
-        timerCommandEntity.setId(commandId);
-        timerCommandEntity.setTargetApp(targetApp);
-        timerCommandEntity.setType(type);
-        timerCommandEntity.setBody(body);
-
-        TimerEntity entity = new TimerEntity();
-        entity.setId(new EntityUuid(tenant, id));
-        entity.setRetryCounter(retryCount);
-        entity.setTriggerTime(triggerTime);
-        entity.setActive(active);
-        entity.setCommand(timerCommandEntity);
-
-        timerRepository.save(entity);
-
-        Optional<TimerDto> foundOpt = timerService.findFirstActiveTimerByTenant(tenant);
-        assertFalse(foundOpt.isPresent());
-    }
-
-    @Test
-    public void findFirstActiveTimerByTenant_timerExists_triggerTimerBeforeInactive() {
-        UUID id = UUID.randomUUID();
-        int tenant = 5;
-        int retryCount = 10;
-        Instant now = Instant.now();
-        Instant triggerTime = now.minus(10, ChronoUnit.MINUTES);
-        Boolean active = Boolean.FALSE;
-
-        String commandId = "id";
-        String targetApp = "targetApp";
-        String type = "type";
-        String body = "{\"body\":\"body\"}";
-        TimerCommandEntity timerCommandEntity = new TimerCommandEntity();
-        timerCommandEntity.setId(commandId);
-        timerCommandEntity.setTargetApp(targetApp);
-        timerCommandEntity.setType(type);
-        timerCommandEntity.setBody(body);
-
-        TimerEntity entity = new TimerEntity();
-        entity.setId(new EntityUuid(tenant, id));
-        entity.setRetryCounter(retryCount);
-        entity.setTriggerTime(triggerTime);
-        entity.setActive(active);
-        entity.setCommand(timerCommandEntity);
-
-        timerRepository.save(entity);
-
-        Optional<TimerDto> foundOpt = timerService.findFirstActiveTimerByTenant(tenant);
-        assertFalse(foundOpt.isPresent());
-    }
-
-    @Test
     public void save_properUpdate() {
+
         UUID id = UUID.randomUUID();
         int tenant = 5;
 
@@ -259,7 +155,7 @@ public class TimerServiceImplTest {
         timerCommandDto.setId(commandId);
         timerCommandDto.setTargetApp(targetApp);
         timerCommandDto.setType(type);
-        timerCommandDto.setBody(Json.getMapper().read(body));
+        timerCommandDto.setBody(new ObjectData(body));
 
         CommandResult result = Json.getMapper().read(COMMAND_RESULT_JSON, CommandResult.class);
 
@@ -280,12 +176,15 @@ public class TimerServiceImplTest {
         assertEquals(new EntityUuid(tenant, id), saved.getId());
         assertEquals((Integer) retryCount, saved.getRetryCounter());
         assertEquals(triggerTime, saved.getTriggerTime());
-        assertEquals(active, saved.getActive());
+        assertEquals(active, saved.isActive());
         assertNotNull(saved.getCommand());
-        assertEquals(commandId, saved.getCommand().getId());
-        assertEquals(targetApp, saved.getCommand().getTargetApp());
-        assertEquals(type, saved.getCommand().getType());
-        assertEquals(body, saved.getCommand().getBody());
+
+        TimerCommandDto command = Json.getMapper().read(saved.getCommand(), TimerCommandDto.class);
+
+        assertEquals(commandId, command.getId());
+        assertEquals(targetApp, command.getTargetApp());
+        assertEquals(type, command.getType());
+        assertEquals(new ObjectData(body), command.getBody());
         assertEquals(Json.getMapper().read(COMMAND_RESULT_JSON, CommandResult.class),
             Json.getMapper().read(saved.getResult(), CommandResult.class));
     }

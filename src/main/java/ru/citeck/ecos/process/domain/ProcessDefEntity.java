@@ -9,22 +9,20 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Document(collection = "process_def")
 @Getter @Setter
 @NoArgsConstructor
 @CompoundIndexes({
-    @CompoundIndex(name = "proc_def_proc_type_ext_id_idx", def = "{'tenant': 1, 'procType' : 1, 'extId': 1}"),
-    @CompoundIndex(name = "proc_def_proc_type_ecos_type_idx", def = "{'tenant': 1, 'procType' : 1, 'ecosTypeRef': 1}"),
-    @CompoundIndex(name = "proc_def_proc_type_alf_type_idx", def = "{'tenant': 1, 'procType' : 1, 'alfType': 1}"),
+    @CompoundIndex(name = "proc_def_tnt_proc_type_ext_id_idx", def = "{'id.tnt': 1, 'procType' : 1, 'extId': 1}"),
+    @CompoundIndex(name = "proc_def_tnt_proc_type_ecos_type_idx", def = "{'id.tnt': 1, 'procType' : 1, 'ecosTypeRef': 1}"),
+    @CompoundIndex(name = "proc_def_tnt_proc_type_alf_type_idx", def = "{'id.tnt': 1, 'procType' : 1, 'alfType': 1}"),
 })
 public class ProcessDefEntity {
 
     @Id
     private EntityUuid id;
-
-    private int tenant;
 
     /**
      * Engine type (cmmn)
@@ -37,9 +35,9 @@ public class ProcessDefEntity {
 
     private String alfType;
 
-    private LocalDateTime created;
+    private Instant created;
 
-    private LocalDateTime modified;
+    private Instant modified;
 
     @DBRef
     private ProcessDefRevEntity lastRev;

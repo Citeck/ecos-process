@@ -15,7 +15,7 @@ import ru.citeck.ecos.process.dto.ProcessDefDto;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.RecordsService;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,9 +35,9 @@ public class ProcessDefServiceImpl implements ProcessDefService {
 
         int currentTenant = tenantService.getCurrent();
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
-        ProcessDefEntity currentProcDef = processDefRepo.findFirstByTenantAndProcTypeAndExtId(
+        ProcessDefEntity currentProcDef = processDefRepo.findFirstByIdTntAndProcTypeAndExtId(
             currentTenant,
             processDef.getType(),
             processDef.getId()
@@ -59,7 +59,6 @@ public class ProcessDefServiceImpl implements ProcessDefService {
             currentProcDef.setProcType(processDef.getType());
             currentProcDef.setModified(now);
             currentProcDef.setCreated(now);
-            currentProcDef.setTenant(currentTenant);
             currentProcDef = processDefRepo.save(currentProcDef);
 
             newRevision.setVersion(0);
@@ -109,7 +108,7 @@ public class ProcessDefServiceImpl implements ProcessDefService {
         if (RecordRef.isNotEmpty(ecosTypeRef)) {
 
             String ecosType = ecosTypeRef.toString();
-            processDef = processDefRepo.findFirstByTenantAndProcTypeAndEcosTypeRef(
+            processDef = processDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRef(
                 currentTenant,
                 type,
                 ecosType
@@ -124,7 +123,7 @@ public class ProcessDefServiceImpl implements ProcessDefService {
 
                 for (RecordRef parentRef : typeInfo.getParents()) {
                     String parentRefStr = parentRef.toString();
-                    processDef = processDefRepo.findFirstByTenantAndProcTypeAndEcosTypeRef(
+                    processDef = processDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRef(
                         currentTenant,
                         type,
                         parentRefStr
@@ -138,7 +137,7 @@ public class ProcessDefServiceImpl implements ProcessDefService {
 
         if (processDef == null && alfTypes != null) {
             for (String alfType : alfTypes) {
-                processDef = processDefRepo.findFirstByTenantAndProcTypeAndAlfType(
+                processDef = processDefRepo.findFirstByIdTntAndProcTypeAndAlfType(
                     currentTenant,
                     type,
                     alfType

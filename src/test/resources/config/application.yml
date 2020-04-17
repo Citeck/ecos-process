@@ -98,7 +98,7 @@ eproc:
   ecos-records:
     force-local-mode: true
 
-jobs:
-  execute-timer-commands-job:
-    delay-after-fail-millis: 600000
-    rate-millis: 60000
+ecos-process:
+  timers:
+    delay-after-fail-ms: 600000
+    update-rate-ms: 30000

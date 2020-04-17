@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.dto;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -19,7 +19,7 @@ public class ProcessStateDto {
     private UUID processId;
 
     @NotNull
-    private LocalDateTime created;
+    private Instant created;
 
     @NotNull
     private int version;
