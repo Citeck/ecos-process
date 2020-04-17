@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Document(collection = "process_state")
 @Getter
@@ -26,7 +26,7 @@ public class ProcessStateEntity {
     @DBRef
     private ProcessDefRevEntity procDefRev;
 
-    private LocalDateTime created = LocalDateTime.now();
+    private Instant created = Instant.now();
 
     private int version;
 }

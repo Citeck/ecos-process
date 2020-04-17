@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Document(collection = "process_instance")
 @Getter @Setter
@@ -23,7 +23,7 @@ public class ProcessInstanceEntity {
     @DBRef
     private ProcessStateEntity state;
 
-    private LocalDateTime created;
+    private Instant created;
 
-    private LocalDateTime modified;
+    private Instant modified;
 }

@@ -1,11 +1,10 @@
 package ru.citeck.ecos.process.dto;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import ru.citeck.ecos.records2.RecordRef;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -24,8 +23,8 @@ public class ProcessInstanceDto {
     private UUID stateId;
 
     @NotNull
-    private LocalDateTime created;
+    private Instant created;
 
     @NotNull
-    private LocalDateTime modified;
+    private Instant modified;
 }

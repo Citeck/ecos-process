@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -24,7 +24,7 @@ public class ProcessDefRevDto {
     private String procDefId;
 
     @NotNull
-    private LocalDateTime created;
+    private Instant created;
 
     @NotNull
     private int version;

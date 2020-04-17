@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface ProcessDefRepository extends MongoRepository<ProcessDefEntity, EntityUuid> {
 
-    Optional<ProcessDefEntity> findFirstByTenantAndProcTypeAndEcosTypeRef(int tenant, String type, String ecosTypeRef);
+    Optional<ProcessDefEntity> findFirstByIdTntAndProcTypeAndEcosTypeRef(int tenant, String type, String ecosTypeRef);
 
-    Optional<ProcessDefEntity> findFirstByTenantAndProcTypeAndExtId(int tenant, String type, String extId);
+    Optional<ProcessDefEntity> findFirstByIdTntAndProcTypeAndExtId(int tenant, String type, String extId);
 
-    Optional<ProcessDefEntity> findFirstByTenantAndProcTypeAndAlfType(int tenant, String type, String alfType);
+    Optional<ProcessDefEntity> findFirstByIdTntAndProcTypeAndAlfType(int tenant, String type, String alfType);
 }

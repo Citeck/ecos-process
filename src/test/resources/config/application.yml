@@ -97,3 +97,8 @@ jhipster:
 eproc:
   ecos-records:
     force-local-mode: true
+
+ecos-process:
+  timers:
+    delay-after-fail-ms: 600000
+    update-rate-ms: 30000

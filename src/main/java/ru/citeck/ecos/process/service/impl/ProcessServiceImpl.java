@@ -15,7 +15,7 @@ import ru.citeck.ecos.process.repository.ProcessStateRepository;
 import ru.citeck.ecos.process.service.ProcessService;
 import ru.citeck.ecos.records2.RecordRef;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -45,7 +45,7 @@ public class ProcessServiceImpl implements ProcessService {
         processInstance.setId(new EntityUuid(tenantService.getCurrent(), UUID.randomUUID()));
         processInstance.setRecordRef(recordRef.toString());
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         processInstance.setModified(now);
         processInstance.setCreated(now);
         processInstance.setProcType(processDefRev.getProcessDef().getProcType());
@@ -92,12 +92,12 @@ public class ProcessServiceImpl implements ProcessService {
         newState.setProcDefRev(stateEntity.getProcDefRev());
         newState.setProcess(stateEntity.getProcess());
         newState.setVersion(stateEntity.getVersion() + 1);
-        newState.setCreated(LocalDateTime.now());
+        newState.setCreated(Instant.now());
         newState = processStateRepo.save(newState);
 
         ProcessInstanceEntity process = stateEntity.getProcess();
         process.setState(newState);
-        process.setModified(LocalDateTime.now());
+        process.setModified(Instant.now());
         processRepo.save(process);
 
         return stateToDto(newState);
