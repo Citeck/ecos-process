@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.commands.dto.CommandResult;
+import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.domain.EntityUuid;
 import ru.citeck.ecos.process.domain.TimerEntity;
@@ -122,7 +123,12 @@ public class TimerServiceImpl implements TimerService {
         builder.setId(timerCommand.getId());
         builder.setTargetApp(timerCommand.getTargetApp());
         builder.setType(timerCommand.getType());
-        builder.setBody(timerCommand.getBody());
+
+        ObjectData body = ObjectData.deepCopy(timerCommand.getBody());
+        if (body != null && !body.has("timerId")) {
+            body.set("timerId", entity.getId().getId());
+        }
+        builder.setBody(body);
 
         return Unit.INSTANCE;
     }
