@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface TimerRepository extends MongoRepository<TimerEntity, EntityUuid> {
 
     Optional<TimerEntity> findFirstByActiveAndTriggerTimeBefore(boolean active, Instant triggerTime);
+
+    Optional<TimerEntity> findFirstByActiveAndId(boolean active, EntityUuid id);
 }

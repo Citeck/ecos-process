@@ -61,6 +61,20 @@ public class TimerServiceImpl implements TimerService {
     }
 
     @Override
+    public boolean cancelTimer(UUID timerId) {
+
+        EntityUuid id = new EntityUuid(tenantService.getCurrent(), timerId);
+        TimerEntity entity = timerRepository.findFirstByActiveAndId(true, id).orElse(null);
+
+        if (entity != null) {
+            entity.setActive(false);
+            timerRepository.save(entity);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public void updateTimers() {
 
         Optional<TimerEntity> timerOpt;
