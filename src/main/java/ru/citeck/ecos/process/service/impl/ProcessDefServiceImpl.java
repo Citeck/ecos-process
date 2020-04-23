@@ -115,27 +115,6 @@ public class ProcessDefServiceImpl implements ProcessDefService {
             ).orElse(null);
 
             if (processDef == null) {
-                ecosType = ecosTypeRef.getId();
-                processDef = processDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRef(
-                    currentTenant,
-                    type,
-                    ecosType
-                ).orElse(null);
-            }
-
-            if (processDef == null) {
-                int slashIdx = ecosType.indexOf('/');
-                if (slashIdx > 0 && ecosType.length() > slashIdx + 1) {
-                    ecosType = ecosType.substring(slashIdx + 1);
-                    processDef = processDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRef(
-                        currentTenant,
-                        type,
-                        ecosType
-                    ).orElse(null);
-                }
-            }
-
-            if (processDef == null) {
 
                 TypeParents typeInfo = recordsService.getMeta(ecosTypeRef, TypeParents.class);
                 if (typeInfo == null || typeInfo.parents == null) {
