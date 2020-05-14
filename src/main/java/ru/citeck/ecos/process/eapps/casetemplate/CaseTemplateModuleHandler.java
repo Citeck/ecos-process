@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplateDto> {
 
+    private static final String CMMN_NAMESPACE = "http://www.omg.org/spec/CMMN/20151109/MODEL";
     private static final String CASE_TEMPLATE_TYPE = "process/cmmn";
 
     private final ProcessDefService processService;
@@ -92,9 +93,10 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
     private Node getCaseNode(byte[] data) {
         try {
             DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+            docBuilderFactory.setNamespaceAware(true);
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
             Document document = docBuilder.parse(new ByteArrayInputStream(data));
-            NodeList nodeList = document.getElementsByTagName("cmmn:case");
+            NodeList nodeList = document.getElementsByTagNameNS(CMMN_NAMESPACE, "case");
             return nodeList.item(0);
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
