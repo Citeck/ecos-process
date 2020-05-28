@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process;
 
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import ru.citeck.ecos.process.config.ApplicationProperties;
 import ru.citeck.ecos.process.config.DefaultProfileUtil;
 
@@ -23,6 +24,7 @@ import java.util.Collection;
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class})
 @EnableDiscoveryClient
+@EnableMongoRepositories("ru.citeck.ecos.process.domain.*.repository")
 public class EprocApp implements InitializingBean {
 
     private static final Logger log = LoggerFactory.getLogger(EprocApp.class);

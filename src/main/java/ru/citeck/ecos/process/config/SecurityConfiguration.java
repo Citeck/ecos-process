@@ -1,9 +1,5 @@
 package ru.citeck.ecos.process.config;
 
-import ru.citeck.ecos.process.security.*;
-import ru.citeck.ecos.process.security.jwt.*;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
@@ -14,6 +10,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
+import ru.citeck.ecos.process.security.AuthoritiesConstants;
+import ru.citeck.ecos.process.security.jwt.JWTConfigurer;
+import ru.citeck.ecos.process.security.jwt.TokenProvider;
 
 @Configuration
 @EnableWebSecurity

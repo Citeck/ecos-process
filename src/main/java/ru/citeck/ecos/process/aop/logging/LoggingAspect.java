@@ -44,7 +44,7 @@ public class LoggingAspect {
      * Pointcut that matches all Spring beans in the application's main packages.
      */
     @Pointcut("within(ru.citeck.ecos.process.repository..*)"+
-        " || within(ru.citeck.ecos.process.service..*)"+
+        " || within(ru.citeck.ecos.process.domain..*)"+
         " || within(ru.citeck.ecos.process.web.rest..*)")
     public void applicationPackagePointcut() {
         // Method is empty as this is just a Pointcut, the implementations are in the advices.

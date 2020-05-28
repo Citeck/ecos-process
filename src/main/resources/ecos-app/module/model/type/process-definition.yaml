@@ -1,0 +1,22 @@
+
+id: process-definition
+
+name:
+  en: Process definition
+  ru: Описание процесса
+
+system: true
+
+journal: uiserv/journal@process-definitions
+form: uiserv/eform@process-definition-form
+
+createVariants:
+
+  - id: create-new-process-def
+    name: { ru: Создать описание, en: Create definition }
+    recordRef: eproc/procdef@
+
+  - id: upload-process-def
+    name: { ru: Загрузить описание, en: Upload definition }
+    recordRef: eproc/procdef@
+    formRef: uiserv/eform@ecos-module-upload
