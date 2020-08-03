@@ -162,7 +162,20 @@ public class ProcDefServiceImpl implements ProcDefService {
 
         ProcDefEntity procDefEntity =
             procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, procType, id)
-                .orElseThrow(() -> new IllegalArgumentException("Process definition is not found by id " + id));
+                .orElse(null);
+
+        if (procDefEntity == null) {
+
+            NewProcessDefDto newProcessDefDto = new NewProcessDefDto();
+            newProcessDefDto.setId(dto.getId());
+            newProcessDefDto.setData(dto.getData());
+            newProcessDefDto.setAlfType(dto.getAlfType());
+            newProcessDefDto.setEcosTypeRef(dto.getEcosTypeRef());
+            newProcessDefDto.setFormat(dto.getFormat());
+            newProcessDefDto.setProcType(dto.getProcType());
+
+            return uploadProcDef(newProcessDefDto);
+        }
 
         byte[] currentData = procDefEntity.getLastRev().getData();
 
