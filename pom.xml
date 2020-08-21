@@ -5,7 +5,7 @@
 
     <groupId>ru.citeck.ecos.process</groupId>
     <artifactId>ecos-process</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>ecos-process</name>
 
