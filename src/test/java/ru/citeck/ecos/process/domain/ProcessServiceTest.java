@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,13 +28,10 @@ import ru.citeck.ecos.process.domain.proc.command.updateprocstate.UpdateProcStat
 import ru.citeck.ecos.process.domain.proc.command.updateprocstate.UpdateProcStateResp;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records2.graphql.meta.value.MetaField;
-import ru.citeck.ecos.records2.source.dao.local.LocalRecordsDAO;
-import ru.citeck.ecos.records2.source.dao.local.v2.LocalRecordsMetaDAO;
+import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -119,7 +118,7 @@ public class ProcessServiceTest {
     }
 
     @Component
-    public static class TypesDao extends LocalRecordsDAO implements LocalRecordsMetaDAO<Object> {
+    public static class TypesDao implements RecordAttsDao {
 
         public static final String ID = "emodel/type";
 
@@ -130,10 +129,9 @@ public class ProcessServiceTest {
         public static final String type2Id = "type2";
         public static final RecordRef type2Ref = RecordRef.valueOf(ID + "@" + type2Id);
 
-        private Map<String, Record> records = new HashMap<>();
+        private final Map<String, Record> records = new HashMap<>();
 
         public TypesDao() {
-            setId(ID);
 
             records.put(type2Id, new Record(type2Id, Arrays.asList(
                 RecordRef.valueOf(getId() + "@" + type1Id),
@@ -145,9 +143,16 @@ public class ProcessServiceTest {
             records.put(type0Id, new Record(type0Id, Collections.emptyList()));
         }
 
+        @Nullable
         @Override
-        public List<Object> getLocalRecordsMeta(List<RecordRef> records, MetaField metaField) {
-            return records.stream().map(r -> this.records.get(r.getId())).collect(Collectors.toList());
+        public Object getRecordAtts(@NotNull String s) {
+            return this.records.get(s);
+        }
+
+        @NotNull
+        @Override
+        public String getId() {
+            return ID;
         }
 
         @Data
