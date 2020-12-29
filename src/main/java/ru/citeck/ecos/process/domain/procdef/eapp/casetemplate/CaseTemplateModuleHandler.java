@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.apps.module.handler.EcosModuleHandler;
 import ru.citeck.ecos.apps.module.handler.ModuleMeta;
 import ru.citeck.ecos.apps.module.handler.ModuleWithMeta;
+import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 
@@ -33,7 +34,12 @@ public class CaseTemplateModuleHandler implements EcosModuleHandler<CaseTemplate
     @Override
     public ModuleWithMeta<CaseTemplateDto> getModuleMeta(@NotNull CaseTemplateDto dto) {
         NewProcessDefDto procDefDto = CaseTemplateUtils.parseCmmn(dto.getFilePath(), dto.getData());
-        return new ModuleWithMeta<>(dto, new ModuleMeta(procDefDto.getId(), Collections.emptyList()));
+        return new ModuleWithMeta<>(dto, new ModuleMeta(
+            procDefDto.getId(),
+            new MLText(),
+            Collections.emptyList(),
+            Collections.emptyList()
+        ));
     }
 
     @NotNull
