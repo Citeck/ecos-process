@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.citeck.ecos.apps.module.ModuleRef;
+import ru.citeck.ecos.apps.artifact.ArtifactRef;
 import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
 import ru.citeck.ecos.process.domain.procdef.entity.ProcDefEntity;
@@ -218,7 +218,7 @@ public class ProcDefServiceImpl implements ProcDefService {
     }
 
     @Override
-    public Optional<ProcDefWithDataDto> getProcessDefById(ModuleRef id) {
+    public Optional<ProcDefWithDataDto> getProcessDefById(ArtifactRef id) {
 
         int currentTenant = tenantService.getCurrent();
 

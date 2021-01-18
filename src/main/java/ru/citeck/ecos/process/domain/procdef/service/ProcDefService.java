@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.procdef.service;
 
-import ru.citeck.ecos.apps.module.ModuleRef;
+import ru.citeck.ecos.apps.artifact.ArtifactRef;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto;
@@ -28,5 +28,5 @@ public interface ProcDefService {
 
     Optional<ProcDefRevDto> findProcDef(String procType, RecordRef ecosTypeRef, List<String> altTypes);
 
-    Optional<ProcDefWithDataDto> getProcessDefById(ModuleRef id);
+    Optional<ProcDefWithDataDto> getProcessDefById(ArtifactRef id);
 }
