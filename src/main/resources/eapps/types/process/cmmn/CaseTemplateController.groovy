@@ -14,7 +14,7 @@ import java.util.stream.Collectors
 
 class CmmnControllerImpl implements ArtifactController<Artifact, Unit> {
 
-    private static final Logger log = LoggerFactory.getLogger(CaseTemplateController.class)
+    private static final Logger log = LoggerFactory.getLogger(CmmnControllerImpl.class)
 
     @Override
     List<Artifact> read(@NotNull EcosFile root, Unit config) {
