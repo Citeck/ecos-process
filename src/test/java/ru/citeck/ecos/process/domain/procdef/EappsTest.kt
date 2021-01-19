@@ -7,6 +7,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
+import ru.citeck.ecos.apps.app.domain.artifact.source.ArtifactSourceType
+import ru.citeck.ecos.apps.app.domain.artifact.source.SourceKey
 import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.apps.artifact.ArtifactService
 import ru.citeck.ecos.process.EprocApp
@@ -29,7 +31,7 @@ class EappsTest {
         val typesDir = localAppService.getArtifactTypesDir()
 
         val artifactsDir = localAppService.getArtifactsDir(
-            "classpath",
+            SourceKey("classpath", ArtifactSourceType.APPLICATION),
             typesDir,
             Instant.now()
         )
