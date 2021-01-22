@@ -62,7 +62,7 @@ class BuildInfoSender(
         commandsService.execute {
             targetApp = "uiserv"
             body = AddBuildInfoCommand(listOf(
-                    AppBuildInfo("emodel", "ECOS Model", "", info)
+                    AppBuildInfo("eproc", "ECOS Process", "", info)
             ))
             ttl = Duration.ofHours(1)
         }
