@@ -19,7 +19,8 @@
             "components": [
               {
                 "label": {
-                  "ru": "Identifier"
+                  "ru": "Идентификатор",
+                  "en": "Identifier"
                 },
                 "defaultValue": "",
                 "key": "artifactId",
