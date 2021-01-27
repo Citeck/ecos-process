@@ -1,0 +1,39 @@
+{
+  "id": "proc-activity-cmmn:HumanTask",
+  "formKey": "",
+  "title": {
+    "en": "CMMN HumanTask Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Роли",
+          "en": "Roles"
+        },
+        "defaultValue": "",
+        "key": "roles",
+        "type": "textfield",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}
