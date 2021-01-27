@@ -98,15 +98,23 @@ class EcosCmmnRecords(
         val ref = ArtifactRef.create(PROC_TYPE, record.artifactId)
         val currentProc = procDefService.getProcessDefById(ref).orElse(null)
 
+        val newDefinition = record.definition ?: ""
+
         if (currentProc == null) {
 
-            val defaultDef = CmmnIO.generateDefaultDef(record.artifactId, record.name, record.ecosType)
             val newProcDef = NewProcessDefDto()
 
             newProcDef.id = record.artifactId
-            newProcDef.name = record.name
-            newProcDef.data = Json.mapper.toBytes(defaultDef)
-            newProcDef.ecosTypeRef = defaultDef.ecosType
+            val definition = if (newDefinition.isNotBlank()) {
+                val newDef = CmmnIO.import(newDefinition)
+                CmmnIO.export(newDef)
+                newDef
+            } else {
+                CmmnIO.generateDefaultDef(record.artifactId, record.name, record.ecosType)
+            }
+            newProcDef.name = definition.name
+            newProcDef.data = Json.mapper.toBytes(definition)
+            newProcDef.ecosTypeRef = definition.ecosType
             newProcDef.format = MimeTypeUtils.APPLICATION_JSON_VALUE
             newProcDef.procType = PROC_TYPE
 
@@ -114,16 +122,22 @@ class EcosCmmnRecords(
 
         } else {
 
-            val newDefinition = record.definition ?: ""
             if (newDefinition.isNotBlank()) {
+
                 val cmmnProcDef = CmmnIO.import(newDefinition)
                 CmmnIO.export(cmmnProcDef)
+
                 currentProc.data = Json.mapper.toBytes(cmmnProcDef)
+                currentProc.ecosTypeRef = cmmnProcDef.ecosType
+                currentProc.name = cmmnProcDef.name
+
+            } else {
+
+                currentProc.ecosTypeRef = record.ecosType
+                currentProc.name = record.name
             }
 
-            currentProc.ecosTypeRef = record.ecosType
             currentProc.enabled = record.enabled
-            currentProc.name = record.name
 
             procDefService.uploadNewRev(currentProc)
         }
