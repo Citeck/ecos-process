@@ -1,0 +1,49 @@
+{
+  "id": "proc-activity-cmmn:Definitions",
+  "formKey": "",
+  "title": {
+    "en": "CMMN Definitions Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Идентификатор",
+          "en": "Identifier"
+        },
+        "defaultValue": "",
+        "key": "id",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": "ECOS Type",
+        "journalId": "ecos-types",
+        "key": "ecosType",
+        "type": "selectJournal",
+        "input": true,
+        "customPredicateJs": null,
+        "presetFilterPredicatesJs": null,
+        "sortAscending": "asc"
+      }
+    ]
+  },
+  "attributes": {}
+}
