@@ -23,7 +23,7 @@
                   "en": "Identifier"
                 },
                 "defaultValue": "",
-                "key": "artifactId",
+                "key": "processDefId",
                 "type": "textfield",
                 "input": true
               },
