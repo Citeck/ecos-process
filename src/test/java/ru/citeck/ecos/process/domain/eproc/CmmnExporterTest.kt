@@ -3,9 +3,11 @@ package ru.citeck.ecos.process.domain.eproc
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.util.ResourceUtils
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.ecmmn.io.CmmnIO
+import ru.citeck.ecos.records2.RecordRef
 
 class CmmnExporterTest {
 
@@ -14,6 +16,14 @@ class CmmnExporterTest {
 
         val procDefFile = ResourceUtils.getFile("classpath:test/cmmn/cmmn-test-process.cmmn.xml")
         val procDefXml = procDefFile.readText()
+
+        testProc(procDefXml)
+        testProc(CmmnIO.exportToString(
+            CmmnIO.generateDefaultDef("test-id", MLText(""), RecordRef.EMPTY)
+        ))
+    }
+
+    private fun testProc(procDefXml: String) {
 
         val cmmnProcess = CmmnIO.import(procDefXml)
         val cmmnXmlProc = CmmnIO.exportToString(cmmnProcess)

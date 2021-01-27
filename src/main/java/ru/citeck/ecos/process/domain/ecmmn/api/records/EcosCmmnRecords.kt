@@ -91,11 +91,11 @@ class EcosCmmnRecords(
 
     override fun saveMutatedRec(record: EcmmnMutateRecord): String {
 
-        if (record.artifactId.isBlank()) {
-            error("artifactId is missing")
+        if (record.processDefId.isBlank()) {
+            error("processDefId is missing")
         }
 
-        val ref = ArtifactRef.create(PROC_TYPE, record.artifactId)
+        val ref = ArtifactRef.create(PROC_TYPE, record.processDefId)
         val currentProc = procDefService.getProcessDefById(ref).orElse(null)
 
         val newDefinition = record.definition ?: ""
@@ -104,13 +104,13 @@ class EcosCmmnRecords(
 
             val newProcDef = NewProcessDefDto()
 
-            newProcDef.id = record.artifactId
+            newProcDef.id = record.processDefId
             val definition = if (newDefinition.isNotBlank()) {
                 val newDef = CmmnIO.import(newDefinition)
                 CmmnIO.export(newDef)
                 newDef
             } else {
-                CmmnIO.generateDefaultDef(record.artifactId, record.name, record.ecosType)
+                CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
             }
             newProcDef.name = definition.name
             newProcDef.data = Json.mapper.toBytes(definition)
@@ -142,7 +142,7 @@ class EcosCmmnRecords(
             procDefService.uploadNewRev(currentProc)
         }
 
-        return record.artifactId
+        return record.processDefId
     }
 
     override fun getId() = PROC_TYPE
@@ -192,12 +192,12 @@ class EcosCmmnRecords(
     }
 
     class EcmmnMutateRecord(
-        var artifactId: String,
+        var processDefId: String,
         var name: MLText,
         var ecosType: RecordRef,
         var definition: String? = null,
         var enabled: Boolean
     ) {
-        fun getId() = artifactId
+        fun getId() = processDefId
     }
 }

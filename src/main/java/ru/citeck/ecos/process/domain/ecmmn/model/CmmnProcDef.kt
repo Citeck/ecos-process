@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.RecordRef
 class CmmnProcDef(
 
     val id: String,
+    val definitionsId: String,
     val name: MLText,
     val ecosType: RecordRef,
 

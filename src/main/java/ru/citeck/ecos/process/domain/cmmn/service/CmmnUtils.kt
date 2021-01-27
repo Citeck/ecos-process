@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.cmmn.service
 
 import mu.KotlinLogging
 import org.apache.commons.io.IOUtils
-import org.springframework.stereotype.Component
 import org.springframework.util.DigestUtils
 import org.springframework.util.ResourceUtils
 import org.w3c.dom.ls.LSResourceResolver
@@ -28,6 +27,7 @@ object CmmnUtils {
     const val NS_ECOS = "http://www.citeck.ru/ecos"
 
     val PROP_ECOS_TYPE = QName(NS_ECOS, "ecosType")
+    val PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")
 
     private const val MODEL_ROOT_PACKAGE = "ru.citeck.ecos.process.domain.cmmn.model"
 

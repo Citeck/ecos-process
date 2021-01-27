@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cmmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI" xmlns:di="http://www.omg.org/spec/CMMN/20151109/DI" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL" xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" xmlns:ecos="http://www.citeck.ru/ecos" id="Definitions_0hgc0au" targetNamespace="http://bpmn.io/schema/cmmn" exporter="cmmn-js (https://demo.bpmn.io/cmmn)" exporterVersion="0.20.0">
+<cmmn:definitions
+    ecos:processDefId="test"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI"
+                  xmlns:di="http://www.omg.org/spec/CMMN/20151109/DI"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL"
+                  xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC"
+                  xmlns:ecos="http://www.citeck.ru/ecos" id="Definitions_0hgc0au"
+                  targetNamespace="http://bpmn.io/schema/cmmn" exporter="cmmn-js (https://demo.bpmn.io/cmmn)" exporterVersion="0.20.0">
     <cmmn:case id="contract-case-id">
         <cmmn:casePlanModel name="A CasePlanModel" id="CasePlanModel_1gu9dts">
             <cmmn:planItem definitionRef="Stage_0b1ium9" id="PlanItem_1wc0cik">

@@ -9,14 +9,12 @@ import ru.citeck.ecos.process.domain.ecmmn.io.convert.artifact.AssociationConver
 import ru.citeck.ecos.process.domain.ecmmn.io.convert.di.CmmnDiConverter
 import ru.citeck.ecos.process.domain.ecmmn.io.convert.plan.ActivityConverter
 import ru.citeck.ecos.process.domain.ecmmn.io.convert.plan.event.ExitCriterionConverter
-import ru.citeck.ecos.process.domain.ecmmn.io.convert.plan.event.SentryConverter
 import ru.citeck.ecos.process.domain.ecmmn.model.CmmnProcDef
 import ru.citeck.ecos.process.domain.ecmmn.model.artifact.CmmnArtifact
 import ru.citeck.ecos.process.domain.ecmmn.model.casemodel.CmmnCaseDef
 import ru.citeck.ecos.process.domain.ecmmn.model.casemodel.plan.CmmnPlanModelDef
 import ru.citeck.ecos.process.domain.ecmmn.model.casemodel.plan.activity.CmmnActivityDef
 import ru.citeck.ecos.process.domain.ecmmn.model.casemodel.plan.event.CmmnExitCriterion
-import ru.citeck.ecos.process.domain.ecmmn.model.casemodel.plan.event.CmmnSentryDef
 import ru.citeck.ecos.process.domain.ecmmn.model.di.CmmnDiDef
 import ru.citeck.ecos.records2.RecordRef
 import java.util.*
@@ -37,8 +35,14 @@ class DefinitionsConverter(
         val artifacts = element.artifact?.map { importArtifact(it.value, context) } ?: emptyList()
 
         val ecosType = element.otherAttributes[CmmnUtils.PROP_ECOS_TYPE]
+        val processDefId = element.otherAttributes[CmmnUtils.PROP_PROCESS_DEF_ID]
+
+        if (processDefId.isNullOrBlank()) {
+            error("ecos:processDefId is a mandatory property for Definitions")
+        }
 
         return CmmnProcDef(
+            processDefId,
             element.id ?: CmmnUtils.generateId(TYPE),
             MLText(element.name ?: ""),
             RecordRef.valueOf(ecosType),
@@ -81,7 +85,7 @@ class DefinitionsConverter(
     override fun export(element: CmmnProcDef, context: ExportContext): Definitions {
 
         val definitions = Definitions()
-        definitions.id = element.id
+        definitions.id = element.definitionsId
 
         element.cases.forEach {
             definitions.case.add(exportCase(it, context))
@@ -102,6 +106,8 @@ class DefinitionsConverter(
         }
 
         definitions.otherAttributes[CmmnUtils.PROP_ECOS_TYPE] = element.ecosType.toString()
+        definitions.otherAttributes[CmmnUtils.PROP_PROCESS_DEF_ID] = element.id
+
         definitions.targetNamespace = "http://bpmn.io/schema/cmmn"
 
         return definitions

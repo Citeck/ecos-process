@@ -19,7 +19,7 @@
           "en": "Identifier"
         },
         "defaultValue": "",
-        "key": "id",
+        "key": "processDefId",
         "type": "textfield",
         "input": true
       },
