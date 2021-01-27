@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.proc.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.proc.entity.ProcessInstanceEntity;
 import ru.citeck.ecos.process.domain.procdef.entity.ProcDefRevEntity;
 import ru.citeck.ecos.process.domain.proc.entity.ProcessStateEntity;

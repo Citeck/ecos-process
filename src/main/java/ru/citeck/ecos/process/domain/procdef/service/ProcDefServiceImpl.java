@@ -1,17 +1,21 @@
 package ru.citeck.ecos.process.domain.procdef.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.citeck.ecos.apps.artifact.ArtifactRef;
-import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
+import ru.citeck.ecos.commons.data.MLText;
+import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
 import ru.citeck.ecos.process.domain.procdef.entity.ProcDefEntity;
 import ru.citeck.ecos.process.domain.procdef.entity.ProcDefRevEntity;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
+import ru.citeck.ecos.process.domain.procdef.entity.QProcDefEntity;
 import ru.citeck.ecos.process.domain.procdef.repository.ProcDefRepository;
 import ru.citeck.ecos.process.domain.procdef.repository.ProcDefRevRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
@@ -65,6 +69,8 @@ public class ProcDefServiceImpl implements ProcDefService {
             currentProcDef.setEcosTypeRef(processDef.getEcosTypeRef().toString());
             currentProcDef.setExtId(processDef.getId());
             currentProcDef.setProcType(processDef.getProcType());
+            currentProcDef.setName(Json.getMapper().toString(processDef.getName()));
+
             currentProcDef.setModified(now);
             currentProcDef.setCreated(now);
             currentProcDef.setEnabled(true);
@@ -76,7 +82,9 @@ public class ProcDefServiceImpl implements ProcDefService {
 
             currentProcDef.setAlfType(processDef.getAlfType());
             currentProcDef.setEcosTypeRef(processDef.getEcosTypeRef().toString());
+            currentProcDef.setName(Json.getMapper().toString(processDef.getName()));
             currentProcDef.setModified(now);
+
             if (currentProcDef.getEnabled() == null) {
                 currentProcDef.setEnabled(true);
             }
@@ -95,30 +103,17 @@ public class ProcDefServiceImpl implements ProcDefService {
     }
 
     @Override
-    public List<ProcDefWithDataDto> findAll(Predicate predicate, int max, int skip) {
+    public List<ProcDefDto> findAll(Predicate predicate, int max, int skip) {
 
-        int currentTenant = tenantService.getCurrent();
+        return findAllProcDefEntities(predicate, max, skip).stream()
+            .map(this::procDefToDto)
+            .collect(Collectors.toList());
+    }
 
-        PredicateQuery query;
-        if (predicate == null) {
-            query = new PredicateQuery();
-        } else {
-            query = PredicateUtils.convertToDto(predicate, PredicateQuery.class);
-        }
-        PageRequest page = PageRequest.of(skip / max, max);
+    @Override
+    public List<ProcDefWithDataDto> findAllWithData(Predicate predicate, int max, int skip) {
 
-        List<ProcDefEntity> entities;
-        if (StringUtils.isBlank(query.moduleId)) {
-            entities = procDefRepo.findAllByIdTnt(currentTenant, page);
-        } else {
-            entities = procDefRepo.findAllByIdTntAndExtIdLike(
-                currentTenant,
-                "%" + query.getModuleId() + "%",
-                page
-            );
-        }
-
-        return entities.stream().map(entity -> {
+        return findAllProcDefEntities(predicate, max, skip).stream().map(entity -> {
 
             ProcDefDto procDefDto = procDefToDto(entity);
             ProcDefRevDto procDefRevDto = procDefRevToDto(entity.getLastRev());
@@ -127,29 +122,36 @@ public class ProcDefServiceImpl implements ProcDefService {
         }).collect(Collectors.toList());
     }
 
+    private List<ProcDefEntity> findAllProcDefEntities(Predicate predicate, int max, int skip) {
+
+        PageRequest page = PageRequest.of(skip / max, max);
+        BooleanExpression query = predicateToQuery(predicate);
+        return procDefRepo.findAll(query, page).getContent();
+    }
+
+    private BooleanExpression predicateToQuery(Predicate predicate) {
+
+        PredicateQuery predQuery = PredicateUtils.convertToDto(predicate, PredicateQuery.class);
+
+        QProcDefEntity entity = QProcDefEntity.procDefEntity;
+        BooleanExpression query = entity.id.tnt.eq(tenantService.getCurrent());
+        if (StringUtils.isNotBlank(predQuery.procType)) {
+            query = query.and(QProcDefEntity.procDefEntity.procType.eq(predQuery.procType));
+        }
+        if (StringUtils.isNotBlank(predQuery.moduleId)) {
+            query = query.and(QProcDefEntity.procDefEntity.extId.likeIgnoreCase("%" + predQuery.moduleId + "%"));
+        }
+
+        return query;
+    }
+
     @Override
     public long getCount() {
         return getCount(null);
     }
 
     public long getCount(Predicate predicate) {
-        int currentTenant = tenantService.getCurrent();
-
-        PredicateQuery query;
-        if (predicate == null) {
-            query = new PredicateQuery();
-        } else {
-            query = PredicateUtils.convertToDto(predicate, PredicateQuery.class);
-        }
-
-        if (StringUtils.isBlank(query.moduleId)) {
-            return procDefRepo.getCount(currentTenant);
-        } else {
-            return procDefRepo.getCount(
-                currentTenant,
-                "%" + query.getModuleId() + "%"
-            );
-        }
+        return procDefRepo.count(predicateToQuery(predicate));
     }
 
     @Override
@@ -168,6 +170,7 @@ public class ProcDefServiceImpl implements ProcDefService {
 
             NewProcessDefDto newProcessDefDto = new NewProcessDefDto();
             newProcessDefDto.setId(dto.getId());
+            newProcessDefDto.setName(dto.getName());
             newProcessDefDto.setData(dto.getData());
             newProcessDefDto.setAlfType(dto.getAlfType());
             newProcessDefDto.setEcosTypeRef(dto.getEcosTypeRef());
@@ -196,6 +199,8 @@ public class ProcDefServiceImpl implements ProcDefService {
 
             procDefEntity.setAlfType(dto.getAlfType());
             procDefEntity.setEcosTypeRef(String.valueOf(dto.getEcosTypeRef()));
+            procDefEntity.setName(Json.getMapper().toString(dto.getName()));
+
             if (dto.getEnabled() != null) {
                 procDefEntity.setEnabled(dto.getEnabled());
             }
@@ -291,6 +296,7 @@ public class ProcDefServiceImpl implements ProcDefService {
         ProcDefDto procDefDto = new ProcDefDto();
         procDefDto.setId(entity.getExtId());
         procDefDto.setProcType(entity.getProcType());
+        procDefDto.setName(Json.getMapper().read(entity.getName(), MLText.class));
         procDefDto.setRevisionId(entity.getLastRev().getId().getId());
         procDefDto.setAlfType(entity.getAlfType());
         procDefDto.setEcosTypeRef(RecordRef.valueOf(entity.getEcosTypeRef()));
@@ -320,5 +326,6 @@ public class ProcDefServiceImpl implements ProcDefService {
     @Data
     public static class PredicateQuery {
         private String moduleId;
+        private String procType;
     }
 }

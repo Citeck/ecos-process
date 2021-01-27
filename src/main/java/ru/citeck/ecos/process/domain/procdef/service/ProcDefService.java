@@ -18,7 +18,9 @@ public interface ProcDefService {
 
     ProcDefDto uploadNewRev(ProcDefWithDataDto dto);
 
-    List<ProcDefWithDataDto> findAll(Predicate predicate, int max, int skip);
+    List<ProcDefWithDataDto> findAllWithData(Predicate predicate, int max, int skip);
+
+    List<ProcDefDto> findAll(Predicate predicate, int max, int skip);
 
     long getCount();
 

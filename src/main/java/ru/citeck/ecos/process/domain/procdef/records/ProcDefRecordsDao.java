@@ -58,7 +58,7 @@ public class ProcDefRecordsDao extends LocalRecordsDao
 
             Predicate predicate = recordsQuery.getQuery(Predicate.class);
 
-            Collection<ProcDefRecord> types = procDefService.findAll(
+            Collection<ProcDefRecord> types = procDefService.findAllWithData(
                 predicate,
                 max,
                 recordsQuery.getSkipCount()
@@ -75,7 +75,7 @@ public class ProcDefRecordsDao extends LocalRecordsDao
 
         if ("criteria".equals(recordsQuery.getLanguage())) {
 
-            result.setRecords(procDefService.findAll(null, max, skip)
+            result.setRecords(procDefService.findAllWithData(null, max, skip)
                 .stream()
                 .map(ProcDefRecord::new)
                 .collect(Collectors.toList())

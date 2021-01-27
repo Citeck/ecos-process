@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Id;
-import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 
 import java.time.Instant;
 

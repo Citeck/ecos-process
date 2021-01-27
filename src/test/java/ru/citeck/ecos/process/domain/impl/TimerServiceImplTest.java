@@ -12,7 +12,7 @@ import ru.citeck.ecos.commands.dto.CommandResult;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.EprocApp;
-import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.timer.entity.TimerEntity;
 import ru.citeck.ecos.process.domain.timer.dto.TimerCommandDto;
 import ru.citeck.ecos.process.domain.timer.dto.TimerDto;

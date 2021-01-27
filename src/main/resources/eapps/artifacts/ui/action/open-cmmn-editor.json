@@ -1,0 +1,8 @@
+{
+  "id": "open-cmmn-editor",
+  "type": "open-url",
+  "config": {
+    "url": "/v2/cmmn-editor?recordRef=${recordRef}",
+    "withinEcosTab": true
+  }
+}

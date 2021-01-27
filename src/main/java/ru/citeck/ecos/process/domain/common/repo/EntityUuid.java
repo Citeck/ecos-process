@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.common.entity;
+package ru.citeck.ecos.process.domain.common.repo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
