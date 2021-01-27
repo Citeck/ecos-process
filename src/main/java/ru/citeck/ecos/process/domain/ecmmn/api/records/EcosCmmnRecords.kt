@@ -176,6 +176,8 @@ class EcosCmmnRecords(
 
         fun getModuleId() = procDef.id
 
+        fun getProcessDefId() = procDef.id
+
         fun getDefinition(): String? {
 
             val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId)

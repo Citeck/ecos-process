@@ -17,7 +17,7 @@ actions:
 
 columns:
 
-  - name: artifactId
+  - name: processDefId
     label: { ru: Идентификатор, en: Id }
 
   - name: name
