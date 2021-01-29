@@ -16,7 +16,7 @@ import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.timer.entity.TimerEntity;
 import ru.citeck.ecos.process.domain.timer.dto.TimerCommandDto;
 import ru.citeck.ecos.process.domain.timer.dto.TimerDto;
-import ru.citeck.ecos.process.domain.timer.repository.TimerRepository;
+import ru.citeck.ecos.process.domain.timer.repo.TimerRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.timer.service.TimerService;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;

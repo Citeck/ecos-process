@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.proc.repository;
+package ru.citeck.ecos.process.domain.proc.repo;
 
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.proc.entity.ProcessInstanceEntity;

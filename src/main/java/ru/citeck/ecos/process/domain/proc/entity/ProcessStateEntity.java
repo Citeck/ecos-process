@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import ru.citeck.ecos.process.domain.procdef.entity.ProcDefRevEntity;
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity;
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 
 import java.time.Instant;

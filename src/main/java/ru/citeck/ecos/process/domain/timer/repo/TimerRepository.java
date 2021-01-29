@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.timer.repository;
+package ru.citeck.ecos.process.domain.timer.repo;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

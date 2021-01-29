@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.procdef.entity;
+package ru.citeck.ecos.process.domain.procdef.repo;
 
 import com.mongodb.annotations.Immutable;
 import lombok.Getter;

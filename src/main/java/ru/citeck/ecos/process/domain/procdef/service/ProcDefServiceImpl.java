@@ -5,19 +5,16 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.citeck.ecos.apps.artifact.ArtifactRef;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
-import ru.citeck.ecos.process.domain.procdef.entity.ProcDefEntity;
-import ru.citeck.ecos.process.domain.procdef.entity.ProcDefRevEntity;
+import ru.citeck.ecos.process.domain.procdef.repo.*;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
-import ru.citeck.ecos.process.domain.procdef.entity.QProcDefEntity;
-import ru.citeck.ecos.process.domain.procdef.repository.ProcDefRepository;
-import ru.citeck.ecos.process.domain.procdef.repository.ProcDefRevRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto;
 import ru.citeck.ecos.records2.RecordRef;
@@ -204,6 +201,8 @@ public class ProcDefServiceImpl implements ProcDefService {
             if (dto.getEnabled() != null) {
                 procDefEntity.setEnabled(dto.getEnabled());
             }
+            procDefEntity.setModified(Instant.now());
+
             result = procDefToDto(procDefRepo.save(procDefEntity));
         }
 
@@ -236,6 +235,19 @@ public class ProcDefServiceImpl implements ProcDefService {
     }
 
     @Override
+    public String getCacheKey() {
+
+        int currentTenant = tenantService.getCurrent();
+        PageRequest page = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("modified")));
+
+        List<ProcDefEntity> modified = procDefRepo.getModifiedDate(currentTenant, page);
+        if (modified.isEmpty()) {
+            return "";
+        }
+        return modified.get(0).getModified().toString();
+    }
+
+    @Override
     public Optional<ProcDefRevDto> findProcDef(String type, RecordRef ecosTypeRef, List<String> alfTypes) {
 
         int currentTenant = tenantService.getCurrent();
@@ -254,7 +266,7 @@ public class ProcDefServiceImpl implements ProcDefService {
             if (processDef == null) {
 
                 TypeParents typeInfo = recordsService.getMeta(ecosTypeRef, TypeParents.class);
-                if (typeInfo == null || typeInfo.parents == null) {
+                if (typeInfo.parents == null) {
                     throw new IllegalArgumentException("ECOS type parents can't be resolved");
                 }
 

@@ -26,6 +26,8 @@ public interface ProcDefService {
 
     long getCount(Predicate predicate);
 
+    String getCacheKey();
+
     Optional<ProcDefRevDto> getProcessDefRev(String procType, UUID procDefRevId);
 
     Optional<ProcDefRevDto> findProcDef(String procType, RecordRef ecosTypeRef, List<String> altTypes);
