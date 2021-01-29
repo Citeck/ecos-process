@@ -4,5 +4,15 @@
   "config": {
     "url": "/v2/cmmn-editor?recordRef=${recordRef}",
     "withinEcosTab": true
+  },
+  "evaluator": {
+    "type": "predicate",
+    "config": {
+      "predicate": {
+        "t": "eq",
+        "att": "format",
+        "val": "ecos-cmmn"
+      }
+    }
   }
 }

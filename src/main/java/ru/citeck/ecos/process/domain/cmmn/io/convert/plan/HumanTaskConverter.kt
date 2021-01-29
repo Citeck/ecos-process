@@ -1,0 +1,37 @@
+package ru.citeck.ecos.process.domain.cmmn.io.convert.plan
+
+import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.cmmn.model.omg.THumanTask
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
+import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
+import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
+import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.type.HumanTaskDef
+import javax.xml.namespace.QName
+
+class HumanTaskConverter : CmmnConverter<THumanTask, HumanTaskDef> {
+
+    companion object {
+        const val TYPE = "HumanTask"
+
+        val PROP_ROLES = QName(CmmnXmlUtils.NS_ECOS, "roles")
+    }
+
+    override fun import(element: THumanTask, context: ImportContext): HumanTaskDef {
+
+        val roles = element.otherAttributes[PROP_ROLES] ?: "[]"
+        val rolesList = Json.mapper.readList(roles, String::class.java)
+
+        return HumanTaskDef(rolesList)
+    }
+
+    override fun export(element: HumanTaskDef, context: ExportContext): THumanTask {
+
+        val task = THumanTask()
+        task.otherAttributes[PROP_ROLES] = Json.mapper.toString(element.roles)
+
+        return task
+    }
+
+    override fun getElementType() = TYPE
+}

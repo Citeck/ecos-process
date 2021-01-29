@@ -110,13 +110,12 @@ class ProcDefServiceImpl(
     }
 
     private fun findAllProcDefEntities(predicate: Predicate, max: Int, skip: Int): List<ProcDefEntity> {
-        val page = PageRequest.of(skip / max, max)
+        val page = PageRequest.of(skip / max, max, Sort.by(Sort.Order.desc("created")))
         val query = predicateToQuery(predicate)
         return procDefRepo.findAll(query, page).content
     }
 
     private fun predicateToQuery(predicate: Predicate): BooleanExpression {
-
 
         val predQuery = PredicateUtils.convertToDto(predicate, PredicateQuery::class.java)
         val entity = QProcDefEntity.procDefEntity
@@ -206,7 +205,9 @@ class ProcDefServiceImpl(
         val modified = procDefRepo.getModifiedDate(currentTenant, page)
         return if (modified.isEmpty()) {
             ""
-        } else modified[0].modified.toString()
+        } else {
+            modified[0].modified.toString()
+        } + "-" + getCount()
     }
 
     override fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto? {

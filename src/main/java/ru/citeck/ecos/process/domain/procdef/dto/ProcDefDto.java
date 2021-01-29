@@ -19,6 +19,9 @@ public class ProcDefDto {
     private String procType;
 
     @NotNull
+    private String format;
+
+    @NotNull
     private UUID revisionId;
 
     @NotNull
@@ -32,6 +35,7 @@ public class ProcDefDto {
     public ProcDefDto(@NotNull String id,
                       MLText name,
                       @NotNull String procType,
+                      @NotNull String format,
                       @NotNull UUID revisionId,
                       @NotNull RecordRef ecosTypeRef,
                       @NotNull String alfType,
@@ -39,6 +43,7 @@ public class ProcDefDto {
         this.id = id;
         this.name = name;
         this.procType = procType;
+        this.format = format;
         this.revisionId = revisionId;
         this.ecosTypeRef = ecosTypeRef;
         this.alfType = alfType;
@@ -69,6 +74,14 @@ public class ProcDefDto {
 
     public void setProcType(String procType) {
         this.procType = procType;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
     }
 
     public UUID getRevisionId() {

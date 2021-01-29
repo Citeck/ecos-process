@@ -6,7 +6,7 @@ import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.ecmmn.io.CmmnIO
+import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.records2.RecordRef
 
 class CmmnExporterTest {
