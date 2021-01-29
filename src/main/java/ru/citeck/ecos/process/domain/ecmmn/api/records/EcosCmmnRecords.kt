@@ -2,13 +2,13 @@ package ru.citeck.ecos.process.domain.ecmmn.api.records
 
 import org.springframework.stereotype.Component
 import org.springframework.util.MimeTypeUtils
-import ru.citeck.ecos.apps.artifact.ArtifactRef
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.ecmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.ecmmn.model.CmmnProcDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -59,7 +59,7 @@ class EcosCmmnRecords(
 
     override fun getRecordAtts(record: String): Any? {
 
-        val ref = ArtifactRef.create(PROC_TYPE, record)
+        val ref = ProcDefRef.create(PROC_TYPE, record)
         val currentProc = procDefService.getProcessDefById(ref).orElse(null)
 
         return currentProc?.let { EcmmnProcDefRecord(ProcDefDto(
@@ -77,7 +77,7 @@ class EcosCmmnRecords(
         return if (recordId.isBlank()) {
             EcmmnMutateRecord("", MLText(), RecordRef.EMPTY, null, true)
         } else {
-            val procDef = procDefService.getProcessDefById(ArtifactRef.create(PROC_TYPE, recordId)).orElse(null)
+            val procDef = procDefService.getProcessDefById(ProcDefRef.create(PROC_TYPE, recordId)).orElse(null)
                 ?: error("Process definition is not found: $recordId")
             EcmmnMutateRecord(
                 recordId,
@@ -95,7 +95,7 @@ class EcosCmmnRecords(
             error("processDefId is missing")
         }
 
-        val ref = ArtifactRef.create(PROC_TYPE, record.processDefId)
+        val ref = ProcDefRef.create(PROC_TYPE, record.processDefId)
         val currentProc = procDefService.getProcessDefById(ref).orElse(null)
 
         val newDefinition = record.definition ?: ""

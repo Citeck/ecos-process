@@ -7,10 +7,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.citeck.ecos.apps.artifact.ArtifactRef;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
 import ru.citeck.ecos.process.domain.procdef.repo.*;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
@@ -22,6 +22,7 @@ import ru.citeck.ecos.records2.RecordsService;
 import ru.citeck.ecos.records2.predicate.PredicateUtils;
 import ru.citeck.ecos.records2.predicate.model.Predicate;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -222,7 +223,7 @@ public class ProcDefServiceImpl implements ProcDefService {
     }
 
     @Override
-    public Optional<ProcDefWithDataDto> getProcessDefById(ArtifactRef id) {
+    public Optional<ProcDefWithDataDto> getProcessDefById(ProcDefRef id) {
 
         int currentTenant = tenantService.getCurrent();
 
@@ -301,6 +302,10 @@ public class ProcDefServiceImpl implements ProcDefService {
             return Optional.empty();
         }
         return Optional.of(procDefRevToDto(processDef.getLastRev()));
+    }
+
+    public void delete() {
+
     }
 
     private ProcDefDto procDefToDto(ProcDefEntity entity) {

@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.procdef.records;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
-import ru.citeck.ecos.apps.artifact.ArtifactRef;
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
@@ -97,7 +97,7 @@ public class ProcDefRecordsDao extends LocalRecordsDao
                 throw new IllegalArgumentException("Parameter 'id' is mandatory");
             }
             ProcDefDto saved = procDefService.uploadNewRev(dto);
-            result.addRecord(new RecordMeta(ArtifactRef.create(saved.getProcType(), saved.getId()).toString()));
+            result.addRecord(new RecordMeta(ProcDefRef.create(saved.getProcType(), saved.getId()).toString()));
         });
 
         return result;
@@ -122,7 +122,7 @@ public class ProcDefRecordsDao extends LocalRecordsDao
         if (id.isEmpty()) {
             return new ProcDefWithDataDto();
         }
-        return procDefService.getProcessDefById(ArtifactRef.valueOf(id))
+        return procDefService.getProcessDefById(ProcDefRef.valueOf(id))
             .orElseThrow(() -> new IllegalArgumentException("Process definition is not found by id: " + id));
     }
 }
