@@ -8,7 +8,6 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -22,15 +21,13 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
     public GetProcDefRevResp execute(GetProcDefRev findProcDef) {
 
         UUID revId = UUID.fromString(findProcDef.getProcDefRevId());
-        Optional<ProcDefRevDto> optDefRev = RemoteRecordsUtils.runAsSystem(() ->
+        ProcDefRevDto procDefRev = RemoteRecordsUtils.runAsSystem(() ->
             procDefService.getProcessDefRev(findProcDef.getProcType(), revId)
         );
 
-        if (!optDefRev.isPresent()) {
+        if (procDefRev == null) {
             return null;
         }
-
-        ProcDefRevDto procDefRev = optDefRev.get();
 
         GetProcDefRevResp resp = new GetProcDefRevResp();
         resp.setData(procDefRev.getData());

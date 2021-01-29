@@ -116,7 +116,7 @@ public class TimerServiceImplTest {
         TimerEntity entity = entities.get(0);
 
         assertNotNull(entity.getId());
-        assertEquals((Integer) tenant, entity.getId().getTnt());
+        assertEquals((Integer) tenant, (Integer) entity.getId().getTnt());
         assertEquals(saved.getTimerId(), entity.getId().getId().toString());
 
         assertEquals(triggerTime, entity.getTriggerTime());

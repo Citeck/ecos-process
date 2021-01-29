@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.procdef.dto;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records2.RecordRef;
@@ -11,7 +10,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
 @ToString(exclude = "data")
 public class ProcDefWithDataDto {
 
@@ -45,6 +43,9 @@ public class ProcDefWithDataDto {
     private int version;
 
     private Boolean enabled;
+
+    public ProcDefWithDataDto() {
+    }
 
     public ProcDefWithDataDto(ProcDefWithDataDto other) {
         this.id = other.id;

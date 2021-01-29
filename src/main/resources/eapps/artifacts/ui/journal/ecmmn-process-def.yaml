@@ -14,6 +14,7 @@ actions:
   - uiserv/action@open-cmmn-editor
   - uiserv/action@download-base64-data-xml
   - uiserv/action@edit
+  - uiserv/action@delete
 
 columns:
 

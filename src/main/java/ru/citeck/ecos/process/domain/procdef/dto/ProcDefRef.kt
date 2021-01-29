@@ -56,4 +56,12 @@ class ProcDefRef private constructor(
         result = 31 * result + id.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return if (this == EMPTY) {
+            ""
+        } else {
+            "$type$TYPE_DELIMITER$id"
+        }
+    }
 }

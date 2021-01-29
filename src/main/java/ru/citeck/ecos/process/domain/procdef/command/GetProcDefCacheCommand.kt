@@ -11,7 +11,7 @@ class GetProcDefCacheCommandExecutor(
 ) : CommandExecutor<GetProcDefCacheCommand> {
 
     override fun execute(command: GetProcDefCacheCommand): Any? {
-        return GetProcDefCacheCommandResp(procDefService.cacheKey)
+        return GetProcDefCacheCommandResp(procDefService.getCacheKey())
     }
 }
 

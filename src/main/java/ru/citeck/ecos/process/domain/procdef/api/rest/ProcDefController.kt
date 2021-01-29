@@ -15,7 +15,6 @@ class ProcDefController(
 
     @GetMapping("cache")
     fun getCache(): String {
-        return procDefService.cacheKey
+        return procDefService.getCacheKey()
     }
-
 }

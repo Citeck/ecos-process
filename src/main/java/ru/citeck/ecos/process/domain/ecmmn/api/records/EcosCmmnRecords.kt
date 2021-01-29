@@ -17,6 +17,8 @@ import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
 import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
+import ru.citeck.ecos.records3.record.op.delete.dao.RecordDeleteDao
+import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
 import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
 import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
@@ -27,7 +29,8 @@ import java.nio.charset.StandardCharsets
 @Component
 class EcosCmmnRecords(
     val procDefService: ProcDefService
-) : RecordsQueryDao, RecordAttsDao, RecordMutateDtoDao<EcosCmmnRecords.EcmmnMutateRecord> {
+) : RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
+    RecordMutateDtoDao<EcosCmmnRecords.EcmmnMutateRecord> {
 
     companion object {
         private const val PROC_TYPE = "ecmmn"
@@ -60,7 +63,7 @@ class EcosCmmnRecords(
     override fun getRecordAtts(record: String): Any? {
 
         val ref = ProcDefRef.create(PROC_TYPE, record)
-        val currentProc = procDefService.getProcessDefById(ref).orElse(null)
+        val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let { EcmmnProcDefRecord(ProcDefDto(
             it.id,
@@ -77,7 +80,7 @@ class EcosCmmnRecords(
         return if (recordId.isBlank()) {
             EcmmnMutateRecord("", MLText(), RecordRef.EMPTY, null, true)
         } else {
-            val procDef = procDefService.getProcessDefById(ProcDefRef.create(PROC_TYPE, recordId)).orElse(null)
+            val procDef = procDefService.getProcessDefById(ProcDefRef.create(PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
             EcmmnMutateRecord(
                 recordId,
@@ -96,7 +99,7 @@ class EcosCmmnRecords(
         }
 
         val ref = ProcDefRef.create(PROC_TYPE, record.processDefId)
-        val currentProc = procDefService.getProcessDefById(ref).orElse(null)
+        val currentProc = procDefService.getProcessDefById(ref)
 
         val newDefinition = record.definition ?: ""
 
@@ -145,6 +148,11 @@ class EcosCmmnRecords(
         return record.processDefId
     }
 
+    override fun delete(recordId: String): DelStatus {
+        procDefService.delete(ProcDefRef.create(PROC_TYPE, recordId))
+        return DelStatus.OK
+    }
+
     override fun getId() = PROC_TYPE
 
     inner class EcmmnProcDefRecord(
@@ -180,8 +188,7 @@ class EcosCmmnRecords(
 
         fun getDefinition(): String? {
 
-            val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId)
-                .orElse(null) ?: return null
+            val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
             val procDef = Json.mapper.read(rev.data, CmmnProcDef::class.java) ?: return null
 
             return CmmnIO.exportToString(procDef)
