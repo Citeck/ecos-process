@@ -13,19 +13,19 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCr
 @JsonDeserialize(builder = ActivityDef.Builder::class)
 class ActivityDef(
 
-        val id: String,
-        val name: MLText,
-        val planItemId: String,
+    val id: String,
+    val name: MLText,
+    val planItemId: String,
 
-        val requiredRule: Boolean?,
-        val repetitionRule: Boolean?,
-        val manualActivationRule: Boolean?,
+    val requiredRule: Boolean?,
+    val repetitionRule: Boolean?,
+    val manualActivationRule: Boolean?,
 
-        val entryCriteria: List<EntryCriterionDef>,
-        val exitCriteria: List<ExitCriterionDef>,
+    val entryCriteria: List<EntryCriterionDef>,
+    val exitCriteria: List<ExitCriterionDef>,
 
-        val type: String,
-        val data: ObjectData
+    val type: String,
+    val data: ObjectData
 ) {
 
     companion object {
@@ -134,16 +134,16 @@ class ActivityDef(
             MandatoryParam.checkString("id", id)
             MandatoryParam.checkString("type", type)
             return ActivityDef(
-                    id,
-                    name,
-                    planItemId,
-                    requiredRule,
-                    repetitionRule,
-                    manualActivationRule,
-                    entryCriteria,
-                    exitCriteria,
-                    type,
-                    data
+                id,
+                name,
+                planItemId,
+                requiredRule,
+                repetitionRule,
+                manualActivationRule,
+                entryCriteria,
+                exitCriteria,
+                type,
+                data
             )
         }
     }

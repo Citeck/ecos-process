@@ -1,8 +1,8 @@
 {
-  "id": "proc-activity-cmmn:HumanTask",
+  "id": "cmmn-type-cmmn:ProcessTask",
   "formKey": "",
   "title": {
-    "en": "CMMN HumanTask Form"
+    "en": "CMMN ProcessTask Form"
   },
   "description": {
     "en": ""
@@ -19,17 +19,27 @@
           "en": "Name"
         },
         "defaultValue": "",
-        "key": "name",
+        "key": "name_ml",
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Тип процесса",
+          "en": "Process Type"
+        },
+        "defaultValue": "",
+        "key": "processType",
         "type": "textfield",
         "input": true
       },
       {
         "label": {
-          "ru": "Роли",
-          "en": "Roles"
+          "ru": "Идентификатор описания процесса",
+          "en": "Process Definition Id"
         },
         "defaultValue": "",
-        "key": "roles",
+        "key": "processDefId",
         "type": "textfield",
         "input": true
       }

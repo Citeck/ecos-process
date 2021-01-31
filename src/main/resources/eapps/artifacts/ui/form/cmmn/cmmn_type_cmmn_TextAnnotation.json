@@ -1,0 +1,29 @@
+{
+  "id": "cmmn-type-cmmn:TextAnnotation",
+  "formKey": "",
+  "title": {
+    "en": "CMMN TextAnnotation Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Текст",
+          "en": "Text"
+        },
+        "defaultValue": "",
+        "key": "text_ml",
+        "type": "mlText",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

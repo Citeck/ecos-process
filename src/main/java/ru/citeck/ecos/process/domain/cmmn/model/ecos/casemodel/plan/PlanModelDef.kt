@@ -5,8 +5,8 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.Act
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 
 class PlanModelDef(
-        val id: String,
-        val name: MLText,
-        val exitCriteria: List<ExitCriterionDef>,
-        val children: List<ActivityDef>
+    val id: String,
+    val name: MLText,
+    val exitCriteria: List<ExitCriterionDef>,
+    val children: List<ActivityDef>
 )

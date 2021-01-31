@@ -1,8 +1,8 @@
 {
-  "id": "proc-activity-cmmn:Stage",
+  "id": "cmmn-type-cmmn:CaseFileOnPart",
   "formKey": "",
   "title": {
-    "en": "CMMN Stage Form"
+    "en": "CMMN CaseFileOnPart Form"
   },
   "description": {
     "en": ""

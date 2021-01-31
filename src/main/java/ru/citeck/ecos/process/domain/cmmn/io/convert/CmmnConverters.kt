@@ -15,9 +15,7 @@ import ru.citeck.ecos.process.domain.cmmn.io.convert.di.ShapeConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.*
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.EntryCriterionConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.ExitCriterionConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.SentryConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.*
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 import kotlin.reflect.KClass
@@ -53,7 +51,9 @@ class CmmnConverters(
             AssociationConverter(),
             TextAnnotationConverter(),
             ExitCriterionConverter(this),
-            EntryCriterionConverter(this)
+            EntryCriterionConverter(this),
+            PlanItemOnPartConverter(),
+            CaseFileOnPartConverter()
         ).map {
             @Suppress("UNCHECKED_CAST")
             val converter = it as CmmnConverter<Any, Any>
@@ -91,7 +91,15 @@ class CmmnConverters(
             ?: error("Conversion failed for $element of type $type and class ${converter.cmmnType}")
 
         @Suppress("UNCHECKED_CAST")
-        return converter.converter.export(cmmnElement, context) as T
+        val result = converter.converter.export(cmmnElement, context) as T
+        if (result is TCmmnElement) {
+            val emptyProps = result.otherAttributes.keys.filter {
+                val value = result.otherAttributes[it]
+                value == null || value == ""
+            }
+            emptyProps.forEach { result.otherAttributes.remove(it) }
+        }
+        return result
     }
 
     fun <T : Any> convertToJaxb(item: T): JAXBElement<T> {

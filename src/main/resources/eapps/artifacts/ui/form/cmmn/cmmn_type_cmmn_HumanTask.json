@@ -1,8 +1,8 @@
 {
-  "id": "proc-activity-cmmn:ProcessTask",
+  "id": "cmmn-type-cmmn:HumanTask",
   "formKey": "",
   "title": {
-    "en": "CMMN ProcessTask Form"
+    "en": "CMMN HumanTask Form"
   },
   "description": {
     "en": ""
@@ -19,28 +19,29 @@
           "en": "Name"
         },
         "defaultValue": "",
-        "key": "name",
-        "type": "textfield",
+        "key": "name_ml",
+        "type": "mlText",
         "input": true
       },
       {
         "label": {
-          "ru": "Тип процесса",
-          "en": "Process Type"
+          "ru": "Роли",
+          "en": "Roles"
         },
         "defaultValue": "",
-        "key": "processType",
+        "key": "roles",
         "type": "textfield",
-        "input": true
+        "input": true,
+        "multiple": true
       },
       {
         "label": {
-          "ru": "Идентификатор описания процесса",
-          "en": "Process Definition Id"
+          "ru": "Форма",
+          "en": "Form"
         },
-        "defaultValue": "",
-        "key": "processDefId",
-        "type": "textfield",
+        "type": "selectJournal",
+        "journalId": "ecos-forms",
+        "key": "formRef",
         "input": true
       }
     ]

@@ -6,47 +6,43 @@ import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.ExpressionDef
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.OnPartDef
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.IfPartDef
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.OnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
+import javax.xml.namespace.QName
 
 class SentryConverter(private val converters: CmmnConverters) : CmmnConverter<Sentry, SentryDef> {
 
     companion object {
+
         const val TYPE = "Sentry"
+
+        private val PROP_CONDITION_TYPE = QName(CmmnXmlUtils.NS_ECOS, "conditionType")
+        private val PROP_CONDITION = QName(CmmnXmlUtils.NS_ECOS, "condition")
     }
 
     override fun import(element: Sentry, context: ImportContext): SentryDef {
 
         val onPart = element.onPart?.mapNotNull { jaxbOnPart ->
 
-            val tOnPart = jaxbOnPart.value as? TPlanItemOnPart
-                    ?: return@mapNotNull null
-            val onPartSource = tOnPart.sourceRef as? TPlanItem
-                    ?: return@mapNotNull null
+            val onPartValue = jaxbOnPart.value
+            val configWithType = converters.import(onPartValue, context)
+            OnPartDef(configWithType.type, configWithType.data)
 
-            val exitSentryRef = (tOnPart.exitCriterionRef as? TCriterion)?.let { (it.sentryRef as? Sentry)?.id }
-
-            OnPartDef(
-                tOnPart.id,
-                onPartSource.id,
-                tOnPart.standardEvent.value(),
-                exitSentryRef
-            )
         } ?: emptyList()
 
-        var cmmnIfPart: ExpressionDef? = null
-        if (element.ifPart != null && element.ifPart.condition != null) {
-            val condition = element.ifPart.condition
-            if (condition.content != null && condition.content.isNotEmpty()) {
-                val conditionConfig = condition.content[0] as? String
-                if (conditionConfig != null) {
-                    cmmnIfPart = ExpressionDef(
-                        condition.language,
-                        Json.mapper.read(conditionConfig, ObjectData::class.java)!!
-                    )
-                }
+        var cmmnIfPart: IfPartDef? = null
+        if (element.ifPart != null) {
+
+            val conditionType = element.ifPart.otherAttributes[PROP_CONDITION_TYPE]
+            val condition = element.ifPart.otherAttributes[PROP_CONDITION]
+
+            if (!conditionType.isNullOrBlank() && !condition.isNullOrBlank()) {
+                val conditionObj = Json.mapper.read(condition, ObjectData::class.java) ?: ObjectData.create()
+                cmmnIfPart = IfPartDef(element.ifPart.id, ExpressionDef(conditionType, conditionObj))
             }
         }
 
@@ -59,26 +55,20 @@ class SentryConverter(private val converters: CmmnConverters) : CmmnConverter<Se
         cmmnSentry.id = element.id
 
         element.onPart.forEach {
-
-            val cmmnOnPart = TPlanItemOnPart()
-            if (it.exitEventRef != null) {
-                cmmnOnPart.exitCriterionRef = it.exitEventRef
-            }
-            cmmnOnPart.id = it.id
-            cmmnOnPart.standardEvent = PlanItemTransition.fromValue(it.eventType)
-            cmmnOnPart.sourceRef = it.sourceRef
-
-            cmmnSentry.onPart.add(converters.convertToJaxb(cmmnOnPart))
+            val onPart = converters.export<TOnPart>(it.type, it.config, context)
+            cmmnSentry.onPart.add(converters.convertToJaxb(onPart))
         }
 
         if (element.ifPart != null) {
 
             val ifPart = TIfPart()
+            ifPart.id = element.ifPart.id
+            ifPart.otherAttributes[PROP_CONDITION_TYPE] = element.ifPart.condition.type
+            ifPart.otherAttributes[PROP_CONDITION] = Json.mapper.toString(element.ifPart.condition.config)
+
             val condition = TExpression()
             ifPart.condition = condition
-
-            condition.language = element.ifPart.type
-            condition.content.add(Json.mapper.toString(element.ifPart.config))
+            condition.language = "ecos"
 
             cmmnSentry.ifPart = ifPart
         }

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
@@ -17,7 +18,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCr
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import ru.citeck.ecos.records2.RecordRef
-import java.util.*
+import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
 
 class DefinitionsConverter(
@@ -41,10 +42,12 @@ class DefinitionsConverter(
             error("ecos:processDefId is a mandatory property for Definitions")
         }
 
+        val name = element.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] ?: element.name
+
         return CmmnProcDef(
             processDefId,
             element.id ?: CmmnXmlUtils.generateId(TYPE),
-            MLText(element.name ?: ""),
+            Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             RecordRef.valueOf(ecosType),
             cases,
             artifacts,
@@ -62,9 +65,12 @@ class DefinitionsConverter(
     }
 
     private fun importCase(case: Case, context: ImportContext): CaseDef {
+
+        val name = case.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] ?: case.name
+
         return CaseDef(
             case.id ?: CmmnXmlUtils.generateId("Case"),
-            MLText(case.name ?: ""),
+            Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             importPlanModel(case.casePlanModel, context)
         )
     }
@@ -92,7 +98,8 @@ class DefinitionsConverter(
         }
 
         definitions.cmmndi = converters.export(CmmnDiConverter.TYPE, element.cmmnDi, context)
-        definitions.name = MLText.getClosestValue(element.name, Locale.ENGLISH)
+        definitions.name = MLText.getClosestValue(element.name, RequestContext.getLocale())
+        definitions.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(element.name)
 
         element.artifacts.filter {
             it.type != AssociationConverter.TYPE
@@ -126,11 +133,12 @@ class DefinitionsConverter(
 
         val resultCase = Case()
         resultCase.id = case.id
-        val name = MLText.getClosestValue(case.name, Locale.ENGLISH)
+        val name = MLText.getClosestValue(case.name, RequestContext.getLocale())
         if (name.isNotBlank()) {
             resultCase.name = name
         }
         resultCase.casePlanModel = exportPlanModel(case.planModel, context)
+        resultCase.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(case.name)
 
         return resultCase
     }
@@ -139,7 +147,8 @@ class DefinitionsConverter(
 
         val casePlanModel = Stage()
         casePlanModel.id = model.id
-        casePlanModel.name = MLText.getClosestValue(model.name, Locale.ENGLISH)
+        casePlanModel.name = MLText.getClosestValue(model.name, RequestContext.getLocale())
+        casePlanModel.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(model.name)
 
         model.exitCriteria.forEach {
             val criterion = converters.export<TExitCriterion>(ExitCriterionConverter.TYPE, it, context)
@@ -156,27 +165,34 @@ class DefinitionsConverter(
             item.exitCriterion?.forEach { addSentry(casePlanModel, it.sentryRef as? Sentry) }
         }
 
-        fixSentries(casePlanModel, context)
+        fixRefs(casePlanModel, context)
 
         return casePlanModel
     }
 
-    private fun fixSentries(stage: Stage, context: ExportContext) {
+    private fun fixRefs(stage: Stage, context: ExportContext) {
         stage.sentry.forEach { fixSentry(it, context) }
         stage.planItemDefinition.mapNotNull {
             it.value as? Stage
         }.forEach {
-            fixSentries(it, context)
+            fixRefs(it, context)
         }
     }
 
     private fun fixSentry(sentry: Sentry, context: ExportContext) {
-        sentry.onPart?.mapNotNull { it.value as? TPlanItemOnPart }?.forEach {
-            if (it.exitCriterionRef is String) {
-                it.exitCriterionRef = context.elementsById[it.exitCriterionRef as String]
-            }
-            if (it.sourceRef is String) {
-                it.sourceRef = context.elementsById[it.sourceRef as String]
+        sentry.onPart?.forEach {
+            val value = it.value
+            if (value is TPlanItemOnPart) {
+                if (value.exitCriterionRef is String) {
+                    value.exitCriterionRef = context.elementsById[value.exitCriterionRef as String]
+                }
+                if (value.sourceRef is String) {
+                    value.sourceRef = context.elementsById[value.sourceRef as String]
+                }
+            } else if (value is TCaseFileItemOnPart) {
+                if (value.sourceRef is String) {
+                    value.sourceRef = context.elementsById[value.sourceRef as String]
+                }
             }
         }
     }

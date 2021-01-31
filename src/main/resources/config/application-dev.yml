@@ -18,8 +18,9 @@ logging:
     ROOT: DEBUG
     io.github.jhipster: DEBUG
     ru.citeck.ecos.process: DEBUG
-    org.mongodb.driver: WARN
-    jdk.event.security: WARN
+    org.mongodb.driver: INFO
+    jdk.event.security: INFO
+    ru.citeck.ecos.process.aop.logging: INFO
 
 eureka:
   instance:

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.plan
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
@@ -12,7 +13,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.Act
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
-import java.util.*
+import ru.citeck.ecos.records3.record.request.RequestContext
 
 class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<TPlanItem, ActivityDef> {
 
@@ -38,10 +39,10 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
         }
 
         val definition = element.definitionRef
-
         if (definition is TPlanItemDefinition) {
             activityDef.id = definition.id
-            activityDef.name = MLText(definition.name ?: "")
+            val name = definition.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] ?: definition.name
+            activityDef.name = Json.mapper.read(name, MLText::class.java) ?: MLText()
         } else {
             error("Unsupported type: " + definition::class)
         }
@@ -108,7 +109,8 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
 
         definition.id = element.id
 
-        val name = MLText.getClosestValue(element.name, Locale.ENGLISH)
+        definition.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(element.name)
+        val name = MLText.getClosestValue(element.name, RequestContext.getLocale())
         if (name.isNotBlank()) {
             definition.name = name
         }
