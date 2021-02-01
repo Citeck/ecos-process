@@ -1,7 +1,11 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.w3c.dom.Element;
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -254,4 +258,35 @@ public abstract class DiagramElement {
 
     }
 
+    @Override
+    public boolean equals(Object o) {
+
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        DiagramElement that = (DiagramElement) o;
+
+        return new EqualsBuilder()
+            .append(extension, that.extension)
+            .append(CmmnXmlUtils.unwrapJaxb(style), CmmnXmlUtils.unwrapJaxb(that.style))
+            .append(sharedStyle, that.sharedStyle)
+            .append(id, that.id)
+            .append(otherAttributes, that.otherAttributes)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .append(extension)
+            .append(CmmnXmlUtils.unwrapJaxb(style))
+            .append(sharedStyle)
+            .append(id)
+            .append(otherAttributes)
+            .toHashCode();
+    }
 }

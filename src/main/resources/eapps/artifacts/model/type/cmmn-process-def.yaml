@@ -16,3 +16,7 @@ createVariants:
     name: { ru: Создать сценарий, en: Create scenario }
     recordRef: eproc/cmmn-def@
 
+  - id: upload-proc-def
+    name: { ru: Загрузить сценарий, en: Upload scenario }
+    recordRef: eproc/cmmn-def@
+    formRef: uiserv/eform@ecos-module-upload

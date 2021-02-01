@@ -2,9 +2,11 @@ package ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpar
 
 import ecos.com.fasterxml.jackson210.annotation.JsonCreator
 import ecos.com.fasterxml.jackson210.annotation.JsonValue
+import ru.citeck.ecos.commons.data.MLText
 
 class CaseFileOnPartDef(
     val id: String,
+    val name: MLText,
     val sourceRef: String,
     val standardEvent: CaseFileItemTransitionEnum
 )

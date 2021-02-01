@@ -1,8 +1,11 @@
 package ru.citeck.ecos.process.domain.cmmn.api.records
 
+import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -24,6 +27,7 @@ import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
 import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 @Component
 class CmmnProcDefRecords(
@@ -96,6 +100,19 @@ class CmmnProcDefRecords(
 
     override fun saveMutatedRec(record: CmmnMutateRecord): String {
 
+        val newDefinition = record.definition ?: ""
+        var newDefData: ByteArray? = null
+        if (newDefinition.isNotBlank()) {
+
+            val cmmnProcDef = CmmnIO.import(newDefinition)
+            CmmnIO.export(cmmnProcDef)
+
+            newDefData = mapper.toBytes(cmmnProcDef)
+            record.ecosType = cmmnProcDef.ecosType
+            record.name = cmmnProcDef.name
+            record.processDefId = cmmnProcDef.id
+        }
+
         if (record.processDefId.isBlank()) {
             error("processDefId is missing")
         }
@@ -108,23 +125,19 @@ class CmmnProcDefRecords(
             error("Process definition with id " + newRef.id + " already exists")
         }
 
-        val newDefinition = record.definition ?: ""
-
         if (currentProc == null) {
 
             val newProcDef = NewProcessDefDto()
 
             newProcDef.id = record.processDefId
-            val definition = if (newDefinition.isNotBlank()) {
-                val newDef = CmmnIO.import(newDefinition)
-                CmmnIO.export(newDef)
-                newDef
-            } else {
+
+            val defData = newDefData ?: Json.mapper.toBytes(
                 CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
-            }
-            newProcDef.name = definition.name
-            newProcDef.data = Json.mapper.toBytes(definition)
-            newProcDef.ecosTypeRef = definition.ecosType
+            )
+
+            newProcDef.name = record.name
+            newProcDef.data = defData
+            newProcDef.ecosTypeRef = record.ecosType
             newProcDef.format = "ecos-cmmn"
             newProcDef.procType = PROC_TYPE
 
@@ -132,22 +145,18 @@ class CmmnProcDefRecords(
 
         } else {
 
-            if (newDefinition.isNotBlank()) {
+            if (newDefData != null) {
 
-                val cmmnProcDef = CmmnIO.import(newDefinition)
-                CmmnIO.export(cmmnProcDef)
-
-                currentProc.data = Json.mapper.toBytes(cmmnProcDef)
-                currentProc.ecosTypeRef = cmmnProcDef.ecosType
-                currentProc.name = cmmnProcDef.name
+                currentProc.data = newDefData
+                currentProc.ecosTypeRef = record.ecosType
+                currentProc.name = record.name
 
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType
                 currentProc.name = record.name
+                currentProc.enabled = record.enabled
             }
-
-            currentProc.enabled = record.enabled
 
             procDefService.uploadNewRev(currentProc)
         }
@@ -227,5 +236,31 @@ class CmmnProcDefRecords(
         var ecosType: RecordRef,
         var definition: String? = null,
         var enabled: Boolean
-    )
+    ) {
+
+        @JsonProperty("_content")
+        fun setContent(contentList: List<ObjectData>) {
+
+            val base64Content = contentList[0].get("url", "")
+            val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
+            val dataMatch = contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
+
+            val format = dataMatch.groupValues[1]
+            val contentText = String(Base64.getDecoder().decode(dataMatch.groupValues[2]))
+
+            definition = when (format) {
+                "text/xml" -> {
+                    contentText
+                }
+                "application/json" -> {
+                    val def = mapper.read(contentText, CmmnProcDef::class.java)
+                            ?: error("Incorrect content: $base64Content")
+                    CmmnIO.exportToString(def)
+                }
+                else -> {
+                    error("Unknown format: $format")
+                }
+            }
+        }
+    }
 }

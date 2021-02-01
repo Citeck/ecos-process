@@ -1,6 +1,8 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import lombok.EqualsAndHashCode;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
@@ -41,6 +43,7 @@ import java.util.Map;
  *
  *
  */
+@EqualsAndHashCode
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "tCmmnElementWithMixedContent", namespace = "http://www.omg.org/spec/CMMN/20151109/MODEL", propOrder = {
     "content"

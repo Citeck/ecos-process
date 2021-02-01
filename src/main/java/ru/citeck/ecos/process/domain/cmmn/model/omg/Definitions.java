@@ -1,6 +1,11 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
@@ -578,4 +583,58 @@ public class Definitions {
         return otherAttributes;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Definitions that = (Definitions) o;
+
+        return new EqualsBuilder()
+            .append(_import, that._import)
+            .append(caseFileItemDefinition, that.caseFileItemDefinition)
+            .append(_case, that._case)
+            .append(process, that.process)
+            .append(decision, that.decision)
+            .append(extensionElements, that.extensionElements)
+            .append(relationship, that.relationship)
+            .append(CmmnXmlUtils.unwrapJaxb(artifact), CmmnXmlUtils.unwrapJaxb(that.artifact))
+            .append(cmmndi, that.cmmndi)
+            .append(id, that.id)
+            .append(name, that.name)
+            .append(targetNamespace, that.targetNamespace)
+            .append(expressionLanguage, that.expressionLanguage)
+            .append(author, that.author)
+            .append(creationDate, that.creationDate)
+            .append(otherAttributes, that.otherAttributes)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .append(_import)
+            .append(caseFileItemDefinition)
+            .append(_case)
+            .append(process)
+            .append(decision)
+            .append(extensionElements)
+            .append(relationship)
+            .append(CmmnXmlUtils.unwrapJaxb(artifact))
+            .append(cmmndi)
+            .append(id)
+            .append(name)
+            .append(targetNamespace)
+            .append(expressionLanguage)
+            .append(author)
+            .append(creationDate)
+            .append(otherAttributes)
+            .toHashCode();
+    }
 }

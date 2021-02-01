@@ -1,6 +1,10 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+
 import javax.xml.bind.annotation.*;
 
 
@@ -88,4 +92,31 @@ public class TCaseFileItemOnPart
         this.sourceRef = value;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        TCaseFileItemOnPart that = (TCaseFileItemOnPart) o;
+
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(getStandardEvent(), that.getStandardEvent())
+            .append(CmmnXmlUtils.idRefToId(getSourceRef()), CmmnXmlUtils.idRefToId(that.getSourceRef()))
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(getStandardEvent())
+            .append(CmmnXmlUtils.idRefToId(getSourceRef()))
+            .toHashCode();
+    }
 }

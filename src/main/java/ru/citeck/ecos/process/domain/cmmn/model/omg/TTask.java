@@ -1,6 +1,8 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import lombok.EqualsAndHashCode;
+
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.List;
  *
  *
  */
+@EqualsAndHashCode(callSuper = true)
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "tTask", namespace = "http://www.omg.org/spec/CMMN/20151109/MODEL", propOrder = {
     "input",

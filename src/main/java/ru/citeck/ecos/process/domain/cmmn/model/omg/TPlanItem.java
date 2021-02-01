@@ -1,6 +1,10 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -183,4 +187,39 @@ public class TPlanItem
         this.definitionRef = value;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        TPlanItem tPlanItem = (TPlanItem) o;
+
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(getItemControl(), tPlanItem.getItemControl())
+            .append(getEntryCriterion(), tPlanItem.getEntryCriterion())
+            .append(getExitCriterion(), tPlanItem.getExitCriterion())
+            .append(getName(), tPlanItem.getName())
+            .append(CmmnXmlUtils.idRefToId(getDefinitionRef()), CmmnXmlUtils.idRefToId(tPlanItem.getDefinitionRef()))
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(getItemControl())
+            .append(getEntryCriterion())
+            .append(getExitCriterion())
+            .append(getName())
+            .append(CmmnXmlUtils.idRefToId(getDefinitionRef()))
+            .toHashCode();
+    }
 }

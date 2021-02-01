@@ -1,6 +1,10 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+
 import javax.xml.bind.annotation.*;
 
 
@@ -88,4 +92,31 @@ public abstract class TCriterion
         this.sentryRef = value;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        TCriterion that = (TCriterion) o;
+
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(getName(), that.getName())
+            .append(CmmnXmlUtils.idRefToId(getSentryRef()), CmmnXmlUtils.idRefToId(that.getSentryRef()))
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(getName())
+            .append(CmmnXmlUtils.idRefToId(getSentryRef()))
+            .toHashCode();
+    }
 }

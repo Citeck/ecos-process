@@ -28,6 +28,7 @@ class UserEventListenerConverter : CmmnConverter<TUserEventListener, UserEventLi
     override fun export(element: UserEventListenerDef, context: ExportContext): TUserEventListener {
 
         val listener = TUserEventListener()
+        listener.authorizedRoleRefs.add("role")
         listener.otherAttributes[PROP_AUTHORIZED_ROLES] = Json.mapper.toString(element.authorizedRoles)
 
         return listener

@@ -137,6 +137,14 @@ class DefinitionsConverter(
         if (name.isNotBlank()) {
             resultCase.name = name
         }
+
+        resultCase.caseRoles = CaseRoles()
+        resultCase.caseRoles.id = "case-roles"
+        val role = Role()
+        role.id = "role"
+        resultCase.caseRoles.role.add(role)
+        context.elementsById[role.id] = role
+
         resultCase.casePlanModel = exportPlanModel(case.planModel, context)
         resultCase.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(case.name)
 
@@ -176,6 +184,19 @@ class DefinitionsConverter(
             it.value as? Stage
         }.forEach {
             fixRefs(it, context)
+        }
+        stage.planItemDefinition.mapNotNull {
+            it.value as? TUserEventListener
+        }.forEach { listener ->
+            val newRoles = listener.authorizedRoleRefs.map {
+                if (it is String) {
+                    context.elementsById[it] ?: error("Element is not found: $it. Listener: ${listener.id}")
+                } else {
+                    it
+                }
+            }
+            listener.authorizedRoleRefs.clear()
+            newRoles.forEach { listener.authorizedRoleRefs.add(it) }
         }
     }
 

@@ -1,6 +1,8 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
+import lombok.EqualsAndHashCode;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -29,6 +31,7 @@ import java.util.List;
  *
  *
  */
+@EqualsAndHashCode
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "CMMNDI", namespace = "http://www.omg.org/spec/CMMN/20151109/CMMNDI", propOrder = {
     "cmmnDiagram",

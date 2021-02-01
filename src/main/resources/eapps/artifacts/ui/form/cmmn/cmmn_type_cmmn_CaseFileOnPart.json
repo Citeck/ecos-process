@@ -19,8 +19,8 @@
           "en": "Name"
         },
         "defaultValue": "",
-        "key": "name",
-        "type": "textfield",
+        "key": "name_ml",
+        "type": "mlText",
         "input": true
       }
     ]

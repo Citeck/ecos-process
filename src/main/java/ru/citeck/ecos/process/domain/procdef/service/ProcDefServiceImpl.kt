@@ -37,10 +37,6 @@ class ProcDefServiceImpl(
     private val recordsService: RecordsService
 ) : ProcDefService {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
-
     override fun uploadProcDef(processDef: NewProcessDefDto): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
@@ -169,6 +165,7 @@ class ProcDefServiceImpl(
             newProcessDefDto.format = dto.format
             newProcessDefDto.id = id
             newProcessDefDto.procType = procType
+            newProcessDefDto.name = dto.name
             result = uploadProcDef(newProcessDefDto)
 
         } else {
@@ -285,6 +282,7 @@ class ProcDefServiceImpl(
         procDefDto.alfType = entity.alfType
         procDefDto.ecosTypeRef = RecordRef.valueOf(entity.ecosTypeRef)
         procDefDto.enabled = entity.enabled
+        procDefDto.format = entity.lastRev?.format ?: ""
         return procDefDto
     }
 

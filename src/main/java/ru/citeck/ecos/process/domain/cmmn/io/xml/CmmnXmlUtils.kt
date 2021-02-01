@@ -6,6 +6,8 @@ import org.springframework.util.DigestUtils
 import org.springframework.util.ResourceUtils
 import org.w3c.dom.ls.LSResourceResolver
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
+import ru.citeck.ecos.process.domain.cmmn.model.omg.Shape
+import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -147,5 +149,34 @@ object CmmnXmlUtils {
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not write to stream", e)
         }
+    }
+
+    @JvmStatic
+    fun idRefToId(ref: Any?): String? {
+        var mutRef = ref ?: return null
+        if (mutRef is JAXBElement<*>) {
+            mutRef = mutRef.value
+        }
+        if (mutRef is String) {
+            return mutRef
+        }
+        if (mutRef is TCmmnElement) {
+            return mutRef.id
+        }
+        if (mutRef is Shape) {
+            return mutRef.id
+        }
+        error("Unknown type: ${mutRef::class} value: $mutRef")
+    }
+
+    @JvmStatic
+    fun <T : Any> unwrapJaxb(value: JAXBElement<T>?): T? {
+        return value?.value
+    }
+
+    @JvmStatic
+    fun <T : Any> unwrapJaxb(list: List<JAXBElement<*>>?): List<T>? {
+        @Suppress("UNCHECKED_CAST")
+        return list?.map { it.value as T }
     }
 }

@@ -51,6 +51,9 @@ object CmmnIO {
                   <cmmn:planItem id="PlanItem_1j0scah" definitionRef="HumanTask_0psu33s" />
                   <cmmn:humanTask id="HumanTask_0psu33s" />
                 </cmmn:casePlanModel>
+                <cmmn:caseRoles>
+                    <cmmn:role id="role" />
+                </cmmn:caseRoles>
               </cmmn:case>
               <cmmndi:CMMNDI>
                 <cmmndi:CMMNDiagram id="CMMNDiagram_1">
