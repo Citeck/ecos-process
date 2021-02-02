@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.MandatoryParam
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.control.PlanItemControlDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 
@@ -17,15 +18,15 @@ class ActivityDef(
     val name: MLText,
     val planItemId: String,
 
-    val requiredRule: Boolean?,
-    val repetitionRule: Boolean?,
-    val manualActivationRule: Boolean?,
+    val control: PlanItemControlDef?,
 
     val entryCriteria: List<EntryCriterionDef>,
     val exitCriteria: List<ExitCriterionDef>,
 
     val type: String,
-    val data: ObjectData
+    val data: ObjectData,
+
+    val otherData: ObjectData
 ) {
 
     companion object {
@@ -57,9 +58,7 @@ class ActivityDef(
         var name: MLText = MLText()
         var planItemId: String = ""
 
-        var requiredRule: Boolean? = null
-        var repetitionRule: Boolean? = null
-        var manualActivationRule: Boolean? = null
+        var control: PlanItemControlDef? = null
 
         var entryCriteria: List<EntryCriterionDef> = emptyList()
         var exitCriteria: List<ExitCriterionDef> = emptyList()
@@ -67,17 +66,18 @@ class ActivityDef(
         var type: String = ""
         var data: ObjectData = ObjectData.create()
 
+        var otherData: ObjectData = ObjectData.create()
+
         constructor(base: ActivityDef) : this() {
             id = base.id
             name = base.name
+            control = base.control
             planItemId = base.planItemId
-            requiredRule = base.requiredRule
-            repetitionRule = base.repetitionRule
-            manualActivationRule = base.manualActivationRule
             entryCriteria = DataValue.create(base.entryCriteria).asList(EntryCriterionDef::class.java)
             exitCriteria = DataValue.create(base.exitCriteria).asList(ExitCriterionDef::class.java)
             type = base.type
             data = ObjectData.deepCopy(base.data)!!
+            otherData = ObjectData.deepCopy(base.otherData)!!
         }
 
         fun withId(id: String): Builder {
@@ -95,18 +95,8 @@ class ActivityDef(
             return this
         }
 
-        fun withRequiredRule(requiredRule: Boolean?): Builder {
-            this.requiredRule = requiredRule
-            return this
-        }
-
-        fun withRepetitionRule(repetitionRule: Boolean?): Builder {
-            this.repetitionRule = repetitionRule
-            return this
-        }
-
-        fun withManualActivationRule(manualActivationRule: Boolean?): Builder {
-            this.manualActivationRule = manualActivationRule
+        fun withControl(control: PlanItemControlDef?): Builder {
+            this.control = control
             return this
         }
 
@@ -130,6 +120,11 @@ class ActivityDef(
             return this
         }
 
+        fun withOtherData(otherData: ObjectData): Builder {
+            this.otherData = otherData
+            return this
+        }
+
         fun build(): ActivityDef {
             MandatoryParam.checkString("id", id)
             MandatoryParam.checkString("type", type)
@@ -137,15 +132,13 @@ class ActivityDef(
                 id,
                 name,
                 planItemId,
-                requiredRule,
-                repetitionRule,
-                manualActivationRule,
+                control,
                 entryCriteria,
                 exitCriteria,
                 type,
-                data
+                data,
+                otherData
             )
         }
     }
-
 }

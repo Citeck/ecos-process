@@ -1,15 +1,15 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.plan
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan
 
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TUserEventListener
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.type.listener.UserEventListenerDef
 import javax.xml.namespace.QName
 
-class UserEventListenerConverter : CmmnConverter<TUserEventListener, UserEventListenerDef> {
+class UserEventListenerConverter : EcosOmgConverter<UserEventListenerDef, TUserEventListener> {
 
     companion object {
         const val TYPE = "UserEventListener"

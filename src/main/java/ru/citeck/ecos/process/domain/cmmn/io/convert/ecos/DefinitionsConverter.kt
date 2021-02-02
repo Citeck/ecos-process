@@ -1,14 +1,15 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.artifact.AssociationConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.di.CmmnDiConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.ActivityConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.ExitCriterionConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.CmmnDiConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.ActivityConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.ExitCriterionConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.ArtifactDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.CaseDef
@@ -21,9 +22,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
 
-class DefinitionsConverter(
-    private val converters: CmmnConverters
-) : CmmnConverter<Definitions, CmmnProcDef> {
+class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
 
     companion object {
         const val TYPE = "Definitions"
@@ -32,7 +31,7 @@ class DefinitionsConverter(
     override fun import(element: Definitions, context: ImportContext): CmmnProcDef {
 
         val cases = element.case.map { importCase(it, context) }
-        val cmmnDi = converters.import(element.cmmndi, DiagramInterchangeDef::class.java, context).data
+        val cmmnDi = context.converters.import(element.cmmndi, DiagramInterchangeDef::class.java, context).data
         val artifacts = element.artifact?.map { importArtifact(it.value, context) } ?: emptyList()
 
         val ecosType = element.otherAttributes[CmmnXmlUtils.PROP_ECOS_TYPE]
@@ -46,7 +45,7 @@ class DefinitionsConverter(
 
         return CmmnProcDef(
             processDefId,
-            element.id ?: CmmnXmlUtils.generateId(TYPE),
+            element.id,
             Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             RecordRef.valueOf(ecosType),
             cases,
@@ -56,9 +55,9 @@ class DefinitionsConverter(
     }
 
     private fun importArtifact(artifact: TArtifact, context: ImportContext): ArtifactDef {
-        val dataWithType = converters.import(artifact, context)
+        val dataWithType = context.converters.import(artifact, context)
         return ArtifactDef(
-            artifact.id ?: CmmnXmlUtils.generateId("Artifact"),
+            artifact.id,
             dataWithType.type,
             dataWithType.data
         )
@@ -69,7 +68,7 @@ class DefinitionsConverter(
         val name = case.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] ?: case.name
 
         return CaseDef(
-            case.id ?: CmmnXmlUtils.generateId("Case"),
+            case.id,
             Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             importPlanModel(case.casePlanModel, context)
         )
@@ -80,10 +79,10 @@ class DefinitionsConverter(
             plan.id,
             MLText(plan.name ?: ""),
             plan.exitCriterion?.map {
-                converters.import(it, ExitCriterionDef::class.java, context).data
+                context.converters.import(it, ExitCriterionDef::class.java, context).data
             } ?: emptyList(),
             plan.planItem.map {
-                converters.import(it, ActivityDef::class.java, context).data
+                context.converters.import(it, ActivityDef::class.java, context).data
             }
         )
     }
@@ -97,7 +96,7 @@ class DefinitionsConverter(
             definitions.case.add(exportCase(it, context))
         }
 
-        definitions.cmmndi = converters.export(CmmnDiConverter.TYPE, element.cmmnDi, context)
+        definitions.cmmndi = context.converters.export(CmmnDiConverter.TYPE, element.cmmnDi, context)
         definitions.name = MLText.getClosestValue(element.name, RequestContext.getLocale())
         definitions.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(element.name)
 
@@ -122,11 +121,11 @@ class DefinitionsConverter(
 
     private fun exportArtifact(artifact: ArtifactDef, context: ExportContext): JAXBElement<out TArtifact> {
 
-        val tArtifact = converters.export<TArtifact>(artifact.type, artifact.data, context)
+        val tArtifact = context.converters.export<TArtifact>(artifact.type, artifact.data, context)
         tArtifact.id = artifact.id
 
         context.elementsById[artifact.id] = tArtifact
-        return converters.convertToJaxb(tArtifact)
+        return context.converters.convertToJaxb(tArtifact)
     }
 
     private fun exportCase(case: CaseDef, context: ExportContext): Case {
@@ -137,6 +136,8 @@ class DefinitionsConverter(
         if (name.isNotBlank()) {
             resultCase.name = name
         }
+
+        context.elementsById[resultCase.id] = resultCase
 
         resultCase.caseRoles = CaseRoles()
         resultCase.caseRoles.id = "case-roles"
@@ -158,17 +159,20 @@ class DefinitionsConverter(
         casePlanModel.name = MLText.getClosestValue(model.name, RequestContext.getLocale())
         casePlanModel.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(model.name)
 
+        context.elementsById[casePlanModel.id] = casePlanModel
+
         model.exitCriteria.forEach {
-            val criterion = converters.export<TExitCriterion>(ExitCriterionConverter.TYPE, it, context)
+            val criterion = context.converters.export<TExitCriterion>(ExitCriterionConverter.TYPE, it, context)
             casePlanModel.exitCriterion.add(criterion)
             casePlanModel.sentry.add(criterion.sentryRef as Sentry)
         }
 
         model.children.map { activityDef ->
-            val item = converters.export<TPlanItem>(ActivityConverter.TYPE, activityDef, context)
+            val item = context.converters.export<TPlanItem>(ActivityConverter.TYPE, activityDef, context)
             casePlanModel.planItem.add(item)
-            casePlanModel.planItemDefinition.add(converters.convertToJaxb(item.definitionRef as TPlanItemDefinition))
-
+            casePlanModel.planItemDefinition.add(
+                context.converters.convertToJaxb(item.definitionRef as TPlanItemDefinition)
+            )
             item.entryCriterion?.forEach { addSentry(casePlanModel, it.sentryRef as? Sentry) }
             item.exitCriterion?.forEach { addSentry(casePlanModel, it.sentryRef as? Sentry) }
         }
@@ -178,7 +182,7 @@ class DefinitionsConverter(
         return casePlanModel
     }
 
-    private fun fixRefs(stage: Stage, context: ExportContext) {
+    fun fixRefs(stage: Stage, context: ExportContext) {
         stage.sentry.forEach { fixSentry(it, context) }
         stage.planItemDefinition.mapNotNull {
             it.value as? Stage
@@ -204,18 +208,38 @@ class DefinitionsConverter(
         sentry.onPart?.forEach {
             val value = it.value
             if (value is TPlanItemOnPart) {
-                if (value.exitCriterionRef is String) {
-                    value.exitCriterionRef = context.elementsById[value.exitCriterionRef as String]
+                val exitCriterionRef = value.exitCriterionRef
+                if (exitCriterionRef is String) {
+                    if (exitCriterionRef.isNotEmpty()) {
+                        value.exitCriterionRef = needCtxElementById(context, exitCriterionRef)
+                    } else {
+                        value.exitCriterionRef = null
+                    }
                 }
-                if (value.sourceRef is String) {
-                    value.sourceRef = context.elementsById[value.sourceRef as String]
+                val sourceRef = value.sourceRef
+                if (sourceRef is String) {
+                    if (sourceRef.isNotEmpty()) {
+                        value.sourceRef = needCtxElementById(context, sourceRef)
+                    } else {
+                        value.sourceRef = null
+                    }
                 }
             } else if (value is TCaseFileItemOnPart) {
-                if (value.sourceRef is String) {
-                    value.sourceRef = context.elementsById[value.sourceRef as String]
+                val sourceRef = value.sourceRef
+                if (sourceRef is String) {
+                    if (sourceRef.isNotEmpty()) {
+                        value.sourceRef = needCtxElementById(context, sourceRef)
+                    } else {
+                        value.sourceRef = null
+                    }
                 }
             }
         }
+    }
+
+    private fun needCtxElementById(context: ExportContext, id: String): Any {
+        return context.elementsById[id]
+            ?: error("Element is not found by id: '${id}'. \nElements: ${context.elementsById.keys}")
     }
 
     private fun addSentry(stage: Stage, sentry: Sentry?) {

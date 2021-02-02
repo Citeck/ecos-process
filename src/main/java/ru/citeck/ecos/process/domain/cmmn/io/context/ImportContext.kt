@@ -1,4 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.io.context
 
-class ImportContext {
-}
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
+
+class ImportContext(
+    val converters: EcosOmgConverters
+)

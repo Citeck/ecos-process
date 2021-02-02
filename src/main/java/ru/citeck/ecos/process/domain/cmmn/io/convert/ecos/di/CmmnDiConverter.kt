@@ -1,9 +1,9 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.di
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
@@ -14,8 +14,8 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNDiagram
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 
 class CmmnDiConverter(
-    private val converters: CmmnConverters
-) : CmmnConverter<CMMNDI, DiagramInterchangeDef> {
+    private val converters: EcosOmgConverters
+) : EcosOmgConverter<DiagramInterchangeDef, CMMNDI> {
 
     companion object {
         const val TYPE = "DI"
@@ -27,7 +27,7 @@ class CmmnDiConverter(
 
     private fun importDiagram(diagram: CMMNDiagram, context: ImportContext): DiagramDef {
         return DiagramDef(
-            diagram.id ?: CmmnXmlUtils.generateId("CMMNDiagram"),
+            diagram.id,
             MLText(diagram.name ?: ""),
             diagram.cmmnElementRef?.localPart,
             DiagramIOUtils.convertDimension(diagram.size),
@@ -40,7 +40,7 @@ class CmmnDiConverter(
         val elementData = converters.import(element, context)
 
         return DiagramElementDef(
-            element.id ?: CmmnXmlUtils.generateId("DiagramElement"),
+            element.id,
             elementData.type,
             elementData.data
         )

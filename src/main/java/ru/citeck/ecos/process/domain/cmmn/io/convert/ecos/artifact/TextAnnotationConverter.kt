@@ -1,9 +1,9 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.artifact
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TTextAnnotation
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
@@ -11,7 +11,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.TextAnnotatio
 import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.namespace.QName
 
-class TextAnnotationConverter  : CmmnConverter<TTextAnnotation, TextAnnotationDef> {
+class TextAnnotationConverter  : EcosOmgConverter<TextAnnotationDef, TTextAnnotation> {
 
     companion object {
         const val TYPE = "TextAnnotation"

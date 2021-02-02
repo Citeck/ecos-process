@@ -1,21 +1,22 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.plan
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.EntryCriterionConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event.ExitCriterionConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.PlanItemControlConverter
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.control.PlanItemControlDef
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.EntryCriterionConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.ExitCriterionConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.ActivityDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import ru.citeck.ecos.records3.record.request.RequestContext
 
-class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<TPlanItem, ActivityDef> {
+class ActivityConverter : EcosOmgConverter<ActivityDef, TPlanItem> {
 
     companion object {
         const val TYPE = "Activity"
@@ -26,16 +27,9 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
         val activityDef = ActivityDef.create()
         activityDef.planItemId = element.id
 
-        if (element.itemControl != null) {
-            if (element.itemControl.manualActivationRule != null) {
-                activityDef.manualActivationRule = true
-            }
-            if (element.itemControl.repetitionRule != null) {
-                activityDef.repetitionRule = true
-            }
-            if (element.itemControl.requiredRule != null) {
-                activityDef.requiredRule = true
-            }
+        val control = element.itemControl
+        if (control != null) {
+            activityDef.withControl(context.converters.import(control, PlanItemControlDef::class.java, context).data)
         }
 
         val definition = element.definitionRef
@@ -47,7 +41,7 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
             error("Unsupported type: " + definition::class)
         }
 
-        val data = converters.import(definition, context)
+        val data = context.converters.import(definition, context)
         activityDef.data = data.data
         activityDef.type = data.type
 
@@ -55,14 +49,14 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
             activityDef.entryCriteria = element.entryCriterion.filter {
                 isValidCriterion(it)
             }.map {
-                converters.import(it, EntryCriterionDef::class.java, context).data
+                context.converters.import(it, EntryCriterionDef::class.java, context).data
             }
         }
         if (element.exitCriterion != null) {
             activityDef.exitCriteria = element.exitCriterion.filter {
                 isValidCriterion(it)
             }.map {
-                converters.import(it, ExitCriterionDef::class.java, context).data
+                context.converters.import(it, ExitCriterionDef::class.java, context).data
             }
         }
 
@@ -79,30 +73,15 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
 
     override fun export(element: ActivityDef, context: ExportContext): TPlanItem {
 
-        val definition = converters.export<TPlanItemDefinition>(element.type, element.data, context)
+        val definition = context.converters.export<TPlanItemDefinition>(element.type, element.data, context)
 
         val planItem = TPlanItem()
         planItem.id = element.planItemId
         planItem.definitionRef = definition
 
-        if (element.manualActivationRule == true) {
-            planItem.itemControl = TPlanItemControl()
-            planItem.itemControl.manualActivationRule = TManualActivationRule()
-            planItem.itemControl.manualActivationRule.id = CmmnXmlUtils.generateId("ManualActivationRule")
-        }
-        if (element.repetitionRule == true) {
-            if (planItem.itemControl == null) {
-                planItem.itemControl = TPlanItemControl()
-            }
-            planItem.itemControl.repetitionRule = TRepetitionRule()
-            planItem.itemControl.repetitionRule.id = CmmnXmlUtils.generateId("RepetitionRule")
-        }
-        if (element.requiredRule == true) {
-            if (planItem.itemControl == null) {
-                planItem.itemControl = TPlanItemControl()
-            }
-            planItem.itemControl.requiredRule = TRequiredRule()
-            planItem.itemControl.requiredRule.id = CmmnXmlUtils.generateId("RequiredRule")
+        val control = element.control
+        if (control != null) {
+            planItem.itemControl = context.converters.export(PlanItemControlConverter.TYPE, control, context)
         }
 
         exportSentries(planItem, element, context)
@@ -117,6 +96,7 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
 
         context.elementsById[planItem.id] = planItem
         context.elementsById[definition.id] = definition
+        context.planItemByDefId[definition.id] = planItem
 
         return planItem
     }
@@ -127,10 +107,10 @@ class ActivityConverter(private val converters: CmmnConverters) : CmmnConverter<
         context: ExportContext
     ) {
         activity.entryCriteria.forEach {
-            planItem.entryCriterion.add(converters.export(EntryCriterionConverter.TYPE, it, context))
+            planItem.entryCriterion.add(context.converters.export(EntryCriterionConverter.TYPE, it, context))
         }
         activity.exitCriteria.forEach {
-            planItem.exitCriterion.add(converters.export(ExitCriterionConverter.TYPE, it, context))
+            planItem.exitCriterion.add(context.converters.export(ExitCriterionConverter.TYPE, it, context))
         }
     }
 

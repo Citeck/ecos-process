@@ -1,13 +1,13 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.di
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNEdge
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.EdgeDef
 import javax.xml.namespace.QName
 
-class EdgeConverter : CmmnConverter<CMMNEdge, EdgeDef> {
+class EdgeConverter : EcosOmgConverter<EdgeDef, CMMNEdge> {
 
     companion object {
         const val TYPE = "Edge"

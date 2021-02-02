@@ -1,7 +1,6 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.plan
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan
 
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.ActivityDef
@@ -11,9 +10,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.Stage
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TPlanItem
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TPlanItemDefinition
 
-class StageConverter(
-    private val converters: CmmnConverters
-) : CmmnConverter<Stage, StageDef> {
+class StageConverter : EcosOmgConverter<StageDef, Stage> {
 
     companion object {
         const val TYPE = "Stage"
@@ -24,7 +21,7 @@ class StageConverter(
         return StageDef(
             element.isAutoComplete,
             element.planItem.map {
-                converters.import(it, ActivityDef::class.java, context).data
+                context.converters.import(it, ActivityDef::class.java, context).data
             }
         )
     }
@@ -37,10 +34,10 @@ class StageConverter(
         }
 
         element.children.map {
-            converters.export<TPlanItem>(ActivityConverter.TYPE, it, context)
+            context.converters.export<TPlanItem>(ActivityConverter.TYPE, it, context)
         }.forEach { planItem ->
             stage.planItem.add(planItem)
-            stage.planItemDefinition.add(converters.convertToJaxb(planItem.definitionRef as TPlanItemDefinition))
+            stage.planItemDefinition.add(context.converters.convertToJaxb(planItem.definitionRef as TPlanItemDefinition))
             planItem.entryCriterion?.mapNotNull { it.sentryRef as? Sentry }?.forEach { stage.sentry.add(it) }
             planItem.exitCriterion?.mapNotNull { it.sentryRef as? Sentry }?.forEach { stage.sentry.add(it) }
         }

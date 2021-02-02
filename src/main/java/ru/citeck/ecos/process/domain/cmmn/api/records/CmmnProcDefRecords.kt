@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.api.records
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
@@ -38,6 +39,9 @@ class CmmnProcDefRecords(
     companion object {
         private const val SOURCE_ID = "cmmn-def"
         private const val PROC_TYPE = "cmmn"
+        private const val ECOS_PROC_DEF_FORMAT = "ecos-cmmn"
+
+        private val log = KotlinLogging.logger {}
     }
 
     override fun queryRecords(query: RecordsQuery): Any? {
@@ -104,8 +108,8 @@ class CmmnProcDefRecords(
         var newDefData: ByteArray? = null
         if (newDefinition.isNotBlank()) {
 
-            val cmmnProcDef = CmmnIO.import(newDefinition)
-            CmmnIO.export(cmmnProcDef)
+            val cmmnProcDef = CmmnIO.importEcosCmmn(newDefinition)
+            CmmnIO.exportEcosCmmn(cmmnProcDef)
 
             newDefData = mapper.toBytes(cmmnProcDef)
             record.ecosType = cmmnProcDef.ecosType
@@ -175,6 +179,10 @@ class CmmnProcDefRecords(
         private val procDef: ProcDefDto
     ) {
 
+        fun getEcosType(): RecordRef {
+            return procDef.ecosTypeRef
+        }
+
         fun getId(): String {
             return procDef.id
         }
@@ -209,7 +217,14 @@ class CmmnProcDefRecords(
         fun getDefinition(): String? {
             val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
             if (rev.format == "ecos-cmmn") {
-                return Json.mapper.read(rev.data, CmmnProcDef::class.java)?.let { CmmnIO.exportToString(it) }
+                return mapper.read(rev.data, CmmnProcDef::class.java)?.let {
+                    try {
+                        CmmnIO.exportEcosCmmnToString(it)
+                    } catch (e: Exception) {
+                        log.error("Definition reading failed: ${rev.procDefId} ${rev.id} ${e.message}")
+                        null
+                    }
+                }
             }
             return String(rev.data, StandardCharsets.UTF_8)
         }
@@ -255,7 +270,7 @@ class CmmnProcDefRecords(
                 "application/json" -> {
                     val def = mapper.read(contentText, CmmnProcDef::class.java)
                             ?: error("Incorrect content: $base64Content")
-                    CmmnIO.exportToString(def)
+                    CmmnIO.exportEcosCmmnToString(def)
                 }
                 else -> {
                     error("Unknown format: $format")

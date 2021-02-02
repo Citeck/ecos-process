@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.procdef.service
 import com.querydsl.core.types.dsl.BooleanExpression
 import lombok.Data
 import lombok.RequiredArgsConstructor
-import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -36,6 +35,10 @@ class ProcDefServiceImpl(
     private val tenantService: ProcTenantService,
     private val recordsService: RecordsService
 ) : ProcDefService {
+
+    companion object {
+        private val STARTUP_TIME_STR = Instant.now().toEpochMilli().toString()
+    }
 
     override fun uploadProcDef(processDef: NewProcessDefDto): ProcDefDto {
 
@@ -203,8 +206,8 @@ class ProcDefServiceImpl(
         return if (modified.isEmpty()) {
             ""
         } else {
-            modified[0].modified.toString()
-        } + "-" + getCount()
+            modified[0].modified?.toEpochMilli().toString()
+        } + "-" + getCount() + "-" + STARTUP_TIME_STR
     }
 
     override fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto? {

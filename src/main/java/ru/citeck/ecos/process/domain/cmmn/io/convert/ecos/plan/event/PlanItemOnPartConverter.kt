@@ -1,17 +1,17 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemOnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemTransitionEnum
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import ru.citeck.ecos.records3.record.request.RequestContext
 
-class PlanItemOnPartConverter : CmmnConverter<TPlanItemOnPart, PlanItemOnPartDef> {
+class PlanItemOnPartConverter: EcosOmgConverter<PlanItemOnPartDef, TPlanItemOnPart> {
 
     companion object {
         const val TYPE = "PlanItemOnPart"

@@ -9,6 +9,6 @@
                 @javax.xml.bind.annotation.XmlNs(prefix = "cmmndi", namespaceURI = "http://www.omg.org/spec/CMMN/20151109/CMMNDI"),
                 @javax.xml.bind.annotation.XmlNs(prefix = "cmmn", namespaceURI = "http://www.omg.org/spec/CMMN/20151109/MODEL"),
                 @javax.xml.bind.annotation.XmlNs(prefix = "xsi", namespaceURI = "http://www.w3.org/2001/XMLSchema-instance"),
-                @javax.xml.bind.annotation.XmlNs(prefix = "ecos", namespaceURI = "http://www.citeck.ru/ecos")
+                @javax.xml.bind.annotation.XmlNs(prefix = "ecos", namespaceURI = "http://www.citeck.ru/ecos/cmmn/1.0")
         }
 ) package ru.citeck.ecos.process.domain.cmmn.model.omg;

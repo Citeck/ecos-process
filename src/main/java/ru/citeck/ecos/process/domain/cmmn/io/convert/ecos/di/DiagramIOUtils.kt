@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.di
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Bounds
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNLabel

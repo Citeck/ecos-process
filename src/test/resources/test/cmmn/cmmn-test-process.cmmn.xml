@@ -3,7 +3,7 @@
                   xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI"
                   xmlns:di="http://www.omg.org/spec/CMMN/20151109/DI" xmlns:xs="http://www.w3.org/2001/XMLSchema"
                   xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL"
-                  xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" xmlns:ecos="http://www.citeck.ru/ecos"
+                  xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" xmlns:ecos="http://www.citeck.ru/ecos/cmmn/1.0"
                   id="Definitions_0hgc0au" name="" targetNamespace="http://bpmn.io/schema/cmmn" ecos:name_ml="{}"
                   ecos:processDefId="test" ecos:ecosType="">
     <cmmn:case id="contract-case-id" ecos:name_ml="{}">

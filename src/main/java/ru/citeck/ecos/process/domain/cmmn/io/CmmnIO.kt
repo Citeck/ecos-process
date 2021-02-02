@@ -2,34 +2,95 @@ package ru.citeck.ecos.process.domain.cmmn.io
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
-import ru.citeck.ecos.process.domain.cmmn.model.omg.ObjectFactory
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
-import ru.citeck.ecos.process.domain.cmmn.io.convert.DefinitionsConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.TextAnnotationConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.CmmnDiConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.EdgeConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.ShapeConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.*
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.*
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.ManualActivationRuleConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.RepetitionRuleConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.RequiredRuleConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfDefinitionsConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfPlanItemOnPartConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfSentryConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef
+import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
+import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.records2.RecordRef
+import javax.xml.namespace.QName
 
 object CmmnIO {
 
-    private val objectFactory = ObjectFactory()
-    private val converters = CmmnConverters(objectFactory)
+    private val PROP_EXT_CMMN_TYPE = QName(CmmnXmlUtils.NS_ECOS, "cmmnType")
 
-    fun import(definitions: String): CmmnProcDef {
-        return import(CmmnXmlUtils.readFromString(definitions))
+    private val ecosCmmnConverters = EcosOmgConverters(listOf(
+        DefinitionsConverter::class,
+        CmmnDiConverter::class,
+        ActivityConverter::class,
+        SentryConverter::class,
+        StageConverter::class,
+        EdgeConverter::class,
+        ShapeConverter::class,
+        HumanTaskConverter::class,
+        ProcessTaskConverter::class,
+        TimerEventListenerConverter::class,
+        UserEventListenerConverter::class,
+        AssociationConverter::class,
+        TextAnnotationConverter::class,
+        ExitCriterionConverter::class,
+        EntryCriterionConverter::class,
+        PlanItemOnPartConverter::class,
+        CaseFileOnPartConverter::class,
+        RepetitionRuleConverter::class,
+        ManualActivationRuleConverter::class,
+        RequiredRuleConverter::class
+    )) { item -> when (item) {
+        is DiagramElement -> item.otherAttributes[PROP_EXT_CMMN_TYPE]
+        is TCmmnElement -> item.otherAttributes[PROP_EXT_CMMN_TYPE]
+        else -> null
+    }}
+
+    private val ecosAlfCmmnConverters = EcosOmgConverters(ecosCmmnConverters, listOf(
+        AlfDefinitionsConverter::class,
+        AlfSentryConverter::class,
+        AlfPlanItemOnPartConverter::class
+    )) { null }
+
+    @JvmStatic
+    fun importEcosCmmn(definitions: String): CmmnProcDef {
+        return importEcosCmmn(CmmnXmlUtils.readFromString(definitions))
     }
 
-    fun import(definitions: Definitions): CmmnProcDef {
-        return converters.import(definitions, CmmnProcDef::class.java, ImportContext()).data
+    @JvmStatic
+    fun importEcosCmmn(definitions: Definitions): CmmnProcDef {
+        return ecosCmmnConverters.import(definitions, CmmnProcDef::class.java).data
     }
 
-    fun export(procDef: CmmnProcDef): Definitions {
-        return converters.export(DefinitionsConverter.TYPE, procDef, ExportContext())
+    @JvmStatic
+    fun exportEcosCmmn(procDef: CmmnProcDef): Definitions {
+        return ecosCmmnConverters.export(DefinitionsConverter.TYPE, procDef)
     }
 
-    fun exportToString(procDef: CmmnProcDef): String {
-        return CmmnXmlUtils.writeToString(export(procDef))
+    @JvmStatic
+    fun exportEcosCmmnToString(procDef: CmmnProcDef): String {
+        return CmmnXmlUtils.writeToString(exportEcosCmmn(procDef))
+    }
+
+    @JvmStatic
+    fun exportAlfCmmn(procDef: CmmnProcDef): Definitions {
+        return ecosAlfCmmnConverters.export(DefinitionsConverter.TYPE, procDef)
+    }
+
+    @JvmStatic
+    fun exportAlfCmmnToString(procDef: CmmnProcDef): String {
+        return CmmnXmlUtils.writeToString(exportAlfCmmn(procDef))
     }
 
     fun generateDefaultDef(processDefId: String, name: MLText, ecosType: RecordRef): CmmnProcDef {
@@ -40,7 +101,7 @@ object CmmnIO {
                     xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC"
                     xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI"
                     xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL"
-                    xmlns:ecos="http://www.citeck.ru/ecos"
+                    xmlns:ecos="http://www.citeck.ru/ecos/cmmn/1.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     id="Definitions_0fet87u"
                     targetNamespace="http://bpmn.io/schema/cmmn"
@@ -71,7 +132,7 @@ object CmmnIO {
             </cmmn:definitions>
         """.trimIndent()
 
-        val cmmnDef = import(CmmnXmlUtils.readFromString(defaultDef))
+        val cmmnDef = importEcosCmmn(CmmnXmlUtils.readFromString(defaultDef))
 
         return CmmnProcDef(
             processDefId,

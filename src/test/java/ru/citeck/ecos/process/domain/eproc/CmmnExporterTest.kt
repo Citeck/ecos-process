@@ -28,8 +28,15 @@ class CmmnExporterTest {
         val procDefXml = procDefFile.readText()
 
         RequestContext.doWithCtx(RecordsServiceFactory()) {
+
+            // test
+            val originalDefs = CmmnXmlUtils.readFromString(procDefXml)
+            val ecosProc = CmmnIO.importEcosCmmn(originalDefs)
+            println(CmmnIO.exportAlfCmmnToString(ecosProc))
+            // /test
+
             testProc(procDefXml)
-            testProc(CmmnIO.exportToString(
+            testProc(CmmnIO.exportEcosCmmnToString(
                 CmmnIO.generateDefaultDef("test-id", MLText(""), RecordRef.EMPTY)
             ))
         }
@@ -40,8 +47,8 @@ class CmmnExporterTest {
         val originalXmlProcess = CmmnXmlUtils.readFromString(procDefXml)
         CmmnComparator.sortAllById(originalXmlProcess)
 
-        val ecosProcess = CmmnIO.import(originalXmlProcess)
-        val xmlProcessAfterExport = CmmnIO.export(ecosProcess)
+        val ecosProcess = CmmnIO.importEcosCmmn(originalXmlProcess)
+        val xmlProcessAfterExport = CmmnIO.exportEcosCmmn(ecosProcess)
 
         CmmnComparator.sortAllById(xmlProcessAfterExport)
 
@@ -70,7 +77,7 @@ class CmmnExporterTest {
 
         assertTrue(compareResult)
 
-        val ecosProcess2 = CmmnIO.import(xmlProcessAfterExport)
+        val ecosProcess2 = CmmnIO.importEcosCmmn(xmlProcessAfterExport)
 
         assertEquals(
             Json.mapper.convert(ecosProcess, ObjectData::class.java),

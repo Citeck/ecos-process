@@ -1,15 +1,15 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.artifact
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact
 
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TAssociation
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TAssociationDirection
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssocDirectionEnum
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssociationDef
 
-class AssociationConverter: CmmnConverter<TAssociation, AssociationDef> {
+class AssociationConverter: EcosOmgConverter<AssociationDef, TAssociation> {
 
     companion object {
         const val TYPE = "Association"

@@ -26,7 +26,8 @@ object CmmnXmlUtils {
     private val log = KotlinLogging.logger {}
 
     const val NS_CMMN = "http://www.omg.org/spec/CMMN/20151109/MODEL"
-    const val NS_ECOS = "http://www.citeck.ru/ecos"
+    const val NS_ECOS = "http://www.citeck.ru/ecos/cmmn/1.0"
+    const val NS_ALF_ECOS_CMMN = "http://www.citeck.ru/ecos/case/cmmn/1.0"
 
     val PROP_ECOS_TYPE = QName(NS_ECOS, "ecosType")
     val PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")

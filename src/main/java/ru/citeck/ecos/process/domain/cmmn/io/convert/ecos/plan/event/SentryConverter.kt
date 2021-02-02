@@ -1,9 +1,8 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.plan.event
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.CmmnConverters
+import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
@@ -14,7 +13,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.Sentry
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import javax.xml.namespace.QName
 
-class SentryConverter(private val converters: CmmnConverters) : CmmnConverter<Sentry, SentryDef> {
+class SentryConverter : EcosOmgConverter<SentryDef, Sentry> {
 
     companion object {
 
@@ -29,7 +28,7 @@ class SentryConverter(private val converters: CmmnConverters) : CmmnConverter<Se
         val onPart = element.onPart?.mapNotNull { jaxbOnPart ->
 
             val onPartValue = jaxbOnPart.value
-            val configWithType = converters.import(onPartValue, context)
+            val configWithType = context.converters.import(onPartValue, context)
             OnPartDef(configWithType.type, configWithType.data)
 
         } ?: emptyList()
@@ -55,8 +54,8 @@ class SentryConverter(private val converters: CmmnConverters) : CmmnConverter<Se
         cmmnSentry.id = element.id
 
         element.onPart.forEach {
-            val onPart = converters.export<TOnPart>(it.type, it.config, context)
-            cmmnSentry.onPart.add(converters.convertToJaxb(onPart))
+            val onPart = context.converters.export<TOnPart>(it.type, it.config, context)
+            cmmnSentry.onPart.add(context.converters.convertToJaxb(onPart))
         }
 
         if (element.ifPart != null) {
