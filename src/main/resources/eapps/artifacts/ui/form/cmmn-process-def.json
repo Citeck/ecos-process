@@ -34,7 +34,7 @@
                 },
                 "defaultValue": "",
                 "key": "name",
-                "type": "textfield",
+                "type": "mlText",
                 "input": true
               }
             ],
