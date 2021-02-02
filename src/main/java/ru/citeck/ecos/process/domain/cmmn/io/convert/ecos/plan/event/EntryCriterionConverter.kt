@@ -12,10 +12,6 @@ import java.util.*
 
 class EntryCriterionConverter: EcosOmgConverter<EntryCriterionDef, TEntryCriterion> {
 
-    companion object {
-        const val TYPE = "EntryCriterion"
-    }
-
     override fun import(element: TEntryCriterion, context: ImportContext): EntryCriterionDef {
         return EntryCriterionDef(
             element.id,
@@ -28,7 +24,7 @@ class EntryCriterionConverter: EcosOmgConverter<EntryCriterionDef, TEntryCriteri
 
         val result = TEntryCriterion()
         result.id = element.id
-        result.sentryRef = context.converters.export<Sentry>(SentryConverter.TYPE, element.sentry, context)
+        result.sentryRef = context.converters.export<Sentry>(element.sentry, context)
 
         val name = MLText.getClosestValue(element.name, Locale.ENGLISH)
         if (name.isNotBlank()) {
@@ -39,6 +35,4 @@ class EntryCriterionConverter: EcosOmgConverter<EntryCriterionDef, TEntryCriteri
 
         return result
     }
-
-    override fun getElementType() = TYPE
 }

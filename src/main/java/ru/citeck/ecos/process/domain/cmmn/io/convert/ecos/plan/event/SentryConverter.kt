@@ -16,9 +16,6 @@ import javax.xml.namespace.QName
 class SentryConverter : EcosOmgConverter<SentryDef, Sentry> {
 
     companion object {
-
-        const val TYPE = "Sentry"
-
         private val PROP_CONDITION_TYPE = QName(CmmnXmlUtils.NS_ECOS, "conditionType")
         private val PROP_CONDITION = QName(CmmnXmlUtils.NS_ECOS, "condition")
     }
@@ -76,6 +73,4 @@ class SentryConverter : EcosOmgConverter<SentryDef, Sentry> {
 
         return cmmnSentry
     }
-
-    override fun getElementType() = TYPE
 }

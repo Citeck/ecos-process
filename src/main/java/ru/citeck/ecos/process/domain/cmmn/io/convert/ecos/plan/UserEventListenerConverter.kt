@@ -12,8 +12,6 @@ import javax.xml.namespace.QName
 class UserEventListenerConverter : EcosOmgConverter<UserEventListenerDef, TUserEventListener> {
 
     companion object {
-        const val TYPE = "UserEventListener"
-
         val PROP_AUTHORIZED_ROLES = QName(CmmnXmlUtils.NS_ECOS, "authorizedRoles")
     }
 
@@ -33,6 +31,4 @@ class UserEventListenerConverter : EcosOmgConverter<UserEventListenerDef, TUserE
 
         return listener
     }
-
-    override fun getElementType() = TYPE
 }

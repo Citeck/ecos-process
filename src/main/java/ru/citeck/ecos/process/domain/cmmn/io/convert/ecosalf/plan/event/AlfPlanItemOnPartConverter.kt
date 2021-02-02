@@ -1,10 +1,11 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf
+package ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.event
 
 import mu.KotlinLogging
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.PlanItemOnPartConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfDefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemOnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemTransitionEnum
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
@@ -41,6 +42,4 @@ class AlfPlanItemOnPartConverter: EcosOmgConverter<PlanItemOnPartDef, TPlanItemO
 
         return onPart
     }
-
-    override fun getElementType(): String = PlanItemOnPartConverter.TYPE
 }

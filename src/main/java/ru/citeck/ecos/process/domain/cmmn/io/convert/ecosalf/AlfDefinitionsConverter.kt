@@ -6,11 +6,10 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ConvertUtils
 import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.EntryCriterionConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.PlanItemOnPartConverter
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.OnPartDef
@@ -19,30 +18,30 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import javax.xml.namespace.QName
 
-class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
+class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
 
     companion object {
 
-        val PROP_ELEMENT_TYPES = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "elementTypes")
+        private val PROP_ELEMENT_TYPES = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "elementTypes")
         private const val PROP_ELEMENT_TYPES_VALUE = "case-tasks,supplementary-files,documents," +
                                                      "completeness-levels,subcases,events,case-roles"
 
-        val PROP_ECOS_TYPE = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "caseEcosType")
-        val PROP_ECOS_KIND = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "caseEcosKind")
+        private val PROP_ALF_ECOS_TYPE = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "caseEcosType")
+        private val PROP_ALF_ECOS_KIND = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "caseEcosKind")
 
         val PROP_NODE_TYPE = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "nodeType")
-        val PROP_TITLE = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "title")
+        private val PROP_TITLE = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "title")
 
-        val PROP_SOURCE_ID = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "sourceId")
+        private val PROP_SOURCE_ID = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "sourceId")
     }
 
     private val standardConverter = DefinitionsConverter()
 
-    override fun import(element: Definitions, context: ImportContext): CmmnProcDef {
+    override fun import(element: Definitions, context: ImportContext): CmmnProcessDef {
         error("Import is not supported")
     }
 
-    override fun export(element: CmmnProcDef, context: ExportContext): Definitions {
+    override fun export(element: CmmnProcessDef, context: ExportContext): Definitions {
 
         val definitions = standardConverter.export(element, context)
         definitions.targetNamespace = "http://www.citeck.ru/ecos/case/cmmn/1.0"
@@ -53,10 +52,10 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
 
         val firstSlashIdx = element.id.indexOf('/')
         if (firstSlashIdx > 0) {
-            case.otherAttributes[PROP_ECOS_TYPE] = element.id.substring(0, firstSlashIdx)
-            case.otherAttributes[PROP_ECOS_KIND] = element.id.substring(firstSlashIdx + 1)
+            case.otherAttributes[PROP_ALF_ECOS_TYPE] = element.id.substring(0, firstSlashIdx)
+            case.otherAttributes[PROP_ALF_ECOS_KIND] = element.id.substring(firstSlashIdx + 1)
         } else {
-            case.otherAttributes[PROP_ECOS_TYPE] = PROP_ELEMENT_TYPES_VALUE
+            case.otherAttributes[PROP_ALF_ECOS_TYPE] = element.id
         }
 
         processStages(case, true, case.casePlanModel, context)
@@ -120,7 +119,7 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
                         CmmnXmlUtils.generateId("Sentry"),
                         listOf(
                             OnPartDef(
-                                PlanItemOnPartConverter.TYPE,
+                                ConvertUtils.getTypeByClass(PlanItemOnPartDef::class.java),
                                 ObjectData.create(PlanItemOnPartDef(
                                     CmmnXmlUtils.generateId("PlanItemOnPart"),
                                     MLText(),
@@ -134,11 +133,7 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
                     )
                 )
 
-                val entryOnParentCreate = context.converters.export<TEntryCriterion>(
-                    EntryCriterionConverter.TYPE,
-                    entryOnParentCreateDef,
-                    context
-                )
+                val entryOnParentCreate = context.converters.export<TEntryCriterion>(entryOnParentCreateDef, context)
 
                 if (isRoot) {
                     (entryOnParentCreate.sentryRef as? Sentry)?.onPart?.mapNotNull {
@@ -163,6 +158,4 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
             }
         }
     }
-
-    override fun getElementType() = DefinitionsConverter.TYPE
 }

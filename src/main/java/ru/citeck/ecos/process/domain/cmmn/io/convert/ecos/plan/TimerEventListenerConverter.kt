@@ -8,10 +8,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.typ
 
 class TimerEventListenerConverter : EcosOmgConverter<TimerEventListenerDef, TTimerEventListener> {
 
-    companion object {
-        const val TYPE = "TimerEventListener"
-    }
-
     override fun import(element: TTimerEventListener, context: ImportContext): TimerEventListenerDef {
         //todo
         return TimerEventListenerDef()
@@ -21,6 +17,4 @@ class TimerEventListenerConverter : EcosOmgConverter<TimerEventListenerDef, TTim
         //todo
         return TTimerEventListener()
     }
-
-    override fun getElementType() = TYPE
 }

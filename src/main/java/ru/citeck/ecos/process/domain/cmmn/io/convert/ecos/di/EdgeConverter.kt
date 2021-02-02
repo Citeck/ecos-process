@@ -9,10 +9,6 @@ import javax.xml.namespace.QName
 
 class EdgeConverter : EcosOmgConverter<EdgeDef, CMMNEdge> {
 
-    companion object {
-        const val TYPE = "Edge"
-    }
-
     override fun import(element: CMMNEdge, context: ImportContext): EdgeDef {
 
         return EdgeDef(
@@ -40,6 +36,4 @@ class EdgeConverter : EcosOmgConverter<EdgeDef, CMMNEdge> {
 
         return edge
     }
-
-    override fun getElementType() = TYPE
 }

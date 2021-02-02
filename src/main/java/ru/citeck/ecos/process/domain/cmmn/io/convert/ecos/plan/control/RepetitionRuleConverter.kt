@@ -8,10 +8,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.TRepetitionRule
 
 class RepetitionRuleConverter : EcosOmgConverter<RepetitionRuleDef, TRepetitionRule> {
 
-    companion object {
-        const val TYPE = "RepetitionRule"
-    }
-
     override fun import(element: TRepetitionRule, context: ImportContext): RepetitionRuleDef {
 
         return RepetitionRuleDef(element.id)
@@ -24,6 +20,4 @@ class RepetitionRuleConverter : EcosOmgConverter<RepetitionRuleDef, TRepetitionR
 
         return rule
     }
-
-    override fun getElementType() = TYPE
 }

@@ -12,10 +12,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.TPlanItemDefinition
 
 class StageConverter : EcosOmgConverter<StageDef, Stage> {
 
-    companion object {
-        const val TYPE = "Stage"
-    }
-
     override fun import(element: Stage, context: ImportContext): StageDef {
 
         return StageDef(
@@ -34,7 +30,7 @@ class StageConverter : EcosOmgConverter<StageDef, Stage> {
         }
 
         element.children.map {
-            context.converters.export<TPlanItem>(ActivityConverter.TYPE, it, context)
+            context.converters.export<TPlanItem>(it, context)
         }.forEach { planItem ->
             stage.planItem.add(planItem)
             stage.planItemDefinition.add(context.converters.convertToJaxb(planItem.definitionRef as TPlanItemDefinition))
@@ -43,6 +39,4 @@ class StageConverter : EcosOmgConverter<StageDef, Stage> {
         }
         return stage
     }
-
-    override fun getElementType() = TYPE
 }

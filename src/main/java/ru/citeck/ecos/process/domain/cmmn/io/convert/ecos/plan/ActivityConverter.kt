@@ -6,10 +6,7 @@ import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.PlanItemControlConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.control.PlanItemControlDef
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.EntryCriterionConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.ExitCriterionConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.ActivityDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
@@ -17,10 +14,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import ru.citeck.ecos.records3.record.request.RequestContext
 
 class ActivityConverter : EcosOmgConverter<ActivityDef, TPlanItem> {
-
-    companion object {
-        const val TYPE = "Activity"
-    }
 
     override fun import(element: TPlanItem, context: ImportContext): ActivityDef {
 
@@ -74,6 +67,9 @@ class ActivityConverter : EcosOmgConverter<ActivityDef, TPlanItem> {
     override fun export(element: ActivityDef, context: ExportContext): TPlanItem {
 
         val definition = context.converters.export<TPlanItemDefinition>(element.type, element.data, context)
+        if (!element.type.startsWith("cmmn:")) {
+            definition.otherAttributes[CmmnXmlUtils.PROP_ECOS_CMMN_TYPE] = element.type
+        }
 
         val planItem = TPlanItem()
         planItem.id = element.planItemId
@@ -81,7 +77,7 @@ class ActivityConverter : EcosOmgConverter<ActivityDef, TPlanItem> {
 
         val control = element.control
         if (control != null) {
-            planItem.itemControl = context.converters.export(PlanItemControlConverter.TYPE, control, context)
+            planItem.itemControl = context.converters.export(control, context)
         }
 
         exportSentries(planItem, element, context)
@@ -107,12 +103,10 @@ class ActivityConverter : EcosOmgConverter<ActivityDef, TPlanItem> {
         context: ExportContext
     ) {
         activity.entryCriteria.forEach {
-            planItem.entryCriterion.add(context.converters.export(EntryCriterionConverter.TYPE, it, context))
+            planItem.entryCriterion.add(context.converters.export(it, context))
         }
         activity.exitCriteria.forEach {
-            planItem.exitCriterion.add(context.converters.export(ExitCriterionConverter.TYPE, it, context))
+            planItem.exitCriterion.add(context.converters.export(it, context))
         }
     }
-
-    override fun getElementType() = TYPE
 }

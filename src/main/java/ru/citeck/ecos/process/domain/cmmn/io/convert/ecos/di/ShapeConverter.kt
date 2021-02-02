@@ -9,10 +9,6 @@ import javax.xml.namespace.QName
 
 class ShapeConverter : EcosOmgConverter<ShapeDef, CMMNShape> {
 
-    companion object {
-        const val TYPE = "Shape"
-    }
-
     override fun import(element: CMMNShape, context: ImportContext): ShapeDef {
 
         return ShapeDef(
@@ -36,6 +32,4 @@ class ShapeConverter : EcosOmgConverter<ShapeDef, CMMNShape> {
 
         return shape
     }
-
-    override fun getElementType() = TYPE
 }

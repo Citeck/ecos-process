@@ -13,10 +13,6 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 
 class PlanItemOnPartConverter: EcosOmgConverter<PlanItemOnPartDef, TPlanItemOnPart> {
 
-    companion object {
-        const val TYPE = "PlanItemOnPart"
-    }
-
     override fun import(element: TPlanItemOnPart, context: ImportContext): PlanItemOnPartDef {
 
         val onPartSource = element.sourceRef as TPlanItem
@@ -48,6 +44,4 @@ class PlanItemOnPartConverter: EcosOmgConverter<PlanItemOnPartDef, TPlanItemOnPa
 
         return result
     }
-
-    override fun getElementType(): String = TYPE
 }

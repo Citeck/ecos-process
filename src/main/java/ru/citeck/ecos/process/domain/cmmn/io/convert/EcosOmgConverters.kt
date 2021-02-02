@@ -11,7 +11,6 @@ import javax.xml.bind.JAXBElement
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.primaryConstructor
 
 class EcosOmgConverters(val base: EcosOmgConverters?,
                         converters: List<KClass<out EcosOmgConverter<*, *>>>,
@@ -31,12 +30,7 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
     init {
 
         val convertersList = converters.map {
-
-            if (it.primaryConstructor?.parameters?.size == 1) {
-                it.primaryConstructor!!.call(this)
-            } else {
-                it.createInstance()
-            }
+            it.createInstance()
         }.map {
             @Suppress("UNCHECKED_CAST")
             val converter = it as EcosOmgConverter<Any, Any>
@@ -44,9 +38,11 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
             ConverterInfo(args[0], args[1], converter)
         }
 
-        convertersByType = convertersList.map { it.converter.getElementType() to it }.toMap()
+        convertersByType = convertersList.map {
+            ConvertUtils.getTypeByClass(it.ecosType) to it
+        }.toMap()
         convertersByOmgType = convertersList.filter {
-            !it.converter.isExtensionType()
+            ConvertUtils.getTypeByClass(it.ecosType).startsWith("cmmn:")
         }.map { it.omgType to it }.toMap()
 
         jaxbCreateMethods = objectFactory::class.declaredFunctions.filter {
@@ -67,8 +63,13 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
         }.toMap()
     }
 
-    fun <T : Any> export(type: String, element: Any): T {
-        return export(type, element, ExportContext(this))
+    fun <T : Any> export(element: Any): T {
+        return export(element, ExportContext(this))
+    }
+
+    fun <T : Any> export(element: Any, context: ExportContext): T {
+        @Suppress("UNCHECKED_CAST")
+        return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
     }
 
     fun <T : Any> export(type: String, element: Any, context: ExportContext): T {
@@ -126,11 +127,12 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
         }
 
         val ecosCmmnData = converter.converter.import(item, context)
+        val type = ConvertUtils.getTypeByClass(ecosCmmnData::class.java)
 
         val convertedData = Json.mapper.convert(ecosCmmnData, expectedType)
                 ?: error("Conversion error. Value: $ecosCmmnData Target Type: $expectedType")
 
-        return EcosElementData(converter.converter.getElementType(), convertedData)
+        return EcosElementData(type, convertedData)
     }
 
     private fun getConverterByOmgType(type: Class<*>?): ConverterInfo? {

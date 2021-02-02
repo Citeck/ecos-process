@@ -12,10 +12,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 
 class CaseFileOnPartConverter : EcosOmgConverter<CaseFileOnPartDef, TCaseFileItemOnPart> {
 
-    companion object {
-        const val TYPE = "CaseFileOnPart"
-    }
-
     override fun import(element: TCaseFileItemOnPart, context: ImportContext): CaseFileOnPartDef {
 
         val onPartSource = element.sourceRef as TPlanItem
@@ -41,6 +37,4 @@ class CaseFileOnPartConverter : EcosOmgConverter<CaseFileOnPartDef, TCaseFileIte
 
         return result
     }
-
-    override fun getElementType(): String = TYPE
 }

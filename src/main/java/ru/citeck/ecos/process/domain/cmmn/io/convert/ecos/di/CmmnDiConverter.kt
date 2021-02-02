@@ -1,9 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
@@ -13,13 +11,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNDI
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNDiagram
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 
-class CmmnDiConverter(
-    private val converters: EcosOmgConverters
-) : EcosOmgConverter<DiagramInterchangeDef, CMMNDI> {
-
-    companion object {
-        const val TYPE = "DI"
-    }
+class CmmnDiConverter: EcosOmgConverter<DiagramInterchangeDef, CMMNDI> {
 
     override fun import(element: CMMNDI, context: ImportContext): DiagramInterchangeDef {
         return DiagramInterchangeDef(element.cmmnDiagram.map { importDiagram(it, context) })
@@ -37,7 +29,7 @@ class CmmnDiConverter(
 
     private fun importElement(element: DiagramElement, context: ImportContext): DiagramElementDef {
 
-        val elementData = converters.import(element, context)
+        val elementData = context.converters.import(element, context)
 
         return DiagramElementDef(
             element.id,
@@ -63,11 +55,9 @@ class CmmnDiConverter(
         resultDiagram.size = DiagramIOUtils.convertDimension(diagram.size)
 
         diagram.elements.forEach {
-            val elem = converters.export<DiagramElement>(it.type, it.data, context)
-            resultDiagram.cmmnDiagramElement.add(converters.convertToJaxb(elem))
+            val elem = context.converters.export<DiagramElement>(it.type, it.data, context)
+            resultDiagram.cmmnDiagramElement.add(context.converters.convertToJaxb(elem))
         }
         return resultDiagram
     }
-
-    override fun getElementType() = TYPE
 }

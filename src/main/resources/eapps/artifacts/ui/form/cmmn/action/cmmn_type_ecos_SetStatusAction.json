@@ -1,0 +1,39 @@
+{
+  "id": "cmmn-type-ecos:SetStatusAction",
+  "formKey": "",
+  "title": {
+    "en": "CMMN SetStatusAction Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name_ml",
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Статус",
+          "en": "Status"
+        },
+        "defaultValue": "",
+        "key": "status",
+        "type": "textfield",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

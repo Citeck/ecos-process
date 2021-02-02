@@ -5,13 +5,15 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ConvertUtils
 import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.CmmnDiConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.ActivityConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.ExitCriterionConverter
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.ArtifactDef
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssociationDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.CaseDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.PlanModelDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.ActivityDef
@@ -22,13 +24,13 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
 
-class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
+class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
 
     companion object {
         const val TYPE = "Definitions"
     }
 
-    override fun import(element: Definitions, context: ImportContext): CmmnProcDef {
+    override fun import(element: Definitions, context: ImportContext): CmmnProcessDef {
 
         val cases = element.case.map { importCase(it, context) }
         val cmmnDi = context.converters.import(element.cmmndi, DiagramInterchangeDef::class.java, context).data
@@ -43,15 +45,15 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
 
         val name = element.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] ?: element.name
 
-        return CmmnProcDef(
-            processDefId,
-            element.id,
-            Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            RecordRef.valueOf(ecosType),
-            cases,
-            artifacts,
-            cmmnDi
-        )
+        return CmmnProcessDef.create {
+            withId(processDefId)
+            withDefinitionsId(element.id)
+            withName(Json.mapper.convert(name, MLText::class.java) ?: MLText())
+            withEcosType(RecordRef.valueOf(ecosType))
+            withCases(cases)
+            withArtifacts(artifacts)
+            withCmmnDi(cmmnDi)
+        }
     }
 
     private fun importArtifact(artifact: TArtifact, context: ImportContext): ArtifactDef {
@@ -87,7 +89,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
         )
     }
 
-    override fun export(element: CmmnProcDef, context: ExportContext): Definitions {
+    override fun export(element: CmmnProcessDef, context: ExportContext): Definitions {
 
         val definitions = Definitions()
         definitions.id = element.definitionsId
@@ -96,17 +98,17 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
             definitions.case.add(exportCase(it, context))
         }
 
-        definitions.cmmndi = context.converters.export(CmmnDiConverter.TYPE, element.cmmnDi, context)
+        definitions.cmmndi = context.converters.export(element.cmmnDi, context)
         definitions.name = MLText.getClosestValue(element.name, RequestContext.getLocale())
         definitions.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(element.name)
 
         element.artifacts.filter {
-            it.type != AssociationConverter.TYPE
+            it.type != ConvertUtils.getTypeByClass(AssociationDef::class.java)
         }.map {
             definitions.artifact.add(exportArtifact(it, context))
         }
         element.artifacts.filter {
-            it.type == AssociationConverter.TYPE
+            it.type == ConvertUtils.getTypeByClass(AssociationDef::class.java)
         }.map {
             definitions.artifact.add(exportArtifact(it, context))
         }
@@ -162,13 +164,13 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
         context.elementsById[casePlanModel.id] = casePlanModel
 
         model.exitCriteria.forEach {
-            val criterion = context.converters.export<TExitCriterion>(ExitCriterionConverter.TYPE, it, context)
+            val criterion = context.converters.export<TExitCriterion>(it, context)
             casePlanModel.exitCriterion.add(criterion)
             casePlanModel.sentry.add(criterion.sentryRef as Sentry)
         }
 
         model.children.map { activityDef ->
-            val item = context.converters.export<TPlanItem>(ActivityConverter.TYPE, activityDef, context)
+            val item = context.converters.export<TPlanItem>(activityDef, context)
             casePlanModel.planItem.add(item)
             casePlanModel.planItemDefinition.add(
                 context.converters.convertToJaxb(item.definitionRef as TPlanItemDefinition)
@@ -246,6 +248,4 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcDef, Definitions> {
         sentry ?: return
         stage.sentry.add(sentry)
     }
-
-    override fun getElementType() = TYPE
 }

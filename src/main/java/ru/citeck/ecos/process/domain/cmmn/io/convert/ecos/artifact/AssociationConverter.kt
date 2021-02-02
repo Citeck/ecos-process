@@ -11,10 +11,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssociationDe
 
 class AssociationConverter: EcosOmgConverter<AssociationDef, TAssociation> {
 
-    companion object {
-        const val TYPE = "Association"
-    }
-
     override fun import(element: TAssociation, context: ImportContext): AssociationDef {
 
         val source = element.sourceRef
@@ -47,6 +43,4 @@ class AssociationConverter: EcosOmgConverter<AssociationDef, TAssociation> {
 
         return tAssoc
     }
-
-    override fun getElementType() = TYPE
 }

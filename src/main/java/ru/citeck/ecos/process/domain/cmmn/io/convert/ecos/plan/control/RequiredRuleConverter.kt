@@ -8,10 +8,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.TRequiredRule
 
 class RequiredRuleConverter : EcosOmgConverter<RequiredRuleDef, TRequiredRule> {
 
-    companion object {
-        const val TYPE = "RequiredRule"
-    }
-
     override fun import(element: TRequiredRule, context: ImportContext): RequiredRuleDef {
 
         return RequiredRuleDef(element.id)
@@ -24,6 +20,4 @@ class RequiredRuleConverter : EcosOmgConverter<RequiredRuleDef, TRequiredRule> {
 
         return rule
     }
-
-    override fun getElementType() = TYPE
 }

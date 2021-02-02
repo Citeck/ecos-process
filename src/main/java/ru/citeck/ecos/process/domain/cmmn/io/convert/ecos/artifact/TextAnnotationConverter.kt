@@ -14,8 +14,6 @@ import javax.xml.namespace.QName
 class TextAnnotationConverter  : EcosOmgConverter<TextAnnotationDef, TTextAnnotation> {
 
     companion object {
-        const val TYPE = "TextAnnotation"
-
         val PROP_TEXT_ML = QName(CmmnXmlUtils.NS_ECOS, "text_ml")
     }
 
@@ -40,6 +38,4 @@ class TextAnnotationConverter  : EcosOmgConverter<TextAnnotationDef, TTextAnnota
 
         return tTextAnn
     }
-
-    override fun getElementType() = TYPE
 }

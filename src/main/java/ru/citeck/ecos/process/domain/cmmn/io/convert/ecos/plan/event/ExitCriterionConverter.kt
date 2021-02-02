@@ -13,10 +13,6 @@ import java.util.*
 
 class ExitCriterionConverter: EcosOmgConverter<ExitCriterionDef, TExitCriterion> {
 
-    companion object {
-        const val TYPE = "ExitCriterion"
-    }
-
     override fun import(element: TExitCriterion, context: ImportContext): ExitCriterionDef {
         return ExitCriterionDef(
             element.id,
@@ -29,7 +25,7 @@ class ExitCriterionConverter: EcosOmgConverter<ExitCriterionDef, TExitCriterion>
 
         val result = TExitCriterion()
         result.id = element.id
-        result.sentryRef = context.converters.export<Sentry>(SentryConverter.TYPE, element.sentry, context)
+        result.sentryRef = context.converters.export<Sentry>(element.sentry, context)
 
         val name = MLText.getClosestValue(element.name, Locale.ENGLISH)
         if (name.isNotBlank()) {
@@ -39,6 +35,4 @@ class ExitCriterionConverter: EcosOmgConverter<ExitCriterionDef, TExitCriterion>
 
         return result
     }
-
-    override fun getElementType() = TYPE
 }

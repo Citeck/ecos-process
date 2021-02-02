@@ -3,8 +3,6 @@ package ru.citeck.ecos.process.domain.cmmn.io
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
@@ -13,22 +11,29 @@ import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.CmmnDiConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.EdgeConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.ShapeConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.*
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.action.SetStatusConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.*
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.ManualActivationRuleConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.RepetitionRuleConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.RequiredRuleConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfDefinitionsConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfPlanItemOnPartConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfSentryConverter
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.action.AlfSetStatusConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.event.AlfPlanItemOnPartConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.event.AlfSentryConverter
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.records2.RecordRef
-import javax.xml.namespace.QName
 
 object CmmnIO {
-
-    private val PROP_EXT_CMMN_TYPE = QName(CmmnXmlUtils.NS_ECOS, "cmmnType")
+    private val extensionTypeResolver = { item: Any ->
+        val result: String? = when (item) {
+            is DiagramElement -> item.otherAttributes[CmmnXmlUtils.PROP_ECOS_CMMN_TYPE]
+            is TCmmnElement -> item.otherAttributes[CmmnXmlUtils.PROP_ECOS_CMMN_TYPE]
+            else -> null
+        }
+        result
+    }
 
     private val ecosCmmnConverters = EcosOmgConverters(listOf(
         DefinitionsConverter::class,
@@ -50,50 +55,48 @@ object CmmnIO {
         CaseFileOnPartConverter::class,
         RepetitionRuleConverter::class,
         ManualActivationRuleConverter::class,
-        RequiredRuleConverter::class
-    )) { item -> when (item) {
-        is DiagramElement -> item.otherAttributes[PROP_EXT_CMMN_TYPE]
-        is TCmmnElement -> item.otherAttributes[PROP_EXT_CMMN_TYPE]
-        else -> null
-    }}
+        RequiredRuleConverter::class,
+        SetStatusConverter::class
+    ), extensionTypeResolver)
 
     private val ecosAlfCmmnConverters = EcosOmgConverters(ecosCmmnConverters, listOf(
         AlfDefinitionsConverter::class,
         AlfSentryConverter::class,
-        AlfPlanItemOnPartConverter::class
-    )) { null }
+        AlfPlanItemOnPartConverter::class,
+        AlfSetStatusConverter::class
+    ), extensionTypeResolver)
 
     @JvmStatic
-    fun importEcosCmmn(definitions: String): CmmnProcDef {
+    fun importEcosCmmn(definitions: String): CmmnProcessDef {
         return importEcosCmmn(CmmnXmlUtils.readFromString(definitions))
     }
 
     @JvmStatic
-    fun importEcosCmmn(definitions: Definitions): CmmnProcDef {
-        return ecosCmmnConverters.import(definitions, CmmnProcDef::class.java).data
+    fun importEcosCmmn(definitions: Definitions): CmmnProcessDef {
+        return ecosCmmnConverters.import(definitions, CmmnProcessDef::class.java).data
     }
 
     @JvmStatic
-    fun exportEcosCmmn(procDef: CmmnProcDef): Definitions {
-        return ecosCmmnConverters.export(DefinitionsConverter.TYPE, procDef)
+    fun exportEcosCmmn(procDef: CmmnProcessDef): Definitions {
+        return ecosCmmnConverters.export(procDef)
     }
 
     @JvmStatic
-    fun exportEcosCmmnToString(procDef: CmmnProcDef): String {
+    fun exportEcosCmmnToString(procDef: CmmnProcessDef): String {
         return CmmnXmlUtils.writeToString(exportEcosCmmn(procDef))
     }
 
     @JvmStatic
-    fun exportAlfCmmn(procDef: CmmnProcDef): Definitions {
-        return ecosAlfCmmnConverters.export(DefinitionsConverter.TYPE, procDef)
+    fun exportAlfCmmn(procDef: CmmnProcessDef): Definitions {
+        return ecosAlfCmmnConverters.export(procDef)
     }
 
     @JvmStatic
-    fun exportAlfCmmnToString(procDef: CmmnProcDef): String {
+    fun exportAlfCmmnToString(procDef: CmmnProcessDef): String {
         return CmmnXmlUtils.writeToString(exportAlfCmmn(procDef))
     }
 
-    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: RecordRef): CmmnProcDef {
+    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: RecordRef): CmmnProcessDef {
 
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>
@@ -134,14 +137,14 @@ object CmmnIO {
 
         val cmmnDef = importEcosCmmn(CmmnXmlUtils.readFromString(defaultDef))
 
-        return CmmnProcDef(
-            processDefId,
-            cmmnDef.definitionsId,
-            name,
-            ecosType,
-            cmmnDef.cases,
-            cmmnDef.artifacts,
-            cmmnDef.cmmnDi
-        )
+        return CmmnProcessDef.create {
+            withId(processDefId)
+            withDefinitionsId(cmmnDef.definitionsId)
+            withName(name)
+            withEcosType(ecosType)
+            withCases(cmmnDef.cases)
+            withArtifacts(cmmnDef.artifacts)
+            withCmmnDi(cmmnDef.cmmnDi)
+        }
     }
 }

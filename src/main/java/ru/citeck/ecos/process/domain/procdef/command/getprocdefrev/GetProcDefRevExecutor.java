@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO;
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcDef;
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
@@ -42,7 +42,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
 
         byte[] data;
         if ("ecos-cmmn".equals(procDefRev.getFormat())) {
-            CmmnProcDef def = Json.getMapper().read(procDefRev.getData(), CmmnProcDef.class);
+            CmmnProcessDef def = Json.getMapper().read(procDefRev.getData(), CmmnProcessDef.class);
             if (def == null) {
                 throw new RuntimeException("Proc def can't be readed: "
                     + procDefRev.getProcDefId() + " "

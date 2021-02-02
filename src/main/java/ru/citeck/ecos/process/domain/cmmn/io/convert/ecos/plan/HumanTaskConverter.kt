@@ -36,6 +36,4 @@ class HumanTaskConverter : EcosOmgConverter<HumanTaskDef, THumanTask> {
 
         return task
     }
-
-    override fun getElementType() = TYPE
 }

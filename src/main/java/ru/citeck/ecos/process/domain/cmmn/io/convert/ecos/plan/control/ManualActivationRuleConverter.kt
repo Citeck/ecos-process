@@ -8,10 +8,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.TManualActivationRule
 
 class ManualActivationRuleConverter : EcosOmgConverter<ManualActivationRuleDef, TManualActivationRule> {
 
-    companion object {
-        const val TYPE = "ManualActivationRule"
-    }
-
     override fun import(element: TManualActivationRule, context: ImportContext): ManualActivationRuleDef {
 
         return ManualActivationRuleDef(element.id)
@@ -24,6 +20,4 @@ class ManualActivationRuleConverter : EcosOmgConverter<ManualActivationRuleDef, 
 
         return rule
     }
-
-    override fun getElementType() = TYPE
 }

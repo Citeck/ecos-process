@@ -11,8 +11,6 @@ import javax.xml.namespace.QName
 class ProcessTaskConverter : EcosOmgConverter<ProcessTaskDef, TProcessTask> {
 
     companion object {
-        const val TYPE = "ProcessTask"
-
         val PROP_PROC_TYPE = QName(CmmnXmlUtils.NS_ECOS, "processType")
         val PROP_PROC_DEF_ID = QName(CmmnXmlUtils.NS_ECOS, "processDefId")
     }
@@ -36,6 +34,4 @@ class ProcessTaskConverter : EcosOmgConverter<ProcessTaskDef, TProcessTask> {
 
         return procTask
     }
-
-    override fun getElementType() = TYPE
 }

@@ -8,8 +8,4 @@ interface EcosOmgConverter<EcosT, OmgT> {
     fun import(element: OmgT, context: ImportContext): EcosT
 
     fun export(element: EcosT, context: ExportContext): OmgT
-
-    fun getElementType(): String
-
-    fun isExtensionType(): Boolean = false
 }

@@ -33,6 +33,8 @@ object CmmnXmlUtils {
     val PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")
     val PROP_NAME_ML = QName(NS_ECOS, "name_ml")
 
+    val PROP_ECOS_CMMN_TYPE = QName(NS_ECOS, "cmmnType")
+
     private const val MODEL_ROOT_PACKAGE = "ru.citeck.ecos.process.domain.cmmn.model.omg"
 
     private val schema: Schema
