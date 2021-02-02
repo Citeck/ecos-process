@@ -119,9 +119,6 @@ class CmmnProcessDef(
 
         fun build(): CmmnProcessDef {
             MandatoryParam.checkString("id", id)
-            if (RecordRef.isEmpty(ecosType)) {
-                error("ECOS Type is empty!")
-            }
             return CmmnProcessDef(id, definitionsId, name, ecosType, cases, artifacts, cmmnDi, otherData)
         }
     }
