@@ -3,9 +3,9 @@ package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TTextAnnotation
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.TextAnnotationDef
 import ru.citeck.ecos.records3.record.request.RequestContext

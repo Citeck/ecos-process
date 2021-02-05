@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -193,8 +193,8 @@ public class Stage
         return new EqualsBuilder()
             .appendSuper(super.equals(o))
             .append(getPlanningTable(), stage.getPlanningTable())
-            .append(CmmnXmlUtils.unwrapJaxb(getPlanItemDefinition()),
-                    CmmnXmlUtils.unwrapJaxb(stage.getPlanItemDefinition()))
+            .append(XmlDefUtils.unwrapJaxb(getPlanItemDefinition()),
+                XmlDefUtils.unwrapJaxb(stage.getPlanItemDefinition()))
             .append(getExitCriterion(), stage.getExitCriterion())
             .append(isAutoComplete(), stage.isAutoComplete())
             .isEquals();
@@ -205,7 +205,7 @@ public class Stage
         return new HashCodeBuilder(17, 37)
             .appendSuper(super.hashCode())
             .append(getPlanningTable())
-            .append(CmmnXmlUtils.unwrapJaxb(getPlanItemDefinition()))
+            .append(XmlDefUtils.unwrapJaxb(getPlanItemDefinition()))
             .append(getExitCriterion())
             .append(isAutoComplete())
             .toHashCode();

@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -604,7 +605,7 @@ public class Definitions {
             .append(decision, that.decision)
             .append(extensionElements, that.extensionElements)
             .append(relationship, that.relationship)
-            .append(CmmnXmlUtils.unwrapJaxb(artifact), CmmnXmlUtils.unwrapJaxb(that.artifact))
+            .append(XmlDefUtils.unwrapJaxb(artifact), XmlDefUtils.unwrapJaxb(that.artifact))
             .append(cmmndi, that.cmmndi)
             .append(id, that.id)
             .append(name, that.name)
@@ -626,7 +627,7 @@ public class Definitions {
             .append(decision)
             .append(extensionElements)
             .append(relationship)
-            .append(CmmnXmlUtils.unwrapJaxb(artifact))
+            .append(XmlDefUtils.unwrapJaxb(artifact))
             .append(cmmndi)
             .append(id)
             .append(name)

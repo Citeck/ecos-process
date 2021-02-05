@@ -4,10 +4,10 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ConvertUtils
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.ConvertUtils
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
@@ -16,6 +16,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemOnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemTransitionEnum
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
 import javax.xml.namespace.QName
 
 class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
@@ -108,20 +109,20 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
                     sourceRef = ""
                 } else {
                     transition = PlanItemTransitionEnum.START
-                    sourceRef = context.planItemByDefId[parentElement.id]?.id
+                    sourceRef = context.cmmnPItemByDefId[parentElement.id]?.id
                         ?: error("PlanItem is not found for ${parentElement.id}")
                 }
 
                 val entryOnParentCreateDef = EntryCriterionDef(
-                    CmmnXmlUtils.generateId("EntryCriterion"),
+                    XmlDefUtils.generateId("EntryCriterion"),
                     MLText(),
                     SentryDef(
-                        CmmnXmlUtils.generateId("Sentry"),
+                        XmlDefUtils.generateId("Sentry"),
                         listOf(
                             OnPartDef(
                                 ConvertUtils.getTypeByClass(PlanItemOnPartDef::class.java),
                                 ObjectData.create(PlanItemOnPartDef(
-                                    CmmnXmlUtils.generateId("PlanItemOnPart"),
+                                    XmlDefUtils.generateId("PlanItemOnPart"),
                                     MLText(),
                                     sourceRef,
                                     transition,

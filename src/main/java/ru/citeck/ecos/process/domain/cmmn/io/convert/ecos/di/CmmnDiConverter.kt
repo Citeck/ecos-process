@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.DiagramDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.DiagramElementDef
@@ -22,7 +22,7 @@ class CmmnDiConverter: EcosOmgConverter<DiagramInterchangeDef, CMMNDI> {
             diagram.id,
             MLText(diagram.name ?: ""),
             diagram.cmmnElementRef?.localPart,
-            DiagramIOUtils.convertDimension(diagram.size),
+                DiagramIOUtils.convertDimension(diagram.size),
             diagram.cmmnDiagramElement?.map { importElement(it.value, context) } ?: emptyList()
         )
     }

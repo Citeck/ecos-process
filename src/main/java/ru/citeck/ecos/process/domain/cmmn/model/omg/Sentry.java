@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -147,7 +147,7 @@ public class Sentry
 
         return new EqualsBuilder()
             .appendSuper(super.equals(o))
-            .append(CmmnXmlUtils.unwrapJaxb(onPart), CmmnXmlUtils.unwrapJaxb(sentry.onPart))
+            .append(XmlDefUtils.unwrapJaxb(onPart), XmlDefUtils.unwrapJaxb(sentry.onPart))
             .append(ifPart, sentry.ifPart)
             .append(name, sentry.name)
             .isEquals();
@@ -157,7 +157,7 @@ public class Sentry
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
             .appendSuper(super.hashCode())
-            .append(CmmnXmlUtils.unwrapJaxb(onPart))
+            .append(XmlDefUtils.unwrapJaxb(onPart))
             .append(ifPart)
             .append(name)
             .toHashCode();

@@ -3,10 +3,9 @@ package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Sentry
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TExitCriterion
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
 import java.util.*
@@ -31,7 +30,7 @@ class ExitCriterionConverter: EcosOmgConverter<ExitCriterionDef, TExitCriterion>
         if (name.isNotBlank()) {
             result.name = name
         }
-        context.elementsById[result.id] = result
+        context.cmmnElementsById[result.id] = result
 
         return result
     }

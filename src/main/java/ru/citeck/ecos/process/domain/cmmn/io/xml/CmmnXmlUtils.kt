@@ -1,25 +1,17 @@
 package ru.citeck.ecos.process.domain.cmmn.io.xml
 
 import mu.KotlinLogging
-import org.apache.commons.io.IOUtils
-import org.springframework.util.DigestUtils
-import org.springframework.util.ResourceUtils
-import org.w3c.dom.ls.LSResourceResolver
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Shape
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
 import java.io.*
 import java.nio.charset.StandardCharsets
-import java.util.*
-import javax.xml.XMLConstants
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.JAXBElement
 import javax.xml.bind.JAXBException
 import javax.xml.bind.Marshaller
 import javax.xml.namespace.QName
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.Schema
-import javax.xml.validation.SchemaFactory
 
 object CmmnXmlUtils {
 
@@ -37,76 +29,13 @@ object CmmnXmlUtils {
 
     private const val MODEL_ROOT_PACKAGE = "ru.citeck.ecos.process.domain.cmmn.model.omg"
 
-    private val schema: Schema
-    private val random = Random()
-
-    private val schemaFiles = listOf(
+    val schema = XmlDefUtils.loadSchema("cmmn/omg/11", listOf(
         "CMMN11.xsd",
         "CMMN11CaseModel.xsd",
         "CMMNDI11.xsd",
         "DC.xsd",
         "DI.xsd"
-    ).map { "classpath:schema/cmmn/omg/11/$it" }
-
-    init {
-
-        val schemaFileByName: MutableMap<String, File> = HashMap()
-        val sources = arrayOfNulls<StreamSource>(schemaFiles.size)
-        for (i in sources.indices) {
-            val schemaFile = ResourceUtils.getFile(schemaFiles[i])
-            val streamSource = StreamSource(schemaFile)
-            streamSource.systemId = schemaFile.toURI().toString()
-            schemaFileByName[schemaFile.name] = schemaFile
-            sources[i] = streamSource
-        }
-
-        val schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
-        schemaFactory.resourceResolver = LSResourceResolver {
-                type: String?,
-                namespaceURI: String?,
-                publicId: String?,
-                systemId: String?,
-                baseURI: String? ->
-
-            object : XmlLsInput(type, namespaceURI, publicId, systemId, baseURI) {
-                override fun getXsdData(systemId: String): ByteArray? {
-                    val file = schemaFileByName[systemId] ?: return null
-                    try {
-                        FileInputStream(file).use { fis -> return IOUtils.toByteArray(fis) }
-                    } catch (e: IOException) {
-                        log.error("Cannot read schema: $systemId", e)
-                    }
-                    return null
-                }
-            }
-        }
-        schema = schemaFactory.newSchema(sources)
-    }
-
-    fun generateId(prefix: String): String {
-        val prefixValue = if (prefix.isBlank()) {
-            "Id"
-        } else if (!prefix[0].isLetter()) {
-            error("Incorrect prefix: $prefix")
-        } else {
-            prefix
-        }
-        var time = System.nanoTime()
-        val bytes = ByteArray(12)
-        for (i in 7 downTo 0) {
-            bytes[i] = (time and 0xFFL).toByte()
-            time = time shr 8
-        }
-        for (i in 8 until bytes.size) {
-            bytes[i] = (random.nextInt(255) - 128).toByte()
-        }
-        val digestId = DigestUtils.md5DigestAsHex(bytes).substring(0, 7)
-        return "${prefixValue}_$digestId"
-    }
-
-    fun getSchema(): Schema {
-        return schema
-    }
+    ))
 
     fun readFromString(definition: String): Definitions {
 
@@ -114,7 +43,7 @@ object CmmnXmlUtils {
 
             val jaxbContext: JAXBContext = JAXBContext.newInstance(MODEL_ROOT_PACKAGE)
             val unmarshaller = jaxbContext.createUnmarshaller()
-            unmarshaller.schema = getSchema()
+            unmarshaller.schema = schema
             var result: Any? = unmarshaller.unmarshal(
                 ByteArrayInputStream(definition.toByteArray(StandardCharsets.UTF_8)))
 
@@ -125,7 +54,7 @@ object CmmnXmlUtils {
             result as Definitions
 
         } catch (e: JAXBException) {
-            throw java.lang.IllegalArgumentException("Can not parse stream", e)
+            throw IllegalArgumentException("Can not parse stream", e)
         }
     }
 
@@ -138,9 +67,9 @@ object CmmnXmlUtils {
             val marshaller = context.createMarshaller()
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
 
-            marshaller.schema = getSchema()
+            marshaller.schema = schema
 
-            val qName = QName("http://www.omg.org/spec/CMMN/20151109/MODEL", "definitions")
+            val qName = QName(NS_CMMN, "definitions")
 
             val element: JAXBElement<Definitions> = JAXBElement(qName, Definitions::class.java, definitions)
             val outStream = ByteArrayOutputStream()
@@ -170,16 +99,5 @@ object CmmnXmlUtils {
             return mutRef.id
         }
         error("Unknown type: ${mutRef::class} value: $mutRef")
-    }
-
-    @JvmStatic
-    fun <T : Any> unwrapJaxb(value: JAXBElement<T>?): T? {
-        return value?.value
-    }
-
-    @JvmStatic
-    fun <T : Any> unwrapJaxb(list: List<JAXBElement<*>>?): List<T>? {
-        @Suppress("UNCHECKED_CAST")
-        return list?.map { it.value as T }
     }
 }

@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.io
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverters
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.TextAnnotationConverter

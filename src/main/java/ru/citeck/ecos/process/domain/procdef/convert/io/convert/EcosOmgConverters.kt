@@ -1,25 +1,27 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert
+package ru.citeck.ecos.process.domain.procdef.convert.io.convert
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.ObjectFactory
-import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.bind.JAXBElement
+import javax.xml.namespace.QName
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredFunctions
 
 class EcosOmgConverters(val base: EcosOmgConverters?,
                         converters: List<KClass<out EcosOmgConverter<*, *>>>,
-                        private val typeResolver: (Any) -> String?) {
+                        private val typeResolver: (Any) -> String? = { null },
+                        private val otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null }) {
 
     constructor(
         converters: List<KClass<out EcosOmgConverter<*, *>>>,
-        typeResolver: (Any) -> String?
-    ) : this(null, converters, typeResolver)
+        typeResolver: (Any) -> String? = { null },
+        otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null }
+    ) : this(null, converters, typeResolver, otherAttsResolver)
 
     private val convertersByType: Map<String, ConverterInfo>
     private val convertersByOmgType: Map<Class<*>, ConverterInfo>
@@ -42,7 +44,7 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
             ConvertUtils.getTypeByClass(it.ecosType) to it
         }.toMap()
         convertersByOmgType = convertersList.filter {
-            ConvertUtils.getTypeByClass(it.ecosType).startsWith("cmmn:")
+            !ConvertUtils.getTypeByClass(it.ecosType).startsWith("ecos:")
         }.map { it.omgType to it }.toMap()
 
         jaxbCreateMethods = objectFactory::class.declaredFunctions.filter {
@@ -82,12 +84,13 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
 
         @Suppress("UNCHECKED_CAST")
         val result = converter.converter.export(cmmnElement, context) as T
-        if (result is TCmmnElement) {
-            val emptyProps = result.otherAttributes.keys.filter {
-                val value = result.otherAttributes[it]
+        val otherAtts = otherAttsResolver.invoke(result)
+        if (otherAtts != null) {
+            val emptyProps = otherAtts.keys.filter {
+                val value = otherAtts[it]
                 value == null || value == ""
             }
-            emptyProps.forEach { result.otherAttributes.remove(it) }
+            emptyProps.forEach { otherAtts.remove(it) }
         }
         return result
     }

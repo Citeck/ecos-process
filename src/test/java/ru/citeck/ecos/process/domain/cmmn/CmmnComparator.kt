@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.eproc
+package ru.citeck.ecos.process.domain.cmmn
 
 import mu.KotlinLogging
 import org.apache.commons.beanutils.PropertyUtils

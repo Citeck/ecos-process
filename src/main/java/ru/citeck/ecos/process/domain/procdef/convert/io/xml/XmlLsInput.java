@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.cmmn.io.xml;
+package ru.citeck.ecos.process.domain.procdef.convert.io.xml;
 
 import org.w3c.dom.ls.LSInput;
 

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.cmmn.io.convert
+package ru.citeck.ecos.process.domain.procdef.convert.io.convert
 
 class EcosElementData<T>(
     val type: String,

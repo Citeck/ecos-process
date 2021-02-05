@@ -1,7 +1,5 @@
-package ru.citeck.ecos.process.domain.eproc
+package ru.citeck.ecos.process.domain.cmmn
 
-import com.eclipsesource.v8.V8
-import com.eclipsesource.v8.V8Array
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -14,7 +12,6 @@ import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
 import ru.citeck.ecos.records2.RecordRef
-
 
 class CmmnExporterTest {
 

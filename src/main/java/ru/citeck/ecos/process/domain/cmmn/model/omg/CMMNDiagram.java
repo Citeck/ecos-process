@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -145,7 +145,7 @@ public class CMMNDiagram
         return new EqualsBuilder()
             .appendSuper(super.equals(o))
             .append(size, that.size)
-            .append(CmmnXmlUtils.unwrapJaxb(cmmnDiagramElement), CmmnXmlUtils.unwrapJaxb(that.cmmnDiagramElement))
+            .append(XmlDefUtils.unwrapJaxb(cmmnDiagramElement), XmlDefUtils.unwrapJaxb(that.cmmnDiagramElement))
             .append(cmmnElementRef, that.cmmnElementRef)
             .isEquals();
     }
@@ -155,7 +155,7 @@ public class CMMNDiagram
         return new HashCodeBuilder(17, 37)
             .appendSuper(super.hashCode())
             .append(size)
-            .append(CmmnXmlUtils.unwrapJaxb(cmmnDiagramElement))
+            .append(XmlDefUtils.unwrapJaxb(cmmnDiagramElement))
             .append(cmmnElementRef)
             .toHashCode();
     }

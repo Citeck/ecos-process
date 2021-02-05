@@ -1,0 +1,21 @@
+
+id: bpmn-process-def
+
+name:
+  en: ECOS BPMN Process Definition
+  ru: Описание BPMN процесса ECOS
+
+system: true
+
+form: uiserv/eform@bpmn-process-def
+
+createVariants:
+
+  - id: create-new-process-def
+    name: { ru: Создать процесс, en: Create process }
+    recordRef: eproc/bpmn-def@
+
+  - id: upload-proc-def
+    name: { ru: Загрузить процесс, en: Upload process }
+    recordRef: eproc/bpmn-def@
+    formRef: uiserv/eform@ecos-module-upload

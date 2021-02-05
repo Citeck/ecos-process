@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -114,7 +114,7 @@ public class TTimerEventListener
         return new EqualsBuilder()
             .appendSuper(super.equals(o))
             .append(timerExpression, that.timerExpression)
-            .append(CmmnXmlUtils.unwrapJaxb(timerStart), CmmnXmlUtils.unwrapJaxb(that.timerStart))
+            .append(XmlDefUtils.unwrapJaxb(timerStart), XmlDefUtils.unwrapJaxb(that.timerStart))
             .isEquals();
     }
 
@@ -123,7 +123,7 @@ public class TTimerEventListener
         return new HashCodeBuilder(17, 37)
             .appendSuper(super.hashCode())
             .append(timerExpression)
-            .append(CmmnXmlUtils.unwrapJaxb(timerStart))
+            .append(XmlDefUtils.unwrapJaxb(timerStart))
             .toHashCode();
     }
 }

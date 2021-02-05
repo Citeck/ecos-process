@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.action
 
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.cmmn.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.cmmn.io.context.ExportContext
-import ru.citeck.ecos.process.domain.cmmn.io.context.ImportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.action.SetStatusConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfDefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.type.action.SetStatusActionDef

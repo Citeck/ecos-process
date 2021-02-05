@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -120,7 +120,7 @@ public class TPlanningTable
 
         return new EqualsBuilder()
             .appendSuper(super.equals(o))
-            .append(CmmnXmlUtils.unwrapJaxb(tableItem), CmmnXmlUtils.unwrapJaxb(that.tableItem))
+            .append(XmlDefUtils.unwrapJaxb(tableItem), XmlDefUtils.unwrapJaxb(that.tableItem))
             .append(applicabilityRule, that.applicabilityRule)
             .isEquals();
     }
@@ -129,7 +129,7 @@ public class TPlanningTable
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
             .appendSuper(super.hashCode())
-            .append(CmmnXmlUtils.unwrapJaxb(tableItem))
+            .append(XmlDefUtils.unwrapJaxb(tableItem))
             .append(applicabilityRule)
             .toHashCode();
     }

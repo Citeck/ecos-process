@@ -1,11 +1,10 @@
 
 package ru.citeck.ecos.process.domain.cmmn.model.omg;
 
-import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.w3c.dom.Element;
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils;
+import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.*;
@@ -272,7 +271,7 @@ public abstract class DiagramElement {
 
         return new EqualsBuilder()
             .append(extension, that.extension)
-            .append(CmmnXmlUtils.unwrapJaxb(style), CmmnXmlUtils.unwrapJaxb(that.style))
+            .append(XmlDefUtils.unwrapJaxb(style), XmlDefUtils.unwrapJaxb(that.style))
             .append(sharedStyle, that.sharedStyle)
             .append(id, that.id)
             .append(otherAttributes, that.otherAttributes)
@@ -283,7 +282,7 @@ public abstract class DiagramElement {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
             .append(extension)
-            .append(CmmnXmlUtils.unwrapJaxb(style))
+            .append(XmlDefUtils.unwrapJaxb(style))
             .append(sharedStyle)
             .append(id)
             .append(otherAttributes)
