@@ -84,7 +84,7 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
 
         @Suppress("UNCHECKED_CAST")
         val result = converter.converter.export(cmmnElement, context) as T
-        val otherAtts = otherAttsResolver.invoke(result)
+        val otherAtts = otherAttsResolver.invoke(result) ?: base?.otherAttsResolver?.invoke(result)
         if (otherAtts != null) {
             val emptyProps = otherAtts.keys.filter {
                 val value = otherAtts[it]

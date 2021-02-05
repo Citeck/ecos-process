@@ -13,15 +13,21 @@ object ConvertUtils {
             if (name.endsWith("Def")) {
                 name = name.substring(0, name.length - 3)
             }
-            if (clazz.getAnnotation(ExtensionType::class.java) != null) {
-                "ecos:"
-            } else if (clazz.name.contains(".cmmn.")) {
-                "cmmn:"
-            } else if (clazz.name.contains(".bpmn.")) {
-                "bpmn:"
-            } else {
-                error("Unknown type: $it")
-            } + name
+            val prefix = when {
+                it.getAnnotation(ExtensionType::class.java) != null -> {
+                    "ecos:"
+                }
+                it.name.contains(".cmmn.") -> {
+                    "cmmn:"
+                }
+                it.name.contains(".bpmn.") -> {
+                    "bpmn:"
+                }
+                else -> {
+                    error("Unknown type: $it")
+                }
+            }
+            prefix + name
         }
     }
 }

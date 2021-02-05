@@ -232,7 +232,8 @@ class CmmnProcDefRecords(
                     try {
                         CmmnIO.exportEcosCmmnToString(it)
                     } catch (e: Exception) {
-                        log.error("Definition reading failed: ${rev.procDefId} ${rev.id} ${e.message}")
+                        log.error("Definition reading failed: ${rev.procDefId} ${rev.id} ${e.message}", e)
+
                         null
                     }
                 }

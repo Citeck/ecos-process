@@ -35,6 +35,10 @@ object CmmnIO {
         result
     }
 
+    private val otherAttsResolver = { item: Any ->
+        (item as? TCmmnElement)?.otherAttributes
+    }
+
     private val ecosCmmnConverters = EcosOmgConverters(listOf(
         DefinitionsConverter::class,
         CmmnDiConverter::class,
@@ -57,7 +61,7 @@ object CmmnIO {
         ManualActivationRuleConverter::class,
         RequiredRuleConverter::class,
         SetStatusConverter::class
-    ), extensionTypeResolver)
+    ), extensionTypeResolver, otherAttsResolver)
 
     private val ecosAlfCmmnConverters = EcosOmgConverters(ecosCmmnConverters, listOf(
         AlfDefinitionsConverter::class,
