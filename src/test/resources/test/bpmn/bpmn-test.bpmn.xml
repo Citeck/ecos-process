@@ -4,7 +4,9 @@
                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                   id="Definitions_0rn8l53" targetNamespace="http://bpmn.io/schema/bpmn"
-                  exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0">
+                  xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
+                  exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0"
+                  ecos:processDefId="test-bpmn-process">
   <bpmn:process id="Process_0uxajkr" isExecutable="false">
     <bpmn:startEvent id="StartEvent_0lly8qf">
       <bpmn:outgoing>Flow_15brz3r</bpmn:outgoing>

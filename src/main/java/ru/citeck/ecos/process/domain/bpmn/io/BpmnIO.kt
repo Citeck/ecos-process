@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.io
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.DefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnProcessDef
@@ -73,6 +74,11 @@ object BpmnIO {
             </bpmn:definitions>
         """.trimIndent()
 
-        return BpmnXmlUtils.readFromString(defaultDef)
+        val def = BpmnXmlUtils.readFromString(defaultDef)
+        def.otherAttributes[BpmnXmlUtils.PROP_ECOS_TYPE] = ecosType.toString()
+        def.otherAttributes[BpmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(name)
+        def.otherAttributes[BpmnXmlUtils.PROP_PROCESS_DEF_ID] = processDefId
+
+        return def
     }
 }
