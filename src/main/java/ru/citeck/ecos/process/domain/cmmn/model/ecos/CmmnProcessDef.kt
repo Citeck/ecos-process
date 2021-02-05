@@ -55,7 +55,7 @@ class CmmnProcessDef(
 
         var id: String = ""
         var definitionsId: String = ""
-        var name: MLText = MLText()
+        var name: MLText = MLText.EMPTY
         var ecosType: RecordRef = RecordRef.EMPTY
 
         var cases: List<CaseDef> = emptyList()
@@ -68,7 +68,7 @@ class CmmnProcessDef(
             id = base.id
 
             definitionsId = base.definitionsId
-            name = MLText.copy(base.name) ?: MLText()
+            name = base.name
             ecosType = base.ecosType
 
             cases = DataValue.create(base.cases).asList(CaseDef::class.java)
