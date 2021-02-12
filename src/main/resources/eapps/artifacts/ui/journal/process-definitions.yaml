@@ -2,9 +2,6 @@
 id: process-definitions
 label: { ru: Описания процессов, en: Process definitions }
 
-typeRef: emodel/type@process-definition
-sourceId: eproc/procdef
-
 actions:
   - uiserv/action@download-base64-data
   - uiserv/action@edit

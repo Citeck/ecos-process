@@ -4,9 +4,6 @@ label:
   en: ECOS CMMN Scenario Definitions
   ru: Описания CMMN сценариев ECOS
 
-typeRef: emodel/type@cmmn-process-def
-sourceId: eproc/cmmn-def
-
 actions:
   - uiserv/action@open-cmmn-editor
   - uiserv/action@download-base64-data-xml
