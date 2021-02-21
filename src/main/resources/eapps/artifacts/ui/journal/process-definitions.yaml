@@ -1,6 +1,6 @@
 
 id: process-definitions
-label: { ru: Описания процессов, en: Process definitions }
+name: { ru: Описания процессов, en: Process definitions }
 
 actions:
   - uiserv/action@download-base64-data
@@ -8,15 +8,15 @@ actions:
 
 columns:
 
-  - name: moduleId
-    label: { ru: Идентификатор, en: Id }
+  - id: moduleId
+    name: { ru: Идентификатор, en: Id }
 
-  - name: procType
-    label: { ru: Тип процесса, en: Process type }
+  - id: procType
+    name: { ru: Тип процесса, en: Process type }
 
-  - name: ecosTypeRef
-    label: { ru: Тип ECOS, en: ECOS Type }
+  - id: ecosTypeRef
+    name: { ru: Тип ECOS, en: ECOS Type }
 
-  - name: enabled
-    label: { ru: Включен, en: Enabled }
+  - id: enabled
+    name: { ru: Включен, en: Enabled }
 

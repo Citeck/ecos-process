@@ -1,6 +1,6 @@
 
 id: cmmn-process-def
-label:
+name:
   en: ECOS CMMN Scenario Definitions
   ru: Описания CMMN сценариев ECOS
 
@@ -13,15 +13,15 @@ actions:
 
 columns:
 
-  - name: processDefId
-    label: { ru: Идентификатор, en: Id }
+  - id: processDefId
+    name: { ru: Идентификатор, en: Id }
 
-  - name: name
-    label: { ru: Имя, en: Name }
+  - id: name
+    name: { ru: Имя, en: Name }
 
-  - name: ecosType
-    label: { ru: Тип ECOS, en: ECOS Type }
+  - id: ecosType
+    name: { ru: Тип ECOS, en: ECOS Type }
 
-  - name: enabled
-    label: { ru: Включен, en: Enabled }
+  - id: enabled
+    name: { ru: Включен, en: Enabled }
 
