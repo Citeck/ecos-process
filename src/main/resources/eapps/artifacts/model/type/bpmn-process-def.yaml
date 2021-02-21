@@ -8,7 +8,7 @@ name:
 system: true
 sourceId: eproc/bpmn-def
 
-formRef: uiserv/eform@bpmn-process-def
+formRef: uiserv/form@bpmn-process-def
 
 createVariants:
 
@@ -17,4 +17,4 @@ createVariants:
 
   - id: upload-proc-def
     name: { ru: Загрузить процесс, en: Upload process }
-    formRef: uiserv/eform@ecos-module-upload
+    formRef: uiserv/form@ecos-module-upload

@@ -9,7 +9,7 @@ system: true
 sourceId: eproc/cmmn-def
 
 journalRef: uiserv/journal@cmmn-process-def
-formRef: uiserv/eform@cmmn-process-def
+formRef: uiserv/form@cmmn-process-def
 
 createVariants:
 
@@ -18,4 +18,4 @@ createVariants:
 
   - id: upload-proc-def
     name: { ru: Загрузить сценарий, en: Upload scenario }
-    formRef: uiserv/eform@ecos-module-upload
+    formRef: uiserv/form@ecos-module-upload

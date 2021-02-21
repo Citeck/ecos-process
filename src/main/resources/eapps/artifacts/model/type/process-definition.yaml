@@ -9,7 +9,7 @@ system: true
 sourceId: eproc/procdef
 
 journalRef: uiserv/journal@process-definitions
-formRef: uiserv/eform@process-definition-form
+formRef: uiserv/form@process-definition-form
 
 createVariants:
 
@@ -18,4 +18,4 @@ createVariants:
 
   - id: upload-process-def
     name: { ru: Загрузить описание, en: Upload definition }
-    formRef: uiserv/eform@ecos-module-upload
+    formRef: uiserv/form@ecos-module-upload
