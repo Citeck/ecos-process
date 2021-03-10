@@ -1,0 +1,14 @@
+---
+id: bpmn-process-def
+
+name:
+  en: BPMN Processes
+  ru: Процессы BPMN
+
+columns:
+
+  - id: processDefId
+    name: { ru: Идентификатор, en: Id }
+
+  - id: name
+    name: { ru: Имя, en: Name }

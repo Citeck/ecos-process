@@ -1,6 +1,9 @@
-
+---
 id: process-definitions
-name: { ru: Описания процессов, en: Process definitions }
+
+name:
+  ru: Описания процессов
+  en: Process definitions
 
 actions:
   - uiserv/action@download-base64-data

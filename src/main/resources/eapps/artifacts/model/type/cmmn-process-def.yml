@@ -1,4 +1,4 @@
-
+---
 id: cmmn-process-def
 
 name:
@@ -8,8 +8,8 @@ name:
 system: true
 sourceId: eproc/cmmn-def
 
-journalRef: uiserv/journal@cmmn-process-def
 formRef: uiserv/form@cmmn-process-def
+journalRef: uiserv/journal@cmmn-process-def
 
 createVariants:
 

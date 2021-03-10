@@ -1,4 +1,4 @@
-
+---
 id: bpmn-process-def
 
 name:
@@ -9,6 +9,7 @@ system: true
 sourceId: eproc/bpmn-def
 
 formRef: uiserv/form@bpmn-process-def
+journalRef: uiserv/journal@bpmn-process-def
 
 createVariants:
 
