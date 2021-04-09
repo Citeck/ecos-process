@@ -5,7 +5,7 @@
                   xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL"
                   xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC" xmlns:ecos="http://www.citeck.ru/ecos/cmmn/1.0"
                   id="Definitions_0hgc0au" name="" targetNamespace="http://bpmn.io/schema/cmmn" ecos:name_ml="{}"
-                  ecos:processDefId="test" ecos:ecosType="">
+                  ecos:processDefId="test" ecos:ecosType="" ecos:format="ecos-cmmn">
   <cmmn:case id="contract-case-id" ecos:name_ml="{}">
     <cmmn:casePlanModel name="A CasePlanModel" id="CasePlanModel_1gu9dts"
                         ecos:name_ml="{&quot;en&quot;:&quot;A CasePlanModel&quot;}">
