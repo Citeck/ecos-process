@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.procdef.eapps.casetemplate;
+package ru.citeck.ecos.process.domain.cmmn.eapps;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

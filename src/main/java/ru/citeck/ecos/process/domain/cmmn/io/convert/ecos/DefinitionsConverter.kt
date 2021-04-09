@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -103,6 +104,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
         definitions.cmmndi = context.converters.export(element.cmmnDi, context)
         definitions.name = MLText.getClosestValue(element.name, RequestContext.getLocale())
         definitions.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(element.name)
+        definitions.otherAttributes[CmmnXmlUtils.PROP_ECOS_FORMAT] = CmmnFormat.ECOS_CMMN.code
 
         element.artifacts.filter {
             it.type != ConvertUtils.getTypeByClass(AssociationDef::class.java)
@@ -123,7 +125,6 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
         element.otherData.forEach { key, value ->
             definitions.otherAttributes[QName(CmmnXmlUtils.NS_ECOS, "other_$key")] = value.toString()
         }
-
 
         return definitions
     }

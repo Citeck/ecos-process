@@ -11,6 +11,8 @@ sourceId: eproc/cmmn-def
 formRef: uiserv/form@cmmn-process-def
 journalRef: uiserv/journal@cmmn-process-def
 
+defaultCreateVariant: false
+
 createVariants:
 
   - id: create-new-process-def

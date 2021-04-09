@@ -1,0 +1,12 @@
+{
+  "id": "open-cmmn-legacy-editor",
+  "type": "open-url",
+  "config": {
+    "url": "/legacy/cmmn-editor/index.html?templateRef=${recordRef}"
+  },
+  "predicate": {
+    "t": "eq",
+    "att": "format",
+    "val": "xml"
+  }
+}

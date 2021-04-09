@@ -6,9 +6,9 @@ name:
   ru: Описания CMMN сценариев ECOS
 
 actions:
+  - uiserv/action@open-cmmn-legacy-editor
   - uiserv/action@open-cmmn-editor
   - uiserv/action@download-base64-data-xml
-  - uiserv/action@ecos-module-download
   - uiserv/action@edit
   - uiserv/action@delete
 

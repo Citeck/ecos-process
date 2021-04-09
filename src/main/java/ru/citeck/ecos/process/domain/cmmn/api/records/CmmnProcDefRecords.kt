@@ -5,9 +5,11 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
+import ru.citeck.ecos.process.domain.cmmn.io.CmmnProcDefImporter
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
@@ -32,14 +34,14 @@ import java.util.*
 
 @Component
 class CmmnProcDefRecords(
-    val procDefService: ProcDefService
+    val procDefService: ProcDefService,
+    val cmmnProcDefImporter: CmmnProcDefImporter
 ) : RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
     RecordMutateDtoDao<CmmnProcDefRecords.CmmnMutateRecord> {
 
     companion object {
         private const val SOURCE_ID = "cmmn-def"
         private const val PROC_TYPE = "cmmn"
-        private const val FORMAT_ECOS_CMMN = "ecos-cmmn"
 
         private val log = KotlinLogging.logger {}
     }
@@ -105,16 +107,21 @@ class CmmnProcDefRecords(
     override fun saveMutatedRec(record: CmmnMutateRecord): String {
 
         val newDefinition = record.definition ?: ""
-        var newDefData: ByteArray? = null
+        var newProcDefDto: NewProcessDefDto? = null
+
         if (newDefinition.isNotBlank()) {
 
-            val cmmnProcDef = CmmnIO.importEcosCmmn(newDefinition)
-            CmmnIO.exportEcosCmmn(cmmnProcDef)
+            newProcDefDto = cmmnProcDefImporter.getDataToImport(newDefinition, record.fileName)
 
-            newDefData = mapper.toBytes(cmmnProcDef)
-            record.ecosType = cmmnProcDef.ecosType
-            record.name = cmmnProcDef.name
-            record.processDefId = cmmnProcDef.id
+            if (newProcDefDto.format == CmmnFormat.ECOS_CMMN.code) {
+
+                // validate ECOS_CMMN format
+                val cmmnProcDef = CmmnIO.importEcosCmmn(newDefinition)
+                CmmnIO.exportEcosCmmn(cmmnProcDef)
+            }
+            record.ecosType = newProcDefDto.ecosTypeRef
+            record.name = newProcDefDto.name
+            record.processDefId = newProcDefDto.id
         }
 
         if (record.processDefId.isBlank()) {
@@ -125,35 +132,41 @@ class CmmnProcDefRecords(
 
         val currentProc = procDefService.getProcessDefById(newRef)
 
-        if ((record.id != record.processDefId) && currentProc != null) {
+        if (record.id.isNotBlank() && record.id != record.processDefId && currentProc != null) {
             error("Process definition with id " + newRef.id + " already exists")
         }
 
         if (currentProc == null) {
 
-            val newProcDef = NewProcessDefDto()
+            if (newProcDefDto != null) {
 
-            newProcDef.id = record.processDefId
+                procDefService.uploadProcDef(newProcDefDto)
 
-            val defData = newDefData ?: Json.mapper.toBytes(
-                CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
-            )
+            } else {
 
-            newProcDef.name = record.name
-            newProcDef.data = defData
-            newProcDef.ecosTypeRef = record.ecosType
-            newProcDef.format = "ecos-cmmn"
-            newProcDef.procType = PROC_TYPE
+                val newProcDef = NewProcessDefDto()
 
-            procDefService.uploadProcDef(newProcDef)
+                newProcDef.id = record.processDefId
 
+                val defData = mapper.toBytes(
+                    CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
+                )
+
+                newProcDef.name = record.name
+                newProcDef.data = defData
+                newProcDef.ecosTypeRef = record.ecosType
+                newProcDef.format = CmmnFormat.ECOS_CMMN.code
+                newProcDef.procType = PROC_TYPE
+
+                procDefService.uploadProcDef(newProcDef)
+            }
         } else {
 
-            if (newDefData != null) {
+            if (newProcDefDto != null) {
 
-                currentProc.data = newDefData
-                currentProc.ecosTypeRef = record.ecosType
-                currentProc.name = record.name
+                currentProc.data = newProcDefDto.data
+                currentProc.ecosTypeRef = newProcDefDto.ecosTypeRef
+                currentProc.name = newProcDefDto.name
 
             } else {
 
@@ -161,7 +174,8 @@ class CmmnProcDefRecords(
                 currentProc.name = record.name
                 currentProc.enabled = record.enabled
 
-                if (currentProc.format == FORMAT_ECOS_CMMN) {
+                if (currentProc.format == CmmnFormat.ECOS_CMMN.code) {
+
                     var procDef = mapper.read(currentProc.data, CmmnProcessDef::class.java)
                         ?: error("Process parsing error: ${currentProc.id}")
 
@@ -170,6 +184,13 @@ class CmmnProcDefRecords(
                         withName(record.name)
                     }
                     currentProc.data = mapper.toBytes(procDef) ?: error("Process conversion error: ${currentProc.id}")
+
+                } else {
+
+                    val definition = CmmnXmlUtils.readFromBytes(currentProc.data)
+                    definition.otherAttributes[CmmnXmlUtils.PROP_ECOS_TYPE] = record.ecosType.toString()
+                    definition.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = mapper.toString(record.name)
+                    currentProc.data = CmmnXmlUtils.writeToBytes(definition)
                 }
             }
 
@@ -227,7 +248,7 @@ class CmmnProcDefRecords(
 
         fun getDefinition(): String? {
             val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
-            if (rev.format == FORMAT_ECOS_CMMN) {
+            if (rev.format == CmmnFormat.ECOS_CMMN.code) {
                 return mapper.read(rev.data, CmmnProcessDef::class.java)?.let {
                     try {
                         CmmnIO.exportEcosCmmnToString(it)
@@ -244,10 +265,10 @@ class CmmnProcDefRecords(
         @AttName("?json")
         fun getJson(): CmmnProcessDef? {
             val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
-            if (rev.format != FORMAT_ECOS_CMMN) {
-                error("Json representation allowed only for $FORMAT_ECOS_CMMN processes")
+            if (rev.format != CmmnFormat.ECOS_CMMN.code) {
+                error("Json representation allowed only for ECOS_CMMN processes")
             }
-            return Json.mapper.read(rev.data, CmmnProcessDef::class.java)
+            return mapper.read(rev.data, CmmnProcessDef::class.java)
         }
 
         @AttName("_type")
@@ -262,13 +283,16 @@ class CmmnProcDefRecords(
         var name: MLText,
         var ecosType: RecordRef,
         var definition: String? = null,
-        var enabled: Boolean
+        var enabled: Boolean,
+        var fileName: String = ""
     ) {
 
         @JsonProperty("_content")
         fun setContent(contentList: List<ObjectData>) {
 
-            val base64Content = contentList[0].get("url", "")
+            fileName = contentList[0].get("originalName").asText()
+
+            val base64Content = contentList[0].get("url").asText()
             val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
             val dataMatch = contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
 
