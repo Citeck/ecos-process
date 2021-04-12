@@ -32,4 +32,6 @@ interface ProcDefService {
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?
 
     fun delete(ref: ProcDefRef)
+
+    fun listenChanges(type: String, action: (ProcDefDto) -> Unit)
 }

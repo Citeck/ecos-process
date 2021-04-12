@@ -25,6 +25,8 @@ import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +42,15 @@ class ProcDefServiceImpl(
         private val STARTUP_TIME_STR = Instant.now().toEpochMilli().toString()
     }
 
+    private val procDefListeners = ConcurrentHashMap<String, MutableList<(ProcDefDto) -> Unit>>()
+
     override fun uploadProcDef(processDef: NewProcessDefDto): ProcDefDto {
+        val procDefDto = uploadProcDefImpl(processDef)
+        procDefListeners[procDefDto.procType]?.forEach { it.invoke(procDefDto) }
+        return procDefDto
+    }
+
+    private fun uploadProcDefImpl(processDef: NewProcessDefDto): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
         val now = Instant.now()
@@ -144,7 +154,10 @@ class ProcDefServiceImpl(
         val procType = dto.procType
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, procType, id)
 
+        val result: ProcDefDto
+
         if (procDefEntity == null) {
+
             val newProcessDefDto = NewProcessDefDto()
             newProcessDefDto.id = dto.id
             newProcessDefDto.name = dto.name
@@ -153,35 +166,39 @@ class ProcDefServiceImpl(
             newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
             newProcessDefDto.format = dto.format
             newProcessDefDto.procType = dto.procType
-            return uploadProcDef(newProcessDefDto)
-        }
-
-        val currentData = procDefEntity.lastRev!!.data
-        val result: ProcDefDto
-
-        if (!Arrays.equals(currentData, dto.data)) {
-
-            val newProcessDefDto = NewProcessDefDto()
-            newProcessDefDto.alfType = dto.alfType
-            newProcessDefDto.data = dto.data
-            newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
-            newProcessDefDto.format = dto.format
-            newProcessDefDto.id = id
-            newProcessDefDto.procType = procType
-            newProcessDefDto.name = dto.name
-            result = uploadProcDef(newProcessDefDto)
+            result = uploadProcDefImpl(newProcessDefDto)
 
         } else {
 
-            procDefEntity.alfType = dto.alfType
-            procDefEntity.ecosTypeRef = dto.ecosTypeRef.toString()
-            procDefEntity.name = mapper.toString(dto.name)
-            if (dto.enabled != null) {
-                procDefEntity.enabled = dto.enabled
+            val currentData = procDefEntity.lastRev!!.data
+
+            if (!Arrays.equals(currentData, dto.data)) {
+
+                val newProcessDefDto = NewProcessDefDto()
+                newProcessDefDto.alfType = dto.alfType
+                newProcessDefDto.data = dto.data
+                newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
+                newProcessDefDto.format = dto.format
+                newProcessDefDto.id = id
+                newProcessDefDto.procType = procType
+                newProcessDefDto.name = dto.name
+                result = uploadProcDefImpl(newProcessDefDto)
+
+            } else {
+
+                procDefEntity.alfType = dto.alfType
+                procDefEntity.ecosTypeRef = dto.ecosTypeRef.toString()
+                procDefEntity.name = mapper.toString(dto.name)
+                if (dto.enabled != null) {
+                    procDefEntity.enabled = dto.enabled
+                }
+                procDefEntity.modified = Instant.now()
+                result = procDefToDto(procDefRepo.save(procDefEntity))
             }
-            procDefEntity.modified = Instant.now()
-            result = procDefToDto(procDefRepo.save(procDefEntity))
         }
+
+        procDefListeners[result.procType]?.forEach { it.invoke(result) }
+
         return result
     }
 
@@ -298,6 +315,11 @@ class ProcDefServiceImpl(
         procDefRevDto.format = entity.format
         procDefRevDto.version = entity.version
         return procDefRevDto
+    }
+
+    override fun listenChanges(type: String, action: (ProcDefDto) -> Unit) {
+        val listeners = procDefListeners.computeIfAbsent(type) { CopyOnWriteArrayList() }
+        listeners.add(action)
     }
 
     @Data

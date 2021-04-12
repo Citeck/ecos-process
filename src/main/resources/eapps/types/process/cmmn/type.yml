@@ -1,6 +1,10 @@
 modelVersion: "1.0"
 
-source-id: "eproc/procdef"
+source-id: "eproc/cmmn-def"
+
+name:
+  ru: CMMN Сценарий
+  en: CMMN Scenario
 
 controller:
   type: script

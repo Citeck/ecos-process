@@ -116,7 +116,7 @@ object CmmnXmlUtils {
 
         val formatFromAtts = definition.otherAttributes[PROP_ECOS_FORMAT] ?: ""
         if (formatFromAtts.isNotBlank()) {
-            return CmmnFormat.valueOf(formatFromAtts)
+            return CmmnFormat.getByCode(formatFromAtts)
         }
         if (definition.targetNamespace == NS_ECOS_LEGACY_CMMN) {
             return CmmnFormat.LEGACY_CMMN
