@@ -18,6 +18,11 @@ createVariants:
   - id: create-new-process-def
     name: { ru: Создать сценарий, en: Create scenario }
 
+  - id: create-new-process-def-legacy-format
+    name: { ru: Создать сценарий старого формата, en: Create scenario with old format }
+    attributes:
+      format: xml
+
   - id: upload-proc-def
     name: { ru: Загрузить сценарий, en: Upload scenario }
     formRef: uiserv/form@ecos-module-upload

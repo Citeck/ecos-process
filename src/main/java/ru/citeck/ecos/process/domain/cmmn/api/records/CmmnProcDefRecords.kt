@@ -148,14 +148,32 @@ class CmmnProcDefRecords(
 
                 newProcDef.id = record.processDefId
 
-                val defData = mapper.toBytes(
-                    CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
-                )
+                val format = if (record.format.isNotBlank()) {
+                    CmmnFormat.getByCode(record.format)
+                } else {
+                    CmmnFormat.ECOS_CMMN
+                }
+
+                val defData = when (format) {
+                    CmmnFormat.ECOS_CMMN -> {
+                        mapper.toBytes(
+                            CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
+                        )
+                    }
+                    CmmnFormat.LEGACY_CMMN -> {
+                        val def = CmmnIO.generateLegacyDefaultTemplate(
+                            record.processDefId,
+                            record.name,
+                            record.ecosType
+                        )
+                        CmmnXmlUtils.writeToBytes(def)
+                    }
+                }
 
                 newProcDef.name = record.name
                 newProcDef.data = defData
                 newProcDef.ecosTypeRef = record.ecosType
-                newProcDef.format = CmmnFormat.ECOS_CMMN.code
+                newProcDef.format = format.code
                 newProcDef.procType = PROC_TYPE
 
                 procDefService.uploadProcDef(newProcDef)
@@ -284,7 +302,8 @@ class CmmnProcDefRecords(
         var ecosType: RecordRef,
         var definition: String? = null,
         var enabled: Boolean,
-        var fileName: String = ""
+        var fileName: String = "",
+        var format: String = ""
     ) {
 
         @JsonProperty("_content")
