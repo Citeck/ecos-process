@@ -245,6 +245,19 @@ class CmmnProcDefRecords(
             return procDef.format
         }
 
+        fun getJournalFormat(): CmmnFormatType? {
+            return try {
+                when (CmmnFormat.getByCode(procDef.format)) {
+                    CmmnFormat.LEGACY_CMMN ->
+                        CmmnFormatType("old", "Старый")
+                    CmmnFormat.ECOS_CMMN ->
+                        CmmnFormatType("new", "Новый")
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+
         @AttName("?disp")
         fun getDisplayName(): String {
             return MLText.getClosestValue(getName(), RequestContext.getLocale())
@@ -294,6 +307,11 @@ class CmmnProcDefRecords(
             return RecordRef.create("emodel", "type", "cmmn-process-def")
         }
     }
+
+    data class CmmnFormatType(
+        val value: String,
+        val displayName: String
+    )
 
     class CmmnMutateRecord(
         var id: String,
