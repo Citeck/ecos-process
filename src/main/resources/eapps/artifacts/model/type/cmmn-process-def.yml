@@ -19,7 +19,7 @@ createVariants:
     name: { ru: Создать сценарий, en: Create scenario }
 
   - id: create-new-process-def-legacy-format
-    name: { ru: Создать сценарий старого формата, en: Create scenario with old format }
+    name: { ru: Создать сценарий табличного формата, en: Create scenario with table format }
     attributes:
       format: xml
 

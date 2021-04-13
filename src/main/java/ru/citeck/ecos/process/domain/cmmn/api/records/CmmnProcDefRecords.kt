@@ -249,9 +249,9 @@ class CmmnProcDefRecords(
             return try {
                 when (CmmnFormat.getByCode(procDef.format)) {
                     CmmnFormat.LEGACY_CMMN ->
-                        CmmnFormatType("old", "Старый")
+                        CmmnFormatType("old", "Таблица")
                     CmmnFormat.ECOS_CMMN ->
-                        CmmnFormatType("new", "Новый")
+                        CmmnFormatType("new", "Схема")
                 }
             } catch (e: Exception) {
                 null
