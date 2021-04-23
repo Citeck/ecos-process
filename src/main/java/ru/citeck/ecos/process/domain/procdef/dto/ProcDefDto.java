@@ -1,23 +1,25 @@
 package ru.citeck.ecos.process.domain.procdef.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.records2.RecordRef;
 
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ProcDefDto {
 
     @NotNull
     private String id;
 
+    private MLText name;
+
     @NotNull
     private String procType;
+
+    @NotNull
+    private String format;
 
     @NotNull
     private UUID revisionId;
@@ -29,4 +31,88 @@ public class ProcDefDto {
     private String alfType;
 
     private Boolean enabled;
+
+    public ProcDefDto(@NotNull String id,
+                      MLText name,
+                      @NotNull String procType,
+                      @NotNull String format,
+                      @NotNull UUID revisionId,
+                      @NotNull RecordRef ecosTypeRef,
+                      @NotNull String alfType,
+                      Boolean enabled) {
+        this.id = id;
+        this.name = name;
+        this.procType = procType;
+        this.format = format;
+        this.revisionId = revisionId;
+        this.ecosTypeRef = ecosTypeRef;
+        this.alfType = alfType;
+        this.enabled = enabled;
+    }
+
+    public ProcDefDto() {}
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public MLText getName() {
+        return name;
+    }
+
+    public void setName(MLText name) {
+        this.name = name;
+    }
+
+    public String getProcType() {
+        return procType;
+    }
+
+    public void setProcType(String procType) {
+        this.procType = procType;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public UUID getRevisionId() {
+        return revisionId;
+    }
+
+    public void setRevisionId(UUID revisionId) {
+        this.revisionId = revisionId;
+    }
+
+    public RecordRef getEcosTypeRef() {
+        return ecosTypeRef;
+    }
+
+    public void setEcosTypeRef(RecordRef ecosTypeRef) {
+        this.ecosTypeRef = ecosTypeRef;
+    }
+
+    public String getAlfType() {
+        return alfType;
+    }
+
+    public void setAlfType(String alfType) {
+        this.alfType = alfType;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
 }

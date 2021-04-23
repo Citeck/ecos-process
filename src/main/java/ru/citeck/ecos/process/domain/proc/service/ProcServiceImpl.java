@@ -2,16 +2,16 @@ package ru.citeck.ecos.process.domain.proc.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
-import ru.citeck.ecos.process.domain.proc.entity.ProcessInstanceEntity;
-import ru.citeck.ecos.process.domain.procdef.entity.ProcDefRevEntity;
-import ru.citeck.ecos.process.domain.proc.entity.ProcessStateEntity;
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
+import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity;
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity;
+import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessInstanceDto;
 import ru.citeck.ecos.process.domain.proc.dto.ProcessInstanceDto;
 import ru.citeck.ecos.process.domain.proc.dto.ProcessStateDto;
-import ru.citeck.ecos.process.domain.procdef.repository.ProcDefRevRepository;
-import ru.citeck.ecos.process.domain.proc.repository.ProcInstanceRepository;
-import ru.citeck.ecos.process.domain.proc.repository.ProcStateRepository;
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository;
+import ru.citeck.ecos.process.domain.proc.repo.ProcInstanceRepository;
+import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.records2.RecordRef;
 
@@ -104,7 +104,7 @@ public class ProcServiceImpl implements ProcService {
     }
 
     @Override
-    public ProcessStateDto getProcStateByProcId(String procType, UUID procId) {
+    public ProcessStateDto getProcStateByProcId(UUID procId) {
 
         return processRepo.findById(new EntityUuid(tenantService.getCurrent(), procId))
             .map(ProcessInstanceEntity::getState)
@@ -113,7 +113,7 @@ public class ProcServiceImpl implements ProcService {
     }
 
     @Override
-    public ProcessStateDto getProcStateByStateId(String procType, UUID procStateId) {
+    public ProcessStateDto getProcStateByStateId(UUID procStateId) {
 
         return processStateRepo.findById(new EntityUuid(tenantService.getCurrent(), procStateId))
             .map(this::stateToDto)

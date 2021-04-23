@@ -1,0 +1,50 @@
+{
+  "id": "cmmn-type-cmmn:HumanTask",
+  "formKey": "",
+  "title": {
+    "en": "CMMN HumanTask Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name_ml",
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Роли",
+          "en": "Roles"
+        },
+        "defaultValue": "",
+        "key": "roles",
+        "type": "textfield",
+        "input": true,
+        "multiple": true
+      },
+      {
+        "label": {
+          "ru": "Форма",
+          "en": "Form"
+        },
+        "type": "selectJournal",
+        "journalId": "ecos-forms",
+        "key": "formRef",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

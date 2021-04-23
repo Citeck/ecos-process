@@ -1,0 +1,30 @@
+
+id: cmmn-process-def
+label:
+  en: ECOS CMMN Scenario Definitions
+  ru: Описания CMMN сценариев ECOS
+
+typeRef: emodel/type@cmmn-process-def
+sourceId: eproc/cmmn-def
+
+actions:
+  - uiserv/action@open-cmmn-editor
+  - uiserv/action@download-base64-data-xml
+  - uiserv/action@ecos-module-download
+  - uiserv/action@edit
+  - uiserv/action@delete
+
+columns:
+
+  - name: processDefId
+    label: { ru: Идентификатор, en: Id }
+
+  - name: name
+    label: { ru: Имя, en: Name }
+
+  - name: ecosType
+    label: { ru: Тип ECOS, en: ECOS Type }
+
+  - name: enabled
+    label: { ru: Включен, en: Enabled }
+

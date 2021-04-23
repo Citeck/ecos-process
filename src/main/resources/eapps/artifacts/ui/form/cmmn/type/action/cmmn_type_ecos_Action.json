@@ -1,0 +1,29 @@
+{
+  "id": "cmmn-type-ecos:Action",
+  "formKey": "",
+  "title": {
+    "en": "CMMN Action Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name_ml",
+        "type": "mlText",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

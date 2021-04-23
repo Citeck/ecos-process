@@ -1,0 +1,49 @@
+{
+  "id": "bpmn-type-bpmn:Definitions",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Definitions Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Идентификатор",
+          "en": "Identifier"
+        },
+        "defaultValue": "",
+        "key": "processDefId",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name_ml",
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": "ECOS Type",
+        "journalId": "ecos-types",
+        "key": "ecosType",
+        "type": "selectJournal",
+        "input": true,
+        "customPredicateJs": null,
+        "presetFilterPredicatesJs": null,
+        "sortAscending": "asc"
+      }
+    ]
+  },
+  "attributes": {}
+}

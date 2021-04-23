@@ -1,0 +1,22 @@
+
+id: cmmn-process-def
+
+name:
+  en: ECOS CMMN Scenario Definition
+  ru: Описание CMMN сценария ECOS
+
+system: true
+
+journal: uiserv/journal@cmmn-process-def
+form: uiserv/eform@cmmn-process-def
+
+createVariants:
+
+  - id: create-new-process-def
+    name: { ru: Создать сценарий, en: Create scenario }
+    recordRef: eproc/cmmn-def@
+
+  - id: upload-proc-def
+    name: { ru: Загрузить сценарий, en: Upload scenario }
+    recordRef: eproc/cmmn-def@
+    formRef: uiserv/eform@ecos-module-upload

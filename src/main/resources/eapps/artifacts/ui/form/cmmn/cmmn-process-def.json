@@ -1,0 +1,134 @@
+{
+  "id": "cmmn-process-def",
+  "formKey": "",
+  "title": {
+    "en": "Process definition form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "columns": [
+          {
+            "components": [
+              {
+                "label": {
+                  "ru": "Идентификатор",
+                  "en": "Identifier"
+                },
+                "defaultValue": "",
+                "key": "processDefId",
+                "type": "textfield",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Имя",
+                  "en": "Name"
+                },
+                "defaultValue": "",
+                "key": "name",
+                "type": "mlText",
+                "input": true
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "index": 0,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          },
+          {
+            "index": 1,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [
+              {
+                "label": "ECOS Type",
+                "journalId": "ecos-types",
+                "key": "ecosType",
+                "type": "selectJournal",
+                "input": true,
+                "customPredicateJs": null,
+                "presetFilterPredicatesJs": null,
+                "sortAscending": "asc"
+              },
+              {
+                "label": "Enabled",
+                "key": "enabled",
+                "type": "checkbox",
+                "input": true
+              }
+            ],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          }
+        ],
+        "key": "columns3",
+        "type": "columns",
+        "input": false
+      },
+      {
+        "columns": [
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "index": 0,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          },
+          {
+            "index": 1,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [
+              {
+                "label": "Save",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "key": "submit",
+                "type": "button",
+                "input": true
+              }
+            ],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          }
+        ],
+        "key": "columns2",
+        "type": "columns",
+        "input": false
+      }
+    ]
+  },
+  "attributes": {}
+}

@@ -22,7 +22,7 @@ public class GetProcStateExecutor implements CommandExecutor<GetProcState> {
 
         UUID procStateId = UUID.fromString(getProcState.getProcStateId());
         ProcessStateDto procState = RemoteRecordsUtils.runAsSystem(() ->
-            procService.getProcStateByStateId(getProcState.getProcType(), procStateId)
+            procService.getProcStateByStateId(procStateId)
         );
 
         if (procState == null) {

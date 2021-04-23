@@ -4,11 +4,11 @@ import ecos.com.fasterxml.jackson210.annotation.JsonProperty;
 import ecos.com.fasterxml.jackson210.annotation.JsonValue;
 import lombok.NoArgsConstructor;
 import org.springframework.util.MimeTypeUtils;
-import ru.citeck.ecos.apps.module.ModuleRef;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto;
-import ru.citeck.ecos.process.domain.procdef.eapp.casetemplate.CaseTemplateUtils;
+import ru.citeck.ecos.process.domain.procdef.eapps.casetemplate.CaseTemplateUtils;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt;
 
@@ -34,7 +34,7 @@ public class ProcDefRecord extends ProcDefWithDataDto {
     }
 
     public void setModuleId(String value) {
-        setId(ModuleRef.valueOf(value).getId());
+        setId(ProcDefRef.valueOf(value).getId());
     }
 
     @MetaAtt(".disp")

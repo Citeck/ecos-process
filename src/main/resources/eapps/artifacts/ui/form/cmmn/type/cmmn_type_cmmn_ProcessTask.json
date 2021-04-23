@@ -1,0 +1,49 @@
+{
+  "id": "cmmn-type-cmmn:ProcessTask",
+  "formKey": "",
+  "title": {
+    "en": "CMMN ProcessTask Form"
+  },
+  "description": {
+    "en": ""
+  },
+  "customModule": null,
+  "typeRef": "",
+  "width": "default",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "defaultValue": "",
+        "key": "name_ml",
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Тип процесса",
+          "en": "Process Type"
+        },
+        "defaultValue": "",
+        "key": "processType",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Идентификатор описания процесса",
+          "en": "Process Definition Id"
+        },
+        "defaultValue": "",
+        "key": "processDefId",
+        "type": "textfield",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

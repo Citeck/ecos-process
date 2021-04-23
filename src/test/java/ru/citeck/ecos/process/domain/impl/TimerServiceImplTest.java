@@ -12,11 +12,11 @@ import ru.citeck.ecos.commands.dto.CommandResult;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.EprocApp;
-import ru.citeck.ecos.process.domain.common.entity.EntityUuid;
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
 import ru.citeck.ecos.process.domain.timer.entity.TimerEntity;
 import ru.citeck.ecos.process.domain.timer.dto.TimerCommandDto;
 import ru.citeck.ecos.process.domain.timer.dto.TimerDto;
-import ru.citeck.ecos.process.domain.timer.repository.TimerRepository;
+import ru.citeck.ecos.process.domain.timer.repo.TimerRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.timer.service.TimerService;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;
@@ -116,7 +116,7 @@ public class TimerServiceImplTest {
         TimerEntity entity = entities.get(0);
 
         assertNotNull(entity.getId());
-        assertEquals((Integer) tenant, entity.getId().getTnt());
+        assertEquals((Integer) tenant, (Integer) entity.getId().getTnt());
         assertEquals(saved.getTimerId(), entity.getId().getId().toString());
 
         assertEquals(triggerTime, entity.getTriggerTime());
