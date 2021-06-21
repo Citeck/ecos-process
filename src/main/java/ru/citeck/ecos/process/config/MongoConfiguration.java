@@ -1,12 +1,20 @@
 package ru.citeck.ecos.process.config;
 
-import com.github.mongobee.Mongobee;
+import com.github.cloudyrock.mongock.SpringMongock;
+import com.github.cloudyrock.mongock.SpringMongockBuilder;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoDatabase;
 import io.github.jhipster.domain.util.JSR310DateConverters;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
@@ -15,8 +23,10 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableMongoRepositories("ru.citeck.ecos.process.repository")
 @Profile("!test")
@@ -35,10 +45,25 @@ public class MongoConfiguration {
     }
 
     @Bean
-    public Mongobee mongobee() {
-        Mongobee runner = new Mongobee(mongoDBURI);
-        runner.setChangeLogsScanPackage(MONGO_CHANGELOG_PACKAGE);
-        return runner;
+    public SpringMongock mongock() {
+        MongoClientURI mongoClientURI = new MongoClientURI(mongoDBURI);
+        MongoClient mongoclient = new MongoClient(mongoClientURI);
+        migrateChangeLogs(mongoClientURI, mongoclient);
+        return new SpringMongockBuilder(mongoclient, mongoClientURI.getDatabase(), MONGO_CHANGELOG_PACKAGE)
+            .setLockQuickConfig()
+            .build();
+    }
+
+    private void migrateChangeLogs(MongoClientURI mongoClientURI, MongoClient mongoclient) {
+        MongoDatabase db = mongoclient.getDatabase(mongoClientURI.getDatabase());
+        boolean dbchangeLogIsEmpty = db.getCollection("dbchangelog").count() == 0L;
+        boolean mongockChangeLogIsEmpty = db.getCollection("mongockChangeLog").count() == 0L;
+        if (!dbchangeLogIsEmpty && mongockChangeLogIsEmpty) {
+            log.info("Migrate rows from dbchangelog to mongockChangeLog");
+            db.getCollection("dbchangelog")
+                .aggregate(Collections.singletonList(new BasicDBObject("$out", "mongockChangeLog")))
+                .toCollection();
+        }
     }
 
     @Bean
