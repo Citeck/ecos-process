@@ -5,6 +5,9 @@ name:
   en: BPMN Processes
   ru: Процессы BPMN
 
+queryData:
+  loadFromAlfresco: true
+
 columns:
 
   - id: processDefId

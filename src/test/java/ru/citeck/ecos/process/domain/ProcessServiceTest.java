@@ -28,7 +28,7 @@ import ru.citeck.ecos.process.domain.proc.command.updateprocstate.UpdateProcStat
 import ru.citeck.ecos.process.domain.proc.command.updateprocstate.UpdateProcStateResp;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.RecordRef;
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao;
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;

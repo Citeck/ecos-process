@@ -14,17 +14,20 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
-import ru.citeck.ecos.records3.record.op.atts.dao.RecordAttsDao
-import ru.citeck.ecos.records3.record.op.atts.service.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.op.atts.service.value.impl.EmptyAttValue
-import ru.citeck.ecos.records3.record.op.delete.dao.RecordDeleteDao
-import ru.citeck.ecos.records3.record.op.delete.dto.DelStatus
-import ru.citeck.ecos.records3.record.op.mutate.dao.RecordMutateDtoDao
-import ru.citeck.ecos.records3.record.op.query.dao.RecordsQueryDao
-import ru.citeck.ecos.records3.record.op.query.dto.RecsQueryRes
-import ru.citeck.ecos.records3.record.op.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records2.predicate.model.ValuePredicate
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
+import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
+import ru.citeck.ecos.records3.record.dao.delete.RecordDeleteDao
+import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -32,7 +35,7 @@ import java.util.*
 @Component
 class BpmnProcDefRecords(
     val procDefService: ProcDefService
-) : RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
+) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
     RecordMutateDtoDao<BpmnProcDefRecords.BpmnMutateRecord> {
 
     companion object {
@@ -42,6 +45,10 @@ class BpmnProcDefRecords(
     }
 
     override fun queryRecords(query: RecordsQuery): Any? {
+
+        if (query.language == "predicate-with-data") {
+            return loadDefinitionsFromAlfresco(query)
+        }
 
         if (query.language != PredicateService.LANGUAGE_PREDICATE) {
             return null
@@ -65,7 +72,35 @@ class BpmnProcDefRecords(
         return res
     }
 
+    private fun loadDefinitionsFromAlfresco(query: RecordsQuery): Any {
+
+        val procDefQuery = query.getQuery(ProcDefAlfQuery::class.java)
+
+        val predicateForAlfresco = Predicates.and(
+            Predicates.eq("type", "ecosbpm:processModel"),
+            PredicateUtils.mapValuePredicates(procDefQuery.predicate) { pred ->
+                when (pred.getAttribute()) {
+                    "processDefId" -> ValuePredicate("ecosbpm:processId", pred.getType(), pred.getValue())
+                    "name" -> ValuePredicate("cm:title", pred.getType(), pred.getValue())
+                    else -> null
+                }
+            }
+        )
+
+        return recordsService.query(
+            query.copy {
+                withSourceId("alfresco/")
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(predicateForAlfresco)
+            }, ProcDefAlfAtts::class.java
+        )
+    }
+
     override fun getRecordAtts(record: String): Any? {
+
+        if (record.startsWith("flowable$")) {
+            return RecordRef.create("alfresco", "workflow", "def_$record")
+        }
 
         val ref = ProcDefRef.create(PROC_TYPE, record)
         val currentProc = procDefService.getProcessDefById(ref)
@@ -273,5 +308,37 @@ class BpmnProcDefRecords(
                 }
             }
         }
+    }
+
+    class ProcDefAlfQuery(
+        val data: ObjectData,
+        val predicate: Predicate
+    )
+
+    class ProcDefAlfAtts(
+        @AttName("ecosbpm:processId")
+        val processId: String?,
+        @AttName("ecosbpm:engine")
+        val engine: String?,
+        @AttName("cm:title")
+        val title: MLText?
+    ) {
+        fun getId(): String? {
+            return "$engine$$processId"
+        }
+
+        fun getProcessDefId(): String? {
+            return processId
+        }
+
+        fun getProcType(): String? {
+            return engine
+        }
+
+        fun getName(): MLText? {
+            return title
+        }
+
+        fun getDisplayName() = getName()
     }
 }
