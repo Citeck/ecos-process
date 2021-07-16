@@ -84,7 +84,8 @@ class BpmnProcDefRecords(
                     "name" -> ValuePredicate("cm:title", pred.getType(), pred.getValue())
                     else -> null
                 }
-            }
+            },
+            Predicates.notEmpty("ecosbpm:startFormRef")
         )
 
         return recordsService.query(
@@ -321,7 +322,8 @@ class BpmnProcDefRecords(
         @AttName("ecosbpm:engine")
         val engine: String?,
         @AttName("cm:title")
-        val title: MLText?
+        val title: MLText?,
+        val startFormRef: RecordRef?
     ) {
         fun getId(): String? {
             return "$engine$$processId"
