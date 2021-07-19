@@ -97,13 +97,13 @@ class BpmnProcDefRecords(
         )
     }
 
-    override fun getRecordAtts(record: String): Any? {
+    override fun getRecordAtts(recordId: String): Any? {
 
-        if (record.startsWith("flowable$")) {
-            return RecordRef.create("alfresco", "workflow", "def_$record")
+        if (recordId.startsWith("flowable$") || recordId.startsWith("activiti$")) {
+            return RecordRef.create("alfresco", "workflow", "def_$recordId")
         }
 
-        val ref = ProcDefRef.create(PROC_TYPE, record)
+        val ref = ProcDefRef.create(PROC_TYPE, recordId)
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let { BpmnProcDefRecord(ProcDefDto(
