@@ -12,11 +12,11 @@ timestamps {
           doGenerateSubmoduleConfigurations: false,
           extensions: [],
           submoduleCfg: [],
-          userRemoteConfigs: [[credentialsId: 'bc074014-bab1-4fb0-b5a4-4cfa9ded5e66',url: 'git@bitbucket.org:citeck/ecos-process.git']]
+          userRemoteConfigs: [[credentialsId: 'awx.integrations',url: 'git@bitbucket.org:citeck/ecos-process.git']]
         ])
       }
       def project_version = readMavenPom().getVersion().toLowerCase()
-      if ((env.BRANCH_NAME != "master") && (env.BRANCH_NAME != "master1") && (!project_version.contains('snapshot')))  {
+      if ((env.BRANCH_NAME != "master") && (env.BRANCH_NAME != "master-1") && (!project_version.contains('snapshot')))  {
         echo "Assembly of release artifacts is allowed only from the master branch!"
         currentBuild.result = 'SUCCESS'
         return
