@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.cmmn.eapps;
 
 import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.apps.app.domain.handler.EcosArtifactHandler;
@@ -82,5 +82,11 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
 
             return Unit.INSTANCE;
         });
+    }
+
+    @Override
+    public void deleteArtifact(@NotNull String id) {
+        //TODO: implement
+        throw new IllegalStateException("awaiting implementation");
     }
 }
