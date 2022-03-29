@@ -1,13 +1,11 @@
 package ru.citeck.ecos.process.domain.impl;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import ru.citeck.ecos.commands.dto.CommandResult;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -30,7 +28,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = EprocApp.class)
 @ActiveProfiles("test")
 public class TimerServiceImplTest {
@@ -79,7 +76,7 @@ public class TimerServiceImplTest {
     @MockBean
     private ProcTenantService tenantService;
 
-    @Before
+    @BeforeEach
     public void before() {
         timerRepository.deleteAll();
     }
