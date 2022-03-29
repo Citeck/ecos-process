@@ -18,6 +18,12 @@
       "config": {
         "journalId": "cmmn-process-def"
       }
+    },
+    {
+      "type": "JOURNAL",
+      "config": {
+        "journalId": "bpmn-process-def"
+      }
     }
   ]
 }

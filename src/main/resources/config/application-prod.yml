@@ -138,3 +138,14 @@ jhipster:
 # ===================================================================
 
 # application:
+
+ecos-process:
+  camunda:
+    datasource:
+      type: com.zaxxer.hikari.HikariDataSource
+      url: jdbc:postgresql://localhost:5430/camunda
+      username: camunda
+      password:
+      hikari:
+        poolName: HikariCamunda
+        auto-commit: false

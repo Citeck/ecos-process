@@ -5,8 +5,11 @@ name:
   en: BPMN Processes
   ru: Процессы BPMN
 
-queryData:
-  loadFromAlfresco: true
+actions:
+  - uiserv/action@open-bpmn-editor
+  - uiserv/action@download-base64-data-xml
+  - uiserv/action@edit
+  - uiserv/action@delete
 
 columns:
 
@@ -15,3 +18,9 @@ columns:
 
   - id: name
     name: { ru: Имя, en: Name }
+
+  - id: ecosType
+    name: { ru: Тип ECOS, en: ECOS Type }
+
+  - id: enabled
+    name: { ru: Включен, en: Enabled }

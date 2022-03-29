@@ -1,0 +1,27 @@
+{
+  "id": "bpmn-type-bpmn:StartEvent",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Task Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "refreshOn": [],
+        "type": "mlText",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}
