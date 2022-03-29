@@ -138,6 +138,8 @@ public class TimerServiceImplTest {
         UUID id = UUID.randomUUID();
         int tenant = 5;
 
+        when(tenantService.getCurrent()).thenReturn(tenant);
+
         TimerEntity entity = new TimerEntity();
         entity.setId(new EntityUuid(tenant, id));
 

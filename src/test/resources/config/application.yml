@@ -23,6 +23,8 @@ eureka:
 spring:
   application:
     name: eproc
+  profiles:
+    active: test
   cache:
     type: none
   mail:

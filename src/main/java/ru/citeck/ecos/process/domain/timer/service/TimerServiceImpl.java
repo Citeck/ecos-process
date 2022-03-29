@@ -155,7 +155,9 @@ public class TimerServiceImpl implements TimerService {
     private TimerEntity dtoToEntity(TimerDto dto) {
 
         TimerEntity entity = timerRepository.findById(new EntityUuid(tenantService.getCurrent(), dto.getId()))
-            .orElseThrow(() -> new IllegalArgumentException("TimerEntity with id '" + dto.getId() + "' not found"));
+            .orElseThrow(() -> new IllegalArgumentException(
+                "TimerEntity with tenant: '" + tenantService.getCurrent() + "', id '" + dto.getId() + "' not found")
+            );
 
         entity.setRetryCounter(dto.getRetryCounter());
         entity.setTriggerTime(dto.getTriggerTime());
