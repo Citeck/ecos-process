@@ -1,8 +1,8 @@
 {
-  "id": "bpmn-type-bpmn:StartEvent",
+  "id": "bpmn-type-bpmn:EndEvent",
   "formKey": "",
   "title": {
-    "en": "BPMN Start Event Form"
+    "en": "BPMN End Event Form"
   },
   "description": {},
   "customModule": null,
