@@ -115,3 +115,8 @@ ecos-process:
       hikari:
         poolName: HikariCamunda
         auto-commit: false
+
+notifications:
+  default:
+    locale: en
+    from: ecos.notifications@citeck.ru

@@ -214,3 +214,8 @@ ecos-process:
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
+
+notifications:
+  default:
+    locale: en
+    from: ecos.notifications@citeck.ru

@@ -75,16 +75,20 @@ class CmmnProcDefRecords(
         val ref = ProcDefRef.create(PROC_TYPE, record)
         val currentProc = procDefService.getProcessDefById(ref)
 
-        return currentProc?.let { CmmnProcDefRecord(ProcDefDto(
-            it.id,
-            it.name,
-            it.procType,
-            it.format,
-            it.revisionId,
-            it.ecosTypeRef,
-            it.alfType,
-            it.enabled
-        )) } ?: EmptyAttValue.INSTANCE
+        return currentProc?.let {
+            CmmnProcDefRecord(
+                ProcDefDto(
+                    it.id,
+                    it.name,
+                    it.procType,
+                    it.format,
+                    it.revisionId,
+                    it.ecosTypeRef,
+                    it.alfType,
+                    it.enabled
+                )
+            )
+        } ?: EmptyAttValue.INSTANCE
     }
 
     override fun getRecToMutate(recordId: String): CmmnMutateRecord {
@@ -114,11 +118,9 @@ class CmmnProcDefRecords(
             newProcDefDto = cmmnProcDefImporter.getDataToImport(newDefinition, record.fileName)
 
             if (newProcDefDto.format == CmmnFormat.ECOS_CMMN.code) {
-
-                // validate ECOS_CMMN format
-                val cmmnProcDef = CmmnIO.importEcosCmmn(newDefinition)
-                CmmnIO.exportEcosCmmn(cmmnProcDef)
+                validateEcosCmmnFormat(newDefinition)
             }
+
             record.ecosType = newProcDefDto.ecosTypeRef
             record.name = newProcDefDto.name
             record.processDefId = newProcDefDto.id
@@ -216,6 +218,11 @@ class CmmnProcDefRecords(
         }
 
         return record.processDefId
+    }
+
+    private fun validateEcosCmmnFormat(newDefinition: String) {
+        val cmmnProcDef = CmmnIO.importEcosCmmn(newDefinition)
+        CmmnIO.exportEcosCmmn(cmmnProcDef)
     }
 
     override fun delete(recordId: String): DelStatus {
@@ -342,7 +349,7 @@ class CmmnProcDefRecords(
                 }
                 "application/json" -> {
                     val def = mapper.read(contentText, CmmnProcessDef::class.java)
-                            ?: error("Incorrect content: $base64Content")
+                        ?: error("Incorrect content: $base64Content")
                     CmmnIO.exportEcosCmmnToString(def)
                 }
                 else -> {

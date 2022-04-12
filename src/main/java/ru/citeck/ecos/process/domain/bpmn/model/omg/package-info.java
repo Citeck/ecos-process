@@ -15,7 +15,8 @@
         @javax.xml.bind.annotation.XmlNs(prefix = "bpmndi", namespaceURI = "http://www.omg.org/spec/BPMN/20100524/DI"),
         @javax.xml.bind.annotation.XmlNs(prefix = "bpmn", namespaceURI = "http://www.omg.org/spec/BPMN/20100524/MODEL"),
         @javax.xml.bind.annotation.XmlNs(prefix = "xsi", namespaceURI = "http://www.w3.org/2001/XMLSchema-instance"),
-        @javax.xml.bind.annotation.XmlNs(prefix = "ecos", namespaceURI = "http://www.citeck.ru/ecos/bpmn/1.0")
+        @javax.xml.bind.annotation.XmlNs(prefix = "ecos", namespaceURI = "http://www.citeck.ru/ecos/bpmn/1.0"),
+        @javax.xml.bind.annotation.XmlNs(prefix = "camunda", namespaceURI = "http://camunda.org/schema/1.0/bpmn")
     }
 )
 package ru.citeck.ecos.process.domain.bpmn.model.omg;

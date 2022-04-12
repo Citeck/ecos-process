@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.xml
 
+import ru.citeck.ecos.process.domain.bpmn.io.NS_BPMN
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
 import java.io.ByteArrayInputStream
@@ -13,34 +14,31 @@ import javax.xml.namespace.QName
 
 object BpmnXmlUtils {
 
-    private const val MODEL_ROOT_PACKAGE = "ru.citeck.ecos.process.domain.bpmn.model.omg"
+    private const val MODEL_ROOT_PACKAGES = "ru.citeck.ecos.process.domain.bpmn.model.omg" +
+        ":ru.citeck.ecos.process.domain.bpmn.model.camunda"
 
-    const val NS_BPMN = "http://www.omg.org/spec/BPMN/20100524/MODEL"
-    const val NS_ECOS = "http://www.citeck.ru/ecos/bpmn/1.0"
-
-    val PROP_ECOS_TYPE = QName(NS_ECOS, "ecosType")
-    val PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")
-    val PROP_NAME_ML = QName(NS_ECOS, "name_ml")
-
-    val PROP_ECOS_BPMN_TYPE = QName(NS_ECOS, "bpmnType")
-
-    val schema = XmlDefUtils.loadSchema("bpmn/omg/20", listOf(
-        "BPMN20.xsd",
-        "Semantic.xsd",
-        "DC.xsd",
-        "DI.xsd",
-        "BPMNDI.xsd"
-    ))
+    private val schema = XmlDefUtils.loadSchema(
+        "bpmn/omg/20", listOf(
+            "BPMN20.xsd",
+            "Semantic.xsd",
+            "DC.xsd",
+            "DI.xsd",
+            "BPMNDI.xsd"
+        )
+    )
 
     fun readFromString(definition: String): TDefinitions {
 
         return try {
 
-            val jaxbContext: JAXBContext = JAXBContext.newInstance(MODEL_ROOT_PACKAGE)
+            val jaxbContext: JAXBContext = JAXBContext.newInstance(MODEL_ROOT_PACKAGES)
+
             val unmarshaller = jaxbContext.createUnmarshaller()
             unmarshaller.schema = schema
+
             var result: Any? = unmarshaller.unmarshal(
-                ByteArrayInputStream(definition.toByteArray(StandardCharsets.UTF_8)))
+                ByteArrayInputStream(definition.toByteArray(StandardCharsets.UTF_8))
+            )
 
             if (result is JAXBElement<*>) {
                 result = result.value
@@ -56,11 +54,10 @@ object BpmnXmlUtils {
     fun writeToString(definitions: TDefinitions): String {
 
         try {
-            val context: JAXBContext = JAXBContext.newInstance(MODEL_ROOT_PACKAGE)
+            val context: JAXBContext = JAXBContext.newInstance(MODEL_ROOT_PACKAGES)
 
             val marshaller = context.createMarshaller()
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
-
             marshaller.schema = schema
 
             val qName = QName(NS_BPMN, "definitions")

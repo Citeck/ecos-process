@@ -1,13 +1,17 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty
+import mu.KotlinLogging
+import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnProcessDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -34,7 +38,8 @@ import java.util.*
 
 @Component
 class BpmnProcDefRecords(
-    val procDefService: ProcDefService
+    val procDefService: ProcDefService,
+    val repositoryService: RepositoryService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
     RecordMutateDtoDao<BpmnProcDefRecords.BpmnMutateRecord> {
 
@@ -42,6 +47,8 @@ class BpmnProcDefRecords(
         private const val SOURCE_ID = "bpmn-def"
         private const val PROC_TYPE = "bpmn"
         private const val FORMAT_BPMN = "bpmn"
+
+        private val log = KotlinLogging.logger {}
     }
 
     override fun queryRecords(query: RecordsQuery): Any? {
@@ -106,16 +113,20 @@ class BpmnProcDefRecords(
         val ref = ProcDefRef.create(PROC_TYPE, recordId)
         val currentProc = procDefService.getProcessDefById(ref)
 
-        return currentProc?.let { BpmnProcDefRecord(ProcDefDto(
-            it.id,
-            it.name,
-            it.procType,
-            it.format,
-            it.revisionId,
-            it.ecosTypeRef,
-            it.alfType,
-            it.enabled
-        )) } ?: EmptyAttValue.INSTANCE
+        return currentProc?.let {
+            BpmnProcDefRecord(
+                ProcDefDto(
+                    it.id,
+                    it.name,
+                    it.procType,
+                    it.format,
+                    it.revisionId,
+                    it.ecosTypeRef,
+                    it.alfType,
+                    it.enabled
+                )
+            )
+        } ?: EmptyAttValue.INSTANCE
     }
 
     override fun getRecToMutate(recordId: String): BpmnMutateRecord {
@@ -139,20 +150,25 @@ class BpmnProcDefRecords(
 
         val newDefinition = record.definition ?: ""
         var newDefData: ByteArray? = null
+        var newEcosBpmnDef: BpmnDefinitionDef? = null
 
         if (newDefinition.isNotBlank()) {
 
-            val bpmnProcDef = BpmnXmlUtils.readFromString(newDefinition)
-            BpmnXmlUtils.writeToString(bpmnProcDef)
+            validateEcosBpmnFormat(newDefinition)
 
-            newDefData = newDefinition.toByteArray()
+            newEcosBpmnDef = BpmnIO.importEcosBpmn(newDefinition)
 
-            record.ecosType = RecordRef.valueOf(bpmnProcDef.otherAttributes[BpmnXmlUtils.PROP_ECOS_TYPE])
-            record.name = mapper.read(
-                bpmnProcDef.otherAttributes[BpmnXmlUtils.PROP_NAME_ML],
-                MLText::class.java
-            ) ?: MLText()
-            record.processDefId = bpmnProcDef.otherAttributes[BpmnXmlUtils.PROP_PROCESS_DEF_ID] ?: ""
+            //TODO: remove logging
+            val s2 = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef)
+            log.info { "\n" + s2 }
+            val camundaStr = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef)
+            log.info { "\n" + camundaStr }
+
+            newDefData = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef).toByteArray()
+
+            record.ecosType = newEcosBpmnDef.ecosType
+            record.name = newEcosBpmnDef.name
+            record.processDefId = newEcosBpmnDef.id
         }
 
         if (record.processDefId.isBlank()) {
@@ -173,10 +189,9 @@ class BpmnProcDefRecords(
 
             newProcDef.id = record.processDefId
 
-            val defData = newDefData ?:
-                BpmnXmlUtils.writeToString(
-                    BpmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
-                ).toByteArray()
+            val defData = newDefData ?: BpmnXmlUtils.writeToString(
+                BpmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
+            ).toByteArray()
 
             newProcDef.name = record.name
             newProcDef.data = defData
@@ -203,8 +218,8 @@ class BpmnProcDefRecords(
                 if (currentProc.format == FORMAT_BPMN) {
 
                     val procDef = BpmnXmlUtils.readFromString(String(currentProc.data))
-                    procDef.otherAttributes[BpmnXmlUtils.PROP_NAME_ML] = mapper.toString(record.ecosType)
-                    procDef.otherAttributes[BpmnXmlUtils.PROP_ECOS_TYPE] = record.ecosType.toString()
+                    procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(record.name)
+                    procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = record.ecosType.toString()
 
                     currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
                 }
@@ -213,7 +228,26 @@ class BpmnProcDefRecords(
             procDefService.uploadNewRev(currentProc)
         }
 
+        if (record.action == "DEPLOY") {
+            val camundaFormat = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef!!)
+            log.debug { "Deploy to camunda:\n $camundaFormat" }
+
+            val result = repositoryService.createDeployment()
+                .addInputStream(record.id + ".bpmn", camundaFormat.byteInputStream())
+                .name(record.name.getClosest())
+                .source("Ecos Modeler")
+                .deployWithResult()
+
+            log.error { "Camunda deploy result: $result" }
+        }
+
         return record.processDefId
+    }
+
+    private fun validateEcosBpmnFormat(newDefinition: String) {
+        val ecosBpmnDef = BpmnIO.importEcosBpmn(newDefinition)
+        BpmnIO.exportEcosBpmn(ecosBpmnDef)
+        BpmnIO.exportCamundaBpmn(ecosBpmnDef)
     }
 
     override fun delete(recordId: String): DelStatus {
@@ -268,7 +302,7 @@ class BpmnProcDefRecords(
         }
 
         @AttName("?json")
-        fun getJson(): BpmnProcessDef? {
+        fun getJson(): BpmnDefinitionDef? {
             error("Json representation is not supported")
         }
 
@@ -284,7 +318,8 @@ class BpmnProcDefRecords(
         var name: MLText,
         var ecosType: RecordRef,
         var definition: String? = null,
-        var enabled: Boolean
+        var enabled: Boolean,
+        var action: String = ""
     ) {
 
         @JsonProperty("_content")
