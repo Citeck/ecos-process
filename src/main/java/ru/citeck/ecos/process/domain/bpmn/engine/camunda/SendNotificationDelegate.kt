@@ -6,6 +6,7 @@ import org.camunda.bpm.engine.delegate.JavaDelegate
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.service.NotificationService
+import ru.citeck.ecos.records2.RecordRef
 
 @Component
 class SendNotificationDelegate(
@@ -20,8 +21,9 @@ class SendNotificationDelegate(
     override fun execute(execution: DelegateExecution?) {
 
         val nt = Notification.Builder()
-            .title(notificationTitle!!.expressionText)
-            .body(notificationBody!!.expressionText)
+            .title(notificationTitle?.expressionText ?: "")
+            .body(notificationBody?.expressionText ?: "")
+            .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
             .recipients(listOf("some-mail@mail.ru"))
             .build()
 
