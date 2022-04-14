@@ -11,21 +11,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Component;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.process.EprocApp;
-import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProc;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProcResp;
-import ru.citeck.ecos.process.domain.procdef.command.finddef.FindProcDef;
-import ru.citeck.ecos.process.domain.procdef.command.finddef.FindProcDefResp;
-import ru.citeck.ecos.process.domain.procdef.command.getprocdefrev.GetProcDefRev;
-import ru.citeck.ecos.process.domain.procdef.command.getprocdefrev.GetProcDefRevResp;
 import ru.citeck.ecos.process.domain.proc.command.getprocstate.GetProcState;
 import ru.citeck.ecos.process.domain.proc.command.getprocstate.GetProcStateResp;
 import ru.citeck.ecos.process.domain.proc.command.updateprocstate.UpdateProcState;
 import ru.citeck.ecos.process.domain.proc.command.updateprocstate.UpdateProcStateResp;
+import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto;
+import ru.citeck.ecos.process.domain.procdef.command.finddef.FindProcDef;
+import ru.citeck.ecos.process.domain.procdef.command.finddef.FindProcDefResp;
+import ru.citeck.ecos.process.domain.procdef.command.getprocdefrev.GetProcDefRev;
+import ru.citeck.ecos.process.domain.procdef.command.getprocdefrev.GetProcDefRevResp;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
@@ -37,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = EprocApp.class)
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @ActiveProfiles("test")
 public class ProcessServiceTest {
 
