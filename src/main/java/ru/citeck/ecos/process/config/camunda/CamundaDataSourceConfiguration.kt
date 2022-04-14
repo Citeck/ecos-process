@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
 import javax.sql.DataSource
@@ -24,6 +25,7 @@ class CamundaDataSourceConfiguration {
 
     @Bean
     @ConfigurationProperties("ecos-process.camunda.datasource.hikari")
+    @Profile("!test")
     fun camundaDataSource(
         @Qualifier("camundaDataSourceProperties") camundaDataSourceProperties: DataSourceProperties
     ): HikariDataSource {
