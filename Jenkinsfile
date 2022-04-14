@@ -12,7 +12,7 @@ timestamps {
           doGenerateSubmoduleConfigurations: false,
           extensions: [],
           submoduleCfg: [],
-          userRemoteConfigs: [[credentialsId: 'awx.integrations',url: 'git@bitbucket.org:citeck/ecos-process.git']]
+          userRemoteConfigs: [[credentialsId: 'awx.integrations',url: 'git@gitlab.citeck.ru:citeck-projects/ecos-process.git']]
         ])
       }
       def project_version = readMavenPom().getVersion().toLowerCase()
