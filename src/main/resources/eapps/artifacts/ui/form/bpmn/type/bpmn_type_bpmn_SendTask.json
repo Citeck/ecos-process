@@ -12,12 +12,35 @@
   "definition": {
     "components": [
       {
+        "label": "load roles",
+        "source": {
+          "type": "recordsScript",
+          "recordsScript": {
+            "attributes": {
+              "rolesData": "model.roles[]{value:id,label:name}"
+            },
+            "script": "let ref = instance.options.editor.getEcosType()._id;\n\nif (!!ref) {\n  value = ref;\n}"
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "roles",
+        "type": "asyncData",
+        "input": true
+      },
+      {
         "label": {
           "ru": "Имя",
           "en": "Name"
         },
         "key": "name_ml",
+        "validate": {
+          "required": true
+        },
         "refreshOn": [],
+        "optionalWhenDisabled": false,
         "type": "mlText",
         "input": true
       },
@@ -44,8 +67,8 @@
             }
           ]
         },
-        "defaultValue": "EMAIL_NOTIFICATION",
-        "customDefaultValue": "value = \"EMAIL_NOTIFICATION\"",
+        "defaultValue": "",
+        "customDefaultValue": "value = \"EMAIL_NOTIFICATION\";",
         "optionalWhenDisabled": false,
         "type": "ecosSelect",
         "input": true
@@ -195,14 +218,52 @@
             "components": [
               {
                 "label": {
-                  "ru": "Кому",
-                  "en": "To"
+                  "ru": "Кому"
                 },
-                "key": "notificationRecipients",
-                "defaultValue": "",
-                "refreshOn": [],
+                "key": "notificationTo",
+                "multiple": true,
+                "reorder": false,
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'roles.rolesData');"
+                },
+                "defaultValue": [],
                 "optionalWhenDisabled": false,
-                "type": "textfield",
+                "type": "ecosSelect",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Копия",
+                  "en": "Cc"
+                },
+                "key": "notificationCc",
+                "multiple": true,
+                "reorder": false,
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'roles.rolesData');"
+                },
+                "defaultValue": [],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Скрытая копия",
+                  "en": "Bcc"
+                },
+                "key": "notificationBcc",
+                "multiple": true,
+                "reorder": false,
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'roles.rolesData');"
+                },
+                "defaultValue": [],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
                 "input": true
               }
             ]
@@ -255,6 +316,20 @@
               }
             ],
             "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Дополнительная модель",
+              "en": "Additional meta"
+            },
+            "key": "notificationAdditionalMeta",
+            "keyLabel": "",
+            "addAnother": "Добавить еще",
+            "disableInlineEdit": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "datamap",
             "input": true
           }
         ]

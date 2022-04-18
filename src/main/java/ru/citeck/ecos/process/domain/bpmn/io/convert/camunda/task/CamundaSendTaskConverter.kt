@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.CamundaFieldCreator
 import ru.citeck.ecos.process.domain.bpmn.io.convert.addIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.jaxb
+import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJson
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnSendTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
@@ -16,7 +17,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
@@ -64,8 +64,26 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
                     record.toString()
                 )
             )
+            fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_TYPE.localPart, type.toString()))
             fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_TITLE.localPart, title))
             fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_BODY.localPart, body))
+
+            fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_TO.localPart, recipientsToJson(to)))
+            fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_CC.localPart, recipientsToJson(cc)))
+            fields.addIfNotBlank(
+                CamundaFieldCreator.string(
+                    BPMN_PROP_NOTIFICATION_BCC.localPart,
+                    recipientsToJson(bcc)
+                )
+            )
+
+            fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_LANG.localPart, lang.toString()))
+            fields.addIfNotBlank(
+                CamundaFieldCreator.string(
+                    BPMN_PROP_NOTIFICATION_ADDITIONAL_META.localPart,
+                    Json.mapper.toString(additionalMeta) ?: ""
+                )
+            )
         }
 
         return fields.map { it.jaxb(context) }

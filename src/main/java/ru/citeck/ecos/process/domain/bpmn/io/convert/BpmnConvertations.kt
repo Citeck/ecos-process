@@ -1,9 +1,12 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert
 
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.omg.Bounds
 import ru.citeck.ecos.process.domain.bpmn.model.omg.Point
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
@@ -80,7 +83,7 @@ inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V)
 inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T) {
     when (true) {
         value is String -> {
-            if (value.isNotBlank()) add(value)
+            if (value.isNotBlank() && value != "null") add(value)
         }
         value is RecordRef -> {
             if (RecordRef.isNotEmpty(value)) add(value)
@@ -90,4 +93,31 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T) {
         }
         else -> error("Type ${T::class} is not supported")
     }
+}
+
+fun recipientsFromJson(type: RecipientType, jsonData: String): List<Recipient> {
+    if (jsonData.isBlank()) {
+        return emptyList()
+    }
+
+    return Json.mapper.readList(jsonData, String::class.java).map {
+        Recipient(type, it)
+    }
+}
+
+fun recipientsFromJson(jsonData: String): List<Recipient> {
+    if (jsonData.isBlank()) {
+        return emptyList()
+    }
+
+    return Json.mapper.readList(jsonData, Recipient::class.java)
+}
+
+fun recipientsToJsonWithoutType(recipients: List<Recipient>): String {
+    val values = recipients.map { it.value }
+    return Json.mapper.toString(values) ?: ""
+}
+
+fun recipientsToJson(recipients: List<Recipient>): String {
+    return Json.mapper.toString(recipients) ?: ""
 }
