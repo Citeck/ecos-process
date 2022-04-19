@@ -13,6 +13,7 @@ import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import java.util.regex.Pattern
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -21,6 +22,8 @@ class BpmnActivitiesStatRecordsDao : AbstractRecordsDao(), RecordsQueryDao {
 
     companion object {
         const val ID = "bpmn-activities-stat"
+
+        private val UUID_PATTERN = Pattern.compile("^[\\da-fA-F]{8}-([\\da-fA-F]{4}-){3}[\\da-fA-F]{12}$")
 
         private val ELEMENT_TYPES_TO_STAT = setOf(
             "startEvent",
@@ -66,19 +69,34 @@ class BpmnActivitiesStatRecordsDao : AbstractRecordsDao(), RecordsQueryDao {
     private fun loadDefinition(procDef: RecordRef): TDefinitions {
 
         val definitionsString = if (procDef.id.contains("$")) {
-            loadDefinitionsFromAlfresco(procDef.id)
+            loadDefinitionFromAlfrescoByProcId(procDef.id)
+        } else if (procDef.id.contains("workspace://SpacesStore/")) {
+            loadDefinitionFromAlfrescoByNodeRef(procDef.id)
         } else {
-            recordsService.getAtt(procDef, "definition?str").asText()
+            val atts = recordsService.getAtts(procDef, BpmProcessContentAtts::class.java)
+            if (atts.definition.isNullOrBlank() && UUID_PATTERN.matcher(procDef.id).matches()) {
+                loadDefinitionFromAlfrescoByNodeRef("workspace://SpacesStore/" + procDef.id)
+            } else {
+                atts.definition
+            }
         }
 
-        if (definitionsString.isBlank()) {
+        if (definitionsString.isNullOrBlank()) {
             error("Definition is blank. ProcDef: $procDef")
         }
 
         return BpmnXmlUtils.readFromString(definitionsString)
     }
 
-    private fun loadDefinitionsFromAlfresco(procDefId: String): String {
+    private fun loadDefinitionFromAlfrescoByNodeRef(nodeRef: String): String {
+
+        val recRef = RecordRef.valueOf(nodeRef)
+            .withDefaultAppName("alfresco")
+
+        return recordsService.getAtt(recRef, "cm:content?str").asText()
+    }
+
+    private fun loadDefinitionFromAlfrescoByProcId(procDefId: String): String {
 
         val engineAndProcId = procDefId.split("$")
 
@@ -114,5 +132,9 @@ class BpmnActivitiesStatRecordsDao : AbstractRecordsDao(), RecordsQueryDao {
         val activeCount: Int,
         val completedCount: Int,
         val type: String
+    )
+
+    class BpmProcessContentAtts(
+        val definition: String?
     )
 }
