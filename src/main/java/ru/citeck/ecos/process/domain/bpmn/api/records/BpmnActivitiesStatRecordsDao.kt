@@ -46,7 +46,7 @@ class BpmnActivitiesStatRecordsDao : AbstractRecordsDao(), RecordsQueryDao {
         MandatoryParam.check("procDef", procDef) { RecordRef.isNotEmpty(it) }
 
         val definition = loadDefinition(procDef)
-        val process = definition.rootElement[0].value as TProcess
+        val process = definition.rootElement.find { it.name.localPart == "process" }!!.value as TProcess
 
         val activities = ArrayList<ActivityElement>()
         var iterator = 0
