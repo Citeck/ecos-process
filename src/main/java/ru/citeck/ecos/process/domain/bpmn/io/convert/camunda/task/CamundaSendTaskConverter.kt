@@ -37,7 +37,6 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
-            otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[camundaClass] = SendNotificationDelegate::class.java.name
 
             extensionElements = TExtensionElements()

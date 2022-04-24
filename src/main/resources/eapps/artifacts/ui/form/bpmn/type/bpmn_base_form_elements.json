@@ -1,0 +1,42 @@
+{
+  "id": "bpmn-base-form-elements",
+  "formKey": "",
+  "title": {
+    "en": "Bpmn base form elements"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "validate": {
+          "required": true
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Документация",
+          "en": "Documentation"
+        },
+        "key": "documentation",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlTextarea",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

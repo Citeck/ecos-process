@@ -8,7 +8,16 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
-  "i18n": {},
+  "i18n": {
+    "ru": {
+      "notification_type_email": "Электронная почта",
+      "notification_type_firebase_push": "Мобильное push уведомление"
+    },
+    "en": {
+      "notification_type_email": "Email",
+      "notification_type_firebase_push": "Mobile push notification"
+    }
+  },
   "definition": {
     "components": [
       {
@@ -31,18 +40,11 @@
         "input": true
       },
       {
-        "label": {
-          "ru": "Имя",
-          "en": "Name"
-        },
-        "key": "name_ml",
-        "validate": {
-          "required": true
-        },
-        "refreshOn": [],
-        "optionalWhenDisabled": false,
-        "type": "mlText",
-        "input": true
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
       },
       {
         "label": {
@@ -50,7 +52,6 @@
           "en": "Notification type"
         },
         "key": "notificationType",
-        "disabled": true,
         "validate": {
           "required": true
         },
@@ -58,11 +59,11 @@
         "data": {
           "values": [
             {
-              "label": "Электронная почта",
+              "label": "notification_type_email",
               "value": "EMAIL_NOTIFICATION"
             },
             {
-              "label": "Мобильное push уведомление",
+              "label": "notification_type_firebase_push",
               "value": "FIREBASE_NOTIFICATION"
             }
           ]
@@ -98,43 +99,6 @@
             "type": "selectJournal",
             "input": true,
             "queryData": ""
-          },
-          {
-            "label": {
-              "ru": "Record уведомления",
-              "en": "Record notifications"
-            },
-            "key": "notificationRecord",
-            "tooltip": {
-              "ru": "Базовый RecordRef по которому отправляется уведомление. Если пусто, то документ, по которому идет бизнес процесс."
-            },
-            "hidden": true,
-            "defaultValue": "",
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
-            "logic": [
-              {
-                "name": "is template selected",
-                "trigger": {
-                  "type": "javascript",
-                  "javascript": "return !!data.notificationTemplate"
-                },
-                "actions": [
-                  {
-                    "name": "display",
-                    "type": "property",
-                    "property": {
-                      "label": "Hidden",
-                      "value": "hidden",
-                      "type": "boolean"
-                    },
-                    "state": "false"
-                  }
-                ]
-              }
-            ],
-            "type": "textfield",
-            "input": true
           },
           {
             "label": {
@@ -210,6 +174,10 @@
               "ru": "Panel"
             },
             "key": "panel-recipients",
+            "tooltip": {
+              "ru": "Получатели выбираются из ролей типа ecos",
+              "en": "Recipients are selected from roles of ecos type"
+            },
             "title": "Получатели",
             "refreshOn": [],
             "optionalWhenDisabled": false,
@@ -281,6 +249,43 @@
         "type": "panel",
         "input": false,
         "components": [
+          {
+            "label": {
+              "ru": "Record уведомления",
+              "en": "Record notifications"
+            },
+            "key": "notificationRecord",
+            "tooltip": {
+              "ru": "Базовый RecordRef по которому отправляется уведомление. Если пусто, то документ, по которому идет бизнес процесс."
+            },
+            "hidden": true,
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is template selected",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "return !!data.notificationTemplate"
+                },
+                "actions": [
+                  {
+                    "name": "display",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "false"
+                  }
+                ]
+              }
+            ],
+            "type": "textfield",
+            "input": true
+          },
           {
             "label": {
               "ru": "Язык",
