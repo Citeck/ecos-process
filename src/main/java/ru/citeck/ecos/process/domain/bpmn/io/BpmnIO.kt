@@ -118,7 +118,7 @@ object BpmnIO {
                     targetNamespace="http://bpmn.io/schema/bpmn"
                     exporter="bpmn-js (https://demo.bpmn.io)"
                     exporterVersion="8.2.0">
-              <bpmn:process id="Process_0ib6j41" isExecutable="true">
+              <bpmn:process id="Process_$processDefId" isExecutable="true">
                 <bpmn:startEvent id="StartEvent_1ew9rff" />
               </bpmn:process>
               <bpmndi:BPMNDiagram id="BPMNDiagram_1">
