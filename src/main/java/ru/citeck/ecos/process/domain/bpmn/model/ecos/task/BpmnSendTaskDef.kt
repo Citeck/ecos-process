@@ -36,6 +36,12 @@ data class BpmnSendTaskDef(
         if (to.isEmpty() && cc.isEmpty() && bcc.isEmpty()) {
             throw EcosBpmnDefinitionException("All recipients is empty")
         }
+
+        if (type != NotificationType.EMAIL_NOTIFICATION) {
+            throw EcosBpmnDefinitionException(
+                "In the current version, only the email type is supported"
+            )
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.config.camunda;
 
+import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.CamundaDatasourceConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;

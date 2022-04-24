@@ -12,6 +12,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaE
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaStartEventConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaSendTaskConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaUserTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnProcessConverter
@@ -22,6 +23,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnEndEven
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnStartEventConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnSendTaskConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnUserTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
@@ -50,7 +52,8 @@ object BpmnIO {
             BpmnStartEventConverter::class,
             BpmnEndEventConverter::class,
             BpmnSequenceFlowConverter::class,
-            BpmnSendTaskConverter::class
+            BpmnSendTaskConverter::class,
+            BpmnUserTaskConverter::class
         ), extensionTypeResolver
     )
 
@@ -65,7 +68,8 @@ object BpmnIO {
             CamundaStartEventConverter::class,
             CamundaEndEventConverter::class,
             CamundaSequenceFlowConverter::class,
-            CamundaSendTaskConverter::class
+            CamundaSendTaskConverter::class,
+            CamundaUserTaskConverter::class
         ), extensionTypeResolver
     )
 
