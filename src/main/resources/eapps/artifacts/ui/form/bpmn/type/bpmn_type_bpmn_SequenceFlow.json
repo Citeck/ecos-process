@@ -1,8 +1,8 @@
 {
-  "id": "bpmn-type-bpmn:StartEvent",
+  "id": "bpmn-type-bpmn:SequenceFlow",
   "formKey": "",
   "title": {
-    "en": "BPMN Start Event Form"
+    "en": "BPMN Sequence Flow Form"
   },
   "description": {},
   "customModule": null,

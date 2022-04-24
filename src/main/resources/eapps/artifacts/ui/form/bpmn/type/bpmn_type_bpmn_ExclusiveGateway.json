@@ -1,8 +1,8 @@
 {
-  "id": "bpmn-type-bpmn:StartEvent",
+  "id": "bpmn-type-bpmn:ExclusiveGateway",
   "formKey": "",
   "title": {
-    "en": "BPMN Start Event Form"
+    "en": "BPMN Exclusive Gateway Form"
   },
   "description": {},
   "customModule": null,

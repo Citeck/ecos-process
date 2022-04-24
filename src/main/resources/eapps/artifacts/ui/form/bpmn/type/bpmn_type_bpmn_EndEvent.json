@@ -17,13 +17,6 @@
         "key": "includeForm2",
         "label": "Форма: Bpmn base form elements",
         "type": "includeForm"
-      },
-      {
-        "type": "button",
-        "key": "submit",
-        "disableOnInvalid": true,
-        "theme": "primary",
-        "input": true
       }
     ]
   },
