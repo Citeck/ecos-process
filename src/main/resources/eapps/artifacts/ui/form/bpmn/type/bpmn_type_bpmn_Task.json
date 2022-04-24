@@ -1,8 +1,8 @@
 {
-  "id": "bpmn-type-bpmn:StartEvent",
+  "id": "bpmn-type-bpmn:Task",
   "formKey": "",
   "title": {
-    "en": "BPMN Start Event Form"
+    "en": "BPMN Task Form"
   },
   "description": {},
   "customModule": null,
