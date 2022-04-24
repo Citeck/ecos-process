@@ -185,13 +185,6 @@
             "row": "0-1"
           }
         ]
-      },
-      {
-        "type": "button",
-        "key": "submit",
-        "disableOnInvalid": true,
-        "theme": "primary",
-        "input": true
       }
     ]
   },
