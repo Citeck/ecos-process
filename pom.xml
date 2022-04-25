@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos</groupId>
         <artifactId>ecos-micro-base</artifactId>
-        <version>3.45.0</version>
+        <version>3.46.0</version>
     </parent>
 
     <repositories>
@@ -136,6 +136,11 @@
         </dependency>
 
         <dependency>
+            <groupId>ru.citeck.ecos.data</groupId>
+            <artifactId>ecos-data-sql-pg-spring</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>ru.citeck.ecos</groupId>
             <artifactId>ecos-notifications-lib-spring</artifactId>
             <version>${ecos.notifications-lib.version}</version>
@@ -144,6 +149,26 @@
         <dependency>
             <groupId>ru.citeck.ecos.model</groupId>
             <artifactId>ecos-model-lib-spring</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.zookeeper</groupId>
+            <artifactId>ecos-zookeeper-spring</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos</groupId>
+            <artifactId>ecos-curator-framework</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos</groupId>
+            <artifactId>ecos-curator-test</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.events</groupId>
+            <artifactId>ecos-events2-rabbitmq-spring</artifactId>
         </dependency>
 
         <dependency>

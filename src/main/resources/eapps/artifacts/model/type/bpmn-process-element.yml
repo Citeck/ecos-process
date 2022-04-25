@@ -1,0 +1,54 @@
+---
+id: bpmn-process-element
+
+name:
+  en: Process Elements
+  ru: Элементы процесса
+
+system: true
+sourceId: eproc/bpmn-process-elements
+
+journalRef: uiserv/journal@bpmn-process-elements
+
+defaultCreateVariant: false
+
+model:
+  attributes:
+    - id: activityId
+      index:
+        enabled: true
+    - id: engine
+      index:
+        enabled: true
+    - id: assignee
+    - id: activityType
+    - id: procDefId
+    - id: procDefVersion
+    - id: procInstanceId
+    - id: activityDefId
+    - id: created
+      type: DATETIME
+      index:
+        enabled: true
+    - id: dueDate
+      type: DATETIME
+      index:
+        enabled: true
+    - id: completed
+      type: DATETIME
+      index:
+        enabled: true
+    - id: description
+    - id: priority
+    - id: executionId
+    - id: name
+      type: MLTEXT
+    - id: comment
+    - id: outcome
+    - id: outcomeName
+      type: MLTEXT
+    - id: document
+      type: ASSOC
+    - id: documentTypeRef
+      type: ASSOC
+

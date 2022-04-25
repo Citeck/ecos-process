@@ -137,6 +137,14 @@ ecos-process:
       hikari:
         poolName: HikariCamunda
         auto-commit: false
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://localhost:5428/eproc
+    username: eproc
+    password:
+    hikari:
+      poolName: HikariCamunda
+      auto-commit: false
 
 camunda.bpm.admin-user:
   id: demo

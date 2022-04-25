@@ -1,0 +1,29 @@
+---
+id: bpmn-process-elements
+
+name:
+  en: BPMN Process Elements
+  ru: Элементы BPMN Процесса
+
+columns:
+
+  - id: activityId
+  - id: engine
+  - id: assignee
+  - id: activityType
+  - id: procDefId
+  - id: procDefVersion
+  - id: procInstanceId
+  - id: activityDefId
+  - id: created
+  - id: dueDate
+  - id: completed
+  - id: description
+  - id: priority
+  - id: executionId
+  - id: name
+  - id: comment
+  - id: outcome
+  - id: outcomeName
+  - id: document
+  - id: documentTypeRef
