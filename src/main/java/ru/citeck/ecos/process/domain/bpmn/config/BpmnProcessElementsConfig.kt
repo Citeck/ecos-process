@@ -85,14 +85,14 @@ class BpmnProcessElementsConfig(
             withEventType("bpmn-user-task-complete")
             withDataClass(TaskEvent::class.java)
             withAction {
-                val existingActivity = recordsService.queryOne(RecordsQuery.create {
+                val existingElement = recordsService.queryOne(RecordsQuery.create {
                     withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
                     withQuery(Predicates.and(
                         Predicates.eq("engine", it.engine),
-                        Predicates.eq("activityId", it.taskId)
+                        Predicates.eq("elementId", it.taskId)
                     ))
                 })
-                if (existingActivity == null) {
+                if (existingElement == null) {
                     createTaskElement(it, true)
                 } else {
                     val data = ObjectData.create()
@@ -100,7 +100,7 @@ class BpmnProcessElementsConfig(
                     data.set("outcome", it.outcome)
                     data.set("outcomeName", it.outcomeName)
                     data.set("comment", it.comment)
-                    recordsService.mutate(existingActivity, data)
+                    recordsService.mutate(existingElement, data)
                 }
             }
         }
@@ -126,8 +126,8 @@ class BpmnProcessElementsConfig(
             data.remove("outcomeName")
             data.remove("comment")
         }
-        data.set("activityId", event.taskId)
-        data.set("activityType", "UserTask")
+        data.set("elementId", event.taskId)
+        data.set("elementType", "UserTask")
         recordsService.create(BPMN_ELEMENTS_REPO_SOURCE_ID, data)
     }
 
@@ -141,8 +141,8 @@ class BpmnProcessElementsConfig(
     private class FlowElementTakeEvent(
         var engine: String? = null,
         var procDefId: String? = null,
-        var activityType: String? = null,
-        var activityDefId: String? = null,
+        var elementType: String? = null,
+        var elementDefId: String? = null,
         var procDefVersion: String? = null,
         var procInstanceId: String? = null,
         var executionId: String? = null,
@@ -160,7 +160,7 @@ class BpmnProcessElementsConfig(
         var procDefId: String? = null,
         var procDefVersion: Int? = null,
         var procInstanceId: String? = null,
-        var activityDefId: String? = null,
+        var elementDefId: String? = null,
         var created: String? = null,
         var dueDate: Instant? = null,
         var description: String? = null,

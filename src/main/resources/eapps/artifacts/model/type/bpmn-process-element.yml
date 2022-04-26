@@ -14,18 +14,18 @@ defaultCreateVariant: false
 
 model:
   attributes:
-    - id: activityId
+    - id: elementId
       index:
         enabled: true
     - id: engine
       index:
         enabled: true
     - id: assignee
-    - id: activityType
+    - id: elementType
     - id: procDefId
     - id: procDefVersion
     - id: procInstanceId
-    - id: activityDefId
+    - id: elementDefId
     - id: created
       type: DATETIME
       index:

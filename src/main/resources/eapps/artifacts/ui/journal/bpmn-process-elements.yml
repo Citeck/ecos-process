@@ -7,23 +7,33 @@ name:
 
 columns:
 
-  - id: activityId
+  - id: elementId
+    visible: false
   - id: engine
+    visible: false
   - id: assignee
-  - id: activityType
+    visible: false
+  - id: elementType
   - id: procDefId
   - id: procDefVersion
   - id: procInstanceId
-  - id: activityDefId
+  - id: elementDefId
   - id: created
   - id: dueDate
   - id: completed
   - id: description
+    visible: false
   - id: priority
+    visible: false
   - id: executionId
   - id: name
   - id: comment
+    visible: false
   - id: outcome
+    visible: false
   - id: outcomeName
+    visible: false
   - id: document
+    visible: false
   - id: documentTypeRef
+    visible: false
