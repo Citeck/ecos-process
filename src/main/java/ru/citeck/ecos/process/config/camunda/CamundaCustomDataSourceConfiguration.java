@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.config.camunda;
 
-import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.spring.SpringProcessEngineConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.CamundaDatasourceConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;
@@ -9,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
+import ru.citeck.ecos.process.domain.datasource.DataSourceFactory;
 
-import javax.sql.DataSource;
 import java.util.Collections;
 
 /**
@@ -20,8 +19,7 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
     implements CamundaDatasourceConfiguration {
 
     @Autowired
-    @Qualifier("camundaDataSource")
-    protected DataSource dataSource;
+    protected DataSourceFactory dataSourceFactory;
 
     @Autowired
     @Qualifier("camundaTransactionManager")
@@ -36,7 +34,7 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
 
         configuration.setTransactionManager(transactionManager);
 
-        configuration.setDataSource(dataSource);
+        configuration.setDataSource(dataSourceFactory.getJdbcDataSource("camunda").getJavaDataSource());
 
         configuration.setDatabaseType(database.getType());
         configuration.setDatabaseSchemaUpdate(database.getSchemaUpdate());
@@ -52,14 +50,6 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
         configuration.setJdbcBatchProcessing(database.isJdbcBatchProcessing());
 
         configuration.setProcessEnginePlugins(Collections.singletonList(testPlugin));
-    }
-
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
     }
 
     public PlatformTransactionManager getTransactionManager() {

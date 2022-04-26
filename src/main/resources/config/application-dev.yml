@@ -126,25 +126,18 @@ jhipster:
 spring.rabbitmq:
   host: localhost
 
-
-ecos-process:
-  camunda:
-    datasource:
-      type: com.zaxxer.hikari.HikariDataSource
-      url: jdbc:postgresql://localhost:5430/camunda
-      username: camunda
-      password:
-      hikari:
-        poolName: HikariCamunda
-        auto-commit: false
+ecos:
   datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5428/eproc
-    username: eproc
-    password:
-    hikari:
-      poolName: HikariCamunda
-      auto-commit: false
+    jdbc:
+      connections:
+        camunda:
+          url: jdbc:postgresql://localhost:5430/camunda
+          username: camunda
+          password:
+        eproc:
+          url: jdbc:postgresql://localhost:5428/eproc
+          username: eproc
+          password:
 
 camunda.bpm.admin-user:
   id: demo

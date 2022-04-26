@@ -98,6 +98,19 @@ jhipster:
 
 # application:
 
+ecos:
+  datasource:
+    jdbc:
+      connections:
+        camunda:
+          url: jdbc:postgresql://localhost:5430/camunda
+          username: camunda
+          password:
+        eproc:
+          url: jdbc:postgresql://localhost:5428/eproc
+          username: eproc
+          password:
+
 eproc:
   ecos-records:
     force-local-mode: true
@@ -106,15 +119,6 @@ ecos-process:
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
-  camunda:
-    datasource:
-      type: com.zaxxer.hikari.HikariDataSource
-      url: jdbc:postgresql://localhost:5430/camunda
-      username: camunda
-      password:
-      hikari:
-        poolName: HikariCamunda
-        auto-commit: false
 
 notifications:
   default:
