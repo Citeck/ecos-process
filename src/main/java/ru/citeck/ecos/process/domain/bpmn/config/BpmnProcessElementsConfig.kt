@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.config
 
+import mu.KotlinLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -37,6 +38,8 @@ class BpmnProcessElementsConfig(
     companion object {
         const val BPMN_ELEMENTS_SOURCE_ID = "bpmn-process-elements"
         const val BPMN_ELEMENTS_REPO_SOURCE_ID = "$BPMN_ELEMENTS_SOURCE_ID-repo"
+
+        val log = KotlinLogging.logger {}
     }
 
     @Bean
@@ -139,9 +142,9 @@ class BpmnProcessElementsConfig(
             }
         }
 
-        eventsService.addListener<FlowElementTakeEvent> {
-            withEventType("bpmn-flow-element-take")
-            withDataClass(FlowElementTakeEvent::class.java)
+        eventsService.addListener<FlowElementEvent> {
+            withEventType("bpmn-flow-element-start")
+            withDataClass(FlowElementEvent::class.java)
             withAction {
                 createFlowElement(it)
             }
@@ -151,6 +154,7 @@ class BpmnProcessElementsConfig(
     }
 
     private fun createTaskElement(event: TaskEvent, completedEvent: Boolean) {
+        log.debug { "Create task element. Event: $event. Completed: $completedEvent" }
         val data = ObjectData.create(event)
         if (completedEvent) {
             data.set("started", event.time)
@@ -168,7 +172,12 @@ class BpmnProcessElementsConfig(
         recordsService.create(BPMN_ELEMENTS_REPO_SOURCE_ID, data)
     }
 
-    private fun createFlowElement(event: FlowElementTakeEvent) {
+    private fun createFlowElement(event: FlowElementEvent) {
+        if (event.elementType == "UserTask") {
+            log.debug { "User task flow take skipped: $event" }
+            return
+        }
+        log.debug { "Create BPMN element by event: $event" }
         val data = ObjectData.create(event)
         data.set("created", event.time)
         data.set("completed", event.time)
@@ -178,7 +187,7 @@ class BpmnProcessElementsConfig(
         recordsService.create(BPMN_ELEMENTS_REPO_SOURCE_ID, data)
     }
 
-    private class FlowElementTakeEvent(
+    private data class FlowElementEvent(
         var engine: String? = null,
         var procDefId: String? = null,
         var elementType: String? = null,
@@ -193,7 +202,7 @@ class BpmnProcessElementsConfig(
         var documentTypeRef: RecordRef? = null,
     )
 
-    private class TaskEvent(
+    private data class TaskEvent(
         var taskId: String? = null,
         var engine: String? = null,
         var assignee: String? = null,
