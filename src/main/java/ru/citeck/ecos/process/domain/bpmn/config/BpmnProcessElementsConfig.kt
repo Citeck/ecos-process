@@ -15,12 +15,16 @@ import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import java.time.Instant
 
 @Profile("!test")
@@ -37,7 +41,37 @@ class BpmnProcessElementsConfig(
 
     @Bean
     fun bpmnElementsDao(): RecordsDao {
-        return RecordsDaoProxy(BPMN_ELEMENTS_SOURCE_ID, BPMN_ELEMENTS_REPO_SOURCE_ID)
+        return object : RecordsDaoProxy(BPMN_ELEMENTS_SOURCE_ID, BPMN_ELEMENTS_REPO_SOURCE_ID) {
+            override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
+                if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE) {
+                    return super.queryRecords(recsQuery)
+                }
+                val predicate = recsQuery.getQuery(Predicate::class.java)
+                val newPredicate = PredicateUtils.mapValuePredicates(predicate) { pred ->
+                    if (pred.getAttribute() == "procDefRef") {
+                        preProcessProcDefQueryAtt(RecordRef.valueOf(pred.getValue().asText()))
+                    } else {
+                        pred
+                    }
+                } ?: Predicates.alwaysTrue()
+                return super.queryRecords(recsQuery.copy { withQuery(newPredicate) })
+            }
+        }
+    }
+
+    private fun preProcessProcDefQueryAtt(value: RecordRef): Predicate {
+        return if (value.appName == "alfresco") {
+            val procDefId = recordsService.getAtt(value, "ecosbpm:processId").asText()
+            Predicates.and(
+                Predicates.eq("procDefId", procDefId),
+                Predicates.eq("engine", "flowable")
+            )
+        } else {
+            Predicates.and(
+                Predicates.eq("procDefId", value.id),
+                Predicates.not(Predicates.eq("engine", "flowable"))
+            )
+        }
     }
 
     @Bean
@@ -128,6 +162,9 @@ class BpmnProcessElementsConfig(
         }
         data.set("elementId", event.taskId)
         data.set("elementType", "UserTask")
+        if (data.get("engine").asText().isBlank()) {
+            data.set("engine", "flowable")
+        }
         recordsService.create(BPMN_ELEMENTS_REPO_SOURCE_ID, data)
     }
 
@@ -135,6 +172,9 @@ class BpmnProcessElementsConfig(
         val data = ObjectData.create(event)
         data.set("created", event.time)
         data.set("completed", event.time)
+        if (data.get("engine").asText().isBlank()) {
+            data.set("engine", "flowable")
+        }
         recordsService.create(BPMN_ELEMENTS_REPO_SOURCE_ID, data)
     }
 
