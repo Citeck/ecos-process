@@ -15,7 +15,7 @@ columns:
     visible: false
   - id: elementType
   - id: procDefId
-  - id: procDefVersion
+  - id: procDefVersionLabel
   - id: procInstanceId
   - id: elementDefId
   - id: created

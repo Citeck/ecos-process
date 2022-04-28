@@ -110,6 +110,8 @@ class BpmnProcessElementsConfig(
                 .build()
         ).withPermsComponent(permsComponent).build()
 
+        recordsDao.addAttributesMixin(BpmnProcessElementsMixin(recordsService))
+
         eventsService.addListener<TaskEvent> {
             withEventType("bpmn-user-task-create")
             withDataClass(TaskEvent::class.java)
@@ -192,7 +194,7 @@ class BpmnProcessElementsConfig(
         var procDefId: String? = null,
         var elementType: String? = null,
         var elementDefId: String? = null,
-        var procDefVersion: String? = null,
+        var procDeploymentVersion: String? = null,
         var procInstanceId: String? = null,
         var executionId: String? = null,
         @AttName("\$event.time")
@@ -207,7 +209,7 @@ class BpmnProcessElementsConfig(
         var engine: String? = null,
         var assignee: String? = null,
         var procDefId: String? = null,
-        var procDefVersion: Int? = null,
+        var procDeploymentVersion: Int? = null,
         var procInstanceId: String? = null,
         var elementDefId: String? = null,
         var created: String? = null,

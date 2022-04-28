@@ -15,40 +15,100 @@ defaultCreateVariant: false
 model:
   attributes:
     - id: elementId
+      name:
+        ru: Идентификатор
+        en: Identifier
       index:
         enabled: true
     - id: engine
+      name:
+        ru: Движок
+        en: Engine
       index:
         enabled: true
     - id: assignee
+      name:
+        ru: Исполнитель
+        en: Assignee
     - id: elementType
+      name:
+        ru: Тип элемента
+        en: Element type
     - id: procDefId
-    - id: procDefVersion
+      name:
+        ru: Идентификатор описания процесса
+        en: Process definition identifier
+    - id: procDeploymentVersion
+      name:
+        ru: Версия описания процесса
+        en: Process definition version
     - id: procInstanceId
+      name:
+        ru: Идентификатор инстанса процесса
+        en: Process instance identifier
     - id: elementDefId
+      name:
+        ru: Идентификатор элемента
+        en: Element identifier
     - id: created
+      name:
+        ru: Время создяния
+        en: Creation time
       type: DATETIME
       index:
         enabled: true
     - id: dueDate
+      name:
+        ru: Срок выполнения
+        en: Due date
       type: DATETIME
       index:
         enabled: true
     - id: completed
+      name:
+        ru: Время завершения
+        en: Creation time
       type: DATETIME
       index:
         enabled: true
     - id: description
+      name:
+        ru: Описание
+        en: Description
     - id: priority
+      name:
+        ru: Приоритет
+        en: Priority
     - id: executionId
+      name:
+        ru: Идентификатор исполнения
+        en: Execution identifier
     - id: name
+      name:
+        ru: Имя
+        en: Name
       type: MLTEXT
     - id: comment
+      name:
+        ru: Комментарий
+        en: Comment
     - id: outcome
+      name:
+        ru: Идентификатор результата выполнения
+        en: Outcome identifier
     - id: outcomeName
+      name:
+        ru: Результат выполнения
+        en: Outcome
       type: MLTEXT
     - id: document
+      name:
+        ru: Документ
+        en: Document
       type: ASSOC
     - id: documentTypeRef
+      name:
+        ru: Тип документа
+        en: Document type
       type: ASSOC
 
