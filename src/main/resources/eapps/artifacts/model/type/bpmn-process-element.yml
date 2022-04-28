@@ -38,6 +38,7 @@ model:
       name:
         ru: Идентификатор описания процесса
         en: Process definition identifier
+      visible: false
     - id: procDeploymentVersion
       name:
         ru: Версия описания процесса
