@@ -36,23 +36,23 @@ model:
         en: Element type
     - id: procDefId
       name:
-        ru: Идентификатор описания процесса
-        en: Process definition identifier
+        ru: Описание процесса
+        en: Process definition
     - id: procDeploymentVersion
       name:
         ru: Версия описания процесса
         en: Process definition version
     - id: procInstanceId
       name:
-        ru: Идентификатор инстанса процесса
-        en: Process instance identifier
+        ru: Инстанс процесса
+        en: Process instance
     - id: elementDefId
       name:
         ru: Идентификатор элемента
         en: Element identifier
     - id: created
       name:
-        ru: Время создяния
+        ru: Время создания
         en: Creation time
       type: DATETIME
       index:
@@ -85,8 +85,8 @@ model:
         en: Execution identifier
     - id: name
       name:
-        ru: Имя
-        en: Name
+        ru: Имя элемента
+        en: Element name
       type: MLTEXT
     - id: comment
       name:

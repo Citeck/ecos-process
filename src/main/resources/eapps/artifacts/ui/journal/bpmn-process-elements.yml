@@ -13,24 +13,26 @@ columns:
     visible: false
   - id: assignee
     visible: false
-  - id: elementType
-  - id: procDefId
-    visible: false
+  - id: procInstanceId
   - id: procDefVersionLabel
     name:
       ru: Версия процесса
       en: Process version
-  - id: procInstanceId
+  - id: procDefId
+    visible: false
+  - id: elementType
+  - id: name
   - id: elementDefId
   - id: created
   - id: dueDate
+    visible: false
   - id: completed
   - id: description
     visible: false
   - id: priority
     visible: false
   - id: executionId
-  - id: name
+    visible: false
   - id: comment
     visible: false
   - id: outcome
