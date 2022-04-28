@@ -16,6 +16,9 @@ columns:
   - id: elementType
   - id: procDefId
   - id: procDefVersionLabel
+    name:
+      ru: Версия процесса
+      en: Process version
   - id: procInstanceId
   - id: elementDefId
   - id: created
