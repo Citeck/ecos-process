@@ -15,6 +15,7 @@ columns:
     visible: false
   - id: elementType
   - id: procDefId
+    visible: false
   - id: procDefVersionLabel
     name:
       ru: Версия процесса
