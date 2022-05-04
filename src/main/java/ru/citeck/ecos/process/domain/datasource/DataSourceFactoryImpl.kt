@@ -34,7 +34,7 @@ class DataSourceFactoryImpl : DataSourceFactory {
         val factory = factories[type] ?: throw UnsupportedDataSourceType(type)
         val propsType = ReflectUtils.getGenericArgs(factory::class.java, DataSourceTypeFactory::class.java)[0]
 
-        val propPrefix = "ecos.datasource.$type.connections.$id."
+        val propPrefix = "ecos.webapp.datasource.$type.connections.$id."
 
         val propsValues = mutableMapOf<String, String?>()
         val descriptors = PropertyUtils.getPropertyDescriptors(propsType)
