@@ -35,7 +35,8 @@
           "forceLoad": false
         },
         "update": {
-          "type": "once"
+          "type": "once",
+          "rate": 300
         },
         "key": "roles",
         "type": "asyncData",
@@ -68,6 +69,9 @@
           "custom": "values = _.get(data, 'roles.rolesData');"
         },
         "defaultValue": "",
+        "refreshOn": [
+          "roles"
+        ],
         "optionalWhenDisabled": false,
         "type": "ecosSelect",
         "input": true
@@ -149,6 +153,10 @@
               "en": ""
             },
             "objectObject": {
+              "ru": "",
+              "en": ""
+            },
+            "_name": {
               "ru": "",
               "en": ""
             }

@@ -196,6 +196,9 @@
                   "custom": "values = _.get(data, 'roles.rolesData');"
                 },
                 "defaultValue": [],
+                "refreshOn": [
+                  "roles"
+                ],
                 "optionalWhenDisabled": false,
                 "type": "ecosSelect",
                 "input": true
@@ -213,6 +216,9 @@
                   "custom": "values = _.get(data, 'roles.rolesData');"
                 },
                 "defaultValue": [],
+                "refreshOn": [
+                  "roles"
+                ],
                 "optionalWhenDisabled": false,
                 "type": "ecosSelect",
                 "input": true
@@ -230,6 +236,9 @@
                   "custom": "values = _.get(data, 'roles.rolesData');"
                 },
                 "defaultValue": [],
+                "refreshOn": [
+                  "roles"
+                ],
                 "optionalWhenDisabled": false,
                 "type": "ecosSelect",
                 "input": true
