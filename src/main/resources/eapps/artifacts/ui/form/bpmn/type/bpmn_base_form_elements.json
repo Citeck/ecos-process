@@ -13,6 +13,23 @@
     "components": [
       {
         "label": {
+          "ru": "ID элемента",
+          "en": "Element ID"
+        },
+        "key": "id",
+        "validate": {
+          "required": true,
+          "minLength": 1
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "validateOn": "blur",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
           "ru": "Имя",
           "en": "Name"
         },
