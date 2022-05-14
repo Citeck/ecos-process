@@ -4,6 +4,10 @@ import javax.xml.namespace.QName
 
 const val NS_BPMN = "http://www.omg.org/spec/BPMN/20100524/MODEL"
 const val NS_ECOS = "http://www.citeck.ru/ecos/bpmn/1.0"
+const val NS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
+
+val XSI_TYPE = QName(NS_XSI, "type")
+const val BPMN_T_FORMAT_EXPRESSION = "bpmn:tFormalExpression"
 
 val BPMN_PROP_ECOS_TYPE = QName(NS_ECOS, "ecosType")
 val BPMN_PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")
@@ -25,5 +29,8 @@ val BPMN_PROP_ASSIGNEES = QName(NS_ECOS, "assignees")
 val BPMN_PROP_FORM_REF = QName(NS_ECOS, "formRef")
 val BPMN_PROP_OUTCOMES = QName(NS_ECOS, "outcomes")
 val BPMN_PROP_PRIORITY = QName(NS_ECOS, "priority")
+
+val BPMN_PROP_CONDITION_CONFIG = QName(NS_ECOS, "conditionConfig")
+val BPMN_PROP_CONDITION_TYPE = QName(NS_ECOS, "conditionType")
 
 val BPMN_PROP_ECOS_BPMN_TYPE = QName(NS_ECOS, "bpmnType")

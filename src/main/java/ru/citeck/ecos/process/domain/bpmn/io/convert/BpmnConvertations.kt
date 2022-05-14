@@ -1,17 +1,28 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert
 
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_CONDITION_CONFIG
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_CONDITION_TYPE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_T_FORMAT_EXPRESSION
+import ru.citeck.ecos.process.domain.bpmn.io.XSI_TYPE
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.omg.Bounds
 import ru.citeck.ecos.process.domain.bpmn.model.omg.Point
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TExpression
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.records2.RecordRef
 import javax.xml.bind.JAXBElement
+import javax.xml.namespace.QName
 
 fun Bounds.toDef(): BoundsDef {
     return BoundsDef(
@@ -69,11 +80,11 @@ fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {
 }
 
 inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V) {
-    when (true) {
-        value is String -> {
+    when (value) {
+        is String -> {
             if (value.isNotBlank()) put(key, value)
         }
-        value is RecordRef -> {
+        is RecordRef -> {
             if (RecordRef.isNotEmpty(value)) put(key, value)
         }
         else -> error("Type ${V::class} is not supported")
@@ -81,14 +92,14 @@ inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V)
 }
 
 inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T) {
-    when (true) {
-        value is String -> {
+    when (value) {
+        is String -> {
             if (value.isNotBlank() && value != "null") add(value)
         }
-        value is RecordRef -> {
+        is RecordRef -> {
             if (RecordRef.isNotEmpty(value)) add(value)
         }
-        value is CamundaField -> {
+        is CamundaField -> {
             if (value.stringValue?.value?.isNotBlank() == true) add(value)
         }
         else -> error("Type ${T::class} is not supported")
@@ -120,4 +131,35 @@ fun recipientsToJsonWithoutType(recipients: List<Recipient>): String {
 
 fun recipientsToJson(recipients: List<Recipient>): String {
     return Json.mapper.toString(recipients) ?: ""
+}
+
+fun conditionFromAttributes(atts: Map<QName, String>): BpmnConditionDef {
+    return BpmnConditionDef(
+        type = atts[BPMN_PROP_CONDITION_TYPE]?.let {
+            ConditionType.valueOf(it.uppercase())
+        } ?: ConditionType.NONE,
+        config = atts[BPMN_PROP_CONDITION_CONFIG]?.let {
+            Json.mapper.read(it)?.let { node ->
+                ConditionConfig(
+                    fn = node["fn"].asText(),
+                    expression = node["expression"].asText(),
+                    outcome = Outcome(node["outcome"].asText())
+                )
+            } ?: ConditionConfig()
+        } ?: ConditionConfig()
+    )
+}
+
+fun Outcome.toTExpression(): TExpression {
+    val exp = TExpression()
+    exp.content.add(this.toExpressionStr())
+    exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+    return exp
+}
+
+fun Outcome.toExpressionStr(): String {
+    if (this == Outcome.EMPTY) {
+        return ""
+    }
+    return "\${${id}_${OUTCOME_POSTFIX} == '${key}'}"
 }
