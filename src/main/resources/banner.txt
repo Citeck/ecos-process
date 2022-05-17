@@ -1,1 +1,1 @@
-:: STARTING ${AnsiColor.BRIGHT_MAGENTA}ECOS-PROCESS${AnsiColor.DEFAULT} ::
+:: STARTING ${AnsiColor.BRIGHT_MAGENTA}${ecos.webapp.properties.appName}${AnsiColor.DEFAULT} Powered by Spring Boot ${spring-boot.version} ::
