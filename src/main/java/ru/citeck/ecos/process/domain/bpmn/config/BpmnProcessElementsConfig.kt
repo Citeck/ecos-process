@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.data.sql.datasource.DbDataSourceImpl
 import ru.citeck.ecos.data.sql.domain.DbDomainConfig
 import ru.citeck.ecos.data.sql.domain.DbDomainFactory
 import ru.citeck.ecos.data.sql.dto.DbTableRef
@@ -26,6 +27,8 @@ import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
+import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 import java.time.Instant
 
 @Profile("!test")
@@ -78,7 +81,7 @@ class BpmnProcessElementsConfig(
     }
 
     @Bean
-    fun bpmnActivitiesRepoDao(eventsService: EventsService): RecordsDao {
+    fun bpmnActivitiesRepoDao(eventsService: EventsService, dataSourceManager: EcosDataSourceManager): RecordsDao {
 
         val accessPerms = object : DbRecordPerms {
             override fun getAuthoritiesWithReadPermission(): Set<String> {
@@ -94,6 +97,8 @@ class BpmnProcessElementsConfig(
             }
         }
 
+        val dataSource = dataSourceManager.getDataSource("eproc", JdbcDataSource::class.java).getJavaDataSource()
+
         val typeRef = TypeUtils.getTypeRef("bpmn-process-element")
         val recordsDao = dbDomainFactory.create(
             DbDomainConfig.create()
@@ -108,7 +113,9 @@ class BpmnProcessElementsConfig(
                     withStoreTableMeta(true)
                 })
                 .build()
-        ).withPermsComponent(permsComponent).build()
+        ).withPermsComponent(permsComponent)
+            .withDataSource(DbDataSourceImpl(dataSource))
+            .build()
 
         recordsDao.addAttributesMixin(BpmnProcessElementsMixin(recordsService))
 

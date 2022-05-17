@@ -6,11 +6,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
-import io.github.jhipster.domain.util.JSR310DateConverters;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -18,8 +15,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import ru.citeck.ecos.webapp.lib.spring.context.utils.JSR310DateConverters;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -28,7 +27,6 @@ import java.util.List;
 
 @Slf4j
 @Configuration
-@EnableMongoRepositories("ru.citeck.ecos.process.repository")
 @Profile("!test")
 public class MongoConfiguration {
 
@@ -36,13 +34,6 @@ public class MongoConfiguration {
 
     @Value("${spring.data.mongodb.uri}")
     private String mongoDBURI;
-
-    @Bean
-    @Primary
-    @ConfigurationProperties(prefix = "spring.data.mongodb")
-    public DataSource domainDataSource() {
-        return DataSourceBuilder.create().build();
-    }
 
     @Bean
     public SpringMongock mongock() {
@@ -82,5 +73,13 @@ public class MongoConfiguration {
     @Bean
     public ValidatingMongoEventListener validatingMongoEventListener(LocalValidatorFactoryBean localValidatorFactoryBean) {
         return new ValidatingMongoEventListener(localValidatorFactoryBean);
+    }
+
+    @Bean
+    @Primary
+    public DataSource domainDataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.H2)
+            .build();
     }
 }

@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
-import ru.citeck.ecos.process.domain.datasource.DataSourceFactory;
+import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource;
+import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager;
 
 import java.util.Collections;
 
@@ -19,7 +20,7 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
     implements CamundaDatasourceConfiguration {
 
     @Autowired
-    protected DataSourceFactory dataSourceFactory;
+    protected EcosDataSourceManager dataSourceManager;
 
     @Autowired
     @Qualifier("camundaTransactionManager")
@@ -34,7 +35,8 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
 
         configuration.setTransactionManager(transactionManager);
 
-        configuration.setDataSource(dataSourceFactory.getJdbcDataSource("camunda").getJavaDataSource());
+        JdbcDataSource dataSource = dataSourceManager.getDataSource("camunda", JdbcDataSource.class);
+        configuration.setDataSource(dataSource.getJavaDataSource());
 
         configuration.setDatabaseType(database.getType());
         configuration.setDatabaseSchemaUpdate(database.getSchemaUpdate());

@@ -1,7 +1,7 @@
 # ===================================================================
-# Spring Boot configuration for the "dev" profile.
+# Spring Boot configuration.
 #
-# This configuration overrides the application.yml file.
+# This configuration is used for unit/integration tests.
 #
 # More information on profiles: https://www.jhipster.tech/profiles/
 # More information on configuration properties: https://www.jhipster.tech/common-application-properties/
@@ -13,29 +13,22 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-logging:
-  level:
-    ROOT: DEBUG
-    io.github.jhipster: DEBUG
-    ru.citeck.ecos.process: DEBUG
-    org.mongodb.driver: INFO
-    jdk.event.security: INFO
-    ru.citeck.ecos.process.aop.logging: INFO
-
 server:
-  port: 8098
+  port: 10344
+  address: localhost
 
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
 # to have type-safe configuration, like in the JHipsterProperties above
+#
+# More documentation is available at:
+# https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
 # application:
 
-spring.rabbitmq:
-  host: localhost
-
-camunda.bpm.admin-user:
-  id: demo
-  password: demo
+ecos-process:
+  timers:
+    delay-after-fail-ms: 600000
+    update-rate-ms: 30000
