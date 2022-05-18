@@ -85,6 +85,7 @@ class CmmnProcDefRecords(
                     it.revisionId,
                     it.ecosTypeRef,
                     it.alfType,
+                    it.formRef,
                     it.enabled
                 )
             )

@@ -7,7 +7,7 @@
   "description": {},
   "customModule": null,
   "typeRef": "",
-  "width": "default",
+  "width": null,
   "i18n": {},
   "definition": {
     "components": [
@@ -26,14 +26,14 @@
                 "input": true
               },
               {
-                "label": {
-                  "ru": "Имя",
-                  "en": "Name"
-                },
-                "defaultValue": "",
-                "key": "name",
-                "type": "mlText",
-                "input": true
+                "label": "ECOS Type",
+                "journalId": "ecos-types",
+                "key": "ecosType",
+                "type": "selectJournal",
+                "input": true,
+                "customPredicateJs": null,
+                "presetFilterPredicatesJs": null,
+                "sortAscending": "asc"
               }
             ],
             "type": "column",
@@ -55,14 +55,27 @@
             "label": "Column",
             "components": [
               {
-                "label": "ECOS Type",
-                "journalId": "ecos-types",
-                "key": "ecosType",
+                "label": {
+                  "ru": "Имя",
+                  "en": "Name"
+                },
+                "key": "name",
+                "type": "mlText",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Форма",
+                  "en": "Form"
+                },
+                "key": "formRef",
+                "modalTitle": "",
+                "journalId": "ecos-forms",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
                 "type": "selectJournal",
                 "input": true,
-                "customPredicateJs": null,
-                "presetFilterPredicatesJs": null,
-                "sortAscending": "asc"
+                "queryData": ""
               },
               {
                 "label": "Enabled",

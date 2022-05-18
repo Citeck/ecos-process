@@ -42,6 +42,8 @@ public class ProcDefWithDataDto {
     @NotNull
     private int version;
 
+    private RecordRef formRef;
+
     private Boolean enabled;
 
     public ProcDefWithDataDto() {
@@ -58,6 +60,7 @@ public class ProcDefWithDataDto {
         this.alfType = other.alfType;
         this.modified = other.modified;
         this.version = other.version;
+        this.formRef = other.formRef;
         this.enabled = other.enabled;
     }
 
@@ -72,6 +75,7 @@ public class ProcDefWithDataDto {
         this.alfType = def.getAlfType();
         this.modified = rev.getCreated();
         this.version = rev.getVersion();
+        this.formRef = def.getFormRef();
         this.enabled = def.getEnabled();
     }
 
@@ -161,5 +165,13 @@ public class ProcDefWithDataDto {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public RecordRef getFormRef() {
+        return formRef;
+    }
+
+    public void setFormRef(RecordRef formRef) {
+        this.formRef = formRef;
     }
 }

@@ -2,10 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_DEF_ID
-import ru.citeck.ecos.process.domain.bpmn.io.propMandatoryError
+import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
@@ -35,6 +32,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             definitionsId = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             ecosType = RecordRef.Companion.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),
+            formRef = RecordRef.Companion.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
             diagrams = element.bpmnDiagram.map {
                 context.converters.import(it, BpmnDiagramDef::class.java, context).data
             },
@@ -66,6 +64,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
             otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = element.id
+            otherAttributes[BPMN_PROP_FORM_REF] = element.formRef.toString()
         }
     }
 }

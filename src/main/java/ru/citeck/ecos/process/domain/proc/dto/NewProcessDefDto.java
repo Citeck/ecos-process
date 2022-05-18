@@ -15,6 +15,7 @@ public class NewProcessDefDto {
     private String format;
     private String alfType;
     private RecordRef ecosTypeRef;
+    private RecordRef formRef;
     private byte[] data;
 
     public String getId() {
@@ -71,5 +72,13 @@ public class NewProcessDefDto {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    public RecordRef getFormRef() {
+        return formRef;
+    }
+
+    public void setFormRef(RecordRef formRef) {
+        this.formRef = formRef;
     }
 }

@@ -30,6 +30,8 @@ public class ProcDefDto {
     @NotNull
     private String alfType;
 
+    private RecordRef formRef;
+
     private Boolean enabled;
 
     public ProcDefDto(@NotNull String id,
@@ -39,6 +41,7 @@ public class ProcDefDto {
                       @NotNull UUID revisionId,
                       @NotNull RecordRef ecosTypeRef,
                       @NotNull String alfType,
+                      RecordRef formRef,
                       Boolean enabled) {
         this.id = id;
         this.name = name;
@@ -47,6 +50,7 @@ public class ProcDefDto {
         this.revisionId = revisionId;
         this.ecosTypeRef = ecosTypeRef;
         this.alfType = alfType;
+        this.formRef = formRef;
         this.enabled = enabled;
     }
 
@@ -114,5 +118,13 @@ public class ProcDefDto {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public RecordRef getFormRef() {
+        return formRef;
+    }
+
+    public void setFormRef(RecordRef formRef) {
+        this.formRef = formRef;
     }
 }

@@ -74,6 +74,7 @@ class ProcDefServiceImpl(
             currentProcDef.id = EntityUuid(tenantService.getCurrent(), UUID.randomUUID())
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
+            currentProcDef.formRef = processDef.formRef.toString()
             currentProcDef.extId = processDef.id
             currentProcDef.procType = processDef.procType
             currentProcDef.name = mapper.toString(processDef.name)
@@ -87,6 +88,7 @@ class ProcDefServiceImpl(
 
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
+            currentProcDef.formRef = processDef.formRef.toString()
             currentProcDef.name = mapper.toString(processDef.name)
             currentProcDef.modified = now
             if (currentProcDef.enabled == null) {
@@ -164,6 +166,7 @@ class ProcDefServiceImpl(
             newProcessDefDto.data = dto.data
             newProcessDefDto.alfType = dto.alfType
             newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
+            newProcessDefDto.formRef = dto.formRef
             newProcessDefDto.format = dto.format
             newProcessDefDto.procType = dto.procType
             result = uploadProcDefImpl(newProcessDefDto)
@@ -178,6 +181,7 @@ class ProcDefServiceImpl(
                 newProcessDefDto.alfType = dto.alfType
                 newProcessDefDto.data = dto.data
                 newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
+                newProcessDefDto.formRef = dto.formRef
                 newProcessDefDto.format = dto.format
                 newProcessDefDto.id = id
                 newProcessDefDto.procType = procType
@@ -188,6 +192,7 @@ class ProcDefServiceImpl(
 
                 procDefEntity.alfType = dto.alfType
                 procDefEntity.ecosTypeRef = dto.ecosTypeRef.toString()
+                procDefEntity.formRef = dto.formRef.toString()
                 procDefEntity.name = mapper.toString(dto.name)
                 if (dto.enabled != null) {
                     procDefEntity.enabled = dto.enabled
@@ -301,6 +306,7 @@ class ProcDefServiceImpl(
         procDefDto.revisionId = entity.lastRev!!.id!!.id
         procDefDto.alfType = entity.alfType
         procDefDto.ecosTypeRef = RecordRef.valueOf(entity.ecosTypeRef)
+        procDefDto.formRef = RecordRef.valueOf(entity.formRef)
         procDefDto.enabled = entity.enabled
         procDefDto.format = entity.lastRev?.format ?: ""
         return procDefDto

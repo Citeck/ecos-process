@@ -22,5 +22,8 @@ columns:
   - id: ecosType
     name: { ru: Тип ECOS, en: ECOS Type }
 
+  - id: formRef
+    name: { ru: Форма, en: Form }
+
   - id: enabled
     name: { ru: Включен, en: Enabled }

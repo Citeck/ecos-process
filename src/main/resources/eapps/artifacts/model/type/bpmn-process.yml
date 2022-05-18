@@ -1,0 +1,9 @@
+---
+id: bpmn-process
+
+name:
+  en: ECOS BPMN Process
+  ru: ECOS BPMN процесс
+
+system: true
+sourceId: eproc/bpmn-proc

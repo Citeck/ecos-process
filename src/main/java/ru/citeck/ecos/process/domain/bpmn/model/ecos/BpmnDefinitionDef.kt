@@ -10,6 +10,7 @@ data class BpmnDefinitionDef(
 
     val name: MLText,
     val ecosType: RecordRef,
+    val formRef: RecordRef,
 
     //TODO: single or list?
     val process: BpmnProcessDef,

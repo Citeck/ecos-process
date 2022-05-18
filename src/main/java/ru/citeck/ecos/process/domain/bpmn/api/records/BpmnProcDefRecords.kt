@@ -8,6 +8,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_FORM_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
@@ -123,6 +124,7 @@ class BpmnProcDefRecords(
                     it.revisionId,
                     it.ecosTypeRef,
                     it.alfType,
+                    it.formRef,
                     it.enabled
                 )
             )
@@ -131,7 +133,7 @@ class BpmnProcDefRecords(
 
     override fun getRecToMutate(recordId: String): BpmnMutateRecord {
         return if (recordId.isBlank()) {
-            BpmnMutateRecord("", "", MLText(), RecordRef.EMPTY, null, true)
+            BpmnMutateRecord("", "", MLText(), RecordRef.EMPTY, RecordRef.EMPTY, null, true)
         } else {
             val procDef = procDefService.getProcessDefById(ProcDefRef.create(PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
@@ -140,6 +142,7 @@ class BpmnProcDefRecords(
                 recordId,
                 procDef.name ?: MLText(),
                 procDef.ecosTypeRef,
+                procDef.formRef,
                 null,
                 procDef.enabled
             )
@@ -160,13 +163,14 @@ class BpmnProcDefRecords(
 
             //TODO: remove logging
             val s2 = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef)
-            log.info { "\n" + s2 }
+            log.info { "exportEcosBpmnToString:\n$s2" }
             val camundaStr = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef)
-            log.info { "\n" + camundaStr }
+            log.info { "\nexportCamundaBpmnToString$camundaStr" }
 
             newDefData = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef).toByteArray()
 
             record.ecosType = newEcosBpmnDef.ecosType
+            record.formRef = newEcosBpmnDef.formRef
             record.name = newEcosBpmnDef.name
             record.processDefId = newEcosBpmnDef.id
         }
@@ -196,6 +200,7 @@ class BpmnProcDefRecords(
             newProcDef.name = record.name
             newProcDef.data = defData
             newProcDef.ecosTypeRef = record.ecosType
+            newProcDef.formRef = record.formRef
             newProcDef.format = FORMAT_BPMN
             newProcDef.procType = PROC_TYPE
 
@@ -207,11 +212,13 @@ class BpmnProcDefRecords(
 
                 currentProc.data = newDefData
                 currentProc.ecosTypeRef = record.ecosType
+                currentProc.formRef = record.formRef
                 currentProc.name = record.name
 
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType
+                currentProc.formRef = record.formRef
                 currentProc.name = record.name
                 currentProc.enabled = record.enabled
 
@@ -220,6 +227,7 @@ class BpmnProcDefRecords(
                     val procDef = BpmnXmlUtils.readFromString(String(currentProc.data))
                     procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(record.name)
                     procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = record.ecosType.toString()
+                    procDef.otherAttributes[BPMN_PROP_FORM_REF] = record.formRef.toString()
 
                     currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
                 }
@@ -310,6 +318,16 @@ class BpmnProcDefRecords(
         fun getType(): RecordRef {
             return RecordRef.create("emodel", "type", "bpmn-process-def")
         }
+
+        @AttName("startFormRef")
+        fun getStartFormRef(): RecordRef {
+            return procDef.formRef
+        }
+
+        @AttName("formRef")
+        fun getFormRef(): RecordRef {
+            return procDef.formRef
+        }
     }
 
     class BpmnMutateRecord(
@@ -317,6 +335,7 @@ class BpmnProcDefRecords(
         var processDefId: String,
         var name: MLText,
         var ecosType: RecordRef,
+        var formRef: RecordRef,
         var definition: String? = null,
         var enabled: Boolean,
         var action: String = ""

@@ -7,7 +7,7 @@
   "description": {},
   "customModule": null,
   "typeRef": "",
-  "width": "default",
+  "width": null,
   "i18n": {},
   "definition": {
     "components": [
@@ -26,10 +26,23 @@
           "ru": "Имя",
           "en": "Name"
         },
-        "defaultValue": "",
         "key": "name_ml",
         "type": "mlText",
         "input": true
+      },
+      {
+        "label": {
+          "ru": "Форма",
+          "en": "Form"
+        },
+        "key": "formRef",
+        "modalTitle": "",
+        "journalId": "ecos-forms",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "selectJournal",
+        "input": true,
+        "queryData": ""
       },
       {
         "label": "ECOS Type",
