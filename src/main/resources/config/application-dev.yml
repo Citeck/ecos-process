@@ -13,17 +13,7 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-logging:
-  level:
-    ROOT: DEBUG
-    io.github.jhipster: DEBUG
-    ru.citeck.ecos.process: DEBUG
-    org.mongodb.driver: INFO
-    jdk.event.security: INFO
-    ru.citeck.ecos.process.aop.logging: INFO
 
-server:
-  port: 8098
 
 # ===================================================================
 # Application specific properties
@@ -32,9 +22,6 @@ server:
 # ===================================================================
 
 # application:
-
-spring.rabbitmq:
-  host: localhost
 
 camunda.bpm.admin-user:
   id: demo

@@ -14,9 +14,10 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
+server:
+  port: 8098
+
 spring:
-  application:
-    name: eproc
   data:
     mongodb:
       uri: mongodb://localhost:27017/eproc
@@ -36,11 +37,6 @@ ecos-app:
   id: ecos-process
   version: 1.0.0
   name: ECOS Process
-
-spring.rabbitmq:
-  host: rabbitmq
-  username: admin
-  password: admin
 
 ecos-process:
   timers:

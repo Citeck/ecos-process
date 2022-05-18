@@ -74,12 +74,4 @@ public class MongoConfiguration {
     public ValidatingMongoEventListener validatingMongoEventListener(LocalValidatorFactoryBean localValidatorFactoryBean) {
         return new ValidatingMongoEventListener(localValidatorFactoryBean);
     }
-
-    @Bean
-    @Primary
-    public DataSource domainDataSource() {
-        return new EmbeddedDatabaseBuilder()
-            .setType(EmbeddedDatabaseType.H2)
-            .build();
-    }
 }
