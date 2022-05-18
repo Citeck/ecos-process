@@ -7,11 +7,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.process.EprocApp;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProc;
@@ -28,15 +34,16 @@ import ru.citeck.ecos.process.domain.procdef.command.getprocdefrev.GetProcDefRev
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao;
+import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
+@Import(ProcessServiceTest.TestConfig.class)
 public class ProcessServiceTest {
 
     @Autowired
@@ -115,7 +122,15 @@ public class ProcessServiceTest {
         assertArrayEquals(stateData, getProcStateResp.getStateData());
     }
 
-    @Component
+    @Configuration
+    public static class TestConfig {
+
+        @Bean
+        public RecordAttsDao createTypesDao() {
+            return new TypesDao();
+        }
+    }
+
     public static class TypesDao implements RecordAttsDao {
 
         public static final String ID = "emodel/type";

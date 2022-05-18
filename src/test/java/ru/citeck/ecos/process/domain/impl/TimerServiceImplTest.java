@@ -2,10 +2,11 @@ package ru.citeck.ecos.process.domain.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.citeck.ecos.commands.dto.CommandResult;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
@@ -19,6 +20,7 @@ import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.timer.service.TimerService;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommandRes;
+import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -28,8 +30,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
-@ActiveProfiles("test")
 public class TimerServiceImplTest {
 
     private static final String COMMAND_RESULT_JSON = "{\n" +

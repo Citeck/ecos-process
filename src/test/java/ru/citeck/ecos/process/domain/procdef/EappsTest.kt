@@ -2,20 +2,20 @@ package ru.citeck.ecos.process.domain.procdef
 
 import junit.framework.Assert.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import ru.citeck.ecos.apps.app.domain.artifact.source.ArtifactSourceType
 import ru.citeck.ecos.apps.app.domain.artifact.source.SourceKey
 import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.apps.artifact.ArtifactService
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.time.Instant
 
+@ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 class EappsTest {
 
     @Autowired

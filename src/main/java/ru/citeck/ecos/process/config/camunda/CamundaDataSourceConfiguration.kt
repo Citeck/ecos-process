@@ -4,7 +4,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
-import ru.citeck.ecos.process.domain.datasource.DataSourceFactory
+import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
+import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 
 /**
  * @author Roman Makarskiy
@@ -13,8 +14,9 @@ import ru.citeck.ecos.process.domain.datasource.DataSourceFactory
 class CamundaDataSourceConfiguration {
 
     @Bean
-    fun camundaTransactionManager(dataSource: DataSourceFactory): PlatformTransactionManager {
-        return DataSourceTransactionManager(dataSource.getJdbcDataSource("camunda").getJavaDataSource())
+    fun camundaTransactionManager(dsManager: EcosDataSourceManager): PlatformTransactionManager {
+        return DataSourceTransactionManager(
+            dsManager.getDataSource("camunda", JdbcDataSource::class.java
+        ).getJavaDataSource())
     }
-
 }
