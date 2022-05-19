@@ -63,7 +63,6 @@ class Outcome(
         }
         return id + SEPARATOR + value
     }
-
 }
 
 object OutcomeSerializer : JsonSerializer<Outcome>() {
@@ -76,5 +75,4 @@ object OutcomeDeserializer : JsonDeserializer<Outcome>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Outcome {
         return Outcome(p.text)
     }
-
 }

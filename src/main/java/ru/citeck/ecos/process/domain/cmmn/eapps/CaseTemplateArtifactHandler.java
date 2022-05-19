@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.apps.app.domain.handler.EcosArtifactHandler;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.process.domain.cmmn.CmmnConstantsKt;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnProcDefImporter;
@@ -46,7 +47,7 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
 
     @Override
     public void listenChanges(@NotNull Consumer<CaseTemplateDto> consumer) {
-        processService.listenChanges("cmmn", procDefDto -> {
+        processService.listenChanges(CmmnConstantsKt.CMMN_TYPE, procDefDto -> {
 
             CaseTemplateDto caseTemplateDto = new CaseTemplateDto();
             caseTemplateDto.setFilePath(procDefDto.getId());
@@ -54,7 +55,7 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
                 caseTemplateDto.setFilePath(caseTemplateDto.getFilePath() + ".xml");
             }
 
-            ProcDefRevDto rev = processService.getProcessDefRev("cmmn", procDefDto.getRevisionId());
+            ProcDefRevDto rev = processService.getProcessDefRev(CmmnConstantsKt.CMMN_TYPE, procDefDto.getRevisionId());
 
             if (rev == null) {
                 throw new RuntimeException("Revision doesn't found for procDef: " + procDefDto.getId());

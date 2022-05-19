@@ -26,4 +26,3 @@ data class AuthorityDto(
     @AttName("containedUsers")
     var containedUsers: MutableList<UserDto> = mutableListOf()
 )
-

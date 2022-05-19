@@ -12,9 +12,8 @@ data class ProcTaskRecord(
     val actors: List<AuthorityDto> = emptyList()
 ) {
 
-    //TODO: add default form. simple-form is default?
+    // TODO: add default form. simple-form is default?
     @get:AttName("_formRef")
     val formKey: RecordRef
         get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
-
 }

@@ -193,20 +193,17 @@ class BpmnProcDefRecords(
 
         if (currentProc == null) {
 
-            val newProcDef = NewProcessDefDto()
-
-            newProcDef.id = record.processDefId
-
-            val defData = newDefData ?: BpmnXmlUtils.writeToString(
-                BpmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
-            ).toByteArray()
-
-            newProcDef.name = record.name
-            newProcDef.data = defData
-            newProcDef.ecosTypeRef = record.ecosType
-            newProcDef.formRef = record.formRef
-            newProcDef.format = FORMAT_BPMN
-            newProcDef.procType = PROC_TYPE
+            val newProcDef = NewProcessDefDto(
+                id = record.processDefId,
+                name = record.name,
+                data = newDefData ?: BpmnXmlUtils.writeToString(
+                    BpmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
+                ).toByteArray(),
+                ecosTypeRef = record.ecosType,
+                formRef = record.formRef,
+                format = FORMAT_BPMN,
+                procType = PROC_TYPE
+            )
 
             procDefService.uploadProcDef(newProcDef)
         } else {
@@ -381,7 +378,7 @@ class BpmnProcDefRecords(
         val title: MLText?,
         val startFormRef: RecordRef?
     ) {
-        fun getId(): String? {
+        fun getId(): String {
             return "$engine$$processId"
         }
 

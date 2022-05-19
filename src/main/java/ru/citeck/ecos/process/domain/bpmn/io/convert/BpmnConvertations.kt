@@ -160,7 +160,7 @@ fun Outcome.toExpressionStr(): String {
     if (this == Outcome.EMPTY) {
         return ""
     }
-    return "\${${fullId()} == '${value}'}"
+    return "\${${fullId()} == '$value'}"
 }
 
 fun Outcome.fullId(): String {

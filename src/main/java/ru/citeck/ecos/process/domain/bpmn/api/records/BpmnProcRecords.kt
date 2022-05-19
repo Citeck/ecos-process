@@ -14,7 +14,8 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 class BpmnProcRecords(
     private val runtimeService: RuntimeService,
     private val repositoryService: RepositoryService
-) : AbstractRecordsDao(), RecordAttsDao,
+) : AbstractRecordsDao(),
+    RecordAttsDao,
     RecordMutateDao {
 
     companion object {
@@ -39,12 +40,12 @@ class BpmnProcRecords(
             return ref
         }
 
-       //TODO: move to proc service
+        // TODO: move to proc service
         val processInstanceById = runtimeService.createProcessInstanceQuery().processInstanceId(recordId).singleResult()
             ?: return ProcRecord()
         val def = repositoryService.getProcessDefinition(processInstanceById.processDefinitionId)
 
-        //TODO: fill proc props to dto
+        // TODO: fill proc props to dto
         return ProcRecord(def.key)
     }
 
@@ -58,13 +59,13 @@ class BpmnProcRecords(
         val variables = mutableMapOf<String, Any?>()
 
         record.attributes.forEach { key, value ->
-            //filter system props
+            // filter system props
             if (!key.startsWith("_")) {
                 variables[key] = value.asJavaObj()
             }
         }
 
-        //TODO: move to proc service
+        // TODO: move to proc service
         val processInstance = runtimeService.startProcessInstanceByKey("Process_${record.id}", variables)
 
         return processInstance.id
@@ -84,11 +85,10 @@ class BpmnProcRecords(
 
         override fun getAtt(name: String): Any? {
             return when (name) {
-                //TODO: remove
+                // TODO: remove
                 "foo" -> "bar"
                 else -> super.getAtt(name)
             }
-
         }
     }
 

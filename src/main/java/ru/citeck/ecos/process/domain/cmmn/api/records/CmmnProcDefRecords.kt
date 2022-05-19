@@ -148,10 +148,6 @@ class CmmnProcDefRecords(
                 procDefService.uploadProcDef(newProcDefDto)
             } else {
 
-                val newProcDef = NewProcessDefDto()
-
-                newProcDef.id = record.processDefId
-
                 val format = if (record.format.isNotBlank()) {
                     CmmnFormat.getByCode(record.format)
                 } else {
@@ -162,7 +158,7 @@ class CmmnProcDefRecords(
                     CmmnFormat.ECOS_CMMN -> {
                         mapper.toBytes(
                             CmmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
-                        )
+                        ) ?: error("Incorrect format. Record: $record")
                     }
                     CmmnFormat.LEGACY_CMMN -> {
                         val def = CmmnIO.generateLegacyDefaultTemplate(
@@ -174,11 +170,14 @@ class CmmnProcDefRecords(
                     }
                 }
 
-                newProcDef.name = record.name
-                newProcDef.data = defData
-                newProcDef.ecosTypeRef = record.ecosType
-                newProcDef.format = format.code
-                newProcDef.procType = PROC_TYPE
+                val newProcDef = NewProcessDefDto(
+                    id = record.processDefId,
+                    name = record.name,
+                    data = defData,
+                    ecosTypeRef = record.ecosType,
+                    format = format.code,
+                    procType = PROC_TYPE
+                )
 
                 procDefService.uploadProcDef(newProcDef)
             }

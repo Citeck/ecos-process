@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.cmmn.CMMN_TYPE
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -24,30 +25,27 @@ class CmmnProcDefImporter {
     fun getDataToImport(definition: Definitions, fileName: String): NewProcessDefDto {
 
         val format = CmmnXmlUtils.getFormat(definition)
-        val procDefDto = NewProcessDefDto()
-
-        procDefDto.id = getProcDefId(definition, fileName)
-        procDefDto.name = getName(definition)
-        procDefDto.procType = "cmmn"
-        procDefDto.format = format.code
-        if (format == CmmnFormat.ECOS_CMMN) {
-            procDefDto.data = Json.mapper.toBytes(CmmnIO.importEcosCmmn(definition))
-                ?: error("Incorrect format. File: $fileName")
-        } else {
-            definition.otherAttributes[CmmnXmlUtils.PROP_PROCESS_DEF_ID] = procDefDto.id
-            procDefDto.data = CmmnXmlUtils.writeToString(definition).toByteArray(Charsets.UTF_8)
-        }
-
-        val caseAdditionalAtts = definition.case[0].otherAttributes.entries.map {
+        val id = getProcDefId(definition, fileName)
+        val caseAdditionalAtts = definition.case[0].otherAttributes.entries.associate {
             it.key.localPart to it.value
-        }.toMap()
-
-        procDefDto.ecosTypeRef = getEcosType(definition, format, caseAdditionalAtts)
-        if (format == CmmnFormat.LEGACY_CMMN) {
-            procDefDto.alfType = getLegacyAlfType(caseAdditionalAtts)
         }
 
-        return procDefDto
+        return NewProcessDefDto(
+            id = id,
+            name = getName(definition),
+            procType = CMMN_TYPE,
+            format = format.code,
+            data = let {
+                if (format == CmmnFormat.ECOS_CMMN) {
+                    Json.mapper.toBytes(CmmnIO.importEcosCmmn(definition)) ?: error("Incorrect format. File: $fileName")
+                } else {
+                    definition.otherAttributes[CmmnXmlUtils.PROP_PROCESS_DEF_ID] = id
+                    CmmnXmlUtils.writeToString(definition).toByteArray(Charsets.UTF_8)
+                }
+            },
+            ecosTypeRef = getEcosType(definition, format, caseAdditionalAtts),
+            alfType = if (format == CmmnFormat.LEGACY_CMMN) getLegacyAlfType(caseAdditionalAtts) else null
+        )
     }
 
     private fun getName(definition: Definitions): MLText {

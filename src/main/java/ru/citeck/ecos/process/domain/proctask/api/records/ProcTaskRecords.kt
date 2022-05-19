@@ -46,7 +46,6 @@ class ProcTaskRecords(
         return record.id
     }
 
-
     private fun getTaskOutcome(task: ProcTaskDto, record: LocalRecordAtts): Outcome {
         val outcome = let {
             var outcomeAttValue = ""
@@ -67,5 +66,4 @@ class ProcTaskRecords(
 
         return Outcome(task.definitionKey, outcome)
     }
-
 }

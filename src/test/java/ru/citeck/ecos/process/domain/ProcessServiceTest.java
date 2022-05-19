@@ -9,17 +9,14 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.citeck.ecos.commands.CommandsService;
+import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.process.EprocApp;
+import ru.citeck.ecos.process.domain.cmmn.CmmnConstantsKt;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProc;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProcResp;
 import ru.citeck.ecos.process.domain.proc.command.getprocstate.GetProcState;
@@ -59,36 +56,41 @@ public class ProcessServiceTest {
 
         String alfType = "{http://www.citeck.ru/model/content/idocs/1.0}contractor";
 
-        NewProcessDefDto newProcessDefDto = new NewProcessDefDto();
-        newProcessDefDto.setId("test-id");
-        newProcessDefDto.setFormat("xml");
-        newProcessDefDto.setProcType("cmmn");
-        newProcessDefDto.setEcosTypeRef(ecosTypeRef);
-        newProcessDefDto.setAlfType(alfType);
         byte[] procDefData = "one two three".getBytes(StandardCharsets.UTF_8);
-        newProcessDefDto.setData(procDefData);
+
+
+        NewProcessDefDto newProcessDefDto = new NewProcessDefDto(
+            "test-id",
+            MLText.EMPTY,
+            CmmnConstantsKt.CMMN_TYPE,
+            "xml",
+            alfType,
+            ecosTypeRef,
+            RecordRef.EMPTY,
+            procDefData
+        );
 
         procDefService.uploadProcDef(newProcessDefDto);
 
-        FindProcDefResp findProcDefResp = commandsService.executeSync(new FindProcDef("cmmn", ecosTypeRef, null))
-                                                      .getResultAs(FindProcDefResp.class);
+        FindProcDefResp findProcDefResp = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE,
+            ecosTypeRef, null)).getResultAs(FindProcDefResp.class);
         assertNotNull(findProcDefResp);
         assertEquals("test-id", findProcDefResp.getProcDefId());
         assertNotNull(findProcDefResp.getProcDefRevId());
 
-        FindProcDefResp findProcDefResp2 = commandsService.executeSync(new FindProcDef("cmmn", null, Collections.singletonList(alfType)))
+        FindProcDefResp findProcDefResp2 = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE, null, Collections.singletonList(alfType)))
             .getResultAs(FindProcDefResp.class);
         assertEquals(findProcDefResp, findProcDefResp2);
 
-        FindProcDefResp findProcDefResp3 = commandsService.executeSync(new FindProcDef("cmmn", TypesDao.type1Ref, null))
+        FindProcDefResp findProcDefResp3 = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE, TypesDao.type1Ref, null))
             .getResultAs(FindProcDefResp.class);
         assertEquals(findProcDefResp, findProcDefResp3);
 
-        FindProcDefResp findProcDefResp4 = commandsService.executeSync(new FindProcDef("cmmn", TypesDao.type2Ref, null))
+        FindProcDefResp findProcDefResp4 = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE, TypesDao.type2Ref, null))
             .getResultAs(FindProcDefResp.class);
         assertEquals(findProcDefResp, findProcDefResp4);
 
-        GetProcDefRevResp getProcDefRev = commandsService.executeSync(new GetProcDefRev("cmmn", findProcDefResp.getProcDefRevId()))
+        GetProcDefRevResp getProcDefRev = commandsService.executeSync(new GetProcDefRev(CmmnConstantsKt.CMMN_TYPE, findProcDefResp.getProcDefRevId()))
             .getResultAs(GetProcDefRevResp.class);
 
         assertNotNull(getProcDefRev);
@@ -98,7 +100,7 @@ public class ProcessServiceTest {
 
         RecordRef docRef = RecordRef.valueOf("uiserv/test@local");
         CreateProcResp newProcResp = commandsService.executeSync(new CreateProc(findProcDefResp.getProcDefRevId(), docRef))
-                        .getResultAs(CreateProcResp.class);
+            .getResultAs(CreateProcResp.class);
 
         assertNotNull(newProcResp);
         assertFalse(StringUtils.isBlank(newProcResp.getProcId()));
@@ -114,7 +116,7 @@ public class ProcessServiceTest {
         assertFalse(StringUtils.isBlank(newStateResp.getProcStateId()));
         assertEquals(1, newStateResp.getVersion());
 
-        GetProcStateResp getProcStateResp = commandsService.executeSync(new GetProcState("cmmn", newStateResp.getProcStateId()))
+        GetProcStateResp getProcStateResp = commandsService.executeSync(new GetProcState(CmmnConstantsKt.CMMN_TYPE, newStateResp.getProcStateId()))
             .getResultAs(GetProcStateResp.class);
 
         assertNotNull(getProcStateResp);

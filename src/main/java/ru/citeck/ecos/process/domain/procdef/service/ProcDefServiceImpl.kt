@@ -159,15 +159,16 @@ class ProcDefServiceImpl(
 
         if (procDefEntity == null) {
 
-            val newProcessDefDto = NewProcessDefDto()
-            newProcessDefDto.id = dto.id
-            newProcessDefDto.name = dto.name
-            newProcessDefDto.data = dto.data
-            newProcessDefDto.alfType = dto.alfType
-            newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
-            newProcessDefDto.formRef = dto.formRef
-            newProcessDefDto.format = dto.format
-            newProcessDefDto.procType = dto.procType
+            val newProcessDefDto = NewProcessDefDto(
+                id = dto.id,
+                name = dto.name,
+                data = dto.data,
+                alfType = dto.alfType,
+                ecosTypeRef = dto.ecosTypeRef,
+                formRef = dto.formRef,
+                format = dto.format,
+                procType = dto.procType
+            )
             result = uploadProcDefImpl(newProcessDefDto)
         } else {
 
@@ -175,15 +176,16 @@ class ProcDefServiceImpl(
 
             if (!Arrays.equals(currentData, dto.data)) {
 
-                val newProcessDefDto = NewProcessDefDto()
-                newProcessDefDto.alfType = dto.alfType
-                newProcessDefDto.data = dto.data
-                newProcessDefDto.ecosTypeRef = dto.ecosTypeRef
-                newProcessDefDto.formRef = dto.formRef
-                newProcessDefDto.format = dto.format
-                newProcessDefDto.id = id
-                newProcessDefDto.procType = procType
-                newProcessDefDto.name = dto.name
+                val newProcessDefDto = NewProcessDefDto(
+                    id = dto.id,
+                    name = dto.name,
+                    data = dto.data,
+                    alfType = dto.alfType,
+                    ecosTypeRef = dto.ecosTypeRef,
+                    formRef = dto.formRef,
+                    format = dto.format,
+                    procType = dto.procType
+                )
                 result = uploadProcDefImpl(newProcessDefDto)
             } else {
 

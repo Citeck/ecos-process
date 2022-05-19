@@ -37,6 +37,4 @@ class ProcTaskService(
     fun submitTaskForm(taskId: String, variables: Map<String, Any>) {
         camundaTaskFormService.submitTaskForm(taskId, variables)
     }
-
-
 }
