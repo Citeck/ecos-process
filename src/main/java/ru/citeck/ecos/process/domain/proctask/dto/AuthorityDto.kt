@@ -21,7 +21,7 @@ data class AuthorityDto(
     var middleName: String? = null,
 
     @AttName(".disp")
-    var displayName: String,
+    var displayName: String? = null,
 
     @AttName("containedUsers")
     var containedUsers: MutableList<UserDto> = mutableListOf()

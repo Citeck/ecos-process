@@ -6,15 +6,17 @@ import java.util.*
 
 data class ProcTaskDto(
 
-    val id: String? = null,
+    val id: String,
 
     val name: MLText = MLText.EMPTY,
 
-    val formRef: RecordRef? = null,
+    val formRef: RecordRef = RecordRef.EMPTY,
+
+    val created: Date,
 
     val dueDate: Date? = null,
 
-    val assignee: RecordRef? = null,
+    val assignee: RecordRef =  RecordRef.EMPTY,
 
     val candidateUsers: List<RecordRef> = emptyList(),
 

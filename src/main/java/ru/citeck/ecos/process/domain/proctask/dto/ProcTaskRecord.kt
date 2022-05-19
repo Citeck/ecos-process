@@ -8,6 +8,7 @@ data class ProcTaskRecord(
     val id: String? = null,
     val formRef: RecordRef? = null,
     val title: String? = null,
+    val created: Date? = null,
     val dueDate: Date? = null,
     val actors: List<AuthorityDto> = emptyList()
 ) {
@@ -16,4 +17,9 @@ data class ProcTaskRecord(
     @get:AttName("_formRef")
     val formKey: RecordRef
         get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
+
+    @AttName("started")
+    fun getStarted(): Date? {
+        return created
+    }
 }

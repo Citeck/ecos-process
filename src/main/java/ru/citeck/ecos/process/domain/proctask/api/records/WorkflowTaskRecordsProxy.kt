@@ -16,31 +16,83 @@ class WorkflowTaskRecordsProxy(
     targetId = "alfresco/wftask"
 ) {
 
-    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
+    companion object {
+        private const val CURRENT_USER_FLAG = "\$CURRENT"
+    }
+
+    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*> {
         val query = recsQuery.getQuery(TaskQuery::class.java)
-        val document = RecordRef.Companion.valueOf(query.document)
+        val document = RecordRef.valueOf(query.document)
 
-        if (document.id.contains("$")) {
-            return super.queryRecords(recsQuery)
+        if (documentIsProcess(document)) return queryTasksForAnyProcess(recsQuery, document)
+
+        val documentTasksFromAlf = queryFromAlf(recsQuery)
+        val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query)
+
+        val result = RecsQueryRes<Any>()
+        result.setRecords(documentTasksFromAlf.getRecords() + documentTasksFromEProc.getRecords())
+        result.setTotalCount(documentTasksFromAlf.getTotalCount() + documentTasksFromEProc.getTotalCount())
+
+        return result
+    }
+
+    private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery): RecsQueryRes<*> {
+        val result = RecsQueryRes<RecordRef>()
+
+        val taskRefs = if (query.actor == CURRENT_USER_FLAG) {
+            procTaskService.getTasksByDocumentForCurrentUser(query.document)
+        } else {
+            procTaskService.getTasksByDocument(query.document)
+        }.map {
+            RecordRef.create("eproc", ProcTaskRecords.ID, it.id)
         }
 
-        if (document.sourceId == BpmnProcRecords.ID) {
-            val result = RecsQueryRes<RecordRef>()
+        result.setRecords(taskRefs)
+        result.setTotalCount(taskRefs.size.toLong())
 
-            val taskRefs = procTaskService.getTasksByProcess(document.id).map {
-                RecordRef.create("eproc", ProcTaskRecords.ID, it.id)
-            }
+        return result
+    }
 
-            result.setRecords(taskRefs)
+    private fun queryTasksForAnyProcess(recsQuery: RecordsQuery, document: RecordRef): RecsQueryRes<*> {
+        return when {
+            isAlfProcess(document) -> queryFromAlf(recsQuery)
+            isEcosProcProcess(document) -> queryTasksForEcosProcess(document)
+            else -> throw IllegalStateException("Unsupported state. Query: $recsQuery")
+        }
+    }
 
-            return result
+    private fun queryFromAlf(recsQuery: RecordsQuery): RecsQueryRes<*> {
+        return super.queryRecords(recsQuery) ?: RecsQueryRes<Any>()
+    }
+
+    private fun queryTasksForEcosProcess(document: RecordRef): RecsQueryRes<*> {
+        val result = RecsQueryRes<RecordRef>()
+
+        val taskRefs = procTaskService.getTasksByProcess(document.id).map {
+            RecordRef.create("eproc", ProcTaskRecords.ID, it.id)
         }
 
-        return super.queryRecords(recsQuery)
+        result.setRecords(taskRefs)
+        result.setTotalCount(taskRefs.size.toLong())
+
+        return result
     }
 
     data class TaskQuery(
         var active: Boolean,
-        var document: String = ""
+        var document: String = "",
+        var actor: String = ""
     )
+}
+
+private fun documentIsProcess(document: RecordRef): Boolean {
+    return isAlfProcess(document) || isEcosProcProcess(document)
+}
+
+private fun isAlfProcess(ref: RecordRef): Boolean {
+    return ref.id.contains("$")
+}
+
+private fun isEcosProcProcess(ref: RecordRef): Boolean {
+    return ref.sourceId == BpmnProcRecords.ID
 }

@@ -49,9 +49,10 @@ fun Task.toProcTask(): ProcTaskDto {
         id = id,
         formRef = RecordRef.valueOf(formKey),
         dueDate = dueDate,
+        created = createTime,
         assignee = let {
             if (assignee.isNullOrBlank()) {
-                null
+                RecordRef.EMPTY
             } else {
                 createPeopleRef(assignee)
             }
@@ -74,12 +75,19 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
     return ProcTaskRecord(
         id = id,
         formRef = formRef,
+        created = created,
         dueDate = dueDate,
         title = name.getClosestValue(),
-        actors = getActorsFromCandidates(candidateUsers + candidateGroups)
+        actors = getActors(assignee, candidateUsers + candidateGroups)
     )
 }
 
-private fun getActorsFromCandidates(candidates: List<RecordRef>): List<AuthorityDto> {
-    return cnv.recordsService.getAtts(candidates, AuthorityDto::class.java)
+private fun getActors(assignee: RecordRef, candidates: List<RecordRef>): List<AuthorityDto> {
+    val actorsRefs = if (RecordRef.isNotEmpty(assignee)) {
+        listOf(assignee)
+    } else {
+        candidates
+    }
+
+    return cnv.recordsService.getAtts(actorsRefs, AuthorityDto::class.java)
 }
