@@ -2,9 +2,6 @@ package ru.citeck.ecos.process.domain.cmmn.io
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.TextAnnotationConverter
@@ -13,17 +10,20 @@ import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.EdgeConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di.ShapeConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.*
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.action.SetStatusConverter
-import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.*
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.ManualActivationRuleConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.RepetitionRuleConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.control.RequiredRuleConverter
+import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.*
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.AlfDefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.action.AlfSetStatusConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.event.AlfPlanItemOnPartConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.event.AlfSentryConverter
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
+import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.records2.RecordRef
 
 object CmmnIO {
@@ -40,36 +40,43 @@ object CmmnIO {
         (item as? TCmmnElement)?.otherAttributes
     }
 
-    private val ecosCmmnConverters = EcosOmgConverters(listOf(
-        DefinitionsConverter::class,
-        CmmnDiConverter::class,
-        ActivityConverter::class,
-        SentryConverter::class,
-        StageConverter::class,
-        EdgeConverter::class,
-        ShapeConverter::class,
-        HumanTaskConverter::class,
-        ProcessTaskConverter::class,
-        TimerEventListenerConverter::class,
-        UserEventListenerConverter::class,
-        AssociationConverter::class,
-        TextAnnotationConverter::class,
-        ExitCriterionConverter::class,
-        EntryCriterionConverter::class,
-        PlanItemOnPartConverter::class,
-        CaseFileOnPartConverter::class,
-        RepetitionRuleConverter::class,
-        ManualActivationRuleConverter::class,
-        RequiredRuleConverter::class,
-        SetStatusConverter::class
-    ), extensionTypeResolver, otherAttsResolver)
+    private val ecosCmmnConverters = EcosOmgConverters(
+        listOf(
+            DefinitionsConverter::class,
+            CmmnDiConverter::class,
+            ActivityConverter::class,
+            SentryConverter::class,
+            StageConverter::class,
+            EdgeConverter::class,
+            ShapeConverter::class,
+            HumanTaskConverter::class,
+            ProcessTaskConverter::class,
+            TimerEventListenerConverter::class,
+            UserEventListenerConverter::class,
+            AssociationConverter::class,
+            TextAnnotationConverter::class,
+            ExitCriterionConverter::class,
+            EntryCriterionConverter::class,
+            PlanItemOnPartConverter::class,
+            CaseFileOnPartConverter::class,
+            RepetitionRuleConverter::class,
+            ManualActivationRuleConverter::class,
+            RequiredRuleConverter::class,
+            SetStatusConverter::class
+        ),
+        extensionTypeResolver, otherAttsResolver
+    )
 
-    private val ecosAlfCmmnConverters = EcosOmgConverters(ecosCmmnConverters, listOf(
-        AlfDefinitionsConverter::class,
-        AlfSentryConverter::class,
-        AlfPlanItemOnPartConverter::class,
-        AlfSetStatusConverter::class
-    ), extensionTypeResolver)
+    private val ecosAlfCmmnConverters = EcosOmgConverters(
+        ecosCmmnConverters,
+        listOf(
+            AlfDefinitionsConverter::class,
+            AlfSentryConverter::class,
+            AlfPlanItemOnPartConverter::class,
+            AlfSetStatusConverter::class
+        ),
+        extensionTypeResolver
+    )
 
     @JvmStatic
     fun importEcosCmmn(definitions: String): CmmnProcessDef {
@@ -153,7 +160,7 @@ object CmmnIO {
         }
     }
 
-    fun generateLegacyDefaultTemplate(processDefId: String, name: MLText, ecosType: RecordRef) : Definitions {
+    fun generateLegacyDefaultTemplate(processDefId: String, name: MLText, ecosType: RecordRef): Definitions {
 
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8" standalone="yes"?>

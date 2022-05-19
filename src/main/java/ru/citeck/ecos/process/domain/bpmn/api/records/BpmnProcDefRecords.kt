@@ -41,7 +41,10 @@ import java.util.*
 class BpmnProcDefRecords(
     val procDefService: ProcDefService,
     val repositoryService: RepositoryService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordAttsDao,
+    RecordDeleteDao,
     RecordMutateDtoDao<BpmnProcDefRecords.BpmnMutateRecord> {
 
     companion object {
@@ -101,7 +104,8 @@ class BpmnProcDefRecords(
                 withSourceId("alfresco/")
                 withLanguage(PredicateService.LANGUAGE_PREDICATE)
                 withQuery(predicateForAlfresco)
-            }, ProcDefAlfAtts::class.java
+            },
+            ProcDefAlfAtts::class.java
         )
     }
 
@@ -161,7 +165,7 @@ class BpmnProcDefRecords(
 
             newEcosBpmnDef = BpmnIO.importEcosBpmn(newDefinition)
 
-            //TODO: remove logging
+            // TODO: remove logging
             val s2 = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef)
             log.info { "exportEcosBpmnToString:\n$s2" }
             val camundaStr = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef)
@@ -205,7 +209,6 @@ class BpmnProcDefRecords(
             newProcDef.procType = PROC_TYPE
 
             procDefService.uploadProcDef(newProcDef)
-
         } else {
 
             if (newDefData != null) {
@@ -214,7 +217,6 @@ class BpmnProcDefRecords(
                 currentProc.ecosTypeRef = record.ecosType
                 currentProc.formRef = record.formRef
                 currentProc.name = record.name
-
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType

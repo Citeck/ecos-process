@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service
 class ProcTenantService {
 
     fun getTenant(id: Int): String {
-        //todo
+        // todo
         return ""
     }
 
-    //todo
+    // todo
     fun getCurrent(): Int = 0
 }

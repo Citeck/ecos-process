@@ -8,9 +8,9 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.request.RequestContext
 
@@ -53,7 +53,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             exporterVersion = element.exporterVersion
             targetNamespace = element.targetNamespace
 
-            //TODO: process single element?
+            // TODO: process single element?
             val process = context.converters.export<TProcess>(element.process)
             rootElement.add(context.converters.convertToJaxb(process))
 

@@ -18,7 +18,8 @@ object BpmnXmlUtils {
         ":ru.citeck.ecos.process.domain.bpmn.model.camunda"
 
     private val schema = XmlDefUtils.loadSchema(
-        "bpmn/omg/20", listOf(
+        "bpmn/omg/20",
+        listOf(
             "BPMN20.xsd",
             "Semantic.xsd",
             "DC.xsd",
@@ -45,7 +46,6 @@ object BpmnXmlUtils {
             }
 
             result as TDefinitions
-
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not parse stream", e)
         }
@@ -68,7 +68,6 @@ object BpmnXmlUtils {
             marshaller.marshal(element, outStream)
 
             return String(outStream.toByteArray(), StandardCharsets.UTF_8)
-
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not write to stream", e)
         }

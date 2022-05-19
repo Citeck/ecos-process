@@ -102,16 +102,20 @@ class BpmnProcessElementsConfig(
         val typeRef = TypeUtils.getTypeRef("bpmn-process-element")
         val recordsDao = dbDomainFactory.create(
             DbDomainConfig.create()
-                .withRecordsDao(DbRecordsDaoConfig.create {
-                    withId(BPMN_ELEMENTS_REPO_SOURCE_ID)
-                    withTypeRef(typeRef)
-                })
-                .withDataService(DbDataServiceConfig.create {
-                    withAuthEnabled(false)
-                    withTableRef(DbTableRef("ecos_data", "bpmn_process_elements"))
-                    withTransactional(false)
-                    withStoreTableMeta(true)
-                })
+                .withRecordsDao(
+                    DbRecordsDaoConfig.create {
+                        withId(BPMN_ELEMENTS_REPO_SOURCE_ID)
+                        withTypeRef(typeRef)
+                    }
+                )
+                .withDataService(
+                    DbDataServiceConfig.create {
+                        withAuthEnabled(false)
+                        withTableRef(DbTableRef("ecos_data", "bpmn_process_elements"))
+                        withTransactional(false)
+                        withStoreTableMeta(true)
+                    }
+                )
                 .build()
         ).withPermsComponent(permsComponent)
             .withDataSource(DbDataSourceImpl(dataSource))
@@ -131,13 +135,17 @@ class BpmnProcessElementsConfig(
             withEventType("bpmn-user-task-complete")
             withDataClass(TaskEvent::class.java)
             withAction {
-                val existingElement = recordsService.queryOne(RecordsQuery.create {
-                    withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
-                    withQuery(Predicates.and(
-                        Predicates.eq("engine", it.engine),
-                        Predicates.eq("elementId", it.taskId)
-                    ))
-                })
+                val existingElement = recordsService.queryOne(
+                    RecordsQuery.create {
+                        withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
+                        withQuery(
+                            Predicates.and(
+                                Predicates.eq("engine", it.engine),
+                                Predicates.eq("elementId", it.taskId)
+                            )
+                        )
+                    }
+                )
                 if (existingElement == null) {
                     createTaskElement(it, true)
                 } else {

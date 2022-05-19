@@ -33,6 +33,4 @@ class EntityUuid {
         result = 31 * result + id.hashCode()
         return result
     }
-
-
 }

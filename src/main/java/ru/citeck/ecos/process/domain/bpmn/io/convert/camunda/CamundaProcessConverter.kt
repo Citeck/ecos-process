@@ -46,5 +46,4 @@ class CamundaProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
             }
         }
     }
-
 }

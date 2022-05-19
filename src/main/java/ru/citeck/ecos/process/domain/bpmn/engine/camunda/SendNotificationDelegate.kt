@@ -60,8 +60,9 @@ class SendNotificationDelegate : JavaDelegate {
 
         val notification = Notification.Builder()
             .record(record)
-            .notificationType(notificationType?.let { NotificationType.valueOf(it.expressionText) }
-                ?: NotificationType.EMAIL_NOTIFICATION
+            .notificationType(
+                notificationType?.let { NotificationType.valueOf(it.expressionText) }
+                    ?: NotificationType.EMAIL_NOTIFICATION
             )
             .title(notificationTitle?.expressionText ?: "")
             .body(notificationBody?.expressionText ?: "")
@@ -70,9 +71,11 @@ class SendNotificationDelegate : JavaDelegate {
             .cc(getRecipientsFromExpression(notificationCc))
             .bcc(getRecipientsFromExpression(notificationBcc))
             .lang(notificationLang?.expressionText)
-            .additionalMeta(notificationAdditionalMeta?.let {
-                Json.mapper.readMap(it.expressionText, String::class.java, String::class.java)
-            } ?: emptyMap())
+            .additionalMeta(
+                notificationAdditionalMeta?.let {
+                    Json.mapper.readMap(it.expressionText, String::class.java, String::class.java)
+                } ?: emptyMap()
+            )
             .build()
 
         AuthContext.runAsSystem {

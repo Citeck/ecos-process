@@ -9,5 +9,4 @@ interface CamundaProcessEngineService {
      * @return The service key by which the service will be available from the camunda engine
      */
     fun getKey(): String
-
 }

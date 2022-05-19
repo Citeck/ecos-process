@@ -12,7 +12,7 @@ data class BpmnDefinitionDef(
     val ecosType: RecordRef,
     val formRef: RecordRef,
 
-    //TODO: single or list?
+    // TODO: single or list?
     val process: BpmnProcessDef,
 
     val diagrams: List<BpmnDiagramDef>,

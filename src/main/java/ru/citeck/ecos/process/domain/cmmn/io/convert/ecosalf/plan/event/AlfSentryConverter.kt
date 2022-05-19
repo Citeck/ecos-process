@@ -1,13 +1,13 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf.plan.event
 
 import mu.KotlinLogging
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event.SentryConverter
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
 class AlfSentryConverter : EcosOmgConverter<SentryDef, Sentry> {
@@ -30,7 +30,7 @@ class AlfSentryConverter : EcosOmgConverter<SentryDef, Sentry> {
 
         val onPart = cmmnSentry.onPart[0].value as TPlanItemOnPart
 
-        //todo "stage-children-stopped" -> complete
+        // todo "stage-children-stopped" -> complete
         // "case-properties-changed" -> resume
         // "user-action" -> occur ns8:confirmationMessage="????"
         val originalEvent = when (onPart.standardEvent) {

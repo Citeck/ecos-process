@@ -1,8 +1,8 @@
 package ru.citeck.ecos.process.domain.procdef.convert.io.convert.context
 
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 
 class ExportContext(
     val converters: EcosOmgConverters,

@@ -20,5 +20,4 @@ class EcosCamundaConfiguration {
     fun camundaServicesConfiguration(): CamundaProcessEngineConfiguration {
         return CamundaServicesConfiguration()
     }
-
 }

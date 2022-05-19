@@ -36,7 +36,9 @@ import java.util.*
 class CmmnProcDefRecords(
     val procDefService: ProcDefService,
     val cmmnProcDefImporter: CmmnProcDefImporter
-) : RecordsQueryDao, RecordAttsDao, RecordDeleteDao,
+) : RecordsQueryDao,
+    RecordAttsDao,
+    RecordDeleteDao,
     RecordMutateDtoDao<CmmnProcDefRecords.CmmnMutateRecord> {
 
     companion object {
@@ -144,7 +146,6 @@ class CmmnProcDefRecords(
             if (newProcDefDto != null) {
 
                 procDefService.uploadProcDef(newProcDefDto)
-
             } else {
 
                 val newProcDef = NewProcessDefDto()
@@ -188,7 +189,6 @@ class CmmnProcDefRecords(
                 currentProc.data = newProcDefDto.data
                 currentProc.ecosTypeRef = newProcDefDto.ecosTypeRef
                 currentProc.name = newProcDefDto.name
-
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType
@@ -205,7 +205,6 @@ class CmmnProcDefRecords(
                         withName(record.name)
                     }
                     currentProc.data = mapper.toBytes(procDef) ?: error("Process conversion error: ${currentProc.id}")
-
                 } else {
 
                     val definition = CmmnXmlUtils.readFromBytes(currentProc.data)

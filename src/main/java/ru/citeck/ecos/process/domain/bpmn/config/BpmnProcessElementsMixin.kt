@@ -47,11 +47,13 @@ class BpmnProcessElementsMixin(private val records: RecordsService) : AttMixin {
         val query = RecordsQuery.create {
             withSourceId("alfresco/")
             withLanguage(PredicateService.LANGUAGE_PREDICATE)
-            withQuery(Predicates.and(
-                Predicates.eq("type", "ecosbpm:deploymentInfo"),
-                Predicates.eq("ecosbpm:deploymentProcDefId", key.procDefId),
-                Predicates.eq("ecosbpm:deploymentVersion", key.procDeploymentVersion)
-            ))
+            withQuery(
+                Predicates.and(
+                    Predicates.eq("type", "ecosbpm:deploymentInfo"),
+                    Predicates.eq("ecosbpm:deploymentProcDefId", key.procDefId),
+                    Predicates.eq("ecosbpm:deploymentVersion", key.procDeploymentVersion)
+                )
+            )
         }
 
         return records.queryOne(query, "ecosbpm:deploymentProcDefVersion")

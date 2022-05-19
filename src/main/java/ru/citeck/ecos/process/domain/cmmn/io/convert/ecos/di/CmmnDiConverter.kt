@@ -1,15 +1,15 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.DiagramDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.DiagramElementDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNDI
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNDiagram
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 
 class CmmnDiConverter : EcosOmgConverter<DiagramInterchangeDef, CMMNDI> {
 

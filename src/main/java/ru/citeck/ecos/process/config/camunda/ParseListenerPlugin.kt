@@ -4,7 +4,7 @@ import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.springframework.stereotype.Component
 
-//TODO: remove
+// TODO: remove
 @Component
 class ParseListenerPlugin(
     private val testParseListener: TestParseListener

@@ -27,7 +27,7 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
             exporterVersion = element.exporterVersion
             targetNamespace = element.targetNamespace
 
-            //TODO: process single element?
+            // TODO: process single element?
             val process = context.converters.export<TProcess>(element.process)
             rootElement.add(context.converters.convertToJaxb(process))
 

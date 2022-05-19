@@ -6,4 +6,3 @@ class ExpressionDef(
     val type: String,
     val config: ObjectData
 )
-

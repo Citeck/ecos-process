@@ -4,9 +4,9 @@ import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.ExecutionListener
 import org.springframework.stereotype.Component
 
-//TODO: remove
+// TODO: remove
 @Component
-class TestListener: ExecutionListener {
+class TestListener : ExecutionListener {
     override fun notify(execution: DelegateExecution) {
 
         val variables = execution.variables
@@ -18,6 +18,5 @@ class TestListener: ExecutionListener {
         println("=========")
         println("listener call")
         println("=========")
-
     }
 }
