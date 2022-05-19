@@ -32,9 +32,11 @@ class CmmnExporterTest {
         // /test
 
         testProc(procDefXml)
-        testProc(CmmnIO.exportEcosCmmnToString(
-            CmmnIO.generateDefaultDef("test-id", MLText(""), RecordRef.EMPTY)
-        ))
+        testProc(
+            CmmnIO.exportEcosCmmnToString(
+                CmmnIO.generateDefaultDef("test-id", MLText(""), RecordRef.EMPTY)
+            )
+        )
     }
 
     private fun testProc(procDefXml: String) {

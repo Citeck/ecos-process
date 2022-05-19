@@ -120,4 +120,3 @@ private data class UserInfo(
     @AttName("email")
     var email: String? = "",
 )
-

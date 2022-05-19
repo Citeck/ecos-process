@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram
 
-import ru.citeck.ecos.process.domain.bpmn.io.convert.toOmg
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toDef
+import ru.citeck.ecos.process.domain.bpmn.io.convert.toOmg
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnShapeDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.BPMNShape
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter

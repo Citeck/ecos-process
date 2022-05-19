@@ -11,10 +11,12 @@ object CmmnComparator {
 
     private val log = KotlinLogging.logger {}
 
-    fun compare(expected: Any?,
-                actual: Any?,
-                excludedProps: Map<Class<*>, Set<String>>,
-                idRefsProps: Map<Class<*>, Set<String>>): Boolean {
+    fun compare(
+        expected: Any?,
+        actual: Any?,
+        excludedProps: Map<Class<*>, Set<String>>,
+        idRefsProps: Map<Class<*>, Set<String>>
+    ): Boolean {
         return compare(emptyList(), expected, actual, CompareContext(excludedProps, idRefsProps))
     }
 
@@ -38,7 +40,6 @@ object CmmnComparator {
                 val listValue = propValue as? MutableList<*> ?: continue
                 listValue.sortBy { getId(it) }
                 listValue.forEach { sortAllById(it) }
-
             } else if (propValue is Map<*, *>) {
 
                 propValue.values.forEach { sortAllById(it) }
@@ -46,10 +47,12 @@ object CmmnComparator {
         }
     }
 
-    private fun compare(path: List<String>,
-                        rawExpected: Any?,
-                        rawActual: Any?,
-                        context: CompareContext): Boolean {
+    private fun compare(
+        path: List<String>,
+        rawExpected: Any?,
+        rawActual: Any?,
+        context: CompareContext
+    ): Boolean {
 
         val expected = unwrap(rawExpected)
         val actual = unwrap(rawActual)
@@ -102,7 +105,6 @@ object CmmnComparator {
                     return true
                 }
             }
-
         } else if (expected is Map<*, *>) {
 
             if (actual !is Map<*, *>) {
@@ -121,7 +123,6 @@ object CmmnComparator {
                     context
                 )
             }
-
         } else {
 
             val descriptors = PropertyUtils.getPropertyDescriptors(expected)
@@ -163,12 +164,15 @@ object CmmnComparator {
                             innerExpected,
                             innerActual,
                             context
-                        )) {
+                        )
+                    ) {
                         notEqualsObjIsFound = true
                     }
                 } catch (e: Exception) {
-                    log.error { "Failed to read property ${descriptor.name} " +
-                        "by getter ${descriptor.readMethod.name}. Msg: ${e.message}" }
+                    log.error {
+                        "Failed to read property ${descriptor.name} " +
+                            "by getter ${descriptor.readMethod.name}. Msg: ${e.message}"
+                    }
                 }
             }
 

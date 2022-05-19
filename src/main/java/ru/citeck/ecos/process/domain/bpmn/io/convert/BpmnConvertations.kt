@@ -61,7 +61,6 @@ object CamundaFieldCreator {
             this.stringValue = stringValue
         }
     }
-
 }
 
 fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {

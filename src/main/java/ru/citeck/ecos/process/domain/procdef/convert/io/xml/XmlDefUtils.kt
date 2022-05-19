@@ -46,11 +46,11 @@ object XmlDefUtils {
 
         val schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
         schemaFactory.resourceResolver = LSResourceResolver {
-            type: String?,
-            namespaceURI: String?,
-            publicId: String?,
-            systemId: String?,
-            baseURI: String? ->
+                type: String?,
+                namespaceURI: String?,
+                publicId: String?,
+                systemId: String?,
+                baseURI: String? ->
 
             object : XmlLsInput(type, namespaceURI, publicId, systemId, baseURI) {
 

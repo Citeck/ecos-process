@@ -5,10 +5,6 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.ConvertUtils
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.ArtifactDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssociationDef
@@ -18,6 +14,10 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.Act
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.ConvertUtils
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
@@ -249,7 +249,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
 
     private fun needCtxElementById(context: ExportContext, id: String): Any {
         return context.cmmnElementsById[id]
-            ?: error("Element is not found by id: '${id}'. \nElements: ${context.cmmnElementsById.keys}")
+            ?: error("Element is not found by id: '$id'. \nElements: ${context.cmmnElementsById.keys}")
     }
 
     private fun addSentry(stage: Stage, sentry: Sentry?) {

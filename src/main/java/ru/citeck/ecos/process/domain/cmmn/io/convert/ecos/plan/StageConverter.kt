@@ -1,14 +1,14 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan
 
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.ActivityDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.activity.type.StageDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Sentry
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Stage
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TPlanItem
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TPlanItemDefinition
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 
 class StageConverter : EcosOmgConverter<StageDef, Stage> {
 

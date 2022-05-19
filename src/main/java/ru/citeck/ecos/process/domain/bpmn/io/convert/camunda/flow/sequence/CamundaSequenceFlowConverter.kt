@@ -13,10 +13,10 @@ class CamundaSequenceFlowConverter : EcosOmgConverter<BpmnSequenceFlowDef, TSequ
     }
 
     override fun export(element: BpmnSequenceFlowDef, context: ExportContext): TSequenceFlow {
-       return TSequenceFlow().apply {
-           id = element.id
-           sourceRef = element.sourceRef
-           targetRef = element.targetRef
-       }
+        return TSequenceFlow().apply {
+            id = element.id
+            sourceRef = element.sourceRef
+            targetRef = element.targetRef
+        }
     }
 }

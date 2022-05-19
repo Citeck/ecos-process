@@ -3,12 +3,8 @@ package ru.citeck.ecos.process.domain.cmmn.io.convert.ecosalf
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.utils.StringUtils
-import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.ConvertUtils
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
+import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
@@ -16,6 +12,10 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemOnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.PlanItemTransitionEnum
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.ConvertUtils
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
 import javax.xml.namespace.QName
 
@@ -25,7 +25,7 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
 
         private val PROP_ELEMENT_TYPES = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "elementTypes")
         private const val PROP_ELEMENT_TYPES_VALUE = "case-tasks,supplementary-files,documents," +
-                                                     "completeness-levels,subcases,events,case-roles"
+            "completeness-levels,subcases,events,case-roles"
 
         private val PROP_ALF_ECOS_TYPE = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "caseEcosType")
         private val PROP_ALF_ECOS_KIND = QName(CmmnXmlUtils.NS_ALF_ECOS_CMMN, "caseEcosKind")
@@ -80,8 +80,10 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
             sentry.onPart.map { it.value }.forEach {
 
                 val planItemOnPart = it as? TPlanItemOnPart
-                val sourceDef = (planItemOnPart
-                    ?.sourceRef as? TPlanItem)
+                val sourceDef = (
+                    planItemOnPart
+                        ?.sourceRef as? TPlanItem
+                    )
                     ?.definitionRef as? TPlanItemDefinition
 
                 if (sourceDef != null) {
@@ -121,13 +123,15 @@ class AlfDefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
                         listOf(
                             OnPartDef(
                                 ConvertUtils.getTypeByClass(PlanItemOnPartDef::class.java),
-                                ObjectData.create(PlanItemOnPartDef(
-                                    XmlDefUtils.generateId("PlanItemOnPart"),
-                                    MLText(),
-                                    sourceRef,
-                                    transition,
-                                    null
-                                ))
+                                ObjectData.create(
+                                    PlanItemOnPartDef(
+                                        XmlDefUtils.generateId("PlanItemOnPart"),
+                                        MLText(),
+                                        sourceRef,
+                                        transition,
+                                        null
+                                    )
+                                )
                             )
                         ),
                         null

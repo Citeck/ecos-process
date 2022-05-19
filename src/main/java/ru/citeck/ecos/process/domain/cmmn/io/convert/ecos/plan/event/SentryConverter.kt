@@ -2,15 +2,15 @@ package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.ExpressionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.IfPartDef
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.OnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart.OnPartDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
 class SentryConverter : EcosOmgConverter<SentryDef, Sentry> {
@@ -27,7 +27,6 @@ class SentryConverter : EcosOmgConverter<SentryDef, Sentry> {
             val onPartValue = jaxbOnPart.value
             val configWithType = context.converters.import(onPartValue, context)
             OnPartDef(configWithType.type, configWithType.data)
-
         } ?: emptyList()
 
         var cmmnIfPart: IfPartDef? = null

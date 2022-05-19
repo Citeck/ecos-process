@@ -43,5 +43,4 @@ class BpmnPlaneConverter : EcosOmgConverter<BpmnPlaneDef, BPMNPlane> {
         val el = context.converters.export<DiagramElement>(element.type, element.data, context)
         return context.converters.convertToJaxb(el)
     }
-
 }

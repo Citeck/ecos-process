@@ -59,5 +59,4 @@ class BpmnProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
             }
         }
     }
-
 }

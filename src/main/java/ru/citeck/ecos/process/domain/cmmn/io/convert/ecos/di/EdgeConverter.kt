@@ -1,10 +1,10 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.EdgeDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNEdge
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.EdgeDef
 import javax.xml.namespace.QName
 
 class EdgeConverter : EcosOmgConverter<EdgeDef, CMMNEdge> {
@@ -13,7 +13,7 @@ class EdgeConverter : EcosOmgConverter<EdgeDef, CMMNEdge> {
 
         return EdgeDef(
             element.id,
-                DiagramIOUtils.convertLabel(element.cmmnLabel),
+            DiagramIOUtils.convertLabel(element.cmmnLabel),
             element.cmmnElementRef?.localPart,
             element.sourceCMMNElementRef?.localPart,
             element.targetCMMNElementRef?.localPart,

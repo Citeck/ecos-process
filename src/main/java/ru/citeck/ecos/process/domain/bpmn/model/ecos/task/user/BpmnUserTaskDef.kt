@@ -32,5 +32,4 @@ data class BpmnUserTaskDef(
             throw EcosBpmnDefinitionException("Task outcomes cannot be empty")
         }
     }
-
 }

@@ -32,13 +32,16 @@ object CmmnXmlUtils {
 
     private const val MODEL_ROOT_PACKAGE = "ru.citeck.ecos.process.domain.cmmn.model.omg"
 
-    val schema = XmlDefUtils.loadSchema("cmmn/omg/11", listOf(
-        "CMMN11.xsd",
-        "CMMN11CaseModel.xsd",
-        "CMMNDI11.xsd",
-        "DC.xsd",
-        "DI.xsd"
-    ))
+    val schema = XmlDefUtils.loadSchema(
+        "cmmn/omg/11",
+        listOf(
+            "CMMN11.xsd",
+            "CMMN11CaseModel.xsd",
+            "CMMNDI11.xsd",
+            "DC.xsd",
+            "DI.xsd"
+        )
+    )
 
     fun readFromBytes(bytes: ByteArray): Definitions {
         return readFromString(String(bytes, Charsets.UTF_8))
@@ -52,14 +55,14 @@ object CmmnXmlUtils {
             val unmarshaller = jaxbContext.createUnmarshaller()
             unmarshaller.schema = schema
             var result: Any? = unmarshaller.unmarshal(
-                ByteArrayInputStream(definition.toByteArray(StandardCharsets.UTF_8)))
+                ByteArrayInputStream(definition.toByteArray(StandardCharsets.UTF_8))
+            )
 
             if (result is JAXBElement<*>) {
                 result = result.value
             }
 
             result as Definitions
-
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not parse stream", e)
         }
@@ -88,7 +91,6 @@ object CmmnXmlUtils {
             marshaller.marshal(element, outStream)
 
             return String(outStream.toByteArray(), StandardCharsets.UTF_8)
-
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not write to stream", e)
         }
@@ -112,7 +114,7 @@ object CmmnXmlUtils {
         error("Unknown type: ${mutRef::class} value: $mutRef")
     }
 
-    fun getFormat(definition: Definitions) : CmmnFormat {
+    fun getFormat(definition: Definitions): CmmnFormat {
 
         val formatFromAtts = definition.otherAttributes[PROP_ECOS_FORMAT] ?: ""
         if (formatFromAtts.isNotBlank()) {

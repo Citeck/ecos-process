@@ -7,11 +7,11 @@ import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl
 import org.camunda.bpm.engine.impl.util.xml.Element
 import org.springframework.stereotype.Component
 
-//TODO: remove
+// TODO: remove
 @Component
 class TestParseListener(
     private val testListener: TestListener
-): AbstractBpmnParseListener() {
+) : AbstractBpmnParseListener() {
 
     override fun parseSendTask(sendTaskElement: Element?, scope: ScopeImpl?, activity: ActivityImpl?) {
         super.parseSendTask(sendTaskElement, scope, activity)
@@ -19,11 +19,10 @@ class TestParseListener(
         println("====================================")
         println("call from parseSendTask TestParseListener")
         println("====================================")
-
     }
 
     override fun parseServiceTask(serviceTaskElement: Element, scope: ScopeImpl?, activity: ActivityImpl?) {
-        //super.parseServiceTask(serviceTaskElement, scope, activity)
+        // super.parseServiceTask(serviceTaskElement, scope, activity)
 
         println("====================================")
         println("call from parseServiceTask TestParseListener")
@@ -47,12 +46,9 @@ class TestParseListener(
                     val elements = el.elements()
 
                     println(name)
-
                 }
-
             }
         }
-
 
         activity!!.addListener(ExecutionListener.EVENTNAME_START, testListener)
     }

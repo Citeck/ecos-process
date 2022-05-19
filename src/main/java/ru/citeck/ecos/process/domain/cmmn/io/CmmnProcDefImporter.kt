@@ -13,15 +13,15 @@ import ru.citeck.ecos.records2.RecordRef
 @Component
 class CmmnProcDefImporter {
 
-    fun getDataToImport(definition: String, fileName: String) : NewProcessDefDto {
+    fun getDataToImport(definition: String, fileName: String): NewProcessDefDto {
         return getDataToImport(CmmnXmlUtils.readFromString(definition), fileName)
     }
 
-    fun getDataToImport(bytes: ByteArray, fileName: String) : NewProcessDefDto {
+    fun getDataToImport(bytes: ByteArray, fileName: String): NewProcessDefDto {
         return getDataToImport(CmmnXmlUtils.readFromString(String(bytes, Charsets.UTF_8)), fileName)
     }
 
-    fun getDataToImport(definition: Definitions, fileName: String) : NewProcessDefDto {
+    fun getDataToImport(definition: Definitions, fileName: String): NewProcessDefDto {
 
         val format = CmmnXmlUtils.getFormat(definition)
         val procDefDto = NewProcessDefDto()
@@ -50,7 +50,7 @@ class CmmnProcDefImporter {
         return procDefDto
     }
 
-    private fun getName(definition: Definitions) : MLText {
+    private fun getName(definition: Definitions): MLText {
         val name = definition.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] ?: definition.name ?: ""
         if (name.isNotEmpty() && name[0] == '{') {
             return DataValue.create(name).getAs(MLText::class.java) ?: MLText()
@@ -58,9 +58,11 @@ class CmmnProcDefImporter {
         return MLText(name)
     }
 
-    private fun getEcosType(definition: Definitions,
-                            format: CmmnFormat,
-                            caseAdditionalAtts: Map<String, String>): RecordRef {
+    private fun getEcosType(
+        definition: Definitions,
+        format: CmmnFormat,
+        caseAdditionalAtts: Map<String, String>
+    ): RecordRef {
 
         var ecosType = definition.otherAttributes[CmmnXmlUtils.PROP_ECOS_TYPE]
         if (ecosType.isNullOrBlank() && format == CmmnFormat.LEGACY_CMMN) {
@@ -74,7 +76,7 @@ class CmmnProcDefImporter {
         return caseAdditionalAtts["caseType"]
     }
 
-    private fun getLegacyCmmnEcosType(caseAdditionalAtts: Map<String, String>) : String {
+    private fun getLegacyCmmnEcosType(caseAdditionalAtts: Map<String, String>): String {
 
         var type = caseAdditionalAtts["caseEcosType"]
         type = if (!type.isNullOrBlank()) {

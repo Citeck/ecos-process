@@ -88,5 +88,3 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
         return fields.map { it.jaxb(context) }
     }
 }
-
-

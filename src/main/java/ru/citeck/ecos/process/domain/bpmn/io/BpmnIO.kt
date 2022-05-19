@@ -57,7 +57,8 @@ object BpmnIO {
             BpmnSendTaskConverter::class,
             BpmnUserTaskConverter::class,
             BpmnExclusiveGatewayConverter::class
-        ), extensionTypeResolver
+        ),
+        extensionTypeResolver
     )
 
     private val ecosCamundaConverters = EcosOmgConverters(
@@ -74,7 +75,8 @@ object BpmnIO {
             CamundaSendTaskConverter::class,
             CamundaUserTaskConverter::class,
             CamundaExclusiveGatewayConverter::class
-        ), extensionTypeResolver
+        ),
+        extensionTypeResolver
     )
 
     fun importEcosBpmn(definitions: String): BpmnDefinitionDef {
@@ -101,8 +103,7 @@ object BpmnIO {
         return BpmnXmlUtils.writeToString(exportCamundaBpmn(definitions))
     }
 
-
-    //todo: replace return value by BpmnProcessDef
+    // todo: replace return value by BpmnProcessDef
     @JvmStatic
     fun generateDefaultDef(processDefId: String, name: MLText, ecosType: RecordRef): TDefinitions {
 

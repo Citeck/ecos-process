@@ -1,16 +1,16 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event
 
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.cmmn.model.omg.Sentry
-import ru.citeck.ecos.process.domain.cmmn.model.omg.TEntryCriterion
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.EntryCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
+import ru.citeck.ecos.process.domain.cmmn.model.omg.Sentry
+import ru.citeck.ecos.process.domain.cmmn.model.omg.TEntryCriterion
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import java.util.*
 
-class EntryCriterionConverter: EcosOmgConverter<EntryCriterionDef, TEntryCriterion> {
+class EntryCriterionConverter : EcosOmgConverter<EntryCriterionDef, TEntryCriterion> {
 
     override fun import(element: TEntryCriterion, context: ImportContext): EntryCriterionDef {
         return EntryCriterionDef(

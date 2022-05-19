@@ -1,15 +1,15 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact
 
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssocDirectionEnum
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssociationDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TAssociation
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TAssociationDirection
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssocDirectionEnum
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.type.AssociationDef
 
-class AssociationConverter: EcosOmgConverter<AssociationDef, TAssociation> {
+class AssociationConverter : EcosOmgConverter<AssociationDef, TAssociation> {
 
     override fun import(element: TAssociation, context: ImportContext): AssociationDef {
 

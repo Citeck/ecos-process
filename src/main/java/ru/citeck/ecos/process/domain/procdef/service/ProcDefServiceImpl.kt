@@ -82,7 +82,6 @@ class ProcDefServiceImpl(
             currentProcDef.enabled = true
             currentProcDef = procDefRepo.save<ProcDefEntity>(currentProcDef)
             newRevision.version = 0
-
         } else {
 
             currentProcDef.alfType = processDef.alfType
@@ -167,7 +166,6 @@ class ProcDefServiceImpl(
             newProcessDefDto.format = dto.format
             newProcessDefDto.procType = dto.procType
             result = uploadProcDefImpl(newProcessDefDto)
-
         } else {
 
             val currentData = procDefEntity.lastRev!!.data
@@ -183,7 +181,6 @@ class ProcDefServiceImpl(
                 newProcessDefDto.procType = procType
                 newProcessDefDto.name = dto.name
                 result = uploadProcDefImpl(newProcessDefDto)
-
             } else {
 
                 procDefEntity.alfType = dto.alfType
@@ -284,9 +281,11 @@ class ProcDefServiceImpl(
         val procRev = procStateRepo.findFirstByProcDefRevIn(revisions)
 
         if (procRev != null) {
-            error("Process definition $ref can't be deleted. " +
-                "At least one process instance was started " +
-                "for recordRef: ${procRev.process!!.recordRef}")
+            error(
+                "Process definition $ref can't be deleted. " +
+                    "At least one process instance was started " +
+                    "for recordRef: ${procRev.process!!.recordRef}"
+            )
         }
 
         procDefRevRepo.deleteAll(revisions)

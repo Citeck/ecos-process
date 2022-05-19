@@ -7,7 +7,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPA
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
-import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
@@ -51,6 +50,4 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_FORM_REF, element.formRef.toString())
         }
     }
-
-
 }
