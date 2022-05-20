@@ -56,17 +56,20 @@ class BpmnProcRecords(
             return res.id
         }
 
-        val variables = mutableMapOf<String, Any?>()
+        val processVariables = mutableMapOf<String, Any?>()
+        val documentVariables =  mutableMapOf<String, Any?>()
 
         record.attributes.forEach { key, value ->
             // filter system props
             if (!key.startsWith("_")) {
-                variables[key] = value.asJavaObj()
+                processVariables[key] = value.asJavaObj()
             }
         }
 
         // TODO: move to proc service
-        val processInstance = runtimeService.startProcessInstanceByKey("Process_${record.id}", variables)
+        // TODO: remove Process_ prefix?
+        // TODO: support _ECM_ document variables with doc mutate
+        val processInstance = runtimeService.startProcessInstanceByKey("Process_${record.id}", processVariables)
 
         return processInstance.id
     }
