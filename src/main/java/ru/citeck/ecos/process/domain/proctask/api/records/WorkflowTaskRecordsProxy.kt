@@ -38,6 +38,7 @@ class WorkflowTaskRecordsProxy(
 
     private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery): RecsQueryRes<*> {
         val result = RecsQueryRes<RecordRef>()
+        if (query.document.isBlank()) return result
 
         val taskRefs = if (query.actor == CURRENT_USER_FLAG) {
             procTaskService.getTasksByDocumentForCurrentUser(query.document)
