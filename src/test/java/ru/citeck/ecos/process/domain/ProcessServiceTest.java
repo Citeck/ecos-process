@@ -67,7 +67,9 @@ public class ProcessServiceTest {
             alfType,
             ecosTypeRef,
             RecordRef.EMPTY,
-            procDefData
+            procDefData,
+            false,
+            false
         );
 
         procDefService.uploadProcDef(newProcessDefDto);
