@@ -46,6 +46,8 @@ public class ProcDefWithDataDto {
 
     private Boolean enabled;
 
+    private Boolean autoStartEnabled;
+
     public ProcDefWithDataDto() {
     }
 
@@ -62,6 +64,7 @@ public class ProcDefWithDataDto {
         this.version = other.version;
         this.formRef = other.formRef;
         this.enabled = other.enabled;
+        this.autoStartEnabled = other.autoStartEnabled;
     }
 
     public ProcDefWithDataDto(ProcDefDto def, ProcDefRevDto rev) {
@@ -77,6 +80,7 @@ public class ProcDefWithDataDto {
         this.version = rev.getVersion();
         this.formRef = def.getFormRef();
         this.enabled = def.getEnabled();
+        this.autoStartEnabled = def.getAutoStartEnabled();
     }
 
     public String getId() {
@@ -173,5 +177,13 @@ public class ProcDefWithDataDto {
 
     public void setFormRef(RecordRef formRef) {
         this.formRef = formRef;
+    }
+
+    public Boolean getAutoStartEnabled() {
+        return autoStartEnabled;
+    }
+
+    public void setAutoStartEnabled(Boolean autoStartEnabled) {
+        this.autoStartEnabled = autoStartEnabled;
     }
 }

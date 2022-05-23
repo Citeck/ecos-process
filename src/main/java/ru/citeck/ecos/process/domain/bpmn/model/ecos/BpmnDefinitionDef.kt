@@ -6,6 +6,10 @@ import ru.citeck.ecos.records2.RecordRef
 
 data class BpmnDefinitionDef(
     val id: String,
+
+    val enabled: Boolean,
+    val autoStartEnabled: Boolean,
+
     val definitionsId: String,
 
     val name: MLText,

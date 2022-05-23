@@ -27,3 +27,6 @@ columns:
 
   - id: enabled
     name: { ru: Включен, en: Enabled }
+
+  - id: autoStartEnabled
+    name: { ru: Автоматический старт процесса, en: Auto start process }

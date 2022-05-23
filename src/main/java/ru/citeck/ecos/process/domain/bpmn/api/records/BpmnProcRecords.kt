@@ -1,8 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import org.camunda.bpm.engine.RepositoryService
-import org.camunda.bpm.engine.RuntimeService
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.value.AttValue
@@ -12,8 +11,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 
 @Component
 class BpmnProcRecords(
-    private val runtimeService: RuntimeService,
-    private val repositoryService: RepositoryService
+    private val bpmnProcService: BpmnProcService
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordMutateDao {
@@ -40,10 +38,7 @@ class BpmnProcRecords(
             return ref
         }
 
-        // TODO: move to proc service
-        val processInstanceById = runtimeService.createProcessInstanceQuery().processInstanceId(recordId).singleResult()
-            ?: return ProcRecord()
-        val def = repositoryService.getProcessDefinition(processInstanceById.processDefinitionId)
+        val def = bpmnProcService.getProcessDefinitionByInstanceId(recordId) ?: return ProcRecord()
 
         // TODO: fill proc props to dto
         return ProcRecord(def.key)
@@ -57,7 +52,7 @@ class BpmnProcRecords(
         }
 
         val processVariables = mutableMapOf<String, Any?>()
-        val documentVariables =  mutableMapOf<String, Any?>()
+        val documentVariables =  mutableMapOf<String, Any>()
 
         record.attributes.forEach { key, value ->
             // filter system props
@@ -66,10 +61,7 @@ class BpmnProcRecords(
             }
         }
 
-        // TODO: move to proc service
-        // TODO: remove Process_ prefix?
-        // TODO: support _ECM_ document variables with doc mutate
-        val processInstance = runtimeService.startProcessInstanceByKey("Process_${record.id}", processVariables)
+        val processInstance = bpmnProcService.startProcess(record.id, processVariables.toMap())
 
         return processInstance.id
     }

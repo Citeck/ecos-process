@@ -88,7 +88,8 @@ class CmmnProcDefRecords(
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
-                    it.enabled
+                    it.enabled,
+                    it.autoStartEnabled
                 )
             )
         } ?: EmptyAttValue.INSTANCE

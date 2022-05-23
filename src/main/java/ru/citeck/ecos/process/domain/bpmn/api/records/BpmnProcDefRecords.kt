@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_FORM_REF
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
-import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
+import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
+import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -49,8 +48,6 @@ class BpmnProcDefRecords(
 
     companion object {
         private const val SOURCE_ID = "bpmn-def"
-        private const val PROC_TYPE = "bpmn"
-        private const val FORMAT_BPMN = "bpmn"
 
         private val log = KotlinLogging.logger {}
     }
@@ -67,7 +64,7 @@ class BpmnProcDefRecords(
 
         val predicate = Predicates.and(
             query.getQuery(Predicate::class.java),
-            Predicates.eq("procType", PROC_TYPE)
+            Predicates.eq("procType", BPMN_PROC_TYPE)
         )
 
         val result = procDefService.findAll(
@@ -115,7 +112,7 @@ class BpmnProcDefRecords(
             return RecordRef.create("alfresco", "workflow", "def_$recordId")
         }
 
-        val ref = ProcDefRef.create(PROC_TYPE, recordId)
+        val ref = ProcDefRef.create(BPMN_PROC_TYPE, recordId)
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {
@@ -129,7 +126,8 @@ class BpmnProcDefRecords(
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
-                    it.enabled
+                    it.enabled,
+                    it.autoStartEnabled
                 )
             )
         } ?: EmptyAttValue.INSTANCE
@@ -137,9 +135,9 @@ class BpmnProcDefRecords(
 
     override fun getRecToMutate(recordId: String): BpmnMutateRecord {
         return if (recordId.isBlank()) {
-            BpmnMutateRecord("", "", MLText(), RecordRef.EMPTY, RecordRef.EMPTY, null, true)
+            BpmnMutateRecord("", "", MLText(), RecordRef.EMPTY, RecordRef.EMPTY, null, false, "", false)
         } else {
-            val procDef = procDefService.getProcessDefById(ProcDefRef.create(PROC_TYPE, recordId))
+            val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
             BpmnMutateRecord(
                 recordId,
@@ -148,7 +146,9 @@ class BpmnProcDefRecords(
                 procDef.ecosTypeRef,
                 procDef.formRef,
                 null,
-                procDef.enabled
+                procDef.enabled,
+                "",
+                procDef.autoStartEnabled
             )
         }
     }
@@ -177,13 +177,15 @@ class BpmnProcDefRecords(
             record.formRef = newEcosBpmnDef.formRef
             record.name = newEcosBpmnDef.name
             record.processDefId = newEcosBpmnDef.id
+            record.enabled = newEcosBpmnDef.enabled
+            record.autoStartEnabled = newEcosBpmnDef.autoStartEnabled
         }
 
         if (record.processDefId.isBlank()) {
             error("processDefId is missing")
         }
 
-        val newRef = ProcDefRef.create(PROC_TYPE, record.processDefId)
+        val newRef = ProcDefRef.create(BPMN_PROC_TYPE, record.processDefId)
 
         val currentProc = procDefService.getProcessDefById(newRef)
 
@@ -195,14 +197,16 @@ class BpmnProcDefRecords(
 
             val newProcDef = NewProcessDefDto(
                 id = record.processDefId,
+                enabled = record.enabled,
+                autoStartEnabled = record.autoStartEnabled,
                 name = record.name,
                 data = newDefData ?: BpmnXmlUtils.writeToString(
                     BpmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
                 ).toByteArray(),
                 ecosTypeRef = record.ecosType,
                 formRef = record.formRef,
-                format = FORMAT_BPMN,
-                procType = PROC_TYPE
+                format = BPMN_FORMAT,
+                procType = BPMN_PROC_TYPE
             )
 
             procDefService.uploadProcDef(newProcDef)
@@ -214,19 +218,24 @@ class BpmnProcDefRecords(
                 currentProc.ecosTypeRef = record.ecosType
                 currentProc.formRef = record.formRef
                 currentProc.name = record.name
+                currentProc.enabled = record.enabled
+                currentProc.autoStartEnabled = record.autoStartEnabled
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType
                 currentProc.formRef = record.formRef
                 currentProc.name = record.name
                 currentProc.enabled = record.enabled
+                currentProc.autoStartEnabled = record.autoStartEnabled
 
-                if (currentProc.format == FORMAT_BPMN) {
+                if (currentProc.format == BPMN_FORMAT) {
 
                     val procDef = BpmnXmlUtils.readFromString(String(currentProc.data))
                     procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(record.name)
                     procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = record.ecosType.toString()
                     procDef.otherAttributes[BPMN_PROP_FORM_REF] = record.formRef.toString()
+                    procDef.otherAttributes[BPMN_PROP_ENABLED] = record.enabled.toString()
+                    procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = record.autoStartEnabled.toString()
 
                     currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
                 }
@@ -258,7 +267,7 @@ class BpmnProcDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-        procDefService.delete(ProcDefRef.create(PROC_TYPE, recordId))
+        procDefService.delete(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
         return DelStatus.OK
     }
 
@@ -293,6 +302,10 @@ class BpmnProcDefRecords(
             return procDef.enabled
         }
 
+        fun getAutoStartEnabled(): Boolean {
+            return procDef.autoStartEnabled
+        }
+
         fun getData(): ByteArray? {
             return getDefinition()?.toByteArray(StandardCharsets.UTF_8)
         }
@@ -304,7 +317,7 @@ class BpmnProcDefRecords(
         fun getProcessDefId() = procDef.id
 
         fun getDefinition(): String? {
-            val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
+            val rev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId) ?: return null
             return String(rev.data, StandardCharsets.UTF_8)
         }
 
@@ -337,7 +350,8 @@ class BpmnProcDefRecords(
         var formRef: RecordRef,
         var definition: String? = null,
         var enabled: Boolean,
-        var action: String = ""
+        var action: String = "",
+        var autoStartEnabled: Boolean
     ) {
 
         @JsonProperty("_content")

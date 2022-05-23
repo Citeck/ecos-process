@@ -32,7 +32,11 @@ public class ProcDefDto {
 
     private RecordRef formRef;
 
+    @NotNull
     private Boolean enabled;
+
+    @NotNull
+    private Boolean autoStartEnabled;
 
     public ProcDefDto(@NotNull String id,
                       MLText name,
@@ -42,7 +46,8 @@ public class ProcDefDto {
                       @NotNull RecordRef ecosTypeRef,
                       @NotNull String alfType,
                       RecordRef formRef,
-                      Boolean enabled) {
+                      Boolean enabled,
+                      Boolean autoStartEnabled) {
         this.id = id;
         this.name = name;
         this.procType = procType;
@@ -52,6 +57,7 @@ public class ProcDefDto {
         this.alfType = alfType;
         this.formRef = formRef;
         this.enabled = enabled;
+        this.autoStartEnabled = autoStartEnabled;
     }
 
     public ProcDefDto() {}
@@ -126,5 +132,13 @@ public class ProcDefDto {
 
     public void setFormRef(RecordRef formRef) {
         this.formRef = formRef;
+    }
+
+    public Boolean getAutoStartEnabled() {
+        return autoStartEnabled;
+    }
+
+    public void setAutoStartEnabled(Boolean autoStartEnabled) {
+        this.autoStartEnabled = autoStartEnabled;
     }
 }

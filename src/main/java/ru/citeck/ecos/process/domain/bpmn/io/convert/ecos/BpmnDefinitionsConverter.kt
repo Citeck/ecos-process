@@ -29,6 +29,8 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
 
         val result = BpmnDefinitionDef(
             id = processDefId,
+            enabled = element.otherAttributes[BPMN_PROP_ENABLED].toBoolean(),
+            autoStartEnabled = element.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean(),
             definitionsId = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             ecosType = RecordRef.Companion.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),
@@ -61,6 +63,8 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
                 bpmnDiagram.add(context.converters.export(it))
             }
 
+            otherAttributes[BPMN_PROP_ENABLED] = element.enabled.toString()
+            otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = element.autoStartEnabled.toString()
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
             otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = element.id

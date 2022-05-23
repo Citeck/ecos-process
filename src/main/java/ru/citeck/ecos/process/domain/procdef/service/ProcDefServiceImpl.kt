@@ -80,7 +80,8 @@ class ProcDefServiceImpl(
             currentProcDef.name = mapper.toString(processDef.name)
             currentProcDef.modified = now
             currentProcDef.created = now
-            currentProcDef.enabled = true
+            currentProcDef.enabled = processDef.enabled
+            currentProcDef.autoStartEnabled = processDef.autoStartEnabled
             currentProcDef = procDefRepo.save<ProcDefEntity>(currentProcDef)
             newRevision.version = 0
         } else {
@@ -90,9 +91,9 @@ class ProcDefServiceImpl(
             currentProcDef.formRef = processDef.formRef.toString()
             currentProcDef.name = mapper.toString(processDef.name)
             currentProcDef.modified = now
-            if (currentProcDef.enabled == null) {
-                currentProcDef.enabled = true
-            }
+            currentProcDef.enabled = processDef.enabled
+            currentProcDef.autoStartEnabled = processDef.autoStartEnabled
+
             newRevision.version = currentProcDef.lastRev!!.version + 1
             newRevision.prevRev = currentProcDef.lastRev
         }
@@ -167,7 +168,9 @@ class ProcDefServiceImpl(
                 ecosTypeRef = dto.ecosTypeRef,
                 formRef = dto.formRef,
                 format = dto.format,
-                procType = dto.procType
+                procType = dto.procType,
+                enabled = dto.enabled,
+                autoStartEnabled = dto.autoStartEnabled
             )
             result = uploadProcDefImpl(newProcessDefDto)
         } else {
@@ -178,6 +181,8 @@ class ProcDefServiceImpl(
 
                 val newProcessDefDto = NewProcessDefDto(
                     id = dto.id,
+                    enabled = dto.enabled,
+                    autoStartEnabled = dto.autoStartEnabled,
                     name = dto.name,
                     data = dto.data,
                     alfType = dto.alfType,
@@ -193,9 +198,8 @@ class ProcDefServiceImpl(
                 procDefEntity.ecosTypeRef = dto.ecosTypeRef.toString()
                 procDefEntity.formRef = dto.formRef.toString()
                 procDefEntity.name = mapper.toString(dto.name)
-                if (dto.enabled != null) {
-                    procDefEntity.enabled = dto.enabled
-                }
+                procDefEntity.enabled = dto.enabled
+                procDefEntity.autoStartEnabled = dto.autoStartEnabled
                 procDefEntity.modified = Instant.now()
                 result = procDefToDto(procDefRepo.save(procDefEntity))
             }
@@ -308,7 +312,8 @@ class ProcDefServiceImpl(
         procDefDto.alfType = entity.alfType
         procDefDto.ecosTypeRef = RecordRef.valueOf(entity.ecosTypeRef)
         procDefDto.formRef = RecordRef.valueOf(entity.formRef)
-        procDefDto.enabled = entity.enabled
+        procDefDto.enabled = entity.enabled ?: false
+        procDefDto.autoStartEnabled = entity.autoStartEnabled ?: false
         procDefDto.format = entity.lastRev?.format ?: ""
         return procDefDto
     }

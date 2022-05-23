@@ -11,12 +11,10 @@ data class NewProcessDefDto(
     val alfType: String? = null,
     val ecosTypeRef: RecordRef = RecordRef.EMPTY,
     val formRef: RecordRef = RecordRef.EMPTY,
-    val data: ByteArray
+    val data: ByteArray,
+    val enabled: Boolean = false,
+    val autoStartEnabled: Boolean = false
 ) {
-    override fun toString(): String {
-        return "NewProcessDefDto(id=$id, name=$name, procType=$procType, format=$format, alfType=$alfType, " +
-            "ecosTypeRef=$ecosTypeRef, formRef=$formRef)"
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -44,5 +42,11 @@ data class NewProcessDefDto(
         result = 31 * result + formRef.hashCode()
         result = 31 * result + data.contentHashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "NewProcessDefDto(id='$id', name=$name, procType='$procType', format='$format', " +
+            "alfType=$alfType, ecosTypeRef=$ecosTypeRef, formRef=$formRef, enabled=$enabled, " +
+            "autoStartEnabled=$autoStartEnabled)"
     }
 }
