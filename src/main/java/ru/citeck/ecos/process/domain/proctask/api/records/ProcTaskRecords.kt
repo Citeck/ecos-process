@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.proctask.converter.toRecord
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskRecord
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
+import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -53,13 +54,15 @@ class ProcTaskRecords(
     }
 
     inner class TaskMutateVariables(
-        task: ProcTaskDto,
+        private val task: ProcTaskDto,
         record: LocalRecordAtts
     ) {
         val taskVariables = mutableMapOf<String, Any?>()
         val documentAtts = RecordAtts()
 
         init {
+            checkPermissionToCompleteTask()
+
             documentAtts.setId(task.documentRef)
 
             val outcome = getTaskOutcome(task, record)
@@ -81,13 +84,10 @@ class ProcTaskRecords(
             }
         }
 
-        private fun processDocumentVariable(k: String, v: DataValue): Pair<String, Any?> {
-            return Pair(getEcmFieldName(k), v.asJavaObj())
-        }
-
-        private fun getEcmFieldName(name: String): String {
-            return name.substring(DOCUMENT_FIELD_PREFIX.length)
-                .replace("_".toRegex(), ":")
+        private fun checkPermissionToCompleteTask() {
+            if (!currentUserIsTaskActor(task)) {
+                throw IllegalStateException("Task mutate denied. Current user is not a task actor")
+            }
         }
 
         private fun getTaskOutcome(task: ProcTaskDto, record: LocalRecordAtts): Outcome {
@@ -109,6 +109,15 @@ class ProcTaskRecords(
             }
 
             return Outcome(task.definitionKey, outcome)
+        }
+
+        private fun processDocumentVariable(k: String, v: DataValue): Pair<String, Any?> {
+            return Pair(getEcmFieldName(k), v.asJavaObj())
+        }
+
+        private fun getEcmFieldName(name: String): String {
+            return name.substring(DOCUMENT_FIELD_PREFIX.length)
+                .replace("_".toRegex(), ":")
         }
 
     }

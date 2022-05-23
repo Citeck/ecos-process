@@ -12,7 +12,7 @@ data class ProcTaskRecord(
     val created: Date? = null,
     val dueDate: Date? = null,
     val actors: List<AuthorityDto> = emptyList()
-) : AttValue {
+) {
 
     // TODO: add default form. simple-form is default?
     @get:AttName("_formRef")
@@ -25,8 +25,8 @@ data class ProcTaskRecord(
     }
 
     //TODO: get ECM fields?
-    override fun getAtt(name: String): Any? {
+    /*override fun getAtt(name: String): Any? {
         println("Get att: $name")
         return super.getAtt(name)
-    }
+    }*/
 }

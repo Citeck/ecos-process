@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task

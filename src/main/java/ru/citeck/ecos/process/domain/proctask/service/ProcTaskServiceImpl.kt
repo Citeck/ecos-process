@@ -39,18 +39,6 @@ class ProcTaskServiceImpl(
         }
     }
 
-    private fun isTaskActor(task: ProcTaskDto, currentUser: String, currentUserAuthorities: List<String>): Boolean {
-        val assigneeName = task.assignee.id
-        val candidateUsers = task.candidateUsers.map { it.id }
-        val candidateGroup = task.candidateGroups.map { it.id }
-
-        if (assigneeName == currentUser) return true
-        if (candidateUsers.contains(currentUser)) return true
-        if (candidateGroup.any { it in currentUserAuthorities }) return true
-
-        return false
-    }
-
     override fun getTaskById(taskId: String): ProcTaskDto? {
         // TODO: remove
         val variables = camundaTaskService.getVariables(taskId)
