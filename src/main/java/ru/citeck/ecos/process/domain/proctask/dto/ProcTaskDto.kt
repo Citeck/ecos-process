@@ -12,6 +12,8 @@ data class ProcTaskDto(
 
     val formRef: RecordRef = RecordRef.EMPTY,
 
+    val documentRef: RecordRef = RecordRef.EMPTY,
+
     val created: Date,
 
     val dueDate: Date? = null,

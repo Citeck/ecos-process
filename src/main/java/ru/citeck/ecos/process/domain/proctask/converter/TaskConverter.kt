@@ -4,6 +4,7 @@ import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskRecord
@@ -31,6 +32,8 @@ private lateinit var cnv: TaskConverter
 
 fun Task.toProcTask(): ProcTaskDto {
     val links = cnv.camundaTaskService.getIdentityLinksForTask(id)
+    val variables = cnv.camundaTaskService.getVariables(id)
+
     val candidateUsers = mutableSetOf<String>()
     val candidateGroups = mutableSetOf<String>()
 
@@ -48,14 +51,17 @@ fun Task.toProcTask(): ProcTaskDto {
     return ProcTaskDto(
         id = id,
         formRef = RecordRef.valueOf(formKey),
+        documentRef = if (variables[VAR_DOCUMENT_REF] != null) {
+            RecordRef.valueOf(variables[VAR_DOCUMENT_REF].toString())
+        } else {
+            RecordRef.EMPTY
+        },
         dueDate = dueDate,
         created = createTime,
-        assignee = let {
-            if (assignee.isNullOrBlank()) {
-                RecordRef.EMPTY
-            } else {
-                createPeopleRef(assignee)
-            }
+        assignee = if (assignee.isNullOrBlank()) {
+            RecordRef.EMPTY
+        } else {
+            createPeopleRef(assignee)
         },
         candidateUsers = candidateUsers.map { createPeopleRef(it) },
         candidateGroups = candidateGroups.map { createAuthorityRef(it) },

@@ -1,6 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -52,12 +55,14 @@ class BpmnProcRecords(
         }
 
         val processVariables = mutableMapOf<String, Any?>()
-        val documentVariables =  mutableMapOf<String, Any>()
 
         record.attributes.forEach { key, value ->
             // filter system props
-            if (!key.startsWith("_")) {
-                processVariables[key] = value.asJavaObj()
+            if (!key.startsWith(SYS_VAR_PREFIX)) {
+                when (key) {
+                    VAR_DOCUMENT -> processVariables[VAR_DOCUMENT_REF] = value.asJavaObj()
+                    else -> processVariables[key] = value.asJavaObj()
+                }
             }
         }
 

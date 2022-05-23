@@ -40,7 +40,7 @@ class SendNotificationDelegate : JavaDelegate {
         camundaRoleService = AppContext.getBean(CamundaRoleService::class.java)
 
         document = let {
-            val documentFromVar = execution.getDocument()
+            val documentFromVar = execution.getDocumentRef()
             if (RecordRef.isEmpty(documentFromVar)) error("Document is mandatory variable")
             documentFromVar
         }

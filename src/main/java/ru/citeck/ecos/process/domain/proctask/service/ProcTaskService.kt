@@ -12,6 +12,6 @@ interface ProcTaskService {
 
     fun getTaskById(taskId: String): ProcTaskDto?
 
-    fun submitTaskForm(taskId: String, variables: Map<String, Any>)
+    fun submitTaskForm(taskId: String, variables: Map<String, Any?>)
 
 }

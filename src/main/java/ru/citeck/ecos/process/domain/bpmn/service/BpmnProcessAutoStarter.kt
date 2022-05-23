@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.type.RecordCreatedEvent
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -40,7 +40,7 @@ class BpmnProcessAutoStarter(
             return
         }
 
-        val processVariables = mapOf(VAR_DOCUMENT to eventData.eventRef.toString())
+        val processVariables = mapOf(VAR_DOCUMENT_REF to eventData.eventRef.toString())
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
         bpmnProcService.startProcess(procDef.id, processVariables)

@@ -4,6 +4,7 @@ import org.camunda.bpm.model.bpmn.impl.BpmnModelConstants.*
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOC
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
@@ -24,11 +25,11 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
     private val camundaFormKey = QName(CAMUNDA_NS, CAMUNDA_ATTRIBUTE_FORM_KEY)
 
     val usersExpression = fun(roles: List<String>): String {
-        return "\${roles.getUserNames(document, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getUserNames(${VAR_DOCUMENT_REF}, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     val groupsExpression = fun(roles: List<String>): String {
-        return "\${roles.getGroupNames(document, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getGroupNames(${VAR_DOCUMENT_REF}, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     override fun import(element: TUserTask, context: ImportContext): BpmnUserTaskDef {

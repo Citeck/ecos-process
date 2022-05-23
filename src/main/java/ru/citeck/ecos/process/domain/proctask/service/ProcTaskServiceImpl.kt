@@ -4,7 +4,7 @@ import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 
@@ -24,7 +24,7 @@ class ProcTaskServiceImpl(
 
     override fun getTasksByDocument(document: String): List<ProcTaskDto> {
         return camundaTaskService.createTaskQuery()
-            .processVariableValueEquals(VAR_DOCUMENT, document)
+            .processVariableValueEquals(VAR_DOCUMENT_REF, document)
             .initializeFormKeys()
             .list()
             .map { it.toProcTask() }
@@ -66,7 +66,7 @@ class ProcTaskServiceImpl(
         return task.toProcTask()
     }
 
-    override fun submitTaskForm(taskId: String, variables: Map<String, Any>) {
+    override fun submitTaskForm(taskId: String, variables: Map<String, Any?>) {
         camundaTaskFormService.submitTaskForm(taskId, variables)
     }
 }

@@ -6,8 +6,8 @@ import ru.citeck.ecos.records2.RecordRef
 
 private const val AUTHORITY_GROUP_PREFIX = "GROUP_"
 
-fun DelegateExecution.getDocument(): RecordRef {
-    val documentVar = getVariable(VAR_DOCUMENT) as String?
+fun DelegateExecution.getDocumentRef(): RecordRef {
+    val documentVar = getVariable(VAR_DOCUMENT_REF) as String?
     return RecordRef.valueOf(documentVar)
 }
 
