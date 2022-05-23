@@ -68,7 +68,7 @@ public class ProcessServiceTest {
             ecosTypeRef,
             RecordRef.EMPTY,
             procDefData,
-            false,
+            true,
             false
         );
 
