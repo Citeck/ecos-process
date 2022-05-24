@@ -1,16 +1,18 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
-import mu.KotlinLogging
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskRecord
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import javax.annotation.PostConstruct
 
 private const val ALFRESCO_APP = "alfresco"
@@ -85,7 +87,19 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         created = created,
         dueDate = dueDate,
         title = name.getClosestValue(),
-        actors = getActors(assignee, candidateUsers + candidateGroups)
+        actors = getActors(assignee, candidateUsers + candidateGroups),
+        documentAtts = let {
+            if (documentRef == RecordRef.EMPTY) {
+                return@let RecordAtts()
+            }
+
+            val requiredAtts = AttContext.getInnerAttsMap()
+                .filter { it.key.startsWith(DOCUMENT_FIELD_PREFIX) }
+                .map { it.key.removePrefix(DOCUMENT_FIELD_PREFIX) to it.value.removePrefix(DOCUMENT_FIELD_PREFIX) }
+                .toMap()
+
+            cnv.recordsService.getAtts(documentRef, requiredAtts)
+        }
     )
 }
 

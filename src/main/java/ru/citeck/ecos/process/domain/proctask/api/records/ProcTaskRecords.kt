@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.io.convert.fullId
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
@@ -25,8 +26,6 @@ class ProcTaskRecords(
 
     companion object {
         const val ID = "proc-task"
-
-        private const val DOCUMENT_FIELD_PREFIX = "_ECM_"
     }
 
     override fun getId(): String {
