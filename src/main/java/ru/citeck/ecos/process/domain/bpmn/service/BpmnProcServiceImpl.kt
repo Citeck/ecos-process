@@ -17,14 +17,13 @@ class BpmnProcServiceImpl(
 ) : BpmnProcService {
 
     // TODO: remove Process_ prefix?
-    // TODO: support _ECM_ document variables with doc mutate и отображение на карточке документа?
     override fun startProcess(processKey: String, variables: Map<String, Any?>): ProcessInstance {
         val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, processKey))
             ?: throw IllegalArgumentException("Process definition with key $processKey not found")
 
         if (!definition.enabled) throw IllegalStateException("Starting a disabled process is not possible")
 
-        return camundaRuntimeService.startProcessInstanceByKey("Process_${processKey}", variables)
+        return camundaRuntimeService.startProcessInstanceByKey("Process_$processKey", variables)
     }
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {

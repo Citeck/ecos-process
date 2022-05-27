@@ -1,10 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert
 
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_CONDITION_CONFIG
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_CONDITION_TYPE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_T_FORMAT_EXPRESSION
-import ru.citeck.ecos.process.domain.bpmn.io.XSI_TYPE
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
+import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
@@ -165,4 +163,19 @@ fun Outcome.toExpressionStr(): String {
 
 fun Outcome.fullId(): String {
     return id + "_" + OUTCOME_VAR
+}
+
+fun ConditionConfig.expressionToTExpression(): TExpression {
+    val exp = TExpression()
+    exp.content.add(expression)
+    exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+    return exp
+}
+
+fun ConditionConfig.scriptToTExpression(): TExpression {
+    val exp = TExpression()
+    exp.content.add(fn)
+    exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+    exp.otherAttributes[SCRIPT_LANGUAGE_ATTRIBUTE] = DEFAULT_SCRIPT_ENGINE_LANGUAGE
+    return exp
 }

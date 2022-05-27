@@ -25,11 +25,11 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
     private val camundaFormKey = QName(CAMUNDA_NS, CAMUNDA_ATTRIBUTE_FORM_KEY)
 
     val usersExpression = fun(roles: List<String>): String {
-        return "\${roles.getUserNames(${VAR_DOCUMENT_REF}, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getUserNames($VAR_DOCUMENT_REF, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     val groupsExpression = fun(roles: List<String>): String {
-        return "\${roles.getGroupNames(${VAR_DOCUMENT_REF}, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getGroupNames($VAR_DOCUMENT_REF, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     override fun import(element: TUserTask, context: ImportContext): BpmnUserTaskDef {

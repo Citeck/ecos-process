@@ -18,7 +18,7 @@
 
         <ecos.webapp-lib.version>1.2.2</ecos.webapp-lib.version>
 
-        <camunda.spring-boot.version>7.16.0</camunda.spring-boot.version>
+        <camunda.spring-boot.version>7.17.0</camunda.spring-boot.version>
 
         <querydsl.version>4.2.1</querydsl.version>
         <mongock.version>3.0.2.BETA</mongock.version>

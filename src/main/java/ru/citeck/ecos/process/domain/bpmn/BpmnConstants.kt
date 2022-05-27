@@ -6,3 +6,5 @@ const val BPMN_FORMAT = "bpmn"
 const val SYS_VAR_PREFIX = "_"
 
 const val DOCUMENT_FIELD_PREFIX = "_ECM_"
+
+const val DEFAULT_SCRIPT_ENGINE_LANGUAGE = "javascript"

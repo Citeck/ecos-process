@@ -74,7 +74,7 @@ class ProcTaskRecords(
                         documentAtts[docAtt.first] = docAtt.second
                     }
                     k.startsWith(SYS_VAR_PREFIX) -> {
-                        //do nothing
+                        // do nothing
                     }
                     else -> {
                         taskVariables[k] = v.asJavaObj()
@@ -118,6 +118,5 @@ class ProcTaskRecords(
             return name.substring(DOCUMENT_FIELD_PREFIX.length)
                 .replace("_".toRegex(), ":")
         }
-
     }
 }

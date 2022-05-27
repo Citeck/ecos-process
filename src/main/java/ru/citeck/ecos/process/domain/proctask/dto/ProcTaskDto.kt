@@ -18,7 +18,7 @@ data class ProcTaskDto(
 
     val dueDate: Date? = null,
 
-    val assignee: RecordRef =  RecordRef.EMPTY,
+    val assignee: RecordRef = RecordRef.EMPTY,
 
     val candidateUsers: List<RecordRef> = emptyList(),
 
