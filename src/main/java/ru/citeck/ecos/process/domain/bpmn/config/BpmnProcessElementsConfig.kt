@@ -27,6 +27,7 @@ import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 import java.time.Instant
@@ -126,35 +127,39 @@ class BpmnProcessElementsConfig(
         eventsService.addListener<TaskEvent> {
             withEventType("bpmn-user-task-create")
             withDataClass(TaskEvent::class.java)
-            withAction {
-                createTaskElement(it, false)
+            withAction { event ->
+                execPostTxnAction(event) {
+                    createTaskElement(it, false)
+                }
             }
         }
 
         eventsService.addListener<TaskEvent> {
             withEventType("bpmn-user-task-complete")
             withDataClass(TaskEvent::class.java)
-            withAction {
-                val existingElement = recordsService.queryOne(
-                    RecordsQuery.create {
-                        withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
-                        withQuery(
-                            Predicates.and(
-                                Predicates.eq("engine", it.engine),
-                                Predicates.eq("elementId", it.taskId)
+            withAction { event ->
+                execPostTxnAction(event) {
+                    val existingElement = recordsService.queryOne(
+                        RecordsQuery.create {
+                            withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
+                            withQuery(
+                                Predicates.and(
+                                    Predicates.eq("engine", it.engine),
+                                    Predicates.eq("elementId", it.taskId)
+                                )
                             )
-                        )
+                        }
+                    )
+                    if (existingElement == null) {
+                        createTaskElement(it, true)
+                    } else {
+                        val data = ObjectData.create()
+                        data["completed"] = it.time
+                        data["outcome"] = it.outcome
+                        data["outcomeName"] = it.outcomeName
+                        data["comment"] = it.comment
+                        recordsService.mutate(existingElement, data)
                     }
-                )
-                if (existingElement == null) {
-                    createTaskElement(it, true)
-                } else {
-                    val data = ObjectData.create()
-                    data.set("completed", it.time)
-                    data.set("outcome", it.outcome)
-                    data.set("outcomeName", it.outcomeName)
-                    data.set("comment", it.comment)
-                    recordsService.mutate(existingElement, data)
                 }
             }
         }
@@ -162,29 +167,42 @@ class BpmnProcessElementsConfig(
         eventsService.addListener<FlowElementEvent> {
             withEventType("bpmn-flow-element-start")
             withDataClass(FlowElementEvent::class.java)
-            withAction {
-                createFlowElement(it)
+            withAction { event ->
+                execPostTxnAction(event) {
+                    createFlowElement(it)
+                }
             }
         }
 
         return recordsDao
     }
 
+    private fun <T : Any> execPostTxnAction(arg: T, action: (T) -> Unit) {
+        val ctx = RequestContext.getCurrentNotNull()
+        if (ctx.ctxData.txnId != null && ctx.ctxData.txnOwner) {
+            RequestContext.doAfterCommit {
+                action.invoke(arg)
+            }
+        } else {
+            action.invoke(arg)
+        }
+    }
+
     private fun createTaskElement(event: TaskEvent, completedEvent: Boolean) {
         log.debug { "Create task element. Event: $event. Completed: $completedEvent" }
         val data = ObjectData.create(event)
         if (completedEvent) {
-            data.set("started", event.time)
-            data.set("completed", event.time)
+            data["started"] = event.time
+            data["completed"] = event.time
         } else {
             data.remove("outcome")
             data.remove("outcomeName")
             data.remove("comment")
         }
-        data.set("elementId", event.taskId)
-        data.set("elementType", "UserTask")
-        if (data.get("engine").asText().isBlank()) {
-            data.set("engine", "flowable")
+        data["elementId"] = event.taskId
+        data["elementType"] = "UserTask"
+        if (data["engine"].asText().isBlank()) {
+            data["engine"] = "flowable"
         }
         recordsService.create(BPMN_ELEMENTS_REPO_SOURCE_ID, data)
     }
