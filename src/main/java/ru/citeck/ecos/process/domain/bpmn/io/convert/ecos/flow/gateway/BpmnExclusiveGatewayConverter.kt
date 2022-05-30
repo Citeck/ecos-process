@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOC
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.gateway.BpmnExclusiveGatewayDef
@@ -9,7 +10,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TExclusiveGateway
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.namespace.QName
 
 class BpmnExclusiveGatewayConverter : EcosOmgConverter<BpmnExclusiveGatewayDef, TExclusiveGateway> {
@@ -29,7 +29,7 @@ class BpmnExclusiveGatewayConverter : EcosOmgConverter<BpmnExclusiveGatewayDef, 
     override fun export(element: BpmnExclusiveGatewayDef, context: ExportContext): TExclusiveGateway {
         return TExclusiveGateway().apply {
             id = element.id
-            name = MLText.getClosestValue(element.name, RequestContext.getLocale())
+            name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }

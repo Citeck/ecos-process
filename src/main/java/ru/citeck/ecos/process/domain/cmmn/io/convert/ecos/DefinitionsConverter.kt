@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
@@ -19,7 +20,6 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
@@ -102,7 +102,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
         }
 
         definitions.cmmndi = context.converters.export(element.cmmnDi, context)
-        definitions.name = MLText.getClosestValue(element.name, RequestContext.getLocale())
+        definitions.name = MLText.getClosestValue(element.name, I18nContext.getLocale())
         definitions.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(element.name)
         definitions.otherAttributes[CmmnXmlUtils.PROP_ECOS_FORMAT] = CmmnFormat.ECOS_CMMN.code
 
@@ -142,7 +142,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
 
         val resultCase = Case()
         resultCase.id = case.id
-        val name = MLText.getClosestValue(case.name, RequestContext.getLocale())
+        val name = MLText.getClosestValue(case.name, I18nContext.getLocale())
         if (name.isNotBlank()) {
             resultCase.name = name
         }
@@ -166,7 +166,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
 
         val casePlanModel = Stage()
         casePlanModel.id = model.id
-        casePlanModel.name = MLText.getClosestValue(model.name, RequestContext.getLocale())
+        casePlanModel.name = MLText.getClosestValue(model.name, I18nContext.getLocale())
         casePlanModel.otherAttributes[CmmnXmlUtils.PROP_NAME_ML] = Json.mapper.toString(model.name)
 
         context.cmmnElementsById[casePlanModel.id] = casePlanModel

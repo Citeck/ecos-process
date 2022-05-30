@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task
 import org.apache.commons.lang3.LocaleUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
@@ -15,7 +16,6 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.namespace.QName
 
 class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
@@ -46,7 +46,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
     override fun export(element: BpmnSendTaskDef, context: ExportContext): TSendTask {
         return TSendTask().apply {
             id = element.id
-            name = MLText.getClosestValue(element.name, RequestContext.getLocale())
+            name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }

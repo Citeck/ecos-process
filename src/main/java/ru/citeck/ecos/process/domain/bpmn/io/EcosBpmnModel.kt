@@ -37,3 +37,8 @@ val BPMN_PROP_CONDITION_CONFIG = QName(NS_ECOS, "conditionConfig")
 val BPMN_PROP_CONDITION_TYPE = QName(NS_ECOS, "conditionType")
 
 val BPMN_PROP_ECOS_BPMN_TYPE = QName(NS_ECOS, "bpmnType")
+
+val BPMN_PROP_RESULT_VARIABLE = QName(NS_ECOS, "resultVariable")
+val BPMN_PROP_ASYNC_CONFIG = QName(NS_ECOS, "asyncConfig")
+val BPMN_PROP_JOB_CONFIG = QName(NS_ECOS, "jobConfig")
+val BPMN_PROP_SCRIPT = QName(NS_ECOS, "script")

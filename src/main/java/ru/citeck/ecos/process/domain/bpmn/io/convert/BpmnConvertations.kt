@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
@@ -14,9 +15,11 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_VAR
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.Bounds
 import ru.citeck.ecos.process.domain.bpmn.model.omg.Point
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExpression
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TScript
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.records2.RecordRef
 import javax.xml.bind.JAXBElement
@@ -76,10 +79,14 @@ fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {
     return context.converters.convertToJaxb(this)
 }
 
+fun CamundaFailedJobRetryTimeCycle.jaxb(context: ExportContext): JAXBElement<CamundaFailedJobRetryTimeCycle> {
+    return context.converters.convertToJaxb(this)
+}
+
 inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V) {
     when (value) {
         is String -> {
-            if (value.isNotBlank()) put(key, value)
+            if (value.isNotBlank() && value != "null") put(key, value)
         }
         is RecordRef -> {
             if (RecordRef.isNotEmpty(value)) put(key, value)
@@ -98,6 +105,9 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T) {
         }
         is CamundaField -> {
             if (value.stringValue?.value?.isNotBlank() == true) add(value)
+        }
+        is CamundaFailedJobRetryTimeCycle -> {
+            if (value.value?.isNotBlank() == true) add(value)
         }
         else -> error("Type ${T::class} is not supported")
     }
@@ -178,4 +188,10 @@ fun ConditionConfig.scriptToTExpression(): TExpression {
     exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
     exp.otherAttributes[SCRIPT_LANGUAGE_ATTRIBUTE] = DEFAULT_SCRIPT_ENGINE_LANGUAGE
     return exp
+}
+
+fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
+    return TScript().apply {
+        content.add(script)
+    }
 }

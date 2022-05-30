@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOC
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.gateway.BpmnExclusiveGatewayDef
@@ -21,12 +22,10 @@ class CamundaExclusiveGatewayConverter : EcosOmgConverter<BpmnExclusiveGatewayDe
     override fun export(element: BpmnExclusiveGatewayDef, context: ExportContext): TExclusiveGateway {
         return TExclusiveGateway().apply {
             id = element.id
-            name = MLText.getClosestValue(element.name, RequestContext.getLocale())
+            name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
-
-            otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
         }
     }
 }

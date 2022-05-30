@@ -4,10 +4,12 @@ import org.camunda.bpm.model.bpmn.impl.BpmnModelConstants.CAMUNDA_ATTRIBUTE_CLAS
 import org.camunda.bpm.model.bpmn.impl.BpmnModelConstants.CAMUNDA_NS
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.SendNotificationDelegate
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.CamundaFieldCreator
 import ru.citeck.ecos.process.domain.bpmn.io.convert.addIfNotBlank
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_CLASS
 import ru.citeck.ecos.process.domain.bpmn.io.convert.jaxb
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJson
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
@@ -23,8 +25,6 @@ import javax.xml.namespace.QName
 
 class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
 
-    private val camundaClass = QName(CAMUNDA_NS, CAMUNDA_ATTRIBUTE_CLASS)
-
     override fun import(element: TSendTask, context: ImportContext): BpmnSendTaskDef {
         error("Not supported")
     }
@@ -32,12 +32,12 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
     override fun export(element: BpmnSendTaskDef, context: ExportContext): TSendTask {
         return TSendTask().apply {
             id = element.id
-            name = MLText.getClosestValue(element.name, RequestContext.getLocale())
+            name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
-            otherAttributes[camundaClass] = SendNotificationDelegate::class.java.name
+            otherAttributes[CAMUNDA_CLASS] = SendNotificationDelegate::class.java.name
 
             extensionElements = TExtensionElements()
             val notificationFields = getNotificationFields(element, context)

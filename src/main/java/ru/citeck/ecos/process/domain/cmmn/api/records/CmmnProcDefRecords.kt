@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnProcDefImporter
@@ -28,7 +29,6 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.records3.record.request.RequestContext
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -267,7 +267,7 @@ class CmmnProcDefRecords(
 
         @AttName("?disp")
         fun getDisplayName(): String {
-            return MLText.getClosestValue(getName(), RequestContext.getLocale())
+            return MLText.getClosestValue(getName(), I18nContext.getLocale())
         }
 
         fun getEnabled(): Boolean {
