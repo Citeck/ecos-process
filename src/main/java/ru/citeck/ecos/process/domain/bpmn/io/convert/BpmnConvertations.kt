@@ -83,7 +83,9 @@ fun CamundaFailedJobRetryTimeCycle.jaxb(context: ExportContext): JAXBElement<Cam
     return context.converters.convertToJaxb(this)
 }
 
-inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V) {
+inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V?) {
+    if (value == null) return
+
     when (value) {
         is String -> {
             if (value.isNotBlank() && value != "null") put(key, value)
@@ -91,11 +93,13 @@ inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V)
         is RecordRef -> {
             if (RecordRef.isNotEmpty(value)) put(key, value)
         }
-        else -> error("Type ${V::class} is not supported")
+        else -> error("Type ${V::class} is not supported. Value: $value")
     }
 }
 
-inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T) {
+inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
+    if (value == null) return
+
     when (value) {
         is String -> {
             if (value.isNotBlank() && value != "null") add(value)
@@ -109,7 +113,7 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T) {
         is CamundaFailedJobRetryTimeCycle -> {
             if (value.value?.isNotBlank() == true) add(value)
         }
-        else -> error("Type ${T::class} is not supported")
+        else -> error("Type ${T::class} is not supported. $value")
     }
 }
 
