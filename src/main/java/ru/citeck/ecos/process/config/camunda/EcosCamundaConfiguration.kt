@@ -20,4 +20,9 @@ class EcosCamundaConfiguration {
     fun camundaServicesConfiguration(): CamundaProcessEngineConfiguration {
         return CamundaServicesConfiguration()
     }
+
+    @Bean
+    fun camundaVariablesConfiguration(): CamundaProcessEngineConfiguration {
+        return CamundaResolveVariablesConfiguration()
+    }
 }

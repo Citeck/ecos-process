@@ -51,7 +51,8 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
 
         configuration.setJdbcBatchProcessing(database.isJdbcBatchProcessing());
 
-        configuration.setProcessEnginePlugins(Collections.singletonList(testPlugin));
+        // TODO: remove
+        //configuration.setProcessEnginePlugins(Collections.singletonList(testPlugin));
     }
 
     public PlatformTransactionManager getTransactionManager() {
