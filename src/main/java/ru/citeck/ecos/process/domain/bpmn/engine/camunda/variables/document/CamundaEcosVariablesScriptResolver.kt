@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.variables
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.variables.document
 
 import org.camunda.bpm.engine.delegate.VariableScope
 import org.camunda.bpm.engine.impl.scripting.engine.Resolver
@@ -9,8 +9,9 @@ import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
 /**
  * @author Roman Makarskiy
  */
-class CamundaEcosVariablesResolver(
-    private val variableScope: VariableScope, private val recordsScriptService: RecordsScriptService
+// TODO: remove?
+class CamundaEcosVariablesScriptResolver(
+    private val variableScope: VariableScope
 ) : Resolver {
 
     companion object {
@@ -18,26 +19,27 @@ class CamundaEcosVariablesResolver(
     }
 
     override fun containsKey(key: Any?): Boolean {
-        return when (key) {
+        return false
+
+       /* return when (key) {
             VAR_DOCUMENT -> {
                 variableScope.hasVariable(VAR_DOCUMENT_REF)
             }
             else -> false
-        }
-
+        }*/
     }
 
     override fun get(key: Any?): Any? {
-        return when (key) {
+       /* return when (key) {
             VAR_DOCUMENT -> {
                 recordsScriptService.get(variableScope.getVariable(VAR_DOCUMENT_REF))
             }
             else -> null
-        }
+        }*/
+        return null
     }
 
     override fun keySet(): MutableSet<String> {
         return KEY_SET
     }
-
 }

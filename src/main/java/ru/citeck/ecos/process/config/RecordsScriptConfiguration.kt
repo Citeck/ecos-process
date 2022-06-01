@@ -15,5 +15,4 @@ class RecordsScriptConfiguration {
     fun recordsScriptService(services: RecordsServiceFactory): RecordsScriptService {
         return RecordsScriptService(services)
     }
-
 }

@@ -1,13 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task
 
-import org.camunda.bpm.model.bpmn.impl.BpmnModelConstants.*
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOC
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_CANDIDATE_GROUPS
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_CANDIDATE_USERS
@@ -19,7 +17,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.namespace.QName
 
 class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {

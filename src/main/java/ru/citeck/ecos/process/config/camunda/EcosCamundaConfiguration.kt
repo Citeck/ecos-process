@@ -22,7 +22,12 @@ class EcosCamundaConfiguration {
     }
 
     @Bean
-    fun camundaVariablesConfiguration(): CamundaProcessEngineConfiguration {
+    fun camundaResolveVariablesConfiguration(): CamundaProcessEngineConfiguration {
         return CamundaResolveVariablesConfiguration()
+    }
+
+    @Bean
+    fun camundaScriptEnvResolvesConfiguration(): CamundaProcessEngineConfiguration {
+        return CamundaScriptEnvResolvesConfiguration()
     }
 }
