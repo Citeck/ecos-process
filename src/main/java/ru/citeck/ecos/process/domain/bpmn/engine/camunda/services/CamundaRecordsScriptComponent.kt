@@ -16,6 +16,7 @@ class CamundaRecordsScriptComponent(
         return "Records"
     }
 
+    // TODO: run as system? How .save() run as system? https://citeck.atlassian.net/browse/ECOSENT-2317
     fun get(record: Any): AttValueScriptCtx {
         return recordsScriptService.get(record)
     }
@@ -23,5 +24,4 @@ class CamundaRecordsScriptComponent(
     fun query(query: Any?, attributes: Any?): Any {
         return recordsScriptService.query(query, attributes)
     }
-
 }

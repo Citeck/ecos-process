@@ -3,13 +3,11 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.variables.document
 import org.camunda.bpm.engine.delegate.VariableScope
 import org.camunda.bpm.engine.impl.scripting.engine.Resolver
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
-import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
 
 /**
  * @author Roman Makarskiy
  */
-// TODO: remove?
+// TODO: fill predefined variables or remove?
 class CamundaEcosVariablesScriptResolver(
     private val variableScope: VariableScope
 ) : Resolver {
@@ -40,6 +38,6 @@ class CamundaEcosVariablesScriptResolver(
     }
 
     override fun keySet(): MutableSet<String> {
-        return KEY_SET
+        return mutableSetOf()
     }
 }
