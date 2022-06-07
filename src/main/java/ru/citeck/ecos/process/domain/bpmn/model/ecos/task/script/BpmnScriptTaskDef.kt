@@ -21,5 +21,4 @@ data class BpmnScriptTaskDef(
     init {
         if (script.isBlank()) throw EcosBpmnDefinitionException("Script task cannot be blank on script task $id")
     }
-
 }

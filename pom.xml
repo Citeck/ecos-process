@@ -9,14 +9,12 @@
     <name>ecos-process</name>
 
     <parent>
-        <groupId>ru.citeck.ecos</groupId>
-        <artifactId>ecos-micro-base</artifactId>
-        <version>3.48.2</version>
+        <groupId>ru.citeck.ecos.webapp</groupId>
+        <artifactId>ecos-webapp-spring-base-parent</artifactId>
+        <version>1.4.2</version>
     </parent>
 
     <properties>
-
-        <ecos.webapp-lib.version>1.2.2</ecos.webapp-lib.version>
 
         <camunda.spring-boot.version>7.17.0</camunda.spring-boot.version>
 

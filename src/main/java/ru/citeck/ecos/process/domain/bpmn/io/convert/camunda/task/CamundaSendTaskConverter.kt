@@ -1,7 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task
 
-import org.camunda.bpm.model.bpmn.impl.BpmnModelConstants.CAMUNDA_ATTRIBUTE_CLASS
-import org.camunda.bpm.model.bpmn.impl.BpmnModelConstants.CAMUNDA_NS
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
@@ -19,7 +17,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records3.record.request.RequestContext
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 

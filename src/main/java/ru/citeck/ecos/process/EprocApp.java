@@ -12,6 +12,8 @@ import ru.citeck.ecos.webapp.lib.spring.EcosSpringApplication;
 @EnableMongoRepositories("ru.citeck.ecos.process.domain.*.repo")
 public class EprocApp {
 
+    public static final String NAME = "eproc";
+
     /**
      * Main method, used to run the application.
      *
