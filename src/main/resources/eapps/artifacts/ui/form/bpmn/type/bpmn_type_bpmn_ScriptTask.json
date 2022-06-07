@@ -38,7 +38,7 @@
         "defaultValue": " ",
         "refreshOn": [],
         "optionalWhenDisabled": false,
-        "rows": 10,
+        "rows": 30,
         "as": "string",
         "type": "textarea",
         "input": true
@@ -53,6 +53,7 @@
           "en": "The name of a process variable to save the return value",
           "ru": "Имя переменной процесса для сохранения возвращаемого значения"
         },
+        "hidden": true,
         "defaultValue": "",
         "refreshOn": [],
         "optionalWhenDisabled": false,
