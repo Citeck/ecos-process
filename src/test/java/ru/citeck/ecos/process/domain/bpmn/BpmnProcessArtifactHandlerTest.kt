@@ -71,5 +71,4 @@ class BpmnProcessArtifactHandlerTest {
         assertEquals(BPMN_TEST_PROCESS_ID, definitions.first().key)
         assertEquals(1, definitions.first().version)
     }
-
 }

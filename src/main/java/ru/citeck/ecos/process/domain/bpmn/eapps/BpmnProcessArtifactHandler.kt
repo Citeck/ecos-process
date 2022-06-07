@@ -67,5 +67,4 @@ class BpmnProcessArtifactHandler(
 
         recordsService.mutate("eproc/${BpmnProcDefRecords.SOURCE_ID}@", bpmnMutateRecord)
     }
-
 }
