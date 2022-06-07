@@ -123,11 +123,11 @@ object BpmnIO {
                     targetNamespace="http://bpmn.io/schema/bpmn"
                     exporter="bpmn-js (https://demo.bpmn.io)"
                     exporterVersion="8.2.0">
-              <bpmn:process id="Process_$processDefId" isExecutable="true">
+              <bpmn:process id="$processDefId" isExecutable="true">
                 <bpmn:startEvent id="StartEvent_1ew9rff" />
               </bpmn:process>
               <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-                <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0ib6j41">
+                <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="$processDefId">
                   <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1ew9rff">
                     <dc:Bounds x="156" y="81" width="36" height="36" />
                   </bpmndi:BPMNShape>

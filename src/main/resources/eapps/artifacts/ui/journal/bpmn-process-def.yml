@@ -7,7 +7,7 @@ name:
 
 actions:
   - uiserv/action@open-bpmn-editor
-  - uiserv/action@download-base64-data-xml
+  - uiserv/action@download-base64-data-bpmn-xml
   - uiserv/action@edit
   - uiserv/action@delete
 

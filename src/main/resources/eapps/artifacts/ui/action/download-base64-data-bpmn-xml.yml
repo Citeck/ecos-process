@@ -1,0 +1,11 @@
+
+id: download-base64-data-bpmn-xml
+
+name:
+  ru: Скачать
+  en: Download
+
+type: download
+config:
+  downloadType: base64
+  extension: bpmn.xml

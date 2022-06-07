@@ -16,26 +16,29 @@ class BpmnProcServiceImpl(
     private val procDefService: ProcDefService
 ) : BpmnProcService {
 
-    // TODO: remove Process_ prefix?
     override fun startProcess(processKey: String, variables: Map<String, Any?>): ProcessInstance {
         val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, processKey))
             ?: throw IllegalArgumentException("Process definition with key $processKey not found")
 
         if (!definition.enabled) throw IllegalStateException("Starting a disabled process is not possible")
 
-        return camundaRuntimeService.startProcessInstanceByKey("Process_$processKey", variables)
+        return camundaRuntimeService.startProcessInstanceByKey(processKey, variables)
     }
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {
         return camundaRuntimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult()
     }
 
-    override fun getProcessDefinitionByInstanceId(processInstanceId: String): ProcessDefinition? {
+    override fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition? {
         val processInstance = getProcessInstance(processInstanceId) ?: return null
         return getProcessDefinition(processInstance.processDefinitionId)
     }
 
     override fun getProcessDefinition(processDefinitionId: String): ProcessDefinition? {
         return camundaRepositoryService.getProcessDefinition(processDefinitionId)
+    }
+
+    override fun getProcessDefinitionsByKey(processKey: String): List<ProcessDefinition> {
+        return camundaRepositoryService.createProcessDefinitionQuery().processDefinitionKey(processKey).list().toList()
     }
 }

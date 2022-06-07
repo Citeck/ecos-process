@@ -41,7 +41,7 @@ class BpmnProcRecords(
             return ref
         }
 
-        val def = bpmnProcService.getProcessDefinitionByInstanceId(recordId) ?: return ProcRecord()
+        val def = bpmnProcService.getProcessDefinitionByProcessInstanceId(recordId) ?: return ProcRecord()
 
         // TODO: fill proc props to dto
         return ProcRecord(def.key)

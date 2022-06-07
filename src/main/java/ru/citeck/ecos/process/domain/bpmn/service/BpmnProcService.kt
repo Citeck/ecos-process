@@ -9,7 +9,9 @@ interface BpmnProcService {
 
     fun getProcessInstance(processInstanceId: String): ProcessInstance?
 
-    fun getProcessDefinitionByInstanceId(processInstanceId: String): ProcessDefinition?
+    fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition?
 
     fun getProcessDefinition(processDefinitionId: String): ProcessDefinition?
+
+    fun getProcessDefinitionsByKey(processKey: String): List<ProcessDefinition>
 }

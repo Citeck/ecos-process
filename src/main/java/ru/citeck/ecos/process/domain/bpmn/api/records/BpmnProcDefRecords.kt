@@ -47,7 +47,7 @@ class BpmnProcDefRecords(
     RecordMutateDtoDao<BpmnProcDefRecords.BpmnMutateRecord> {
 
     companion object {
-        private const val SOURCE_ID = "bpmn-def"
+        const val SOURCE_ID = "bpmn-def"
 
         private val log = KotlinLogging.logger {}
     }
@@ -179,6 +179,10 @@ class BpmnProcDefRecords(
             record.processDefId = newEcosBpmnDef.id
             record.enabled = newEcosBpmnDef.enabled
             record.autoStartEnabled = newEcosBpmnDef.autoStartEnabled
+
+            if (record.id.isBlank()) {
+                record.id = record.processDefId
+            }
         }
 
         if (record.processDefId.isBlank()) {
@@ -244,17 +248,17 @@ class BpmnProcDefRecords(
             procDefService.uploadNewRev(currentProc)
         }
 
-        if (record.action == "DEPLOY") {
+        if (record.action == BpmnProcDefActions.DEPLOY.toString()) {
             val camundaFormat = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
             val result = repositoryService.createDeployment()
-                .addInputStream(record.id + ".bpmn", camundaFormat.byteInputStream())
+                .addInputStream(record.processDefId + ".bpmn", camundaFormat.byteInputStream())
                 .name(record.name.getClosest())
                 .source("Ecos Modeler")
                 .deployWithResult()
 
-            log.error { "Camunda deploy result: $result" }
+            log.debug { "Camunda deploy result: $result" }
         }
 
         return record.processDefId
