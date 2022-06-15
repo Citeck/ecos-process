@@ -8,4 +8,5 @@ data class BpmnExclusiveGatewayDef(
     val documentation: MLText,
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),
+    val default: String? = null
 )

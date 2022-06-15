@@ -22,6 +22,8 @@ class CamundaExclusiveGatewayConverter : EcosOmgConverter<BpmnExclusiveGatewayDe
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
+
+            default = element.default
         }
     }
 }
