@@ -24,7 +24,7 @@ class WorkflowTaskRecordsProxy(
         val query = recsQuery.getQuery(TaskQuery::class.java)
         val document = RecordRef.valueOf(query.document)
 
-        if (documentIsProcess(document)) return queryTasksForAnyProcess(recsQuery, document)
+        if (documentIsProcess(document)) return queryTasksForAnyProcessEngine(recsQuery, document)
 
         val documentTasksFromAlf = queryFromAlf(recsQuery)
         val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query)
@@ -54,7 +54,7 @@ class WorkflowTaskRecordsProxy(
         return result
     }
 
-    private fun queryTasksForAnyProcess(recsQuery: RecordsQuery, document: RecordRef): RecsQueryRes<*> {
+    private fun queryTasksForAnyProcessEngine(recsQuery: RecordsQuery, document: RecordRef): RecsQueryRes<*> {
         return when {
             isAlfProcess(document) -> queryFromAlf(recsQuery)
             isEcosProcProcess(document) -> queryTasksForEcosProcess(document)

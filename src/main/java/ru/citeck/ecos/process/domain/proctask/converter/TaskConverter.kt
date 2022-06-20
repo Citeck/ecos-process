@@ -4,6 +4,7 @@ import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
@@ -53,6 +54,8 @@ fun Task.toProcTask(): ProcTaskDto {
 
     return ProcTaskDto(
         id = id,
+        name = MLText(name),
+        priority = priority,
         formRef = RecordRef.valueOf(formKey),
         documentRef = if (variables[VAR_DOCUMENT_REF] != null) {
             RecordRef.valueOf(variables[VAR_DOCUMENT_REF].toString())
@@ -68,7 +71,8 @@ fun Task.toProcTask(): ProcTaskDto {
         },
         candidateUsers = candidateUsers.map { createPeopleRef(it) },
         candidateGroups = candidateGroups.map { createAuthorityRef(it) },
-        definitionKey = taskDefinitionKey
+        definitionKey = taskDefinitionKey,
+        variables = variables
     )
 }
 
@@ -83,7 +87,9 @@ private fun createAuthorityRef(authorityId: String): RecordRef {
 fun ProcTaskDto.toRecord(): ProcTaskRecord {
     return ProcTaskRecord(
         id = id,
+        priority = priority,
         formRef = formRef,
+        documentRef = documentRef,
         created = created,
         dueDate = dueDate,
         title = name.getClosestValue(),
@@ -99,7 +105,8 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
                 .toMap()
 
             cnv.recordsService.getAtts(documentRef, requiredAtts)
-        }
+        },
+        variables = variables
     )
 }
 

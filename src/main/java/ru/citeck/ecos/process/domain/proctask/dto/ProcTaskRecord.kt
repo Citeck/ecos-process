@@ -8,12 +8,15 @@ import java.util.*
 
 data class ProcTaskRecord(
     val id: String? = null,
+    val priority: Int = 0,
     val formRef: RecordRef? = null,
+    val documentRef: RecordRef? = null,
     val title: String? = null,
     val created: Date? = null,
     val dueDate: Date? = null,
     val actors: List<AuthorityDto> = emptyList(),
-    val documentAtts: RecordAtts = RecordAtts()
+    val documentAtts: RecordAtts = RecordAtts(),
+    val variables: Map<String, Any> = emptyMap()
 ) {
 
     // TODO: add default form. simple-form is default?
@@ -26,11 +29,21 @@ data class ProcTaskRecord(
         return created
     }
 
+    @AttName(".disp")
+    fun getDisp(): String? {
+        return title
+    }
+
+    @AttName("name")
+    fun getName(): String? {
+        return title
+    }
+
     fun getAtt(name: String): Any? {
         if (name.startsWith(DOCUMENT_FIELD_PREFIX)) {
             return documentAtts.getAtt(name.removePrefix(DOCUMENT_FIELD_PREFIX))
         }
 
-        return null
+        return variables[name]
     }
 }

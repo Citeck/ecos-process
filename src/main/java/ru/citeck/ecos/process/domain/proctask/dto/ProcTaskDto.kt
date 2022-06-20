@@ -10,6 +10,8 @@ data class ProcTaskDto(
 
     val name: MLText = MLText.EMPTY,
 
+    val priority: Int = 0,
+
     val formRef: RecordRef = RecordRef.EMPTY,
 
     val documentRef: RecordRef = RecordRef.EMPTY,
@@ -24,6 +26,8 @@ data class ProcTaskDto(
 
     val candidateGroups: List<RecordRef> = emptyList(),
 
-    val definitionKey: String? = null
+    val definitionKey: String? = null,
+
+    val variables: Map<String, Any> = emptyMap()
 
 )
