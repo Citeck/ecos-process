@@ -44,6 +44,8 @@ class BpmnExclusiveGatewayConverter : EcosOmgConverter<BpmnExclusiveGatewayDef, 
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
+            otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
+
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 

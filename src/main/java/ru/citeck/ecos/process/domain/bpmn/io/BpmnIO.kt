@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaShap
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaEndEventConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaStartEventConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaSendTaskConverter
@@ -24,6 +25,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnShapeConve
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnEndEventConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnStartEventConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnSendTaskConverter
@@ -59,7 +61,8 @@ object BpmnIO {
             BpmnSendTaskConverter::class,
             BpmnUserTaskConverter::class,
             BpmnExclusiveGatewayConverter::class,
-            BpmnScriptTaskConverter::class
+            BpmnScriptTaskConverter::class,
+            BpmnParallelGatewayConverter::class
         ),
         extensionTypeResolver
     )
@@ -78,7 +81,8 @@ object BpmnIO {
             CamundaSendTaskConverter::class,
             CamundaUserTaskConverter::class,
             CamundaExclusiveGatewayConverter::class,
-            CamundaScriptTaskConverter::class
+            CamundaScriptTaskConverter::class,
+            CamundaParallelGatewayConverter::class
         ),
         extensionTypeResolver
     )

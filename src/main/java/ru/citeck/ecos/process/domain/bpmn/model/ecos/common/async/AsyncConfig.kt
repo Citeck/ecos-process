@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script
+package ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async
 
 data class AsyncConfig(
     val asyncBefore: Boolean = false,
