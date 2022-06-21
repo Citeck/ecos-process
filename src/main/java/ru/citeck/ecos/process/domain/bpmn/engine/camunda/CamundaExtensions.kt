@@ -17,8 +17,8 @@ fun RecordRef.isAuthorityGroupRef(): Boolean {
 
 fun TaskPriority.toCamundaCode(): Int {
     return when (this) {
-        TaskPriority.LOW -> 0
+        TaskPriority.LOW -> 3
         TaskPriority.MEDIUM -> 2
-        TaskPriority.HIGH -> 3
+        TaskPriority.HIGH -> 1
     }
 }

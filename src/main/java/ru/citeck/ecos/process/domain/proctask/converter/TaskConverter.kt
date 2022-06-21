@@ -69,8 +69,8 @@ fun Task.toProcTask(): ProcTaskDto {
         } else {
             RecordRef.EMPTY
         },
-        dueDate = dueDate,
-        created = createTime,
+        dueDate = dueDate?.toInstant(),
+        created = createTime.toInstant(),
         assignee = if (assignee.isNullOrBlank()) {
             RecordRef.EMPTY
         } else {

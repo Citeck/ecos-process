@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.proctask.dto
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
-import java.util.*
+import java.time.Instant
 
 data class ProcTaskDto(
 
@@ -18,9 +18,9 @@ data class ProcTaskDto(
 
     val processInstanceId: RecordRef = RecordRef.EMPTY,
 
-    val created: Date,
+    val created: Instant,
 
-    val dueDate: Date? = null,
+    val dueDate: Instant? = null,
 
     val assignee: RecordRef = RecordRef.EMPTY,
 

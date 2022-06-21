@@ -24,7 +24,7 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
-import java.util.*
+import java.time.Instant
 
 @Component
 class ProcTaskRecords(
@@ -90,8 +90,8 @@ class ProcTaskRecords(
         val processInstanceId: RecordRef? = null,
         val documentRef: RecordRef? = null,
         val title: String? = null,
-        val created: Date? = null,
-        val dueDate: Date? = null,
+        val created: Instant? = null,
+        val dueDate: Instant? = null,
         val actors: List<AuthorityDto> = emptyList(),
 
         val documentAtts: RecordAtts = RecordAtts(),
@@ -106,7 +106,7 @@ class ProcTaskRecords(
             get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
 
         @AttName("started")
-        fun getStarted(): Date? {
+        fun getStarted(): Instant? {
             return created
         }
 
@@ -187,12 +187,12 @@ class ProcTaskRecords(
             recordsService.getAtts(fullOriginalRef, attsMap)
         }
 
-        val getDateFromAtts = fun(att: String): Date? {
+        val getDateFromAtts = fun(att: String): Instant? {
             val data = alfAtts.getAtt(mapping[att]).asText()
             if (data.isBlank()) {
                 return null
             }
-            return dateFormat.parse(data)
+            return dateFormat.parse(data).toInstant()
         }
 
         return ProcTaskRecord(
