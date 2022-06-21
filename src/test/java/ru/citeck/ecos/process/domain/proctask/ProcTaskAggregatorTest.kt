@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.proctask.api.records.AggregationProcTaskRecords
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.aggregate.AlfWorkflowTaskProvider
 import ru.citeck.ecos.process.domain.proctask.service.aggregate.ProcTaskAggregator
@@ -247,7 +247,7 @@ class ProcTaskAggregatorTest {
         val aggregateTasks = tasks.map {
             AggregateTaskDto(
                 id = it.id,
-                aggregationRef = RecordRef.valueOf("eproc/${AggregationProcTaskRecords.ID}@${it.id}"),
+                aggregationRef = RecordRef.valueOf("eproc/${ProcTaskRecords.ID}@${it.id}"),
                 createTime = sdf.parse(it.createTime)
             )
         }
@@ -268,5 +268,5 @@ class ProcTaskAggregatorTest {
 }
 
 fun String.toAggregationRef(): RecordRef {
-    return RecordRef.create("eproc", "aggregation-proc-task", this)
+    return RecordRef.create("eproc", ProcTaskRecords.ID, this)
 }

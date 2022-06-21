@@ -8,9 +8,10 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
+import ru.citeck.ecos.process.domain.proctask.api.records.isAlfTask
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
-import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskRecord
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -90,8 +91,8 @@ private fun createAuthorityRef(authorityId: String): RecordRef {
     return RecordRef.create(ALFRESCO_APP, AUTHORITY_SRC_ID, authorityId)
 }
 
-fun ProcTaskDto.toRecord(): ProcTaskRecord {
-    return ProcTaskRecord(
+fun ProcTaskDto.toRecord(): ProcTaskRecords.ProcTaskRecord {
+    return ProcTaskRecords.ProcTaskRecord(
         id = id,
         priority = priority,
         formRef = formRef,
@@ -102,7 +103,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         title = name.getClosestValue(),
         actors = getActors(assignee, candidateUsers + candidateGroups),
         documentAtts = let {
-            if (documentRef == RecordRef.EMPTY) {
+            if (documentRef == RecordRef.EMPTY || isAlfTask(id)) {
                 return@let RecordAtts()
             }
 

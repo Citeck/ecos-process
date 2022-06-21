@@ -15,7 +15,7 @@ class ProcTaskAggregator(
 ) {
 
     fun queryTasks(recsQuery: RecordsQuery): RecsQueryRes<RecordRef> {
-        //TODO: check actor filter $CURRENT and filter task query
+        // TODO: check actor filter $CURRENT and filter task query
 
         val originalSkip = recsQuery.page.skipCount
         val fixedQuery = recsQuery.copy {
@@ -51,7 +51,7 @@ class ProcTaskAggregator(
             .map {
                 AggregateTaskDto(
                     id = it.id,
-                    aggregationRef = RecordRef.valueOf("eproc/aggregation-proc-task@${it.id}"),
+                    aggregationRef = RecordRef.valueOf("eproc/proc-task@${it.id}"),
                     createTime = it.createTime
                 )
             }

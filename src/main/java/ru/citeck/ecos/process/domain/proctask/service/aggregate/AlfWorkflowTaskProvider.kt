@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.proctask.service.aggregate
 
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.proctask.api.records.AggregationProcTaskRecords
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
@@ -18,7 +18,7 @@ class AlfWorkflowTaskProvider(
         val resultFromAlf = recordsService.query(alfQuery, AggregateTaskDto::class.java)
 
         resultFromAlf.getRecords().forEach {
-            it.aggregationRef = RecordRef.valueOf("eproc/${AggregationProcTaskRecords.ID}@${it.id}")
+            it.aggregationRef = RecordRef.valueOf("eproc/${ProcTaskRecords.ID}@${it.id}")
         }
 
         return resultFromAlf
