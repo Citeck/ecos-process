@@ -23,7 +23,8 @@ class AggregationProcTaskRecords(
             "bpm:dueDate" to "dueDate",
             "bpm:priority" to "priority",
             "bpm:startDate" to "created",
-            "cm:title" to ".disp"
+            "cm:title" to ".disp",
+            "cm:name" to "id"
         )
 
         val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }

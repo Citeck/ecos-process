@@ -6,6 +6,7 @@ import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
@@ -57,6 +58,11 @@ fun Task.toProcTask(): ProcTaskDto {
         name = MLText(name),
         priority = priority,
         formRef = RecordRef.valueOf(formKey),
+        processInstanceId = if (processInstanceId.isNullOrBlank()) {
+            RecordRef.EMPTY
+        } else {
+            RecordRef.create("eproc", BpmnProcRecords.ID, processInstanceId)
+        },
         documentRef = if (variables[VAR_DOCUMENT_REF] != null) {
             RecordRef.valueOf(variables[VAR_DOCUMENT_REF].toString())
         } else {
@@ -89,6 +95,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         id = id,
         priority = priority,
         formRef = formRef,
+        processInstanceId = processInstanceId,
         documentRef = documentRef,
         created = created,
         dueDate = dueDate,

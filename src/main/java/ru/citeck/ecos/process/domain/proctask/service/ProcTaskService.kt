@@ -6,6 +6,8 @@ interface ProcTaskService {
 
     fun getTasksByProcess(processId: String): List<ProcTaskDto>
 
+    fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto>
+
     fun getTasksByDocument(document: String): List<ProcTaskDto>
 
     fun getTasksByDocumentForCurrentUser(document: String): List<ProcTaskDto>

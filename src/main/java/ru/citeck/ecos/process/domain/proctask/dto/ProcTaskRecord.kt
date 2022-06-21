@@ -10,6 +10,7 @@ data class ProcTaskRecord(
     val id: String? = null,
     val priority: Int = 0,
     val formRef: RecordRef? = null,
+    val processInstanceId: RecordRef? = null,
     val documentRef: RecordRef? = null,
     val title: String? = null,
     val created: Date? = null,
@@ -37,6 +38,11 @@ data class ProcTaskRecord(
     @AttName("name")
     fun getName(): String? {
         return title
+    }
+
+    @AttName("workflow")
+    fun getWorkflow(): RecordRef? {
+        return processInstanceId
     }
 
     fun getAtt(name: String): Any? {

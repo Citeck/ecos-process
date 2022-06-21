@@ -39,6 +39,7 @@ class SendNotificationDelegate : JavaDelegate {
         notificationService = AppContext.getBean(NotificationService::class.java)
         camundaRoleService = AppContext.getBean(CamundaRoleService::class.java)
 
+        //TODO: make document not mandatory? Send to, roles?
         document = let {
             val documentFromVar = execution.getDocumentRef()
             if (RecordRef.isEmpty(documentFromVar)) error("Document is mandatory variable")

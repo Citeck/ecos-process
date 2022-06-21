@@ -22,6 +22,15 @@ class ProcTaskServiceImpl(
             .map { it.toProcTask() }
     }
 
+    override fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto> {
+        val currentUser = AuthContext.getCurrentUser()
+        val currentAuthorities = AuthContext.getCurrentAuthorities()
+
+        return getTasksByProcess(processId).filter {
+            isTaskActor(it, currentUser, currentAuthorities)
+        }
+    }
+
     override fun getTasksByDocument(document: String): List<ProcTaskDto> {
         return camundaTaskService.createTaskQuery()
             .processVariableValueEquals(VAR_DOCUMENT_REF, document)

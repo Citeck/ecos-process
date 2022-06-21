@@ -10,7 +10,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 
 @Component
 class WorkflowTaskRecordsProxy(
-    private val procTaskService: ProcTaskService
+    private val procTaskService: ProcTaskService,
 ) : RecordsDaoProxy(
     id = "wftask",
     targetId = "alfresco/wftask"
@@ -24,7 +24,9 @@ class WorkflowTaskRecordsProxy(
         val query = recsQuery.getQuery(TaskQuery::class.java)
         val document = RecordRef.valueOf(query.document)
 
-        if (documentIsProcess(document)) return queryTasksForAnyProcessEngine(recsQuery, document)
+        if (documentIsProcess(document)) {
+            return queryTasksForAnyProcessEngine(recsQuery, document)
+        }
 
         val documentTasksFromAlf = queryFromAlf(recsQuery)
         val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query)
@@ -54,10 +56,10 @@ class WorkflowTaskRecordsProxy(
         return result
     }
 
-    private fun queryTasksForAnyProcessEngine(recsQuery: RecordsQuery, document: RecordRef): RecsQueryRes<*> {
+    private fun queryTasksForAnyProcessEngine(recsQuery: RecordsQuery, processRef: RecordRef): RecsQueryRes<*> {
         return when {
-            isAlfProcess(document) -> queryFromAlf(recsQuery)
-            isEcosProcProcess(document) -> queryTasksForEcosProcess(document)
+            isAlfProcess(processRef) -> queryFromAlf(recsQuery)
+            isEcosProcProcess(processRef) -> queryTasksForEcosProcess(recsQuery, processRef)
             else -> throw IllegalStateException("Unsupported state. Query: $recsQuery")
         }
     }
@@ -66,10 +68,15 @@ class WorkflowTaskRecordsProxy(
         return super.queryRecords(recsQuery) ?: RecsQueryRes<Any>()
     }
 
-    private fun queryTasksForEcosProcess(document: RecordRef): RecsQueryRes<*> {
+    private fun queryTasksForEcosProcess(recordsQuery: RecordsQuery, processRef: RecordRef): RecsQueryRes<*> {
         val result = RecsQueryRes<RecordRef>()
+        val taskQuery = recordsQuery.getQuery(TaskQuery::class.java)
 
-        val taskRefs = procTaskService.getTasksByProcess(document.id).map {
+        val taskRefs = if (taskQuery.actor == CURRENT_USER_FLAG) {
+            procTaskService.getTasksByProcessForCurrentUser(processRef.id)
+        } else {
+            procTaskService.getTasksByProcess(processRef.id)
+        }.map {
             RecordRef.create("eproc", ProcTaskRecords.ID, it.id)
         }
 
