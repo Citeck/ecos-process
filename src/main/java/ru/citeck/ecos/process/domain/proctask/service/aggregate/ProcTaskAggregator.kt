@@ -17,7 +17,13 @@ class ProcTaskAggregator(
     fun queryTasks(recsQuery: RecordsQuery): RecsQueryRes<RecordRef> {
         //TODO: check actor filter $CURRENT and filter task query
 
-        val resultFromAlf = alfWorkflowTaskProvider.queryTasks(recsQuery)
+        val originalSkip = recsQuery.page.skipCount
+        val fixedQuery = recsQuery.copy {
+            withSkipCount(0)
+            withMaxItems(originalSkip + recsQuery.page.maxItems)
+        }
+
+        val resultFromAlf = alfWorkflowTaskProvider.queryTasks(fixedQuery)
 
         val currentUser = AuthContext.getCurrentUser()
         val currentAuthorities = AuthContext.getCurrentAuthorities()
@@ -41,7 +47,7 @@ class ProcTaskAggregator(
             .orderByTaskCreateTime()
             .desc()
             .initializeFormKeys()
-            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
+            .listPage(0, originalSkip + recsQuery.page.maxItems)
             .map {
                 AggregateTaskDto(
                     id = it.id,
@@ -54,6 +60,7 @@ class ProcTaskAggregator(
         val aggregatedRecords = let {
             return@let (resultFromAlf.getRecords() + tasksFromCamunda)
                 .sortedByDescending { it.createTime }
+                .drop(originalSkip)
                 .map { it.aggregationRef }
         }
 
