@@ -1,7 +1,10 @@
 package ru.citeck.ecos.process.domain.proctask.service
 
+import mu.KotlinLogging
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
+
+private val log = KotlinLogging.logger {}
 
 fun currentUserIsTaskActor(task: ProcTaskDto): Boolean {
     val currentUser = AuthContext.getCurrentUser()
@@ -11,6 +14,8 @@ fun currentUserIsTaskActor(task: ProcTaskDto): Boolean {
 }
 
 fun isTaskActor(task: ProcTaskDto, user: String, userAuthorities: List<String>): Boolean {
+    log.debug { "Is task actor: taskId=${task.id} user=$user userAuthorities=$userAuthorities" }
+
     val assigneeName = task.assignee.id
     val candidateUsers = task.candidateUsers.map { it.id }
     val candidateGroup = task.candidateGroups.map { it.id }

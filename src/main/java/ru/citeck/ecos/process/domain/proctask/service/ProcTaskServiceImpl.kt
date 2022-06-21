@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.service
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
@@ -14,6 +15,10 @@ class ProcTaskServiceImpl(
     private val camundaTaskFormService: FormService
 ) : ProcTaskService {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     override fun getTasksByProcess(processId: String): List<ProcTaskDto> {
         return camundaTaskService.createTaskQuery()
             .processInstanceId(processId)
@@ -25,6 +30,11 @@ class ProcTaskServiceImpl(
     override fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto> {
         val currentUser = AuthContext.getCurrentUser()
         val currentAuthorities = AuthContext.getCurrentAuthorities()
+
+        log.debug {
+            "getTasksByProcessForCurrentUser: processId=$processId " +
+                "user=$currentUser userAuthorities=$currentAuthorities"
+        }
 
         return getTasksByProcess(processId).filter {
             isTaskActor(it, currentUser, currentAuthorities)
@@ -42,6 +52,11 @@ class ProcTaskServiceImpl(
     override fun getTasksByDocumentForCurrentUser(document: String): List<ProcTaskDto> {
         val currentUser = AuthContext.getCurrentUser()
         val currentAuthorities = AuthContext.getCurrentAuthorities()
+
+        log.debug {
+            "getTasksByDocumentForCurrentUser: document=$document " +
+                "user=$currentUser userAuthorities=$currentAuthorities"
+        }
 
         return getTasksByDocument(document).filter {
             isTaskActor(it, currentUser, currentAuthorities)
