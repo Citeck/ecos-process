@@ -14,7 +14,7 @@ fun currentUserIsTaskActor(task: ProcTaskDto): Boolean {
 }
 
 fun isTaskActor(task: ProcTaskDto, user: String, userAuthorities: List<String>): Boolean {
-    log.debug { "Is task actor: taskId=${task.id} user=$user userAuthorities=$userAuthorities" }
+    log.debug { "Is task actor: taskId=${task.id} user=$user userAuthorities=$userAuthorities task:\n$task" }
 
     val assigneeName = task.assignee.id
     val candidateUsers = task.candidateUsers.map { it.id }
