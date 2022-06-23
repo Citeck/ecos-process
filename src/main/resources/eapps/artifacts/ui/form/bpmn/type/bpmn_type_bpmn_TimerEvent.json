@@ -1,0 +1,185 @@
+{
+  "id": "bpmn-type-bpmn:TimerEvent",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Timer Event Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {
+    "ru": {
+      "timer_type_date": "Дата",
+      "timer_type_duration": "Продолжительность",
+      "timer_type_cycle": "Цикл"
+    },
+    "en": {
+      "timer_type_date": "Date",
+      "timer_type_duration": "Duration",
+      "timer_type_cycle": "Cycle"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "timer-panel",
+        "title": "Timer",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Timer config"
+            },
+            "key": "timeConfig",
+            "hideLabel": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "label": {
+                  "ru": "Тип",
+                  "en": "Type"
+                },
+                "key": "type",
+                "validate": {
+                  "required": true
+                },
+                "dataSrc": "values",
+                "data": {
+                  "values": [
+                    {
+                      "label": "timer_type_date",
+                      "value": "DATE"
+                    },
+                    {
+                      "label": "timer_type_duration",
+                      "value": "DURATION"
+                    },
+                    {
+                      "label": "timer_type_cycle",
+                      "value": "CYCLE"
+                    }
+                  ]
+                },
+                "customDefaultValue": "value = \"DATE\";",
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true,
+                "defaultValue": ""
+              },
+              {
+                "label": {
+                  "ru": "Значение",
+                  "en": "Value"
+                },
+                "key": "value",
+                "validate": {
+                  "required": true
+                },
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "html-hint-date"
+            },
+            "key": "html_hint_date",
+            "hideLabel": true,
+            "disabled": true,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "DATE"
+            },
+            "className": "",
+            "content": "A specified point in time defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> combned date and time representation.\n\n<li><i>2019-10-01T12:00:00Z</i> - UTC time</li>\n<li><i>2019-10-02T08:09:40+02:00</i> - UTC plus 2 hours zone offset</li>\n",
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "htmlelement",
+            "input": false
+          },
+          {
+            "label": {
+              "ru": "html-duration-hint"
+            },
+            "key": "html_duration_hint",
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "DURATION"
+            },
+            "className": "",
+            "content": "A time duration defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format.\n\n<li><i>PT15S</i> - 15 seconds</li>\n<li><i>PT1H30M</i> - 1 hour and 30 minutes</li>\n<li><i>P14D</i> - 14 days</li>\n",
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "htmlelement",
+            "input": false
+          },
+          {
+            "label": {
+              "ru": "html-cycle-hint"
+            },
+            "key": "html_cycle_hint",
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "CYCLE"
+            },
+            "className": "",
+            "content": "A cycle defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> repeating intervals format.\n\n<li><i>R5/PT10S</i> - every 10 seconds, up to 5 times</li>\n<li><i>R/P1D</i> - every day, infinitely</li>\n",
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "htmlelement",
+            "input": false
+          },
+          {
+            "label": {
+              "ru": "html-expression-hint"
+            },
+            "key": "html_expression_hint",
+            "disabled": true,
+            "className": "",
+            "content": "You can use expressions for the timer value. By doing so you can influence the timer definition based on process variables. The process variables must contain the <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> (or cron for cycle type) string for the appropriate timer type. For exmaple - <i>${duration}</i>.",
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "htmlelement",
+            "input": false
+          }
+        ]
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      }
+    ]
+  },
+  "attributes": {}
+}

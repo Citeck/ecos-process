@@ -161,6 +161,21 @@ fun conditionFromAttributes(atts: Map<QName, String>): BpmnConditionDef {
     )
 }
 
+fun getCamundaJobRetryTimeCycleFieldConfig(
+    timeCycleValue: String?,
+    context: ExportContext
+): List<JAXBElement<CamundaFailedJobRetryTimeCycle>> {
+    val fields = mutableListOf<CamundaFailedJobRetryTimeCycle>()
+
+    fields.addIfNotBlank(
+        CamundaFailedJobRetryTimeCycle().apply {
+            value = timeCycleValue
+        }
+    )
+
+    return fields.map { it.jaxb(context) }
+}
+
 fun Outcome.toTExpression(): TExpression {
     val exp = TExpression()
     exp.content.add(this.toExpressionStr())
@@ -180,8 +195,12 @@ fun Outcome.fullId(): String {
 }
 
 fun ConditionConfig.expressionToTExpression(): TExpression {
+    return createTExpressionWithContent(expression)
+}
+
+fun createTExpressionWithContent(content: String): TExpression {
     val exp = TExpression()
-    exp.content.add(expression)
+    exp.content.add(content)
     exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
     return exp
 }

@@ -3,19 +3,16 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
-import ru.citeck.ecos.process.domain.bpmn.io.convert.addIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
-import ru.citeck.ecos.process.domain.bpmn.io.convert.jaxb
+import ru.citeck.ecos.process.domain.bpmn.io.convert.getCamundaJobRetryTimeCycleFieldConfig
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.scriptPayloadToTScript
-import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TScriptTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
 class CamundaScriptTaskConverter : EcosOmgConverter<BpmnScriptTaskDef, TScriptTask> {
@@ -44,23 +41,8 @@ class CamundaScriptTaskConverter : EcosOmgConverter<BpmnScriptTaskDef, TScriptTa
             otherAttributes.putIfNotBlank(CAMUNDA_JOB_PRIORITY, element.jobConfig.jobPriority.toString())
 
             extensionElements = TExtensionElements().apply {
-                any.addAll(getJobRetryTimeCycleFieldConfig(element, context))
+                any.addAll(getCamundaJobRetryTimeCycleFieldConfig(element.jobConfig.jobRetryTimeCycle, context))
             }
         }
-    }
-
-    private fun getJobRetryTimeCycleFieldConfig(
-        element: BpmnScriptTaskDef,
-        context: ExportContext
-    ): List<JAXBElement<CamundaFailedJobRetryTimeCycle>> {
-        val fields = mutableListOf<CamundaFailedJobRetryTimeCycle>()
-
-        fields.addIfNotBlank(
-            CamundaFailedJobRetryTimeCycle().apply {
-                value = element.jobConfig.jobRetryTimeCycle
-            }
-        )
-
-        return fields.map { it.jaxb(context) }
     }
 }

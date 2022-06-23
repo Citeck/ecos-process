@@ -86,6 +86,11 @@ class EcosOmgConverters(
         return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
     }
 
+    fun <T : Any> export(element: Any, expectedType: Class<T>, context: ExportContext): T {
+        @Suppress("UNCHECKED_CAST")
+        return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
+    }
+
     fun <T : Any> export(type: String, element: Any, context: ExportContext): T {
 
         val converter = convertersByType[type] ?: base?.convertersByType?.get(type)

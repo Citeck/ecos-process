@@ -3,8 +3,10 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
+import ru.citeck.ecos.process.domain.bpmn.io.convert.scriptPayloadToTScript
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
@@ -41,6 +43,9 @@ class BpmnScriptTaskConverter : EcosOmgConverter<BpmnScriptTaskDef, TScriptTask>
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
+
+            script = element.scriptPayloadToTScript()
+            scriptFormat = DEFAULT_SCRIPT_ENGINE_LANGUAGE
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
