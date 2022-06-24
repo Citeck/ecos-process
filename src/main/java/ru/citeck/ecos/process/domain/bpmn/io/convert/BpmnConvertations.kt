@@ -6,6 +6,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
@@ -13,14 +14,14 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_VAR
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.Bounds
-import ru.citeck.ecos.process.domain.bpmn.model.omg.Point
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TExpression
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TScript
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
@@ -216,5 +217,62 @@ fun ConditionConfig.scriptToTExpression(): TExpression {
 fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
     return TScript().apply {
         content.add(script)
+    }
+}
+
+fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEventDef {
+    if (eventDefinition.size != 1) {
+        error("Not supported state. Check implementation.")
+    }
+
+    val eventDef = eventDefinition[0].value
+    val typeToTransform = when (val type = eventDefinition[0].declaredType) {
+        TTimerEventDefinition::class.java -> BpmnTimerEventDef::class.java
+        else -> error("Class $type not supported")
+    }
+
+    provideOtherAttsToEventDef(eventDef, this)
+
+    return context.converters.import(
+        eventDef, typeToTransform, context
+    ).data
+}
+
+fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstractEventDef, context: ExportContext) {
+    when (val eventDef = bpmnEventDef) {
+        is BpmnTimerEventDef -> {
+            otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(eventDef.value))
+        }
+        else -> error("Class $eventDef not supported")
+    }
+
+    val typeToTransform = when (val type = bpmnEventDef.javaClass) {
+        BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
+        else -> error("Class $type not supported")
+    }
+
+    val eventDef = context.converters.export(bpmnEventDef, typeToTransform, context)
+    eventDefinition.add(context.converters.convertToJaxb(eventDef))
+}
+
+fun TCatchEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
+    bpmnEventDef: BpmnAbstractEventDef, jobConfig: JobConfig, context: ExportContext
+) {
+    val typeToTransform = when (val type = bpmnEventDef.javaClass) {
+        BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
+        else -> error("Class $type not supported")
+    }
+
+    val eventDef = context.converters.export(bpmnEventDef, typeToTransform, context)
+    eventDefinition.add(context.converters.convertToJaxb(eventDef))
+
+    extensionElements = TExtensionElements().apply {
+        any.addAll(getCamundaJobRetryTimeCycleFieldConfig(jobConfig.jobRetryTimeCycle, context))
+    }
+}
+
+fun provideOtherAttsToEventDef(eventDef: TEventDefinition, element: TEvent) {
+    element.otherAttributes.forEach { (k, v) ->
+        eventDef.otherAttributes[k] = v
     }
 }

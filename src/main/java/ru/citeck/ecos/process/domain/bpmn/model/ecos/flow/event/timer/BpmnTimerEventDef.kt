@@ -9,5 +9,4 @@ data class BpmnTimerEventDef(
     override val id: String,
 
     val value: TimeValue,
-) :
-    BpmnAbstractEventDef()
+) : BpmnAbstractEventDef()

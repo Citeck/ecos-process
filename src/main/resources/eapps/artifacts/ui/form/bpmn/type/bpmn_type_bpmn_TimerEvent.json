@@ -163,7 +163,7 @@
             "key": "html_expression_hint",
             "disabled": true,
             "className": "",
-            "content": "You can use expressions for the timer value. By doing so you can influence the timer definition based on process variables. The process variables must contain the <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> (or cron for cycle type) string for the appropriate timer type. For exmaple - <i>${duration}</i>.",
+            "content": "You can use expressions for the timer value. By doing so you can influence the timer definition based on process variables. The process variables must contain the <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> (or cron for cycle type) string for the appropriate timer type. For example - <i>${duration}</i>.",
             "refreshOnChange": false,
             "refreshOn": [],
             "optionalWhenDisabled": false,

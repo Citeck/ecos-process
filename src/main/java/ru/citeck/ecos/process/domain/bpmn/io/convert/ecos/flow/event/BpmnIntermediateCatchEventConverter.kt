@@ -4,14 +4,13 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.convertToBpmnEventDef
+import ru.citeck.ecos.process.domain.bpmn.io.convert.fillBpmnEventDefPayloadFromBpmnEventDef
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnIntermediateCatchEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TEventDefinition
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TIntermediateCatchEvent
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TTimerEventDefinition
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -32,23 +31,7 @@ class BpmnIntermediateCatchEventConverter : EcosOmgConverter<BpmnIntermediateCat
                 ?: AsyncConfig(),
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
                 ?: JobConfig(),
-            eventDefinition = let {
-                if (element.eventDefinition.size != 1) {
-                    error("Not supported state. Check implementation.")
-                }
-
-                val eventDef = element.eventDefinition[0].value
-                val typeToTransform = when (val type = element.eventDefinition[0].declaredType) {
-                    TTimerEventDefinition::class.java -> BpmnTimerEventDef::class.java
-                    else -> error("Class $type not supported")
-                }
-
-                provideOtherAttsToEventDef(eventDef, element)
-
-                return@let context.converters.import(
-                    eventDef, typeToTransform, context
-                ).data
-            }
+            eventDefinition = element.convertToBpmnEventDef(context)
         )
     }
 
@@ -65,27 +48,8 @@ class BpmnIntermediateCatchEventConverter : EcosOmgConverter<BpmnIntermediateCat
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
 
-
-            when (val eventDef = element.eventDefinition) {
-                is BpmnTimerEventDef -> {
-                    otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(eventDef.value))
-                }
-                else -> error("Class $eventDef not supported")
-            }
-
-            val typeToTransform = when (val type = element.eventDefinition.javaClass) {
-                BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
-                else -> error("Class $type not supported")
-            }
-
-            val eventDef = context.converters.export(element.eventDefinition, typeToTransform, context)
-            eventDefinition.add(context.converters.convertToJaxb(eventDef))
+            fillBpmnEventDefPayloadFromBpmnEventDef(element.eventDefinition, context)
         }
     }
 
-    private fun provideOtherAttsToEventDef(eventDef: TEventDefinition, element: TIntermediateCatchEvent) {
-        element.otherAttributes.forEach { (k, v) ->
-            eventDef.otherAttributes[k] = v
-        }
-    }
 }
