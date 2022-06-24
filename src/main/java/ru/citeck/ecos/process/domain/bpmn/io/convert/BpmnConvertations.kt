@@ -220,7 +220,11 @@ fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
     }
 }
 
-fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEventDef {
+fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEventDef? {
+    if (eventDefinition.size == 0) {
+        return null
+    }
+
     if (eventDefinition.size != 1) {
         error("Not supported state. Check implementation.")
     }

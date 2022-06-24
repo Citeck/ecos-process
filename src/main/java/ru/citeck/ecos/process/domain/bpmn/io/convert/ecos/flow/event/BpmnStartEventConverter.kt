@@ -49,7 +49,7 @@ class BpmnStartEventConverter : EcosOmgConverter<BpmnStartEventDef, TStartEvent>
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
 
-            fillBpmnEventDefPayloadFromBpmnEventDef(element.eventDefinition, context)
+            element.eventDefinition?.let { fillBpmnEventDefPayloadFromBpmnEventDef(it, context) }
         }
     }
 }

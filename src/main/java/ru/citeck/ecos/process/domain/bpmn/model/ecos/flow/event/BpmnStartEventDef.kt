@@ -14,5 +14,5 @@ data class BpmnStartEventDef(
     val asyncConfig: AsyncConfig,
     val jobConfig: JobConfig,
 
-    val eventDefinition: BpmnAbstractEventDef
+    val eventDefinition: BpmnAbstractEventDef?
 )

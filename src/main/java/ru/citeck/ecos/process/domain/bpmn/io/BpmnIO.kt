@@ -8,10 +8,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaProcessConve
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaEdgeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaPlaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaShapeConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaEndEventConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaIntermediateCatchEventConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaStartEventConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.CamundaTimerEventDefinitionConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
@@ -24,10 +21,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnEdgeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnPlaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnShapeConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnEndEventConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnIntermediateCatchEventConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnStartEventConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.BpmnTimerEventDefinitionConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
@@ -68,7 +62,8 @@ object BpmnIO {
             BpmnScriptTaskConverter::class,
             BpmnParallelGatewayConverter::class,
             BpmnIntermediateCatchEventConverter::class,
-            BpmnTimerEventDefinitionConverter::class
+            BpmnTimerEventDefinitionConverter::class,
+            BpmnBoundaryEventConverter::class
         ),
         extensionTypeResolver
     )
@@ -90,7 +85,8 @@ object BpmnIO {
             CamundaScriptTaskConverter::class,
             CamundaParallelGatewayConverter::class,
             CamundaIntermediateCatchEventConverter::class,
-            CamundaTimerEventDefinitionConverter::class
+            CamundaTimerEventDefinitionConverter::class,
+            CamundaBoundaryEventConverter::class
 
         ),
         extensionTypeResolver

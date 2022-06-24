@@ -35,7 +35,7 @@ class CamundaStartEventConverter : EcosOmgConverter<BpmnStartEventDef, TStartEve
             otherAttributes[CAMUNDA_ASYNC_AFTER] = element.asyncConfig.asyncAfter.toString()
             otherAttributes.putIfNotBlank(CAMUNDA_JOB_PRIORITY, element.jobConfig.jobPriority.toString())
 
-            fillCamundaEventDefPayloadFromBpmnEventDef(element.eventDefinition, element.jobConfig, context)
+            element.eventDefinition?.let { fillCamundaEventDefPayloadFromBpmnEventDef(it, element.jobConfig, context) }
         }
     }
 }
