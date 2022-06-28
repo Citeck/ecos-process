@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
+import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
@@ -33,6 +34,8 @@ class ProcTaskRecords(
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordMutateDao {
 
     companion object {
+        private val log = KotlinLogging.logger {}
+
         const val ID = "proc-task"
 
         val ALF_TO_ERPOC_TASK_ATTS = mapOf(
@@ -77,6 +80,8 @@ class ProcTaskRecords(
         if (task.documentRef != RecordRef.EMPTY && mutateInfo.documentAtts.getAttributes().isNotEmpty()) {
             recordsService.mutate(mutateInfo.documentAtts)
         }
+
+        log.debug { "Submit task ${record.id} form with variables: ${mutateInfo.taskVariables}" }
 
         procTaskService.submitTaskForm(record.id, mutateInfo.taskVariables)
 
@@ -214,6 +219,8 @@ class ProcTaskRecords(
         val documentAtts = RecordAtts()
 
         init {
+            log.debug { "Init TaskMutateVariables. atts: $record" }
+
             checkPermissionToCompleteTask()
 
             documentAtts.setId(task.documentRef)
@@ -228,6 +235,9 @@ class ProcTaskRecords(
                         documentAtts[docAtt.first] = docAtt.second
                     }
                     k.startsWith(SYS_VAR_PREFIX) -> {
+                        // do nothing
+                    }
+                    k.startsWith(OUTCOME_PREFIX) -> {
                         // do nothing
                     }
                     else -> {
