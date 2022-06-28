@@ -1,11 +1,14 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert
 
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
@@ -217,6 +220,12 @@ fun ConditionConfig.scriptToTExpression(): TExpression {
 fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
     return TScript().apply {
         content.add(script)
+    }
+}
+
+fun BpmnTextAnnotationDef.toTText() : TText {
+    return TText().apply {
+        content.add(MLText.getClosestValue(text, I18nContext.getLocale()))
     }
 }
 

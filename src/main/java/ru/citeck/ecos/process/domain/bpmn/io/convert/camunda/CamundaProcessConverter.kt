@@ -2,10 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda
 
 import ru.citeck.ecos.process.domain.bpmn.io.propMandatoryError
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnProcessDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TExclusiveGateway
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TSequenceFlow
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -29,13 +26,20 @@ class CamundaProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
                 converted
             }
 
+            val tArtifacts = element.artifacts.map {
+                val converted = context.converters.export<TArtifact>(it.type, it.data, context)
+                context.bpmnElementsById[converted.id] = converted
+                converted
+            }
+
             fillElementsRefsFromIdToRealObjects(tFlowElements, context)
 
             tFlowElements.forEach { flowElement.add(context.converters.convertToJaxb(it)) }
+            tArtifacts.forEach { artifact.add(context.converters.convertToJaxb(it)) }
         }
     }
 
-    private fun fillElementsRefsFromIdToRealObjects(tFlowElements: List<TFlowElement>, context: ExportContext) {
+    private fun fillElementsRefsFromIdToRealObjects(tFlowElements: List<TBaseElement>, context: ExportContext) {
         tFlowElements.forEach { element ->
             if (element is TSequenceFlow) {
                 element.sourceRef = context.bpmnElementsById[element.sourceRef.toString()]

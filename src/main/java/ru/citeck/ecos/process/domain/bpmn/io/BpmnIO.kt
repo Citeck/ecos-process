@@ -5,6 +5,8 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaProcessConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaAssociationConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaTextAnnotationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaEdgeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaPlaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaShapeConverter
@@ -18,6 +20,8 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaUserTas
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnProcessConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnAssociationConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnTextAnnotationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnEdgeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnPlaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnShapeConverter
@@ -63,7 +67,9 @@ object BpmnIO {
             BpmnParallelGatewayConverter::class,
             BpmnIntermediateCatchEventConverter::class,
             BpmnTimerEventDefinitionConverter::class,
-            BpmnBoundaryEventConverter::class
+            BpmnBoundaryEventConverter::class,
+            BpmnTextAnnotationConverter::class,
+            BpmnAssociationConverter::class
         ),
         extensionTypeResolver
     )
@@ -86,7 +92,9 @@ object BpmnIO {
             CamundaParallelGatewayConverter::class,
             CamundaIntermediateCatchEventConverter::class,
             CamundaTimerEventDefinitionConverter::class,
-            CamundaBoundaryEventConverter::class
+            CamundaBoundaryEventConverter::class,
+            CamundaTextAnnotationConverter::class,
+            CamundaAssociationConverter::class
 
         ),
         extensionTypeResolver
