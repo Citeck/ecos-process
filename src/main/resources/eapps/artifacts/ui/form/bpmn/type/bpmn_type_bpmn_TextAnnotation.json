@@ -1,0 +1,45 @@
+{
+  "id": "bpmn-type-bpmn:TextAnnotation",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Text Annotation Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {
+    "ru": {
+      "EXPRESSION": "Выражение",
+      "SCRIPT": "Скрипт",
+      "OUTCOME": "Исходящий",
+      "NONE": "Нет"
+    },
+    "en": {
+      "EXPRESSION": "Expression",
+      "SCRIPT": "Script",
+      "OUTCOME": "Outcome",
+      "NONE": "None"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "ID элемента",
+          "en": "ID"
+        },
+        "key": "id",
+        "validate": {
+          "required": true
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}
