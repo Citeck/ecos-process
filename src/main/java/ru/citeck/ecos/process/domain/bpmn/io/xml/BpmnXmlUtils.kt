@@ -67,9 +67,15 @@ object BpmnXmlUtils {
 
             marshaller.marshal(element, outStream)
 
-            return String(outStream.toByteArray(), StandardCharsets.UTF_8)
+            return removeEmptyXmlns(String(outStream.toByteArray(), StandardCharsets.UTF_8));
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not write to stream", e)
         }
+    }
+
+    //  Bpmn modeler failed to parse definition with empty xmlns.
+    // I didn’t find a way to get rid of it when converting, so we use the replacement hack
+    private fun removeEmptyXmlns(data: String): String {
+        return data.replace("xmlns=\"\"", "")
     }
 }
