@@ -1,0 +1,17 @@
+---
+id: bpmn-section
+
+name:
+  en: ECOS BPMN section
+  ru: ECOS BPMN категория
+
+system: true
+sourceId: eproc/bpmn-section
+
+model:
+  attributes:
+    - id: name
+      name:
+        ru: Имя
+        en: Name
+      type: MLTEXT
