@@ -7,10 +7,12 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.apps.EcosWebAppsApi
 
 @Component
 class WorkflowTaskRecordsProxy(
     private val procTaskService: ProcTaskService,
+    private val webAppsApi: EcosWebAppsApi
 ) : RecordsDaoProxy(
     id = "wftask",
     targetId = "alfresco/wftask"
@@ -65,7 +67,11 @@ class WorkflowTaskRecordsProxy(
     }
 
     private fun queryFromAlf(recsQuery: RecordsQuery): RecsQueryRes<*> {
-        return super.queryRecords(recsQuery) ?: RecsQueryRes<Any>()
+        return if (webAppsApi.isAppAvailable(recsQuery.sourceId)) {
+            super.queryRecords(recsQuery)
+        } else {
+            null
+        } ?: RecsQueryRes<Any>()
     }
 
     private fun queryTasksForEcosProcess(recordsQuery: RecordsQuery, processRef: RecordRef): RecsQueryRes<*> {
