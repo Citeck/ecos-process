@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.proctask.dto
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
 data class ProcTaskDto(
@@ -22,11 +23,11 @@ data class ProcTaskDto(
 
     val dueDate: Instant? = null,
 
-    val assignee: RecordRef = RecordRef.EMPTY,
+    val assignee: EntityRef = RecordRef.EMPTY,
 
-    val candidateUsers: List<RecordRef> = emptyList(),
+    val candidateUsers: List<EntityRef> = emptyList(),
 
-    val candidateGroups: List<RecordRef> = emptyList(),
+    val candidateGroups: List<EntityRef> = emptyList(),
 
     val definitionKey: String? = null,
 

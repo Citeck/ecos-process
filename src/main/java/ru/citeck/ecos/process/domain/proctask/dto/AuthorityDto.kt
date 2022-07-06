@@ -5,22 +5,22 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 data class AuthorityDto(
     var id: String? = null,
 
-    @AttName("cm:authorityName")
+    @AttName("authorityName")
     var authorityName: String? = null,
 
-    @AttName("cm:authorityName")
+    @AttName("userName")
     var userName: String? = null,
 
-    @AttName("cm:firstName")
+    @AttName("firstName")
     var firstName: String? = null,
 
-    @AttName("cm:lastName")
+    @AttName("lastName")
     var lastName: String? = null,
 
-    @AttName("cm:middleName")
+    @AttName("middleName")
     var middleName: String? = null,
 
-    @AttName(".disp")
+    @AttName("?disp")
     var displayName: String? = null,
 
     @AttName("containedUsers")

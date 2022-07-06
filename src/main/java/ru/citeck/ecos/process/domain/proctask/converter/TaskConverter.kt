@@ -16,16 +16,15 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.annotation.PostConstruct
-
-private const val ALFRESCO_APP = "alfresco"
-private const val AUTHORITY_SRC_ID = "authority"
-private const val PEOPLE_SRC_ID = "people"
 
 @Component
 class TaskConverter(
     val camundaTaskService: TaskService,
-    val recordsService: RecordsService
+    val recordsService: RecordsService,
+    val authorityService: EcosAuthorityService
 ) {
 
     @PostConstruct
@@ -71,24 +70,12 @@ fun Task.toProcTask(): ProcTaskDto {
         },
         dueDate = dueDate?.toInstant(),
         created = createTime.toInstant(),
-        assignee = if (assignee.isNullOrBlank()) {
-            RecordRef.EMPTY
-        } else {
-            createPeopleRef(assignee)
-        },
-        candidateUsers = candidateUsers.map { createPeopleRef(it) },
-        candidateGroups = candidateGroups.map { createAuthorityRef(it) },
+        assignee = cnv.authorityService.getAuthorityRef(assignee),
+        candidateUsers = candidateUsers.map { cnv.authorityService.getAuthorityRef(it) },
+        candidateGroups = candidateGroups.map { cnv.authorityService.getAuthorityRef(it) },
         definitionKey = taskDefinitionKey,
         variables = variables
     )
-}
-
-private fun createPeopleRef(userName: String): RecordRef {
-    return RecordRef.create(ALFRESCO_APP, PEOPLE_SRC_ID, userName)
-}
-
-private fun createAuthorityRef(authorityId: String): RecordRef {
-    return RecordRef.create(ALFRESCO_APP, AUTHORITY_SRC_ID, authorityId)
 }
 
 fun ProcTaskDto.toRecord(): ProcTaskRecords.ProcTaskRecord {
@@ -118,12 +105,11 @@ fun ProcTaskDto.toRecord(): ProcTaskRecords.ProcTaskRecord {
     )
 }
 
-private fun getActors(assignee: RecordRef, candidates: List<RecordRef>): List<AuthorityDto> {
-    val actorsRefs = if (RecordRef.isNotEmpty(assignee)) {
+private fun getActors(assignee: EntityRef, candidates: List<EntityRef>): List<AuthorityDto> {
+    val actorsRefs = if (EntityRef.isNotEmpty(assignee)) {
         listOf(assignee)
     } else {
         candidates
     }
-
     return cnv.recordsService.getAtts(actorsRefs, AuthorityDto::class.java)
 }
