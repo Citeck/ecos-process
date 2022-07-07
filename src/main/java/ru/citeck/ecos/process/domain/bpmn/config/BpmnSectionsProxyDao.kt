@@ -41,8 +41,7 @@ class BpmnSectionsProxyDao(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*>? {
         val targetQuery = recsQuery.copy().withSourceId(getTargetId()).build()
 
-        val contextAtts = getContextAtts()
-        return if (contextAtts.isEmpty()) {
+        return if (!isQueryWithAtts()) {
             val result = withSourceIdMapping {
                 recordsService.query(targetQuery)
             }
@@ -55,8 +54,9 @@ class BpmnSectionsProxyDao(
 
             result
         } else {
+            val attsForEproc = getContextAtts(false)
             val queryRes = withSourceIdMapping {
-                recordsService.query(targetQuery, contextAtts)
+                recordsService.query(targetQuery, attsForEproc)
             }
             val queryResWithAtts = RecsQueryRes<RecordAtts>()
             queryResWithAtts.setHasMore(queryRes.getHasMore())
@@ -64,7 +64,8 @@ class BpmnSectionsProxyDao(
             queryResWithAtts.setRecords(queryRes.getRecords())
 
             if (isAlfrescoAvailable()) {
-                val queryResWithAttsFromAlfresco = queryBpmnSectionsFromAlfresco(contextAtts)
+                val attsForAlfresco = getContextAtts(true)
+                val queryResWithAttsFromAlfresco = queryBpmnSectionsFromAlfresco(attsForAlfresco)
                 replaceRecordsAttsRefIdForAlfRecords(queryResWithAttsFromAlfresco)
                 queryResWithAtts.merge(queryResWithAttsFromAlfresco)
             }
@@ -78,11 +79,12 @@ class BpmnSectionsProxyDao(
         val alfRecords = mutableListOf<RecordRef>()
         splitRecordRefs(recordsId, eprocRecords, alfRecords)
 
-        val contextAtts = getContextAtts()
+        val attsForEproc = getContextAtts(false)
         val attsFromTarget = withSourceIdMapping {
-            recordsService.getAtts(eprocRecords, contextAtts)
+            recordsService.getAtts(eprocRecords, attsForEproc)
         }
-        val attsFromAlf = recordsService.getAtts(alfRecords, contextAtts)
+        val attsForAlfresco = getContextAtts(true)
+        val attsFromAlf = recordsService.getAtts(alfRecords, attsForAlfresco)
 
         return attsFromTarget + attsFromAlf
     }
@@ -118,8 +120,26 @@ class BpmnSectionsProxyDao(
         throw NotImplementedError()
     }
 
-    private fun getContextAtts(): Map<String, String> {
-        val schemaAtts = AttSchemaUtils.simplifySchema(AttContext.getCurrentSchemaAtt().inner)
+    private fun isQueryWithAtts(): Boolean {
+        return AttContext.getCurrentSchemaAtt().inner.isEmpty()
+    }
+
+    private fun getContextAtts(isAlfresco: Boolean): Map<String, String> {
+        var schemaAtts = AttSchemaUtils.simplifySchema(AttContext.getCurrentSchemaAtt().inner)
+
+        if (isAlfresco) {
+            schemaAtts = schemaAtts.map {
+                if (it.name == "name") {
+                    it.copy()
+                        .withAlias(it.getAliasForValue())
+                        .withName("cm:title")
+                        .build()
+                } else {
+                    it
+                }
+            }
+        }
+
         val writer = serviceFactory.attSchemaWriter
         val result = LinkedHashMap<String, String>()
 
