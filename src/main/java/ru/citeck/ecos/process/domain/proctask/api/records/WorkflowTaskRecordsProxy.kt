@@ -8,6 +8,7 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosWebAppsApi
+import ru.citeck.ecos.webapp.api.constants.AppName
 
 @Component
 class WorkflowTaskRecordsProxy(
@@ -67,7 +68,7 @@ class WorkflowTaskRecordsProxy(
     }
 
     private fun queryFromAlf(recsQuery: RecordsQuery): RecsQueryRes<*> {
-        return if (webAppsApi.isAppAvailable(recsQuery.sourceId)) {
+        return if (webAppsApi.isAppAvailable(AppName.ALFRESCO)) {
             super.queryRecords(recsQuery)
         } else {
             null
