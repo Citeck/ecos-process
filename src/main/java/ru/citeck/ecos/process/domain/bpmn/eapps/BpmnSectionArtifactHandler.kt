@@ -21,7 +21,8 @@ class BpmnSectionArtifactHandler(
             RecordRef.create("bpmn-section-repo", ""),
             mapOf(
                 "id" to artifact["id"],
-                "name" to artifact["name"]
+                "name" to artifact["name"],
+                "parentId" to artifact["parentId"]
             )
         )
     }

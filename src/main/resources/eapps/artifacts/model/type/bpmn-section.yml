@@ -15,3 +15,8 @@ model:
         ru: Имя
         en: Name
       type: MLTEXT
+    - id: parentId
+      name:
+        ru: ID родительской категории
+        en: Parent section ID
+
