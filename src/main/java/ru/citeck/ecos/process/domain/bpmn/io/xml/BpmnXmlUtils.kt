@@ -67,7 +67,7 @@ object BpmnXmlUtils {
 
             marshaller.marshal(element, outStream)
 
-            return removeEmptyXmlns(String(outStream.toByteArray(), StandardCharsets.UTF_8));
+            return removeEmptyXmlns(String(outStream.toByteArray(), StandardCharsets.UTF_8))
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not write to stream", e)
         }

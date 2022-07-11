@@ -8,8 +8,8 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.scriptPayloadToTScript
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TScriptTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext

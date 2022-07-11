@@ -169,7 +169,6 @@ class ProcTaskAggregatorTest {
             aggregator.queryTasks(query)
         }
 
-
         assertThat(aggregationResult.getRecords()).isEqualTo(
             listOf(
                 "alfTask1".toAggregationRef(),
@@ -264,7 +263,6 @@ class ProcTaskAggregatorTest {
         val id: String,
         val createTime: String,
     )
-
 }
 
 fun String.toAggregationRef(): RecordRef {

@@ -5,7 +5,6 @@ import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
-import ru.citeck.ecos.process.domain.proctask.service.ProcTaskServiceImpl
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -82,6 +81,4 @@ class ProcTaskAggregator(
 
         return result
     }
-
-
 }

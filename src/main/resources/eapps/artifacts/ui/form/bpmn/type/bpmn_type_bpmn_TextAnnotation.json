@@ -38,6 +38,18 @@
         "optionalWhenDisabled": false,
         "type": "textfield",
         "input": true
+      },
+      {
+        "label": {
+          "ru": "Текст аннотации",
+          "en": "Annotation text"
+        },
+        "key": "name_ml",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlTextarea",
+        "input": true,
+        "addAnother": "ecos.forms.btn.add-another"
       }
     ]
   },
