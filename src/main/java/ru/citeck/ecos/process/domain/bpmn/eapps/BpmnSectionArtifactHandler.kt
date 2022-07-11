@@ -22,7 +22,7 @@ class BpmnSectionArtifactHandler(
             mapOf(
                 "id" to artifact["id"],
                 "name" to artifact["name"],
-                "parentId" to artifact["parentId"]
+                "parentRef" to artifact["parentRef"]
             )
         )
     }

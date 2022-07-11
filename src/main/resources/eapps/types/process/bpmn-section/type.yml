@@ -4,7 +4,7 @@ source-id: "eproc/bpmn-section"
 
 name:
   ru: BPMN section
-  en: BPMN категория
+  en: BPMN раздел
 
 controller:
   type: json

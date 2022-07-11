@@ -3,7 +3,7 @@ id: bpmn-section
 
 name:
   en: ECOS BPMN section
-  ru: ECOS BPMN категория
+  ru: ECOS BPMN раздел
 
 system: true
 sourceId: eproc/bpmn-section
@@ -15,8 +15,10 @@ model:
         ru: Имя
         en: Name
       type: MLTEXT
-    - id: parentId
+    - id: parentRef
       name:
-        ru: ID родительской категории
-        en: Parent section ID
-
+        ru: Родительская категория
+        en: Parent section
+      type: ASSOC
+      config:
+        typeRef: emodel/type@bpmn-section
