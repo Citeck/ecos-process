@@ -59,5 +59,4 @@ class BpmnBoundaryEventConverter : EcosOmgConverter<BpmnBoundaryEventDef, TBound
             element.eventDefinition?.let { fillBpmnEventDefPayloadFromBpmnEventDef(it, context) }
         }
     }
-
 }

@@ -4,7 +4,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import java.util.*
 
-data class AggregateTaskDto (
+data class AggregateTaskDto(
     var id: String? = "",
 
     @AttName("...")

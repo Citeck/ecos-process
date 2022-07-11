@@ -51,5 +51,4 @@ class BpmnIntermediateCatchEventConverter : EcosOmgConverter<BpmnIntermediateCat
             element.eventDefinition?.let { fillBpmnEventDefPayloadFromBpmnEventDef(it, context) }
         }
     }
-
 }

@@ -223,7 +223,7 @@ fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
     }
 }
 
-fun BpmnTextAnnotationDef.toTText() : TText {
+fun BpmnTextAnnotationDef.toTText(): TText {
     return TText().apply {
         content.add(MLText.getClosestValue(text, I18nContext.getLocale()))
     }
@@ -269,7 +269,9 @@ fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstra
 }
 
 fun TCatchEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
-    bpmnEventDef: BpmnAbstractEventDef, jobConfig: JobConfig, context: ExportContext
+    bpmnEventDef: BpmnAbstractEventDef,
+    jobConfig: JobConfig,
+    context: ExportContext
 ) {
     val typeToTransform = when (val type = bpmnEventDef.javaClass) {
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java

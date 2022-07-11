@@ -283,7 +283,6 @@ class ProcTaskRecords(
                 .replace("_".toRegex(), ":")
         }
     }
-
 }
 
 fun isAlfTask(id: String): Boolean {
