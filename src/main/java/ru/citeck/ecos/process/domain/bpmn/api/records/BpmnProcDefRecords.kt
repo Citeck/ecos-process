@@ -33,13 +33,16 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.apps.EcosWebAppsApi
+import ru.citeck.ecos.webapp.api.constants.AppName
 import java.nio.charset.StandardCharsets
 import java.util.*
 
 @Component
 class BpmnProcDefRecords(
     val procDefService: ProcDefService,
-    val repositoryService: RepositoryService
+    val repositoryService: RepositoryService,
+    val webAppsApi: EcosWebAppsApi
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -72,6 +75,12 @@ class BpmnProcDefRecords(
             query.page.maxItems,
             query.page.skipCount
         ).map { BpmnProcDefRecord(it) }
+
+        if (result.size < (query.page.maxItems + query.page.skipCount)
+                && webAppsApi.isAppAvailable(AppName.ALFRESCO)) {
+
+            // todo: query
+        }
 
         val res = RecsQueryRes(result)
         res.setTotalCount(procDefService.getCount(predicate))
