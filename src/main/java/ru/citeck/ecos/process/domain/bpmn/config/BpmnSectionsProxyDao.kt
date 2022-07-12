@@ -33,8 +33,6 @@ class BpmnSectionsProxyDao(
         const val ALF_ID_PREFIX = AppName.ALFRESCO + "$"
     }
 
-    private val sourceIdMapping = mapOf(TARGET_SOURCE_ID to SOURCE_ID)
-
     private val querySectionsFromAlf = RecordsQuery.create {
         withSourceId(ALF_SOURCE_ID)
         withLanguage("children")
