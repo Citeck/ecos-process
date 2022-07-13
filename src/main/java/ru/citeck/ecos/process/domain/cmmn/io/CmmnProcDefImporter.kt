@@ -44,7 +44,8 @@ class CmmnProcDefImporter {
                 }
             },
             ecosTypeRef = getEcosType(definition, format, caseAdditionalAtts),
-            alfType = if (format == CmmnFormat.LEGACY_CMMN) getLegacyAlfType(caseAdditionalAtts) else null
+            alfType = if (format == CmmnFormat.LEGACY_CMMN) getLegacyAlfType(caseAdditionalAtts) else null,
+            image = null
         )
     }
 

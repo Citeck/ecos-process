@@ -76,6 +76,25 @@
               },
               {
                 "label": {
+                  "ru": "Раздел",
+                  "en": "Section"
+                },
+                "key": "sectionRef",
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'sectionsList.records', []);"
+                },
+                "defaultValue": "",
+                "refreshOn": [
+                  "sectionsList"
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another"
+              },
+              {
+                "label": {
                   "ru": "Форма",
                   "en": "Form"
                 },
@@ -158,6 +177,28 @@
         "key": "columns2",
         "type": "columns",
         "input": false
+      },
+      {
+        "label": "Sections",
+        "source": {
+          "type": "recordsQuery",
+          "recordsQuery": {
+            "query": "value = {\n  sourceId: 'eproc/bpmn-section',\n  language: 'predicate',\n  query: {}\n}",
+            "attributes": {
+              "label": "?disp",
+              "value": "?id"
+            },
+            "isSingle": false
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "sectionsList",
+        "type": "asyncData",
+        "input": true,
+        "addAnother": "ecos.forms.btn.add-another"
       }
     ]
   },

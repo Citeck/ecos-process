@@ -32,6 +32,7 @@ class ProcDefEntity {
     var modified: Instant? = null
     var enabled: Boolean? = null
     var autoStartEnabled: Boolean? = null
+    var sectionRef: String? = null
 
     @DBRef
     var lastRev: ProcDefRevEntity? = null

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.config
+package ru.citeck.ecos.process.domain.bpmnsection.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

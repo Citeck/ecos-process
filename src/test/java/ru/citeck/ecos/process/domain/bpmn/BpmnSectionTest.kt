@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.eapps.BpmnSectionArtifactHandler
+import ru.citeck.ecos.process.domain.bpmnsection.eapps.BpmnSectionArtifactHandler
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService

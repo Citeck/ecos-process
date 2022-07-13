@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.CaseDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.DiagramDef
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 @JsonDeserialize(builder = CmmnProcessDef.Builder::class)
@@ -19,7 +20,7 @@ class CmmnProcessDef(
     val id: String,
     val definitionsId: String,
     val name: MLText,
-    val ecosType: RecordRef,
+    val ecosType: EntityRef,
 
     val cases: List<CaseDef>,
     val artifacts: List<ArtifactDef>,
@@ -56,7 +57,7 @@ class CmmnProcessDef(
         var id: String = ""
         var definitionsId: String = ""
         var name: MLText = MLText.EMPTY
-        var ecosType: RecordRef = RecordRef.EMPTY
+        var ecosType: EntityRef = EntityRef.EMPTY
 
         var cases: List<CaseDef> = emptyList()
         var artifacts: List<ArtifactDef> = emptyList()
@@ -92,7 +93,7 @@ class CmmnProcessDef(
             return this
         }
 
-        fun withEcosType(ecosType: RecordRef): Builder {
+        fun withEcosType(ecosType: EntityRef): Builder {
             this.ecosType = ecosType
             return this
         }

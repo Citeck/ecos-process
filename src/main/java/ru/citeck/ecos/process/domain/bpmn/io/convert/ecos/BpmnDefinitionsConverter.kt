@@ -13,6 +13,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinitions> {
 
@@ -33,8 +34,9 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             autoStartEnabled = element.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean(),
             definitionsId = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            ecosType = RecordRef.Companion.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),
-            formRef = RecordRef.Companion.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
+            ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),
+            formRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
+            sectionRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_SECTION_REF]),
             diagrams = element.bpmnDiagram.map {
                 context.converters.import(it, BpmnDiagramDef::class.java, context).data
             },

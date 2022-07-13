@@ -29,6 +29,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -89,7 +90,10 @@ class CmmnProcDefRecords(
                     it.alfType,
                     it.formRef,
                     it.enabled,
-                    it.autoStartEnabled
+                    it.autoStartEnabled,
+                    it.sectionRef,
+                    it.created,
+                    it.modified
                 )
             )
         } ?: EmptyAttValue.INSTANCE
@@ -177,7 +181,8 @@ class CmmnProcDefRecords(
                     data = defData,
                     ecosTypeRef = record.ecosType,
                     format = format.code,
-                    procType = PROC_TYPE
+                    procType = PROC_TYPE,
+                    image = null
                 )
 
                 procDefService.uploadProcDef(newProcDef)
@@ -236,7 +241,7 @@ class CmmnProcDefRecords(
         private val procDef: ProcDefDto
     ) {
 
-        fun getEcosType(): RecordRef {
+        fun getEcosType(): EntityRef {
             return procDef.ecosTypeRef
         }
 
@@ -324,7 +329,7 @@ class CmmnProcDefRecords(
         var id: String,
         var processDefId: String,
         var name: MLText,
-        var ecosType: RecordRef,
+        var ecosType: EntityRef,
         var definition: String? = null,
         var enabled: Boolean,
         var fileName: String = "",

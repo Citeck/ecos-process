@@ -11,10 +11,21 @@ sourceId: eproc/bpmn-def
 formRef: uiserv/form@bpmn-process-def
 journalRef: uiserv/journal@bpmn-process-def
 
+actions:
+  - uiserv/action@go-to-bpmn-designer
+
+defaultCreateVariant: false
+
 createVariants:
 
-  - id: create-new-process-def
-    name: { ru: Создать процесс, en: Create process }
+  - id: create-new-process-def # UI use this ID as default create variant
+    name: { ru: Создать camunda процесс, en: Create camunda process }
+
+  - id: create-new-flowable-process-def
+    name: { ru: Создать flowable процесс, en: Create flowable process }
+    formRef: uiserv/form@cat-doc-type-ecos-bpm-process-form
+    typeRef: emodel/type@cat-doc-type-ecos-bpm-process
+    sourceId: alfresco/
 
   - id: upload-proc-def
     name: { ru: Загрузить процесс, en: Upload process }
