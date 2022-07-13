@@ -131,7 +131,7 @@ class BpmnProcDefRecords(
 
         var totalCount = procDefService.getCount(predicate)
 
-        if (recsQuery.page.maxItems == -1 || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount) &&
+        if ((recsQuery.page.maxItems == -1 || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)) &&
             webAppsApi.isAppAvailable(AppName.ALFRESCO)
         ) {
 
