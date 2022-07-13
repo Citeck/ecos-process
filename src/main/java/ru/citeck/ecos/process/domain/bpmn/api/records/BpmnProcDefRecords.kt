@@ -131,9 +131,10 @@ class BpmnProcDefRecords(
 
         var totalCount = procDefService.getCount(predicate)
 
-        if ((recsQuery.page.maxItems == -1 || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)) &&
-            webAppsApi.isAppAvailable(AppName.ALFRESCO)
-        ) {
+        val isMoreRecordsRequired = recsQuery.page.maxItems == -1
+            || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)
+
+        if (isMoreRecordsRequired && webAppsApi.isAppAvailable(AppName.ALFRESCO)) {
 
             val alfDefinitions = loadAllDefinitionsFromAlfresco()
             result.addAll(alfDefinitions)
