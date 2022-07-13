@@ -51,9 +51,6 @@ class BpmnProcDefRecordsTest {
     @Autowired
     private lateinit var modelServiceFactoryConfig: ModelServiceFactoryConfig
 
-    @Autowired
-    private lateinit var recordsServiceFactory: RecordsServiceFactory
-
     companion object {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
         private const val COUNT_OF_PROC_DEF_TO_GENERATE = 250L
@@ -67,8 +64,6 @@ class BpmnProcDefRecordsTest {
 
     @BeforeAll
     fun setUp() {
-
-        bpmnProcDefRecords.setRecordsServiceFactory(recordsServiceFactory)
 
         val typesRepo = object : TypesRepo {
             override fun getTypeInfo(typeRef: RecordRef): TypeInfo? {
