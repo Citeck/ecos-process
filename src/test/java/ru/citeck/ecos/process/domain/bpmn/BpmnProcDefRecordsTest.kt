@@ -26,6 +26,7 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -50,6 +51,9 @@ class BpmnProcDefRecordsTest {
     @Autowired
     private lateinit var modelServiceFactoryConfig: ModelServiceFactoryConfig
 
+    @Autowired
+    private lateinit var recordsServiceFactory: RecordsServiceFactory
+
     companion object {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
         private const val COUNT_OF_PROC_DEF_TO_GENERATE = 250L
@@ -63,6 +67,8 @@ class BpmnProcDefRecordsTest {
 
     @BeforeAll
     fun setUp() {
+
+        bpmnProcDefRecords.setRecordsServiceFactory(recordsServiceFactory)
 
         val typesRepo = object : TypesRepo {
             override fun getTypeInfo(typeRef: RecordRef): TypeInfo? {
@@ -137,6 +143,7 @@ class BpmnProcDefRecordsTest {
                 TypeUtils.getTypeRef("type1"),
                 RecordRef.EMPTY,
                 buildProcDefXml(id),
+                null,
                 true,
                 false
             )
@@ -223,6 +230,7 @@ class BpmnProcDefRecordsTest {
             TypeUtils.getTypeRef("type1"),
             RecordRef.EMPTY,
             buildProcDefXml(id),
+            null,
             true,
             false
         )
