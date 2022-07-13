@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -38,7 +39,9 @@ class BpmnProcessArtifactHandlerTest {
 
     @BeforeAll
     fun setUp() {
-        localAppService.deployLocalArtifacts()
+        AuthContext.runAsSystem {
+            localAppService.deployLocalArtifacts()
+        }
     }
 
     @Test

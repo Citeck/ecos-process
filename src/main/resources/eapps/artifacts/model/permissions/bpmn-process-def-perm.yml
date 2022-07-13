@@ -1,0 +1,11 @@
+id: "7e43218b-b639-45e5-a5c9-7061931e7cf5"
+typeRef: "emodel/type@bpmn-process-def"
+
+permissions:
+
+  matrix:
+    admin:
+      ANY: WRITE
+    all:
+      ANY: READ
+  rules: []

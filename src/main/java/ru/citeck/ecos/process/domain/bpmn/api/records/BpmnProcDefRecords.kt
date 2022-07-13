@@ -7,7 +7,12 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
+import ru.citeck.ecos.model.lib.role.constants.RoleConstants
+import ru.citeck.ecos.model.lib.role.service.RoleService
+import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
@@ -42,7 +47,9 @@ import java.util.*
 class BpmnProcDefRecords(
     val procDefService: ProcDefService,
     val repositoryService: RepositoryService,
-    val webAppsApi: EcosWebAppsApi
+    val webAppsApi: EcosWebAppsApi,
+    val recordPermsService: RecordPermsService,
+    val roleService: RoleService
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -51,8 +58,13 @@ class BpmnProcDefRecords(
 
     companion object {
         const val SOURCE_ID = "bpmn-def"
+        private const val APP_NAME = AppName.EPROC
+        private const val QUERY_BATCH_SIZE = 100
+        private const val LIMIT_REQUESTS_COUNT = 100000
+        private const val DEFAULT_MAX_ITEMS = 10000000
 
         private val log = KotlinLogging.logger {}
+        private val BPMN_PROC_DEF_TYPE = TypeUtils.getTypeRef("bpmn-process-def")
     }
 
     override fun queryRecords(query: RecordsQuery): Any? {
@@ -70,23 +82,89 @@ class BpmnProcDefRecords(
             Predicates.eq("procType", BPMN_PROC_TYPE)
         )
 
-        val result = procDefService.findAll(
-            predicate,
-            query.page.maxItems,
-            query.page.skipCount
-        ).map { BpmnProcDefRecord(it) }
+        var numberOfExecutedRequests = 0
+        val maxItems = if (query.page.maxItems > 0) query.page.maxItems else DEFAULT_MAX_ITEMS
+        var requiredAmount = maxItems
+        var result = emptyArray<BpmnProcDefRecord>()
+        var numberOfPermissionsCheck = 0
+        do {
+            val unfilteredBatch = procDefService.findAll(
+                predicate,
+                QUERY_BATCH_SIZE,
+                query.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
+            )
 
-        if (result.size < (query.page.maxItems + query.page.skipCount)
-                && webAppsApi.isAppAvailable(AppName.ALFRESCO)) {
+            val checkedRecords: List<BpmnProcDefRecord>
+            if (AuthContext.isRunAsSystem()) {
+                checkedRecords = unfilteredBatch.map(::toBpmnProcDefRecord)
+                    .take(requiredAmount)
+                numberOfPermissionsCheck = checkedRecords.size
+            } else {
+                checkedRecords = unfilteredBatch.asSequence()
+                    .map(::toBpmnProcDefRecord)
+                    .filter {
+                        numberOfPermissionsCheck++
+                        hasReadPerms(it)
+                    }
+                    .take(requiredAmount)
+                    .toList()
+            }
+
+            result = result.plus(checkedRecords)
+            requiredAmount = maxItems - result.size
+            val hasMore = unfilteredBatch.size == QUERY_BATCH_SIZE
+        } while (hasMore &&
+            requiredAmount != 0 &&
+            numberOfExecutedRequests < LIMIT_REQUESTS_COUNT
+        )
+
+        if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
+            log.warn("Request count limit reached! Request: $query")
+        }
+
+        if (result.size < (query.page.maxItems + query.page.skipCount) &&
+            webAppsApi.isAppAvailable(AppName.ALFRESCO)
+        ) {
 
             // todo: query
         }
 
-        val res = RecsQueryRes(result)
+        val res = RecsQueryRes(result.toList())
         res.setTotalCount(procDefService.getCount(predicate))
-        res.setHasMore(res.getTotalCount() > query.page.maxItems + query.page.skipCount)
+        res.setHasMore(res.getTotalCount() > numberOfPermissionsCheck + query.page.skipCount)
 
         return res
+    }
+
+    private fun toBpmnProcDefRecord(procDefDto: ProcDefDto): BpmnProcDefRecord {
+        return BpmnProcDefRecord(procDefDto)
+    }
+
+    private fun toRecordRef(id: String): RecordRef {
+        return RecordRef.create(APP_NAME, SOURCE_ID, id)
+    }
+
+    private fun hasReadPerms(bpmnProcDefRecord: BpmnProcDefRecord): Boolean {
+        val procDefRecordRef = toRecordRef(bpmnProcDefRecord.getId())
+        val recordPerms = recordPermsService.getRecordPerms(procDefRecordRef)
+        val roles = getRoles(procDefRecordRef)
+        return recordPerms?.isReadAllowed(roles) ?: false
+    }
+
+    private fun hasWritePerms(recordRef: RecordRef): Boolean {
+        if (AuthContext.isRunAsSystem()) {
+            return true
+        }
+        val recordPerms = recordPermsService.getRecordPerms(recordRef)
+        val roles = getRoles(recordRef)
+        return recordPerms?.isWriteAllowed(roles) ?: false
+    }
+
+    private fun getRoles(recordRef: RecordRef): List<String> {
+        return roleService.getRolesId(BPMN_PROC_DEF_TYPE)
+            .filter { roleService.isRoleMember(recordRef, it) }
+            .toList()
+            .plus(RoleConstants.ROLE_EVERYONE)
     }
 
     private fun loadDefinitionsFromAlfresco(query: RecordsQuery): Any {
@@ -163,6 +241,11 @@ class BpmnProcDefRecords(
     }
 
     override fun saveMutatedRec(record: BpmnMutateRecord): String {
+
+        val recordRef = toRecordRef(record.id)
+        if (!hasWritePerms(recordRef)) {
+            throw RuntimeException("Permissions denied. RecordRef: $recordRef")
+        }
 
         val newDefinition = record.definition ?: ""
         var newDefData: ByteArray? = null
@@ -280,8 +363,13 @@ class BpmnProcDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-        procDefService.delete(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
-        return DelStatus.OK
+        val recordRef = toRecordRef(recordId)
+        return if (hasWritePerms(recordRef)) {
+            procDefService.delete(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
+            DelStatus.OK
+        } else {
+            DelStatus.PROTECTED
+        }
     }
 
     override fun getId() = SOURCE_ID
@@ -341,7 +429,7 @@ class BpmnProcDefRecords(
 
         @AttName("_type")
         fun getType(): RecordRef {
-            return RecordRef.create("emodel", "type", "bpmn-process-def")
+            return BPMN_PROC_DEF_TYPE
         }
 
         @AttName("startFormRef")
