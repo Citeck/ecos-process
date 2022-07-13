@@ -24,7 +24,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object CmmnIO {

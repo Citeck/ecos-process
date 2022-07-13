@@ -96,7 +96,6 @@ class BpmnSectionTest {
         ).asText()
         assertEquals(parentOfRec2, "eproc/bpmn-section@testSection2")
 
-
         bpmnSectionArtifactHandler.deleteArtifact("testSection2")
         bpmnSectionArtifactHandler.deleteArtifact("testSection2-1")
         assertEquals(queryAll().getRecords().size, recordsBefore)

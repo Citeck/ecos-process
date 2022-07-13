@@ -62,10 +62,13 @@ class AlfSectionsMigrationPatch(
 
         alfSections.map {
             val id = it.id.replaceFirst(SPACES_STORE_PREFIX, "")
-            recordsService.create(BpmnSectionConfig.BPMN_SECTION_REPO_SOURCE_ID, mapOf(
-                "id" to id,
-                "name" to it.title
-            ))
+            recordsService.create(
+                BpmnSectionConfig.BPMN_SECTION_REPO_SOURCE_ID,
+                mapOf(
+                    "id" to id,
+                    "name" to it.title
+                )
+            )
         }
 
         log.info { "Patch completed" }

@@ -10,7 +10,6 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.function.Consumer

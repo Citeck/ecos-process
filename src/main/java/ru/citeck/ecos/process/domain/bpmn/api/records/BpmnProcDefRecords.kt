@@ -85,8 +85,9 @@ class BpmnProcDefRecords(
 
         var totalCount = procDefService.getCount(predicate)
 
-        if (recsQuery.page.maxItems == -1 || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)
-                && webAppsApi.isAppAvailable(AppName.ALFRESCO)) {
+        if (recsQuery.page.maxItems == -1 || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount) &&
+            webAppsApi.isAppAvailable(AppName.ALFRESCO)
+        ) {
 
             val alfDefinitions = loadAllDefinitionsFromAlfresco()
             result.addAll(alfDefinitions)
@@ -114,8 +115,9 @@ class BpmnProcDefRecords(
             ProcDefAlfAtts::class.java
         )
         return processes.getRecords().map {
-            if (StringUtils.isBlank(it.sectionRef)
-                    || it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default") {
+            if (StringUtils.isBlank(it.sectionRef) ||
+                it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
+            ) {
 
                 it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
             } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
@@ -291,7 +293,6 @@ class BpmnProcDefRecords(
                 currentProc.autoStartEnabled = record.autoStartEnabled
                 currentProc.sectionRef = record.sectionRef
                 currentProc.image = record.imageBytes
-
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType
@@ -377,7 +378,7 @@ class BpmnProcDefRecords(
 
         @AttName(RecordConstants.ATT_MODIFIED)
         fun getModified(): Instant {
-            return alfAtts.modified;
+            return alfAtts.modified
         }
 
         @AttName(RecordConstants.ATT_CREATED)

@@ -27,6 +27,7 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.RecordRef;
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 import ru.citeck.ecos.webapp.lib.model.type.dto.TypeDef;
 import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry;
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension;
@@ -89,10 +90,12 @@ public class ProcessServiceTest {
             "xml",
             alfType,
             ecosTypeRef,
-            RecordRef.EMPTY,
+            EntityRef.EMPTY,
             procDefData,
+            null,
             true,
-            false
+            false,
+            EntityRef.EMPTY
         );
 
         procDefService.uploadProcDef(newProcessDefDto);

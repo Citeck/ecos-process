@@ -10,7 +10,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.artifact.ArtifactDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.CaseDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.DiagramInterchangeDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.DiagramDef
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
