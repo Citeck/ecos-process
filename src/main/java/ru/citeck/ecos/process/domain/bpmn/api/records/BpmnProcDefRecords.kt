@@ -8,11 +8,14 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.commons.utils.DataUriUtil
+import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
 import ru.citeck.ecos.model.lib.role.constants.RoleConstants
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
@@ -22,6 +25,7 @@ import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -40,7 +44,10 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 import java.util.*
 
 @Component
@@ -67,31 +74,31 @@ class BpmnProcDefRecords(
         private val BPMN_PROC_DEF_TYPE = TypeUtils.getTypeRef("bpmn-process-def")
     }
 
-    override fun queryRecords(query: RecordsQuery): Any? {
+    override fun queryRecords(recsQuery: RecordsQuery): Any? {
 
-        if (query.language == "predicate-with-data") {
-            return loadDefinitionsFromAlfresco(query)
+        if (recsQuery.language == "predicate-with-data") {
+            return loadDefinitionsByPredicateWithDataFromAlfresco(recsQuery)
         }
 
-        if (query.language != PredicateService.LANGUAGE_PREDICATE) {
+        if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE) {
             return null
         }
 
         val predicate = Predicates.and(
-            query.getQuery(Predicate::class.java),
+            recsQuery.getQuery(Predicate::class.java),
             Predicates.eq("procType", BPMN_PROC_TYPE)
         )
 
         var numberOfExecutedRequests = 0
-        val maxItems = if (query.page.maxItems > 0) query.page.maxItems else DEFAULT_MAX_ITEMS
+        val maxItems = if (recsQuery.page.maxItems > 0) recsQuery.page.maxItems else DEFAULT_MAX_ITEMS
         var requiredAmount = maxItems
-        var result = emptyArray<BpmnProcDefRecord>()
+        var result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
         do {
             val unfilteredBatch = procDefService.findAll(
                 predicate,
                 QUERY_BATCH_SIZE,
-                query.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
+                recsQuery.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
             )
 
             val checkedRecords: List<BpmnProcDefRecord>
@@ -110,7 +117,7 @@ class BpmnProcDefRecords(
                     .toList()
             }
 
-            result = result.plus(checkedRecords)
+            result.addAll(checkedRecords)
             requiredAmount = maxItems - result.size
             val hasMore = unfilteredBatch.size == QUERY_BATCH_SIZE
         } while (hasMore &&
@@ -119,19 +126,23 @@ class BpmnProcDefRecords(
         )
 
         if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
-            log.warn("Request count limit reached! Request: $query")
+            log.warn("Request count limit reached! Request: $recsQuery")
         }
 
-        if (result.size < (query.page.maxItems + query.page.skipCount) &&
+        var totalCount = procDefService.getCount(predicate)
+
+        if (recsQuery.page.maxItems == -1 || result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount) &&
             webAppsApi.isAppAvailable(AppName.ALFRESCO)
         ) {
 
-            // todo: query
+            val alfDefinitions = loadAllDefinitionsFromAlfresco()
+            result.addAll(alfDefinitions)
+            totalCount += alfDefinitions.size
         }
 
-        val res = RecsQueryRes(result.toList())
-        res.setTotalCount(procDefService.getCount(predicate))
-        res.setHasMore(res.getTotalCount() > numberOfPermissionsCheck + query.page.skipCount)
+        val res = RecsQueryRes(result)
+        res.setTotalCount(totalCount)
+        res.setHasMore(res.getTotalCount() > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return res
     }
@@ -167,7 +178,34 @@ class BpmnProcDefRecords(
             .plus(RoleConstants.ROLE_EVERYONE)
     }
 
-    private fun loadDefinitionsFromAlfresco(query: RecordsQuery): Any {
+    private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
+        val predicate = Predicates.and(
+            Predicates.eq("type", "ecosbpm:processModel"),
+        )
+        val processes = recordsService.query(
+            RecordsQuery.create {
+                withSourceId("alfresco/")
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(predicate)
+                withMaxItems(300)
+            },
+            ProcDefAlfAtts::class.java
+        )
+        return processes.getRecords().map {
+            if (StringUtils.isBlank(it.sectionRef) ||
+                it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
+            ) {
+
+                it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
+            } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
+
+                it.sectionRef = "${EprocApp.NAME}/bpmn-section@" + it.sectionRef?.substringAfterLast('/')
+            }
+            AlfProcDefRecord(it)
+        }
+    }
+
+    private fun loadDefinitionsByPredicateWithDataFromAlfresco(query: RecordsQuery): Any {
 
         val procDefQuery = query.getQuery(ProcDefAlfQuery::class.java)
 
@@ -214,7 +252,10 @@ class BpmnProcDefRecords(
                     it.alfType,
                     it.formRef,
                     it.enabled,
-                    it.autoStartEnabled
+                    it.autoStartEnabled,
+                    it.sectionRef,
+                    it.created,
+                    it.modified
                 )
             )
         } ?: EmptyAttValue.INSTANCE
@@ -222,7 +263,19 @@ class BpmnProcDefRecords(
 
     override fun getRecToMutate(recordId: String): BpmnMutateRecord {
         return if (recordId.isBlank()) {
-            BpmnMutateRecord("", "", MLText(), RecordRef.EMPTY, RecordRef.EMPTY, null, false, "", false)
+            BpmnMutateRecord(
+                "",
+                "",
+                MLText(),
+                RecordRef.EMPTY,
+                RecordRef.EMPTY,
+                null,
+                false,
+                "",
+                false,
+                EntityRef.EMPTY,
+                null
+            )
         } else {
             val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
@@ -235,7 +288,9 @@ class BpmnProcDefRecords(
                 null,
                 procDef.enabled,
                 "",
-                procDef.autoStartEnabled
+                procDef.autoStartEnabled,
+                procDef.sectionRef,
+                procDef.image
             )
         }
     }
@@ -302,7 +357,9 @@ class BpmnProcDefRecords(
                 ecosTypeRef = record.ecosType,
                 formRef = record.formRef,
                 format = BPMN_FORMAT,
-                procType = BPMN_PROC_TYPE
+                procType = BPMN_PROC_TYPE,
+                sectionRef = record.sectionRef,
+                image = record.imageBytes
             )
 
             procDefService.uploadProcDef(newProcDef)
@@ -316,6 +373,8 @@ class BpmnProcDefRecords(
                 currentProc.name = record.name
                 currentProc.enabled = record.enabled
                 currentProc.autoStartEnabled = record.autoStartEnabled
+                currentProc.sectionRef = record.sectionRef
+                currentProc.image = record.imageBytes
             } else {
 
                 currentProc.ecosTypeRef = record.ecosType
@@ -323,6 +382,8 @@ class BpmnProcDefRecords(
                 currentProc.name = record.name
                 currentProc.enabled = record.enabled
                 currentProc.autoStartEnabled = record.autoStartEnabled
+                currentProc.sectionRef = record.sectionRef
+                currentProc.image = record.imageBytes
 
                 if (currentProc.format == BPMN_FORMAT) {
 
@@ -332,6 +393,7 @@ class BpmnProcDefRecords(
                     procDef.otherAttributes[BPMN_PROP_FORM_REF] = record.formRef.toString()
                     procDef.otherAttributes[BPMN_PROP_ENABLED] = record.enabled.toString()
                     procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = record.autoStartEnabled.toString()
+                    procDef.otherAttributes[BPMN_PROP_SECTION_REF] = record.sectionRef.toString()
 
                     currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
                 }
@@ -374,11 +436,61 @@ class BpmnProcDefRecords(
 
     override fun getId() = SOURCE_ID
 
+    inner class AlfProcDefRecord(
+        private val alfAtts: ProcDefAlfAtts
+    ) {
+
+        fun getDisplayName(): MLText? {
+            return alfAtts.getDisplayName()
+        }
+
+        fun getEcosType(): EntityRef {
+            return EntityRef.EMPTY
+        }
+
+        fun getId(): EntityRef {
+            return EntityRef.create(AppName.ALFRESCO, "", alfAtts.nodeRef)
+        }
+
+        fun getPreview(): Any {
+            if (!alfAtts.hasThumbnail) {
+                return EprocPreviewValue(null, "")
+            }
+            return AlfPreviewValue(alfAtts)
+        }
+
+        fun getSectionRef(): EntityRef {
+            return alfAtts.sectionRef.toEntityRef()
+        }
+
+        @AttName(RecordConstants.ATT_MODIFIED)
+        fun getModified(): Instant {
+            return alfAtts.modified
+        }
+
+        @AttName(RecordConstants.ATT_CREATED)
+        fun getCreated(): Instant {
+            return alfAtts.created
+        }
+    }
+
+    private class AlfPreviewValue(
+        val alfAtts: ProcDefAlfAtts
+    ) {
+        fun getUrl(): String {
+            return "/gateway/alfresco/alfresco/s/citeck/ecos/image/thumbnail" +
+                "?nodeRef=${alfAtts.nodeRef}" +
+                "&property=ecosbpm:thumbnail" +
+                "&cached=true" +
+                "&modified=${alfAtts.modified.toEpochMilli()}"
+        }
+    }
+
     inner class BpmnProcDefRecord(
         private val procDef: ProcDefDto
     ) {
 
-        fun getEcosType(): RecordRef {
+        fun getEcosType(): EntityRef {
             return procDef.ecosTypeRef
         }
 
@@ -387,7 +499,11 @@ class BpmnProcDefRecords(
         }
 
         fun getName(): MLText {
-            return procDef.name ?: MLText()
+            val name = procDef.name
+            if (MLText.isEmpty(name)) {
+                return MLText(procDef.id)
+            }
+            return name
         }
 
         fun getFormat(): String {
@@ -428,18 +544,44 @@ class BpmnProcDefRecords(
         }
 
         @AttName("_type")
-        fun getType(): RecordRef {
-            return BPMN_PROC_DEF_TYPE
+        fun getType(): EntityRef {
+            return EntityRef.create("emodel", "type", "bpmn-process-def")
         }
 
         @AttName("startFormRef")
-        fun getStartFormRef(): RecordRef {
+        fun getStartFormRef(): EntityRef {
             return procDef.formRef
         }
 
         @AttName("formRef")
-        fun getFormRef(): RecordRef {
+        fun getFormRef(): EntityRef {
             return procDef.formRef
+        }
+
+        @AttName(RecordConstants.ATT_CREATED)
+        fun getCreated(): Instant {
+            return procDef.created
+        }
+
+        @AttName(RecordConstants.ATT_MODIFIED)
+        fun getModified(): Instant {
+            return procDef.modified
+        }
+
+        fun getSectionRef(): EntityRef {
+            return procDef.sectionRef
+        }
+
+        fun getPreview(): EprocPreviewValue {
+            return EprocPreviewValue(procDef.id, procDef.modified.toEpochMilli())
+        }
+    }
+
+    class EprocPreviewValue(val id: String?, private val cacheBust: Any?) {
+
+        fun getUrl(): String {
+            val ref = EntityRef.create(EprocApp.NAME, SOURCE_ID, id).toString()
+            return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }
 
@@ -447,13 +589,19 @@ class BpmnProcDefRecords(
         var id: String,
         var processDefId: String,
         var name: MLText,
-        var ecosType: RecordRef,
-        var formRef: RecordRef,
+        var ecosType: EntityRef,
+        var formRef: EntityRef,
         var definition: String? = null,
         var enabled: Boolean,
         var action: String = "",
-        var autoStartEnabled: Boolean
+        var autoStartEnabled: Boolean,
+        var sectionRef: EntityRef,
+        var imageBytes: ByteArray?
     ) {
+
+        fun setImage(imageUrl: String) {
+            imageBytes = DataUriUtil.parseData(imageUrl).data
+        }
 
         @JsonProperty("_content")
         fun setContent(contentList: List<ObjectData>) {
@@ -485,13 +633,23 @@ class BpmnProcDefRecords(
     )
 
     class ProcDefAlfAtts(
+        @AttName("ecosbpm:sectionRef?id!ecosbpm:category?localId")
+        var sectionRef: String?,
         @AttName("ecosbpm:processId")
         val processId: String?,
         @AttName("ecosbpm:engine")
         val engine: String?,
         @AttName("cm:title")
         val title: MLText?,
-        val startFormRef: RecordRef?
+        val startFormRef: RecordRef?,
+        @AttName("_has.ecosbpm:thumbnail?bool!false")
+        val hasThumbnail: Boolean,
+        @AttName(RecordConstants.ATT_MODIFIED)
+        val modified: Instant,
+        @AttName(RecordConstants.ATT_CREATED)
+        val created: Instant,
+        @AttName("?localId")
+        val nodeRef: String
     ) {
         fun getId(): String {
             return "$engine$$processId"

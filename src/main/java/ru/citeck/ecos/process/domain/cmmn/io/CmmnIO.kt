@@ -24,7 +24,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object CmmnIO {
     private val extensionTypeResolver = { item: Any ->
@@ -108,7 +108,7 @@ object CmmnIO {
         return CmmnXmlUtils.writeToString(exportAlfCmmn(procDef))
     }
 
-    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: RecordRef): CmmnProcessDef {
+    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: EntityRef): CmmnProcessDef {
 
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>
@@ -160,7 +160,7 @@ object CmmnIO {
         }
     }
 
-    fun generateLegacyDefaultTemplate(processDefId: String, name: MLText, ecosType: RecordRef): Definitions {
+    fun generateLegacyDefaultTemplate(processDefId: String, name: MLText, ecosType: EntityRef): Definitions {
 
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8" standalone="yes"?>

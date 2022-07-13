@@ -10,8 +10,8 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.function.Consumer
 
 private const val ARTIFACT_TYPE = "process/bpmn"
@@ -57,12 +57,14 @@ class BpmnProcessArtifactHandler(
             id = "",
             processDefId = "",
             name = MLText.EMPTY,
-            ecosType = RecordRef.EMPTY,
-            formRef = RecordRef.EMPTY,
+            ecosType = EntityRef.EMPTY,
+            formRef = EntityRef.EMPTY,
             definition = stringDef,
             enabled = false,
             autoStartEnabled = false,
-            action = BpmnProcDefActions.DEPLOY.toString()
+            action = BpmnProcDefActions.DEPLOY.toString(),
+            sectionRef = EntityRef.EMPTY,
+            imageBytes = null
         )
 
         recordsService.mutate("eproc/${BpmnProcDefRecords.SOURCE_ID}@", bpmnMutateRecord)

@@ -13,6 +13,7 @@ const val BPMN_T_FORMAT_EXPRESSION = "bpmn:tFormalExpression"
 val BPMN_PROP_ECOS_TYPE = QName(NS_ECOS, "ecosType")
 val BPMN_PROP_ENABLED = QName(NS_ECOS, "enabled")
 val BPMN_PROP_AUTO_START_ENABLED = QName(NS_ECOS, "autoStartEnabled")
+val BPMN_PROP_SECTION_REF = QName(NS_ECOS, "sectionRef")
 val BPMN_PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")
 val BPMN_PROP_NAME_ML = QName(NS_ECOS, "name_ml")
 val BPMN_PROP_DOC = QName(NS_ECOS, "documentation")

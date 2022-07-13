@@ -37,7 +37,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object BpmnIO {
 
@@ -126,7 +126,7 @@ object BpmnIO {
 
     // todo: replace return value by BpmnProcessDef
     @JvmStatic
-    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: RecordRef): TDefinitions {
+    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: EntityRef): TDefinitions {
 
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>

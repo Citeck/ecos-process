@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
@@ -23,6 +24,8 @@ import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -66,6 +69,7 @@ class ProcDefServiceImpl(
         newRevision.id = EntityUuid(tenantService.getCurrent(), UUID.randomUUID())
         newRevision.created = now
         newRevision.data = processDef.data
+        newRevision.image = processDef.image
         newRevision.format = processDef.format
 
         if (currentProcDef == null) {
@@ -82,6 +86,8 @@ class ProcDefServiceImpl(
             currentProcDef.created = now
             currentProcDef.enabled = processDef.enabled
             currentProcDef.autoStartEnabled = processDef.autoStartEnabled
+            currentProcDef.sectionRef = processDef.sectionRef.toString()
+
             currentProcDef = procDefRepo.save<ProcDefEntity>(currentProcDef)
             newRevision.version = 0
         } else {
@@ -93,6 +99,7 @@ class ProcDefServiceImpl(
             currentProcDef.modified = now
             currentProcDef.enabled = processDef.enabled
             currentProcDef.autoStartEnabled = processDef.autoStartEnabled
+            currentProcDef.sectionRef = processDef.sectionRef.toString()
 
             newRevision.version = currentProcDef.lastRev!!.version + 1
             newRevision.prevRev = currentProcDef.lastRev
@@ -164,13 +171,15 @@ class ProcDefServiceImpl(
                 id = dto.id,
                 name = dto.name,
                 data = dto.data,
+                image = dto.image,
                 alfType = dto.alfType,
                 ecosTypeRef = dto.ecosTypeRef,
                 formRef = dto.formRef,
                 format = dto.format,
                 procType = dto.procType,
                 enabled = dto.enabled,
-                autoStartEnabled = dto.autoStartEnabled
+                autoStartEnabled = dto.autoStartEnabled,
+                sectionRef = dto.sectionRef
             )
             result = uploadProcDefImpl(newProcessDefDto)
         } else {
@@ -185,11 +194,13 @@ class ProcDefServiceImpl(
                     autoStartEnabled = dto.autoStartEnabled,
                     name = dto.name,
                     data = dto.data,
+                    image = dto.image,
                     alfType = dto.alfType,
                     ecosTypeRef = dto.ecosTypeRef,
                     formRef = dto.formRef,
                     format = dto.format,
-                    procType = dto.procType
+                    procType = dto.procType,
+                    sectionRef = dto.sectionRef
                 )
                 result = uploadProcDefImpl(newProcessDefDto)
             } else {
@@ -201,6 +212,8 @@ class ProcDefServiceImpl(
                 procDefEntity.enabled = dto.enabled
                 procDefEntity.autoStartEnabled = dto.autoStartEnabled
                 procDefEntity.modified = Instant.now()
+                procDefEntity.sectionRef = dto.sectionRef.toString()
+
                 result = procDefToDto(procDefRepo.save(procDefEntity))
             }
         }
@@ -315,6 +328,14 @@ class ProcDefServiceImpl(
         procDefDto.enabled = entity.enabled ?: false
         procDefDto.autoStartEnabled = entity.autoStartEnabled ?: false
         procDefDto.format = entity.lastRev?.format ?: ""
+        procDefDto.sectionRef = EntityRef.valueOf(entity.sectionRef).ifEmpty {
+            EntityRef.create(EprocApp.NAME, procDefDto.procType + "-section", "DEFAULT")
+        }
+        val entityCreated = entity.created ?: Instant.EPOCH
+        val entityModified = entity.modified ?: Instant.EPOCH
+        val lastRevCreated = entity.lastRev?.created ?: Instant.EPOCH
+        procDefDto.created = entityCreated
+        procDefDto.modified = lastRevCreated.coerceAtLeast(entityModified).coerceAtLeast(entityCreated)
         return procDefDto
     }
 
@@ -324,6 +345,7 @@ class ProcDefServiceImpl(
         procDefRevDto.created = entity.created
         procDefRevDto.procDefId = entity.processDef!!.extId
         procDefRevDto.data = entity.data
+        procDefRevDto.image = entity.image
         procDefRevDto.format = entity.format
         procDefRevDto.version = entity.version
         return procDefRevDto
