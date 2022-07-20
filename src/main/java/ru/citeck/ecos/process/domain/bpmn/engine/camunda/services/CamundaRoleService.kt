@@ -10,10 +10,9 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-private const val ALFRESCO_APP = "alfresco"
-private const val AUTHORITY_SRC_ID = "authority"
-private const val PEOPLE_SRC_ID = "people"
 private const val GROUP_PREFIX = "GROUP_"
 private const val WORKSPACE_PREFIX = "workspace://"
 
@@ -21,7 +20,8 @@ private const val WORKSPACE_PREFIX = "workspace://"
 @Component("roles")
 class CamundaRoleService(
     private val roleService: RoleService,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+    private val authorityService: EcosAuthorityService
 ) : CamundaProcessEngineService {
 
     companion object {
@@ -70,8 +70,8 @@ class CamundaRoleService(
         }.flatten().toSet()
         val recipientsFullFilledRefs = convertRecipientsToFullFilledRefs(recipientNames)
 
-        val allUsers = mutableSetOf<RecordRef>()
-        val groups = mutableListOf<RecordRef>()
+        val allUsers = mutableSetOf<EntityRef>()
+        val groups = mutableListOf<EntityRef>()
 
         recipientsFullFilledRefs.forEach {
             if (it.isAuthorityGroupRef()) groups.add(it) else allUsers.add(it)
@@ -80,34 +80,23 @@ class CamundaRoleService(
         val usersFromGroup = recordsService.getAtts(groups, GroupInfo::class.java).map { it.containedUsers }.flatten()
         allUsers.addAll(usersFromGroup)
 
-        return recordsService.getAtts(allUsers, UserInfo::class.java)
+        val emals = recordsService.getAtts(allUsers, UserInfo::class.java)
             .filter { it.email?.isNotBlank() ?: false }
             .map { it.email!! }
+
+        log.debug { "Get emails for document: $document, roles: $roles. Result: $emals" }
+
+        return emals
     }
 
-    /**
-     * Role service return userName or groupName. We need convert it to full recordRef format.
-     * //TODO: migrate to model (microservice) people/groups after completion of development.
-     */
-    private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): List<RecordRef> {
-        return recipients.map {
+    private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): List<EntityRef> {
+        recipients.map {
             if (it.startsWith(WORKSPACE_PREFIX)) {
-                throw IllegalArgumentException("NodeRef format does not support. Recipient: $it")
+                log.warn { "Convert nodeRef '$it' to authority refs. Maybe performance issue." }
             }
-
-            var fullFilledRef = RecordRef.valueOf(it)
-
-            if (fullFilledRef.appName.isBlank()) {
-                fullFilledRef = fullFilledRef.addAppName(ALFRESCO_APP)
-            }
-
-            if (fullFilledRef.sourceId.isBlank()) {
-                val sourceId = if (fullFilledRef.isAuthorityGroupRef()) AUTHORITY_SRC_ID else PEOPLE_SRC_ID
-                fullFilledRef = fullFilledRef.withSourceId(sourceId)
-            }
-
-            fullFilledRef
         }
+
+        return authorityService.getAuthorityRefs(recipients.toList())
     }
 }
 

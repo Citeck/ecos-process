@@ -33,7 +33,7 @@ fun currentUserIsTaskActor(task: ProcTaskDto): Boolean {
 }
 
 private fun isTaskActor(task: ProcTaskDto, user: EntityRef, userAuthorities: List<EntityRef>): Boolean {
-    log.debug { "Is task actor: taskId=${task.id} user=$user userAuthorities=$userAuthorities task:\n$task" }
+    log.debug { "Is task actor: \ntaskId=${task.id} \nuser=$user \nuserAuthorities=$userAuthorities \n$task" }
 
     if (task.assignee == user) return true
     if (task.candidateUsers.contains(user)) return true
