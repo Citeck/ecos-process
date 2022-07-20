@@ -28,16 +28,12 @@ class ProcTaskServiceImpl(
     }
 
     override fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto> {
-        val currentUser = AuthContext.getCurrentUser()
-        val currentAuthorities = AuthContext.getCurrentAuthorities()
-
         log.debug {
-            "getTasksByProcessForCurrentUser: processId=$processId " +
-                "user=$currentUser userAuthorities=$currentAuthorities"
+            "getTasksByProcessForCurrentUser: processId=$processId "
         }
 
         return getTasksByProcess(processId).filter {
-            isTaskActor(it, currentUser, currentAuthorities)
+            currentUserIsTaskActor(it)
         }
     }
 
@@ -50,16 +46,12 @@ class ProcTaskServiceImpl(
     }
 
     override fun getTasksByDocumentForCurrentUser(document: String): List<ProcTaskDto> {
-        val currentUser = AuthContext.getCurrentUser()
-        val currentAuthorities = AuthContext.getCurrentAuthorities()
-
         log.debug {
-            "getTasksByDocumentForCurrentUser: document=$document " +
-                "user=$currentUser userAuthorities=$currentAuthorities"
+            "getTasksByDocumentForCurrentUser: document=$document "
         }
 
         return getTasksByDocument(document).filter {
-            isTaskActor(it, currentUser, currentAuthorities)
+            currentUserIsTaskActor(it)
         }
     }
 
