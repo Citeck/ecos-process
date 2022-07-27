@@ -66,6 +66,14 @@
         "key": "includeForm3",
         "label": "Форма: BPMN base form Async",
         "type": "includeForm"
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-multi-instance",
+        "input": true,
+        "key": "includeForm4",
+        "label": "Форма: BPMN base form Multi Instance",
+        "addAnother": "ecos.forms.btn.add-another",
+        "type": "includeForm"
       }
     ]
   },

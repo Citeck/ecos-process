@@ -7,6 +7,8 @@ import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.scriptPayloadToTScript
+import ru.citeck.ecos.process.domain.bpmn.io.convert.toMultiInstanceConfig
+import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
@@ -32,7 +34,8 @@ class BpmnScriptTaskConverter : EcosOmgConverter<BpmnScriptTaskDef, TScriptTask>
             asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
                 ?: AsyncConfig(),
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
-                ?: JobConfig()
+                ?: JobConfig(),
+            multiInstanceConfig = element.toMultiInstanceConfig()
         )
     }
 
@@ -53,6 +56,11 @@ class BpmnScriptTaskConverter : EcosOmgConverter<BpmnScriptTaskDef, TScriptTask>
             otherAttributes.putIfNotBlank(BPMN_PROP_RESULT_VARIABLE, element.resultVariable)
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
+
+            element.multiInstanceConfig?.let {
+                loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
+                otherAttributes[BPMN_MULTI_INSTANCE_CONFIG] = Json.mapper.toString(it)
+            }
         }
     }
 }
