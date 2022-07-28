@@ -182,7 +182,8 @@ class CmmnProcDefRecords(
                     ecosTypeRef = record.ecosType,
                     format = format.code,
                     procType = PROC_TYPE,
-                    image = null
+                    image = null,
+                    enabled = record.enabled
                 )
 
                 procDefService.uploadProcDef(newProcDef)
