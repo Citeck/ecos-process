@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
-import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.commons.utils.StringUtils
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
 import ru.citeck.ecos.model.lib.role.constants.RoleConstants

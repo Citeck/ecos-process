@@ -26,7 +26,8 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
-import ru.citeck.ecos.records3.RecordsServiceFactory
+import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -51,6 +52,9 @@ class BpmnProcDefRecordsTest {
     @Autowired
     private lateinit var modelServiceFactoryConfig: ModelServiceFactoryConfig
 
+    @Autowired
+    private lateinit var recordsService: RecordsService
+
     companion object {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
         private const val COUNT_OF_PROC_DEF_TO_GENERATE = 250L
@@ -59,7 +63,6 @@ class BpmnProcDefRecordsTest {
             withLanguage(PredicateService.LANGUAGE_PREDICATE)
             withQuery(Predicates.alwaysTrue())
         }
-
     }
 
     @BeforeAll
@@ -81,9 +84,9 @@ class BpmnProcDefRecordsTest {
                                             )
                                             .build(),
                                         RoleDef.create()
-                                            .withId("all")
+                                            .withId("EVERYONE")
                                             .withAssignees(
-                                                listOf("GROUP_all")
+                                                listOf("GROUP_EVERYONE")
                                             )
                                             .build()
                                     ),
@@ -111,7 +114,7 @@ class BpmnProcDefRecordsTest {
                                         "admin" to mapOf(
                                             "EMPTY" to PermissionLevel.WRITE
                                         ),
-                                        "all" to mapOf(
+                                        "EVERYONE" to mapOf(
                                             "EMPTY" to PermissionLevel.READ
                                         )
                                     )
@@ -147,13 +150,17 @@ class BpmnProcDefRecordsTest {
         procDefDtos.forEach {
             procDefService.uploadProcDef(it)
         }
+
+        recordsService.register(
+            RecordsDaoBuilder.create("alfresco/").build()
+        )
     }
 
     @Test
     fun queryWithoutPermissions() {
         val result = bpmnProcDefRecords.queryRecords(queryAllProcDefs)
             as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
-        assertEquals(0, result.getRecords().size)
+        assertEquals(250, result.getRecords().size)
         assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE, result.getTotalCount())
     }
 
@@ -168,7 +175,7 @@ class BpmnProcDefRecordsTest {
 
     @Test
     fun queryAsUser() {
-        AuthContext.runAs(user = "fet", authorities = listOf("GROUP_all")) {
+        AuthContext.runAs(user = "fet") {
             val result = bpmnProcDefRecords.queryRecords(queryAllProcDefs)
                 as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
             assertEquals(250, result.getRecords().size)
@@ -182,7 +189,7 @@ class BpmnProcDefRecordsTest {
             .withMaxItems(50)
             .build()
 
-        val result = AuthContext.runAs(user = "fet", authorities = listOf("GROUP_all")) {
+        val result = AuthContext.runAs(user = "fet") {
             bpmnProcDefRecords.queryRecords(querySkip100Max50)
                 as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
         }
@@ -199,7 +206,7 @@ class BpmnProcDefRecordsTest {
 
     @Test
     fun deleteAsUser() {
-        val result = AuthContext.runAs(user = "fet", authorities = listOf("GROUP_all")) {
+        val result = AuthContext.runAs(user = "fet") {
             bpmnProcDefRecords.delete("def-2")
         }
         assertEquals(DelStatus.PROTECTED, result)
@@ -213,7 +220,6 @@ class BpmnProcDefRecordsTest {
         }
         assertEquals(DelStatus.OK, result)
         assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE - 1, procDefService.getCount())
-
 
         val id = "def-250"
         val newProcessDefDto = NewProcessDefDto(
@@ -249,7 +255,7 @@ class BpmnProcDefRecordsTest {
         recToMutate.enabled = false
 
         assertThrows<RuntimeException>("Permissions denied. RecordRef: eproc/bpmn-def@def-250") {
-            AuthContext.runAs(user = "fet", authorities = listOf("GROUP_all")) {
+            AuthContext.runAs(user = "fet") {
                 bpmnProcDefRecords.saveMutatedRec(recToMutate)
             }
         }
@@ -287,6 +293,6 @@ class BpmnProcDefRecordsTest {
                 </bpmn:endEvent>
               </bpmn:process>
             </bpmn:definitions>
-            """.trimIndent().toByteArray(StandardCharsets.UTF_8)
+        """.trimIndent().toByteArray(StandardCharsets.UTF_8)
     }
 }

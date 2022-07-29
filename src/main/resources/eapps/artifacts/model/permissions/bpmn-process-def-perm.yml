@@ -6,6 +6,6 @@ permissions:
   matrix:
     admin:
       ANY: WRITE
-    all:
+    EVERYONE:
       ANY: READ
   rules: []

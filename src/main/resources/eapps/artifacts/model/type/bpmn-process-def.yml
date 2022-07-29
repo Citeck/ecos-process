@@ -40,10 +40,10 @@ model:
       attribute: ''
       assignees:
         - GROUP_ALFRESCO_ADMINISTRATORS
-    - id: all
+    - id: EVERYONE
       name:
         ru: Все пользователи
         en: All users
       attribute: ''
       assignees:
-        - GROUP_all
+        - GROUP_EVERYONE
