@@ -16,7 +16,5 @@ class EcosCamundaParseListenerPlugin(
         listeners.add(multiInstanceUserTaskAssignPlugin)
 
         processEngineConfiguration.customPreBPMNParseListeners = listeners
-
-        println("===== END PRE INIT")
     }
 }
