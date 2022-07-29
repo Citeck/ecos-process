@@ -112,10 +112,10 @@ class BpmnProcDefRecordsTest {
                                 withMatrix(
                                     mapOf(
                                         "admin" to mapOf(
-                                            "EMPTY" to PermissionLevel.WRITE
+                                            "ANY" to PermissionLevel.WRITE
                                         ),
                                         "EVERYONE" to mapOf(
-                                            "EMPTY" to PermissionLevel.READ
+                                            "ANY" to PermissionLevel.READ
                                         )
                                     )
                                 )
