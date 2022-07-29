@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
-import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
@@ -28,16 +27,12 @@ class ProcTaskServiceImpl(
     }
 
     override fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto> {
-        val currentUser = AuthContext.getCurrentUser()
-        val currentAuthorities = AuthContext.getCurrentAuthorities()
-
         log.debug {
-            "getTasksByProcessForCurrentUser: processId=$processId " +
-                "user=$currentUser userAuthorities=$currentAuthorities"
+            "getTasksByProcessForCurrentUser: processId=$processId "
         }
 
         return getTasksByProcess(processId).filter {
-            isTaskActor(it, currentUser, currentAuthorities)
+            currentUserIsTaskActor(it)
         }
     }
 
@@ -50,16 +45,12 @@ class ProcTaskServiceImpl(
     }
 
     override fun getTasksByDocumentForCurrentUser(document: String): List<ProcTaskDto> {
-        val currentUser = AuthContext.getCurrentUser()
-        val currentAuthorities = AuthContext.getCurrentAuthorities()
-
         log.debug {
-            "getTasksByDocumentForCurrentUser: document=$document " +
-                "user=$currentUser userAuthorities=$currentAuthorities"
+            "getTasksByDocumentForCurrentUser: document=$document "
         }
 
         return getTasksByDocument(document).filter {
-            isTaskActor(it, currentUser, currentAuthorities)
+            currentUserIsTaskActor(it)
         }
     }
 

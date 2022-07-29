@@ -5,11 +5,13 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
@@ -226,6 +228,61 @@ fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
 fun BpmnTextAnnotationDef.toTText(): TText {
     return TText().apply {
         content.add(MLText.getClosestValue(text, I18nContext.getLocale()))
+    }
+}
+
+fun TActivity.toMultiInstanceConfig(): MultiInstanceConfig? {
+    if (loopCharacteristics == null) {
+        return null
+    }
+
+    when (val loopConfig = loopCharacteristics.value) {
+        is TMultiInstanceLoopCharacteristics -> {
+            val config = Json.mapper.convert(
+                otherAttributes[BPMN_MULTI_INSTANCE_CONFIG],
+                MultiInstanceConfig::class.java
+            ) ?: error("Cannot convert activity '$id' loop characteristics to multi instance config")
+            config.sequential = loopConfig.isIsSequential
+
+            return config
+        }
+        TStandardLoopCharacteristics::class.java -> {
+            error("Loop is not supported by engine")
+        }
+        else -> error("Unsupported type of loop characteristics. Activity id '$id'")
+    }
+}
+
+fun MultiInstanceConfig.toTLoopCharacteristics(context: ExportContext): TLoopCharacteristics {
+    val config = this
+
+    return TMultiInstanceLoopCharacteristics().apply {
+        isIsSequential = sequential
+
+        if (!config.loopCardinality.isNullOrBlank()) {
+            loopCardinality = TExpression().apply {
+                content.add(config.loopCardinality)
+                otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+            }
+        }
+
+        if (!config.completionCondition.isNullOrBlank()) {
+            completionCondition = TExpression().apply {
+                content.add(config.completionCondition)
+                otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+            }
+        }
+
+        otherAttributes.putIfNotBlank(CAMUNDA_COLLECTION, config.collection)
+        otherAttributes.putIfNotBlank(CAMUNDA_ELEMENT_VARIABLE, config.element)
+
+        otherAttributes[CAMUNDA_ASYNC_BEFORE] = config.asyncConfig.asyncBefore.toString()
+        otherAttributes[CAMUNDA_ASYNC_AFTER] = config.asyncConfig.asyncAfter.toString()
+        otherAttributes[CAMUNDA_EXCLUSIVE] = config.asyncConfig.exclusive.toString()
+
+        extensionElements = TExtensionElements().apply {
+            any.addAll(getCamundaJobRetryTimeCycleFieldConfig(config.jobConfig.jobRetryTimeCycle, context))
+        }
     }
 }
 

@@ -7,6 +7,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.getCamundaJobRetryTimeCycleFieldConfig
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.scriptPayloadToTScript
+import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TScriptTask
@@ -42,6 +43,10 @@ class CamundaScriptTaskConverter : EcosOmgConverter<BpmnScriptTaskDef, TScriptTa
 
             extensionElements = TExtensionElements().apply {
                 any.addAll(getCamundaJobRetryTimeCycleFieldConfig(element.jobConfig.jobRetryTimeCycle, context))
+            }
+
+            element.multiInstanceConfig?.let {
+                loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
             }
         }
     }

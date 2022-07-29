@@ -27,6 +27,11 @@ class EcosCamundaConfiguration {
     }
 
     @Bean
+    fun camundaSystemContextConfiguration(): CamundaProcessEngineConfiguration {
+        return CamundaSystemContextConfiguration()
+    }
+
+    @Bean
     fun camundaScriptEnvResolvesConfiguration(): CamundaProcessEngineConfiguration {
         return CamundaScriptEnvResolvesConfiguration()
     }

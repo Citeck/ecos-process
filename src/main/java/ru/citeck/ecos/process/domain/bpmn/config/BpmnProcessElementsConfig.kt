@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.data.sql.datasource.DbDataSourceImpl
 import ru.citeck.ecos.data.sql.domain.DbDomainConfig
 import ru.citeck.ecos.data.sql.domain.DbDomainFactory
@@ -86,9 +87,15 @@ class BpmnProcessElementsConfig(
 
         val accessPerms = object : DbRecordPerms {
             override fun getAuthoritiesWithReadPermission(): Set<String> {
-                return setOf("EVERYONE")
+                return setOf(AuthGroup.EVERYONE)
             }
             override fun isCurrentUserHasWritePerms(): Boolean {
+                return false
+            }
+            override fun isCurrentUserHasAttReadPerms(name: String): Boolean {
+                return true
+            }
+            override fun isCurrentUserHasAttWritePerms(name: String): Boolean {
                 return false
             }
         }
