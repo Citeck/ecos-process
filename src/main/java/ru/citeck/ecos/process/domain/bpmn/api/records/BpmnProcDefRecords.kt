@@ -176,7 +176,6 @@ class BpmnProcDefRecords(
         return roleService.getRolesId(BPMN_PROC_DEF_TYPE)
             .filter { roleService.isRoleMember(recordRef, it) }
             .toList()
-            .plus(RoleConstants.ROLE_EVERYONE)
     }
 
     private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
