@@ -13,7 +13,8 @@ import java.util.List;
 /**
  * @author Roman Makarskiy
  */
-public class CamundaSystemContextConfiguration extends AbstractCamundaConfiguration implements CamundaProcessEngineConfiguration {
+public class CamundaSystemContextConfiguration extends AbstractCamundaConfiguration
+    implements CamundaProcessEngineConfiguration {
 
     @Override
     public void postInit(ProcessEngineConfigurationImpl processEngineConfiguration) {

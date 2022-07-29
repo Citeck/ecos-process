@@ -11,8 +11,6 @@ import org.springframework.util.StringUtils;
 import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource;
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager;
 
-import java.util.Collections;
-
 /**
  * @author Roman Makarskiy
  */
@@ -25,9 +23,6 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
     @Autowired
     @Qualifier("camundaTransactionManager")
     protected PlatformTransactionManager transactionManager;
-
-    @Autowired
-    protected ParseListenerPlugin testPlugin;
 
     @Override
     public void preInit(SpringProcessEngineConfiguration configuration) {
@@ -61,13 +56,5 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
 
     public void setTransactionManager(PlatformTransactionManager transactionManager) {
         this.transactionManager = transactionManager;
-    }
-
-    public ParseListenerPlugin getTestPlugin() {
-        return testPlugin;
-    }
-
-    public void setTestPlugin(ParseListenerPlugin testPlugin) {
-        this.testPlugin = testPlugin;
     }
 }

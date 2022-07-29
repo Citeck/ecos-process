@@ -13,7 +13,8 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-private const val GROUP_PREFIX = "GROUP_"
+const val GROUP_PREFIX = "GROUP_"
+
 private const val WORKSPACE_PREFIX = "workspace://"
 
 @Slf4j
@@ -41,6 +42,10 @@ class CamundaRoleService(
 
     fun getGroupNames(document: String, roles: String): List<String> {
         return getRecipients(document, roles, isGroup)
+    }
+
+    fun getAuthorityNames(document: String, roles: String): List<String> {
+        return getRecipients(document, roles) { true }
     }
 
     private fun getRecipients(document: String, roles: String, predicate: (String) -> Boolean): List<String> {

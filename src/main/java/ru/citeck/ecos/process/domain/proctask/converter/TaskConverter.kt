@@ -37,7 +37,8 @@ private lateinit var cnv: TaskConverter
 
 fun Task.toProcTask(): ProcTaskDto {
     val links = cnv.camundaTaskService.getIdentityLinksForTask(id)
-    val variables = cnv.camundaTaskService.getVariables(id)
+    val variablesLocal = cnv.camundaTaskService.getVariablesLocal(id)
+    val documentRef = cnv.camundaTaskService.getVariable(id, VAR_DOCUMENT_REF)
 
     val candidateUsers = mutableSetOf<String>()
     val candidateGroups = mutableSetOf<String>()
@@ -63,8 +64,8 @@ fun Task.toProcTask(): ProcTaskDto {
         } else {
             RecordRef.create("eproc", BpmnProcRecords.ID, processInstanceId)
         },
-        documentRef = if (variables[VAR_DOCUMENT_REF] != null) {
-            RecordRef.valueOf(variables[VAR_DOCUMENT_REF].toString())
+        documentRef = if (documentRef != null) {
+            RecordRef.valueOf(documentRef.toString())
         } else {
             RecordRef.EMPTY
         },
@@ -74,7 +75,7 @@ fun Task.toProcTask(): ProcTaskDto {
         candidateUsers = candidateUsers.map { cnv.authorityService.getAuthorityRef(it) },
         candidateGroups = candidateGroups.map { cnv.authorityService.getAuthorityRef(it) },
         definitionKey = taskDefinitionKey,
-        variables = variables
+        variables = variablesLocal
     )
 }
 

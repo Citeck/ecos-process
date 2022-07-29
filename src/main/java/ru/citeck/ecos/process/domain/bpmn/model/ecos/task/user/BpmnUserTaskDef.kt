@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.records2.RecordRef
 
@@ -16,7 +17,9 @@ data class BpmnUserTaskDef(
     val assignees: List<Recipient> = emptyList(),
 
     val formRef: RecordRef,
-    val priority: TaskPriority
+    val priority: TaskPriority,
+
+    val multiInstanceConfig: MultiInstanceConfig? = null
 ) {
 
     init {

@@ -4,9 +4,8 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.*
-import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
-import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
-import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
+import ru.citeck.ecos.process.domain.bpmn.io.convert.*
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
@@ -35,6 +34,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             ),
             formRef = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
             priority = TaskPriority.valueOf(element.otherAttributes[BPMN_PROP_PRIORITY]!!),
+            multiInstanceConfig = element.toMultiInstanceConfig()
         )
     }
 
@@ -53,6 +53,11 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))
             otherAttributes.putIfNotBlank(BPMN_PROP_FORM_REF, element.formRef.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_PRIORITY, element.priority.toString())
+
+            element.multiInstanceConfig?.let {
+                loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
+                otherAttributes[BPMN_MULTI_INSTANCE_CONFIG] = Json.mapper.toString(it)
+            }
         }
     }
 }
