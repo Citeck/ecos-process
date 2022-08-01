@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.io.convert.fullId
@@ -142,7 +143,10 @@ class ProcTaskRecords(
                 return alfTaskAtts.getAtt(name)
             }
 
-            // TODO: replace by method
+            if (name == COMMENT_VAR) {
+                return null
+            }
+
             if (mapping.containsKey(name)) {
                 val fixedAttName = mapping[name]
                 val attValue = when (fixedAttName) {
