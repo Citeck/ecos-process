@@ -67,8 +67,10 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             isIsSequential = sequential
 
             otherAttributes.putIfNotBlank(
-                CAMUNDA_COLLECTION, authorityNamesExpression(
-                    element.assignees.map { it.value })
+                CAMUNDA_COLLECTION,
+                authorityNamesExpression(
+                    element.assignees.map { it.value }
+                )
             )
             otherAttributes.putIfNotBlank(CAMUNDA_ELEMENT_VARIABLE, VAR_ASSIGNEE_ELEMENT)
         }

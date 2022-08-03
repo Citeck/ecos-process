@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.SendNotificationDelegate
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send.SendNotificationDelegate
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.CamundaFieldCreator
 import ru.citeck.ecos.process.domain.bpmn.io.convert.addIfNotBlank

@@ -21,6 +21,7 @@ class Outcome(
         private const val SEPARATOR = ":"
         const val OUTCOME_VAR = "outcome"
         const val OUTCOME_PREFIX = OUTCOME_VAR + "_"
+        const val OUTCOME_POSTFIX = "_$OUTCOME_VAR"
 
         val EMPTY = Outcome("")
     }

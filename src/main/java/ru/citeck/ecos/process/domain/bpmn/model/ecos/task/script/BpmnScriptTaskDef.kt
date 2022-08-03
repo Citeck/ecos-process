@@ -2,9 +2,9 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 
 data class BpmnScriptTaskDef(
     val id: String,
