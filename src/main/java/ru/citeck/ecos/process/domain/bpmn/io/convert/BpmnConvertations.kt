@@ -236,7 +236,7 @@ fun TActivity.toMultiInstanceConfig(): MultiInstanceConfig? {
             val config = Json.mapper.convert(
                 otherAttributes[BPMN_MULTI_INSTANCE_CONFIG],
                 MultiInstanceConfig::class.java
-            ) ?: error("Cannot convert activity '$id' loop characteristics to multi instance config")
+            ) ?: MultiInstanceConfig()
             config.sequential = loopConfig.isIsSequential
 
             return config
