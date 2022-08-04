@@ -4,10 +4,10 @@ import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
-import ru.citeck.ecos.process.domain.bpmn.io.convert.fullId
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_PREFIX
 import ru.citeck.ecos.process.domain.proctask.converter.toRecord
@@ -49,6 +49,8 @@ class ProcTaskRecords(
         )
 
         val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
+
+        private const val FORM_INFO_ATT = "_formInfo"
     }
 
     override fun getId(): String {
@@ -230,7 +232,8 @@ class ProcTaskRecords(
             documentAtts.setId(task.documentRef)
 
             val outcome = getTaskOutcome(task, record)
-            taskVariables[outcome.fullId()] = outcome.value
+            taskVariables[outcome.outcomeId()] = outcome.value
+            taskVariables[outcome.nameId()] = outcome.name.toString()
 
             record.forEach { k, v ->
                 when {
@@ -258,24 +261,26 @@ class ProcTaskRecords(
         }
 
         private fun getTaskOutcome(task: ProcTaskDto, record: LocalRecordAtts): Outcome {
-            val outcome = let {
-                var outcomeAttValue = ""
+            var outcome = ""
+            var formInfo = FormInfo()
 
-                record.forEach { k, v ->
-                    if (k.startsWith(OUTCOME_PREFIX) && v.asBoolean()) {
-                        outcomeAttValue = k
-                    }
+            record.forEach { k, v ->
+                if (k.startsWith(OUTCOME_PREFIX) && v.asBoolean()) {
+                    outcome = k.substringAfter(OUTCOME_PREFIX)
                 }
 
-                outcomeAttValue.substringAfter(OUTCOME_PREFIX)
+                if (k == FORM_INFO_ATT) {
+                    formInfo = v.getAs(FormInfo::class.java) ?: FormInfo()
+                }
             }
+
 
             if (outcome.isBlank()) throw IllegalStateException("Task outcome is mandatory for task completion")
             if (task.definitionKey.isNullOrBlank()) {
                 throw IllegalStateException("Task DefinitionKey is mandatory for task completion")
             }
 
-            return Outcome(task.definitionKey, outcome)
+            return Outcome(task.definitionKey, outcome, formInfo.submitName)
         }
 
         private fun processDocumentVariable(k: String, v: DataValue): Pair<String, Any?> {
@@ -292,3 +297,8 @@ class ProcTaskRecords(
 fun isAlfTask(id: String): Boolean {
     return id.startsWith("workspace")
 }
+
+private data class FormInfo(
+    val formId: String = "",
+    val submitName: MLText = MLText()
+)

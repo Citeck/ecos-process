@@ -5,7 +5,10 @@ import org.camunda.bpm.engine.delegate.DelegateTask
 import org.camunda.bpm.engine.delegate.TaskListener
 import org.camunda.bpm.engine.impl.bpmn.behavior.UserTaskActivityBehavior
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl
+import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.records2.RecordRef
@@ -24,9 +27,15 @@ fun DelegateTask.getDocumentRef(): RecordRef {
 }
 
 fun DelegateTask.getOutcome(): Outcome {
-    val outComeValue = getVariable("${taskDefinitionKey}$OUTCOME_POSTFIX")?.toString()
+    val outcomeValue = getVariable("${taskDefinitionKey}$OUTCOME_POSTFIX")?.toString()
         ?: return Outcome.EMPTY
-    return Outcome(taskDefinitionKey, outComeValue)
+
+    val outcomeName = Json.mapper.convert(
+        getVariable("${taskDefinitionKey}$OUTCOME_NAME_POSTFIX")?.toString() ?: "",
+        MLText::class.java
+    ) ?: MLText()
+
+    return Outcome(taskDefinitionKey, outcomeValue, outcomeName)
 }
 
 fun EntityRef.isAuthorityGroupRef(): Boolean {

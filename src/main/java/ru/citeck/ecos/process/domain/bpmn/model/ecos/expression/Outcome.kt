@@ -8,25 +8,39 @@ import ecos.com.fasterxml.jackson210.databind.JsonSerializer
 import ecos.com.fasterxml.jackson210.databind.SerializerProvider
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonSerialize
+import ru.citeck.ecos.commons.data.MLText
 
 @JsonSerialize(using = OutcomeSerializer::class)
 @JsonDeserialize(using = OutcomeDeserializer::class)
 class Outcome(
-    val data: String
+    val data: String,
+    val name: MLText = MLText()
 ) {
     var id: String = ""
     var value: String = ""
 
+    val outcomeId = fun(): String {
+        return id + "_" + OUTCOME_VAR
+    }
+
+    val nameId = fun(): String {
+        return id + "_" + OUTCOME_NAME_VAR
+    }
+
     companion object {
         private const val SEPARATOR = ":"
         const val OUTCOME_VAR = "outcome"
+        const val OUTCOME_NAME_VAR = "outcomeName"
+
         const val OUTCOME_PREFIX = OUTCOME_VAR + "_"
+
         const val OUTCOME_POSTFIX = "_$OUTCOME_VAR"
+        const val OUTCOME_NAME_POSTFIX = "_$OUTCOME_NAME_VAR"
 
         val EMPTY = Outcome("")
     }
 
-    constructor(id: String, value: String) : this("$id$SEPARATOR$value")
+    constructor(id: String, value: String, name: MLText) : this("$id$SEPARATOR$value", name)
 
     init {
         if (data.isNotBlank()) {

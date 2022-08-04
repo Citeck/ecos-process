@@ -60,6 +60,8 @@ fun DelegateTask.toTaskElement(): TaskElementEvent {
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
     )
 
+    val outcome = getOutcome()
+
     return TaskElementEvent(
         taskId = id,
         engine = BPMN_CAMUNDA_ENGINE,
@@ -75,9 +77,8 @@ fun DelegateTask.toTaskElement(): TaskElementEvent {
         executionId = executionId,
         name = MLText(name),
         comment = variables[COMMENT_VAR]?.toString(),
-        outcome = getOutcome().value,
-        //TODO: outcomeName for camunda task
-        //outcomeName = MLText(""),
+        outcome = outcome.value,
+        outcomeName = outcome.name,
         document = getDocumentRef()
     )
 }

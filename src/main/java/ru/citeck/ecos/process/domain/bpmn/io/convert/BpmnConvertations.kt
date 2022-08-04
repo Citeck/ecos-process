@@ -18,7 +18,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_VAR
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -193,11 +192,7 @@ fun Outcome.toExpressionStr(): String {
     if (this == Outcome.EMPTY) {
         return ""
     }
-    return "\${${fullId()} == '$value'}"
-}
-
-fun Outcome.fullId(): String {
-    return id + "_" + OUTCOME_VAR
+    return "\${${outcomeId()} == '$value'}"
 }
 
 fun ConditionConfig.expressionToTExpression(): TExpression {
