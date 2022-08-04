@@ -12,6 +12,7 @@ formRef: uiserv/form@bpmn-process-def
 journalRef: uiserv/journal@bpmn-process-def
 
 actions:
+  - uiserv/action@download-base64-data-bpmn-xml
   - uiserv/action@go-to-bpmn-designer
 
 defaultCreateVariant: false
