@@ -1,0 +1,16 @@
+
+# ===================================================================
+# Application specific properties
+# Add your own application properties here, see the ApplicationProperties class
+# to have type-safe configuration, like in the JHipsterProperties above
+#
+# More documentation is available at:
+# https://www.jhipster.tech/common-application-properties/
+# ===================================================================
+
+# application:
+
+ecos-process:
+  timers:
+    delay-after-fail-ms: 600000
+    update-rate-ms: 30000

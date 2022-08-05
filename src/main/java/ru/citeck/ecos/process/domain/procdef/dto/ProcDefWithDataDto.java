@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.procdef.dto;
 import lombok.Data;
 import lombok.ToString;
 import ru.citeck.ecos.commons.data.MLText;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
@@ -22,7 +22,7 @@ public class ProcDefWithDataDto {
     private String procType;
 
     @NotNull
-    private RecordRef ecosTypeRef;
+    private EntityRef ecosTypeRef;
 
     @NotNull
     private String alfType;
@@ -37,12 +37,24 @@ public class ProcDefWithDataDto {
     private byte[] data;
 
     @NotNull
+    private byte[] image;
+
+    @NotNull
     private Instant modified;
+
+    @NotNull
+    private Instant created;
 
     @NotNull
     private int version;
 
+    private EntityRef formRef;
+
     private Boolean enabled;
+
+    private Boolean autoStartEnabled;
+
+    private EntityRef sectionRef = EntityRef.EMPTY;
 
     public ProcDefWithDataDto() {
     }
@@ -54,11 +66,16 @@ public class ProcDefWithDataDto {
         this.revisionId = other.revisionId;
         this.format = other.format;
         this.data = other.data;
+        this.image = other.image;
         this.ecosTypeRef = other.ecosTypeRef;
         this.alfType = other.alfType;
         this.modified = other.modified;
+        this.created = other.created;
         this.version = other.version;
+        this.formRef = other.formRef;
         this.enabled = other.enabled;
+        this.autoStartEnabled = other.autoStartEnabled;
+        setSectionRef(other.sectionRef);
     }
 
     public ProcDefWithDataDto(ProcDefDto def, ProcDefRevDto rev) {
@@ -68,11 +85,16 @@ public class ProcDefWithDataDto {
         this.revisionId = def.getRevisionId();
         this.format = rev.getFormat();
         this.data = rev.getData();
+        this.image = rev.getImage();
         this.ecosTypeRef = def.getEcosTypeRef();
         this.alfType = def.getAlfType();
         this.modified = rev.getCreated();
+        this.created = def.getCreated();
         this.version = rev.getVersion();
+        this.formRef = def.getFormRef();
         this.enabled = def.getEnabled();
+        this.autoStartEnabled = def.getAutoStartEnabled();
+        setSectionRef(def.getSectionRef());
     }
 
     public String getId() {
@@ -99,11 +121,11 @@ public class ProcDefWithDataDto {
         this.procType = procType;
     }
 
-    public RecordRef getEcosTypeRef() {
+    public EntityRef getEcosTypeRef() {
         return ecosTypeRef;
     }
 
-    public void setEcosTypeRef(RecordRef ecosTypeRef) {
+    public void setEcosTypeRef(EntityRef ecosTypeRef) {
         this.ecosTypeRef = ecosTypeRef;
     }
 
@@ -139,6 +161,14 @@ public class ProcDefWithDataDto {
         this.data = data;
     }
 
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
+    }
+
     public Instant getModified() {
         return modified;
     }
@@ -161,5 +191,45 @@ public class ProcDefWithDataDto {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public EntityRef getFormRef() {
+        return formRef;
+    }
+
+    public void setFormRef(EntityRef formRef) {
+        this.formRef = formRef;
+    }
+
+    public Boolean getAutoStartEnabled() {
+        return autoStartEnabled;
+    }
+
+    public void setAutoStartEnabled(Boolean autoStartEnabled) {
+        this.autoStartEnabled = autoStartEnabled;
+    }
+
+    public EntityRef getSectionRef() {
+        return sectionRef;
+    }
+
+    public void setSectionRef(EntityRef sectionRef) {
+        if (sectionRef == null) {
+            this.sectionRef = EntityRef.EMPTY;
+        } else {
+            this.sectionRef = sectionRef;
+        }
+    }
+
+    public Instant getCreated() {
+        return created;
+    }
+
+    public void setCreated(Instant created) {
+        if (created != null) {
+            this.created = created;
+        } else {
+            this.created = Instant.EPOCH;
+        }
     }
 }

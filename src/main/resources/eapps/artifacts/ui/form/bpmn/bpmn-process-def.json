@@ -4,12 +4,10 @@
   "title": {
     "en": "BPMN Process definition form"
   },
-  "description": {
-    "en": ""
-  },
+  "description": {},
   "customModule": null,
   "typeRef": "",
-  "width": "default",
+  "width": "lg",
   "i18n": {},
   "definition": {
     "components": [
@@ -28,13 +26,24 @@
                 "input": true
               },
               {
+                "label": "ECOS Type",
+                "journalId": "ecos-types",
+                "key": "ecosType",
+                "type": "selectJournal",
+                "input": true,
+                "customPredicateJs": null,
+                "presetFilterPredicatesJs": null,
+                "sortAscending": "asc"
+              },
+              {
                 "label": {
-                  "ru": "Имя",
-                  "en": "Name"
+                  "ru": "Включен",
+                  "en": "Enabled"
                 },
-                "defaultValue": "",
-                "key": "name",
-                "type": "mlText",
+                "key": "enabled",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "checkbox",
                 "input": true
               }
             ],
@@ -57,18 +66,59 @@
             "label": "Column",
             "components": [
               {
-                "label": "ECOS Type",
-                "journalId": "ecos-types",
-                "key": "ecosType",
-                "type": "selectJournal",
-                "input": true,
-                "customPredicateJs": null,
-                "presetFilterPredicatesJs": null,
-                "sortAscending": "asc"
+                "label": {
+                  "ru": "Имя",
+                  "en": "Name"
+                },
+                "key": "name",
+                "type": "mlText",
+                "input": true
               },
               {
-                "label": "Enabled",
-                "key": "enabled",
+                "label": {
+                  "ru": "Раздел",
+                  "en": "Section"
+                },
+                "key": "sectionRef",
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'sectionsList.records', []);"
+                },
+                "defaultValue": "",
+                "refreshOn": [
+                  "sectionsList"
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another"
+              },
+              {
+                "label": {
+                  "ru": "Форма",
+                  "en": "Form"
+                },
+                "key": "formRef",
+                "modalTitle": "",
+                "journalId": "ecos-forms",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "selectJournal",
+                "input": true,
+                "queryData": ""
+              },
+              {
+                "label": {
+                  "ru": "Автоматический старт процесса",
+                  "en": "Auto start process"
+                },
+                "key": "autoStartEnabled",
+                "tooltip": {
+                  "ru": "При создании объекта указанного типа, процесс будет запущен автоматически",
+                  "en": "When creating an object of the specified type, the process will be launched automatically"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
                 "type": "checkbox",
                 "input": true
               }
@@ -127,6 +177,28 @@
         "key": "columns2",
         "type": "columns",
         "input": false
+      },
+      {
+        "label": "Sections",
+        "source": {
+          "type": "recordsQuery",
+          "recordsQuery": {
+            "query": "value = {\n  sourceId: 'eproc/bpmn-section',\n  language: 'predicate',\n  query: {}\n}",
+            "attributes": {
+              "label": "?disp",
+              "value": "?id"
+            },
+            "isSingle": false
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "sectionsList",
+        "type": "asyncData",
+        "input": true,
+        "addAnother": "ecos.forms.btn.add-another"
       }
     ]
   },

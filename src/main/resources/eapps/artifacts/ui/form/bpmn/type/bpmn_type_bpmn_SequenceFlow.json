@@ -1,0 +1,224 @@
+{
+  "id": "bpmn-type-bpmn:SequenceFlow",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Sequence Flow Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {
+    "ru": {
+      "EXPRESSION": "Выражение",
+      "SCRIPT": "Скрипт",
+      "OUTCOME": "Исходящий",
+      "NONE": "Нет"
+    },
+    "en": {
+      "EXPRESSION": "Expression",
+      "SCRIPT": "Script",
+      "OUTCOME": "Outcome",
+      "NONE": "None"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "HTML"
+        },
+        "key": "id",
+        "labelPosition": "left-left",
+        "className": "",
+        "attrs": [
+          {
+            "attr": "",
+            "value": ""
+          }
+        ],
+        "content": "id: <span class=\"text-muted font-weight-bold\">{{data.id}}</span>",
+        "refreshOnChange": true,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "htmlelement",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "validate": {
+          "required": true
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Тип условия",
+          "en": "Condition Type"
+        },
+        "key": "conditionType",
+        "dataSrc": "values",
+        "data": {
+          "values": [
+            {
+              "label": "NONE",
+              "value": "NONE"
+            },
+            {
+              "label": "OUTCOME",
+              "value": "OUTCOME"
+            },
+            {
+              "label": "SCRIPT",
+              "value": "SCRIPT"
+            },
+            {
+              "label": "EXPRESSION",
+              "value": "EXPRESSION"
+            }
+          ]
+        },
+        "defaultValue": "NONE",
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "conditionConfig Container"
+        },
+        "key": "conditionConfig",
+        "hideLabel": true,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "container",
+        "input": true,
+        "components": [
+          {
+            "label": {
+              "ru": "OUTCOME"
+            },
+            "key": "outcome",
+            "hidden": true,
+            "dataSrc": "custom",
+            "data": {
+              "custom": "const isOutcome = _.get(data, 'conditionType') === 'OUTCOME';\nconst getIncomingOutcomes = _.get(instance, 'root.options.editor.getIncomingOutcomes');\n\nif (!isOutcome|| !_.isFunction(getIncomingOutcomes)) {\n  values = [];\n  return;\n}\n\nconst result = getIncomingOutcomes();\n\nif (!result) {\n  values = [];\n  return;\n}\n\nconst outcomes = [];\n\nresult.forEach(item => {\n  const taskId = (item.id|| '').replace(/\\:/g, '_');\n  \n  item.outcomes.forEach(o => {\n    const outcomeId = (o.id|| '').replace(/\\:/g, '_');\n\n    outcomes.push({\n      value: `${taskId}:${outcomeId}`,\n      label: `${item.name} - ${o.name}`\n    });\n  });\n});\n\nvalues = outcomes;"
+            },
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "logic:show",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "result = _.get(data, 'conditionType') === 'OUTCOME';"
+                },
+                "actions": [
+                  {
+                    "name": "action:show",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "false"
+                  }
+                ]
+              }
+            ],
+            "defaultValue": "",
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "SCRIPT",
+              "en": "SCRIPT"
+            },
+            "key": "fn",
+            "hidden": true,
+            "editor": "ace",
+            "wysiwyg": {
+              "mode": "ace/mode/javascript"
+            },
+            "defaultValue": "// some script;",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "logic:show",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "result = _.get(data, 'conditionType') === 'SCRIPT';"
+                },
+                "actions": [
+                  {
+                    "name": "action:show",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "false"
+                  }
+                ]
+              }
+            ],
+            "as": "string",
+            "type": "textarea",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "EXPRESSION"
+            },
+            "key": "expression",
+            "hidden": true,
+            "placeholder": {
+              "ru": "${someVariable}"
+            },
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "logic:show",
+                "trigger": {
+                  "type": "simple",
+                  "simple": {
+                    "show": true,
+                    "when": "conditionType",
+                    "eq": "EXPRESSION"
+                  }
+                },
+                "actions": [
+                  {
+                    "name": "action:show",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "false"
+                  }
+                ]
+              }
+            ],
+            "type": "textfield",
+            "input": true
+          }
+        ]
+      }
+    ]
+  },
+  "attributes": {}
+}

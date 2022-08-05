@@ -1,12 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos
 
-import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnArtifactDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 
 class BpmnProcessDef(
     val id: String,
-    val definitionsId: String,
-
-    val name: MLText,
-    val ecosType: RecordRef
+    val isExecutable: Boolean,
+    val flowElements: List<BpmnFlowElementDef>,
+    val artifacts: List<BpmnArtifactDef>
 )

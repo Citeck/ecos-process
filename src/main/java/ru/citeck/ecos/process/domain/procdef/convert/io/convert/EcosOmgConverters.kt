@@ -12,10 +12,12 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredFunctions
 
-class EcosOmgConverters(val base: EcosOmgConverters?,
-                        converters: List<KClass<out EcosOmgConverter<*, *>>>,
-                        private val typeResolver: (Any) -> String? = { null },
-                        private val otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null }) {
+class EcosOmgConverters(
+    val base: EcosOmgConverters?,
+    converters: List<KClass<out EcosOmgConverter<*, *>>>,
+    private val typeResolver: (Any) -> String? = { null },
+    private val otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null }
+) {
 
     constructor(
         converters: List<KClass<out EcosOmgConverter<*, *>>>,
@@ -25,9 +27,13 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
 
     private val convertersByType: Map<String, ConverterInfo>
     private val convertersByOmgType: Map<Class<*>, ConverterInfo>
-    private val jaxbCreateMethods: Map<Class<*>, (Any) -> JAXBElement<Any>>
+    private val jaxbCreateMethods: MutableMap<Class<*>, (Any) -> JAXBElement<Any>> = mutableMapOf()
 
-    private val objectFactory = ObjectFactory()
+    private val jaxbFactories = listOf(
+        ObjectFactory(),
+        ru.citeck.ecos.process.domain.bpmn.model.omg.ObjectFactory(),
+        ru.citeck.ecos.process.domain.bpmn.model.camunda.ObjectFactory()
+    )
 
     init {
 
@@ -45,9 +51,13 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
         }.toMap()
         convertersByOmgType = convertersList.filter {
             !ConvertUtils.getTypeByClass(it.ecosType).startsWith("ecos:")
-        }.map { it.omgType to it }.toMap()
+        }.associateBy { it.omgType }
 
-        jaxbCreateMethods = objectFactory::class.declaredFunctions.filter {
+        jaxbFactories.forEach { initJaxbCreateMethods(it) }
+    }
+
+    private fun initJaxbCreateMethods(factory: Any) {
+        val methods = factory::class.declaredFunctions.filter {
             if (it.parameters.size != 2) {
                 return@filter false
             }
@@ -56,13 +66,15 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
                 return@filter false
             }
             it.returnType.classifier == JAXBElement::class && it.name.startsWith("create")
-        }.map {
+        }.associate {
             val func: (Any) -> JAXBElement<Any> = { item ->
                 @Suppress("UNCHECKED_CAST")
-                it.call(objectFactory, item) as JAXBElement<Any>
+                it.call(factory, item) as JAXBElement<Any>
             }
             (it.parameters[1].type.classifier as KClass<*>).java to func
-        }.toMap()
+        }
+
+        jaxbCreateMethods.putAll(methods)
     }
 
     fun <T : Any> export(element: Any): T {
@@ -74,16 +86,21 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
         return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
     }
 
+    fun <T : Any> export(element: Any, expectedType: Class<T>, context: ExportContext): T {
+        @Suppress("UNCHECKED_CAST")
+        return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
+    }
+
     fun <T : Any> export(type: String, element: Any, context: ExportContext): T {
 
         val converter = convertersByType[type] ?: base?.convertersByType?.get(type)
-                                ?: error("Type is not registered: $type")
+            ?: error("Type is not registered: $type")
 
-        val cmmnElement = Json.mapper.convert(element, converter.ecosType)
+        val convertedElement = Json.mapper.convert(element, converter.ecosType)
             ?: error("Conversion failed for $element of type $type and class ${converter.ecosType}")
 
         @Suppress("UNCHECKED_CAST")
-        val result = converter.converter.export(cmmnElement, context) as T
+        val result = converter.converter.export(convertedElement, context) as T
         val otherAtts = otherAttsResolver.invoke(result) ?: base?.otherAttsResolver?.invoke(result)
         if (otherAtts != null) {
             val emptyProps = otherAtts.keys.filter {
@@ -98,7 +115,7 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
     fun <T : Any> convertToJaxb(item: T): JAXBElement<T> {
 
         val jaxbCreate = jaxbCreateMethods[item::class.java]
-                ?: error("Jaxb create method is not found for ${item::class.java}")
+            ?: error("Jaxb create method is not found for ${item::class.java}")
 
         @Suppress("UNCHECKED_CAST")
         return jaxbCreate.invoke(item) as JAXBElement<T>
@@ -112,28 +129,28 @@ class EcosOmgConverters(val base: EcosOmgConverters?,
         return import(item, ObjectData::class.java, context)
     }
 
-    fun <T: Any> import(item: Any, expectedType: Class<T>): EcosElementData<T> {
+    fun <T : Any> import(item: Any, expectedType: Class<T>): EcosElementData<T> {
         return import(item, expectedType, ImportContext(this))
     }
 
-    fun <T: Any> import(item: Any, expectedType: Class<T>, context: ImportContext): EcosElementData<T> {
+    fun <T : Any> import(item: Any, expectedType: Class<T>, context: ImportContext): EcosElementData<T> {
 
         val extensionType = typeResolver.invoke(item)
 
         val converter = if (!extensionType.isNullOrBlank()) {
             convertersByType[extensionType] ?: base?.convertersByType?.get(extensionType)
-                                            ?: error("Type is not registered: $extensionType")
+                ?: error("Type is not registered: $extensionType")
         } else {
-            val type: Class<*>? = item::class.java
+            val type: Class<*> = item::class.java
             getConverterByOmgType(type) ?: base?.getConverterByOmgType(type)
-                                        ?: error("Type is not registered: ${item::class.java}")
+                ?: error("Type is not registered: ${item::class.java}")
         }
 
-        val ecosCmmnData = converter.converter.import(item, context)
-        val type = ConvertUtils.getTypeByClass(ecosCmmnData::class.java)
+        val ecosData = converter.converter.import(item, context)
+        val type = ConvertUtils.getTypeByClass(ecosData::class.java)
 
-        val convertedData = Json.mapper.convert(ecosCmmnData, expectedType)
-                ?: error("Conversion error. Value: $ecosCmmnData Target Type: $expectedType")
+        val convertedData = Json.mapper.convert(ecosData, expectedType)
+            ?: error("Conversion error. Value: $ecosData Target Type: $expectedType")
 
         return EcosElementData(type, convertedData)
     }

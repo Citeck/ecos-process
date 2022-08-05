@@ -1,10 +1,10 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.ShapeDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNShape
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.ShapeDef
 import javax.xml.namespace.QName
 
 class ShapeConverter : EcosOmgConverter<ShapeDef, CMMNShape> {
@@ -13,8 +13,8 @@ class ShapeConverter : EcosOmgConverter<ShapeDef, CMMNShape> {
 
         return ShapeDef(
             element.id,
-                DiagramIOUtils.convertLabel(element.cmmnLabel),
-                DiagramIOUtils.convertBoundsNotNull(element.bounds),
+            DiagramIOUtils.convertLabel(element.cmmnLabel),
+            DiagramIOUtils.convertBoundsNotNull(element.bounds),
             element.cmmnElementRef.localPart,
             element.isIsCollapsed
         )

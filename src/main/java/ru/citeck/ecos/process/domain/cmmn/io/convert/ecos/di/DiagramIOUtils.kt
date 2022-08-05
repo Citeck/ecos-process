@@ -1,13 +1,12 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.di
 
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.LabelDef
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Bounds
 import ru.citeck.ecos.process.domain.cmmn.model.omg.CMMNLabel
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Dimension
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Point
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.diagram.LabelDef
-
-import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.math.DimensionDef as EcosDimension
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.math.BoundsDef as EcosBounds
+import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.math.DimensionDef as EcosDimension
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.di.math.PointDef as EcosPoint
 
 object DiagramIOUtils {

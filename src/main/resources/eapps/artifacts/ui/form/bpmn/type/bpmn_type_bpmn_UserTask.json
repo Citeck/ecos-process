@@ -1,0 +1,200 @@
+{
+  "id": "bpmn-type-bpmn:UserTask",
+  "formKey": "",
+  "title": {
+    "en": "BPMN User Task Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {
+    "ru": {
+      "task_priority_low": "Низкий",
+      "task_priority_medium": "Средний",
+      "task_priority_high": "Высокий"
+    },
+    "en": {
+      "task_priority_low": "Low",
+      "task_priority_medium": "Medium",
+      "task_priority_high": "High"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "label": "load roles",
+        "source": {
+          "type": "recordsScript",
+          "recordsScript": {
+            "attributes": {
+              "rolesData": "model.roles[]{value:id,label:name}"
+            },
+            "script": "let ref = instance.options.editor.getEcosType()._id;\n\nif (!!ref) {\n  value = ref;\n}"
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once",
+          "rate": 300
+        },
+        "key": "roles",
+        "type": "asyncData",
+        "input": true
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "en": "Assignees",
+          "ru": "Реципиенты"
+        },
+        "key": "assignees",
+        "tooltip": {
+          "ru": "Выбор реципиентов задачи из ролей типа ecos",
+          "en": "Selecting task assignees from roles of the ecos type"
+        },
+        "multiple": true,
+        "validate": {
+          "required": true
+        },
+        "reorder": false,
+        "dataSrc": "custom",
+        "data": {
+          "custom": "values = _.get(data, 'roles.rolesData');"
+        },
+        "defaultValue": "",
+        "refreshOn": [
+          "roles"
+        ],
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Форма задачи",
+          "en": "Task form"
+        },
+        "key": "formRef",
+        "validate": {
+          "required": true
+        },
+        "modalTitle": "",
+        "journalId": "ecos-forms",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "selectJournal",
+        "input": true,
+        "queryData": ""
+      },
+      {
+        "label": {
+          "en": "Priority",
+          "ru": "Приоритет"
+        },
+        "key": "priority",
+        "validate": {
+          "required": true
+        },
+        "dataSrc": "values",
+        "data": {
+          "values": [
+            {
+              "label": "task_priority_low",
+              "value": "LOW"
+            },
+            {
+              "label": "task_priority_medium",
+              "value": "MEDIUM"
+            },
+            {
+              "label": "task_priority_high",
+              "value": "HIGH"
+            }
+          ]
+        },
+        "defaultValue": "",
+        "customDefaultValue": "value = \"MEDIUM\";",
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "en": "Task outcomes",
+          "ru": "Результаты задачи"
+        },
+        "key": "outcomes",
+        "multiple": true,
+        "validate": {
+          "required": true,
+          "minLength": "",
+          "maxLength": ""
+        },
+        "disableAddingRemovingRows": false,
+        "addAnotherPosition": "bottom",
+        "removePlacement": "col",
+        "defaultOpen": false,
+        "layoutFixed": false,
+        "enableRowGroups": false,
+        "reorder": true,
+        "defaultValue": [
+          {
+            "textField": "",
+            "id": "",
+            "name": {
+              "ru": "",
+              "en": ""
+            },
+            "objectObject": {
+              "ru": "",
+              "en": ""
+            },
+            "_name": {
+              "ru": "",
+              "en": ""
+            }
+          }
+        ],
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "datagrid",
+        "input": true,
+        "components": [
+          {
+            "label": {
+              "ru": "Идентификатор",
+              "en": "Id"
+            },
+            "key": "id",
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true,
+            "row": "0-0"
+          },
+          {
+            "label": {
+              "en": "Name",
+              "ru": "Название"
+            },
+            "key": "name",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "mlText",
+            "input": true,
+            "row": "0-1"
+          }
+        ]
+      }
+    ]
+  },
+  "attributes": {}
+}

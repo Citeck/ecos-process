@@ -1,0 +1,354 @@
+{
+  "id": "bpmn-type-bpmn:SendTask",
+  "formKey": "",
+  "title": {
+    "en": "BPMN User Send Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {
+    "ru": {
+      "notification_type_email": "Электронная почта",
+      "notification_type_firebase_push": "Мобильное push уведомление"
+    },
+    "en": {
+      "notification_type_email": "Email",
+      "notification_type_firebase_push": "Mobile push notification"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "label": "load roles",
+        "source": {
+          "type": "recordsScript",
+          "recordsScript": {
+            "attributes": {
+              "rolesData": "model.roles[]{value:id,label:name}"
+            },
+            "script": "let ref = instance.options.editor.getEcosType()._id;\n\nif (!!ref) {\n  value = ref;\n}"
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "roles",
+        "type": "asyncData",
+        "input": true
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Тип уведомления",
+          "en": "Notification type"
+        },
+        "key": "notificationType",
+        "validate": {
+          "required": true
+        },
+        "dataSrc": "values",
+        "data": {
+          "values": [
+            {
+              "label": "notification_type_email",
+              "value": "EMAIL_NOTIFICATION"
+            },
+            {
+              "label": "notification_type_firebase_push",
+              "value": "FIREBASE_NOTIFICATION"
+            }
+          ]
+        },
+        "defaultValue": "",
+        "customDefaultValue": "value = \"EMAIL_NOTIFICATION\";",
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel-message",
+        "tooltip": {
+          "ru": "Выберите шаблон уведомления или введите текст уведомления",
+          "en": "Select notification template or enter notification text"
+        },
+        "title": "Сообщение",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Шаблон уведомления"
+            },
+            "key": "notificationTemplate",
+            "journalId": "notification-templates",
+            "refreshOn": [],
+            "type": "selectJournal",
+            "input": true,
+            "queryData": ""
+          },
+          {
+            "label": {
+              "ru": "Заголовок",
+              "en": "Title"
+            },
+            "key": "notificationTitle",
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is template selected",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "result = !!data.notificationTemplate;"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Тело сообщения",
+              "en": "Body"
+            },
+            "key": "notificationBody",
+            "editor": "ckeditor",
+            "wysiwyg": "",
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is template selected",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "result = !!data.notificationTemplate;"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
+            "rows": 5,
+            "type": "textarea",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel-recipients",
+            "tooltip": {
+              "ru": "Получатели выбираются из ролей типа ecos",
+              "en": "Recipients are selected from roles of ecos type"
+            },
+            "title": "Получатели",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Кому"
+                },
+                "key": "notificationTo",
+                "multiple": true,
+                "reorder": false,
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'roles.rolesData');"
+                },
+                "defaultValue": [],
+                "refreshOn": [
+                  "roles"
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Копия",
+                  "en": "Cc"
+                },
+                "key": "notificationCc",
+                "multiple": true,
+                "reorder": false,
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'roles.rolesData');"
+                },
+                "defaultValue": [],
+                "refreshOn": [
+                  "roles"
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Скрытая копия",
+                  "en": "Bcc"
+                },
+                "key": "notificationBcc",
+                "multiple": true,
+                "reorder": false,
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'roles.rolesData');"
+                },
+                "defaultValue": [],
+                "refreshOn": [
+                  "roles"
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel-settings",
+        "title": "Настройки",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Record уведомления",
+              "en": "Record notifications"
+            },
+            "key": "notificationRecord",
+            "tooltip": {
+              "ru": "Базовый RecordRef по которому отправляется уведомление. Если пусто, то документ, по которому идет бизнес процесс."
+            },
+            "hidden": true,
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is template selected",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "return !!data.notificationTemplate"
+                },
+                "actions": [
+                  {
+                    "name": "display",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "false"
+                  }
+                ]
+              }
+            ],
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Язык",
+              "en": "Language"
+            },
+            "key": "notificationLang",
+            "tooltip": {
+              "ru": "Например: 'ru', 'en' и т.д.",
+              "en": "Example: 'ru', 'en' etc"
+            },
+            "defaultValue": "ru",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "template is not selected",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "result = !!!data.notificationTemplate;"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Дополнительная модель",
+              "en": "Additional meta"
+            },
+            "key": "notificationAdditionalMeta",
+            "keyLabel": "",
+            "addAnother": "Добавить еще",
+            "disableInlineEdit": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "datamap",
+            "input": true
+          }
+        ]
+      }
+    ]
+  },
+  "attributes": {}
+}

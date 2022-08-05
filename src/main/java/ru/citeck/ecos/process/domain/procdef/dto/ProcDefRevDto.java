@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.procdef.dto;
 
 import lombok.Data;
 import lombok.ToString;
+import org.jetbrains.annotations.Nullable;
 
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
@@ -19,6 +20,9 @@ public class ProcDefRevDto {
 
     @NotNull
     private byte[] data;
+
+    @Nullable
+    private byte[] image;
 
     @NotNull
     private String procDefId;
@@ -75,5 +79,14 @@ public class ProcDefRevDto {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    @Nullable
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(@Nullable byte[] image) {
+        this.image = image;
     }
 }

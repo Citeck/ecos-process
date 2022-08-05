@@ -1,0 +1,81 @@
+{
+  "id": "bpmn-type-bpmn:ScriptTask",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Script Task Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Скрипт",
+          "en": "Script"
+        },
+        "key": "script",
+        "tooltip": {
+          "ru": "JavaScript"
+        },
+        "placeholder": {
+          "en": "write script here",
+          "ru": "напишите здесь скрипт"
+        },
+        "editor": "ace",
+        "wysiwyg": {
+          "mode": "ace/mode/javascript"
+        },
+        "defaultValue": " ",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "rows": 30,
+        "as": "string",
+        "type": "textarea",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Переменная результата",
+          "en": "Result variable"
+        },
+        "key": "resultVariable",
+        "tooltip": {
+          "en": "The name of a process variable to save the return value",
+          "ru": "Имя переменной процесса для сохранения возвращаемого значения"
+        },
+        "hidden": true,
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-multi-instance",
+        "input": true,
+        "key": "includeForm4",
+        "label": "Форма: BPMN base form Multi Instance",
+        "addAnother": "ecos.forms.btn.add-another",
+        "type": "includeForm"
+      }
+    ]
+  },
+  "attributes": {}
+}

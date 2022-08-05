@@ -3,15 +3,16 @@ package ru.citeck.ecos.process.domain.proc.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
-import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity;
-import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity;
-import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity;
+import ru.citeck.ecos.process.domain.proc.converters.ProcConvertersKt;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessInstanceDto;
 import ru.citeck.ecos.process.domain.proc.dto.ProcessInstanceDto;
 import ru.citeck.ecos.process.domain.proc.dto.ProcessStateDto;
-import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository;
 import ru.citeck.ecos.process.domain.proc.repo.ProcInstanceRepository;
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository;
+import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity;
+import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity;
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity;
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.records2.RecordRef;
 
@@ -63,17 +64,21 @@ public class ProcServiceImpl implements ProcService {
         processInstance.setState(state);
         processInstance = processRepo.save(processInstance);
 
-        NewProcessInstanceDto newProcessDto = new NewProcessInstanceDto();
-        newProcessDto.setId(processInstance.getId().getId());
-        newProcessDto.setStateId(state.getId().getId());
-        newProcessDto.setStateData(state.getData());
+        NewProcessInstanceDto newProcessDto = new NewProcessInstanceDto(
+            processInstance.getId().getId(),
+            state.getId().getId(),
+            state.getData()
+        );
 
         return newProcessDto;
     }
 
     @Override
     public ProcessInstanceDto getInstanceById(UUID id) {
-        return processToDto(processRepo.findById(new EntityUuid(tenantService.getCurrent(), id)).orElse(null));
+        return processRepo.findById(new EntityUuid(tenantService.getCurrent(), id))
+            .map(ProcConvertersKt::toDto)
+            .orElse(null);
+
     }
 
     @Override
@@ -100,7 +105,7 @@ public class ProcServiceImpl implements ProcService {
         process.setModified(Instant.now());
         processRepo.save(process);
 
-        return stateToDto(newState);
+        return ProcConvertersKt.toDto(newState);
     }
 
     @Override
@@ -108,7 +113,7 @@ public class ProcServiceImpl implements ProcService {
 
         return processRepo.findById(new EntityUuid(tenantService.getCurrent(), procId))
             .map(ProcessInstanceEntity::getState)
-            .map(this::stateToDto)
+            .map(ProcConvertersKt::toDto)
             .orElse(null);
     }
 
@@ -116,37 +121,7 @@ public class ProcServiceImpl implements ProcService {
     public ProcessStateDto getProcStateByStateId(UUID procStateId) {
 
         return processStateRepo.findById(new EntityUuid(tenantService.getCurrent(), procStateId))
-            .map(this::stateToDto)
+            .map(ProcConvertersKt::toDto)
             .orElse(null);
-    }
-
-    private ProcessStateDto stateToDto(ProcessStateEntity entity) {
-
-        ProcessStateDto processStateDto = new ProcessStateDto();
-        processStateDto.setId(entity.getId().getId());
-        processStateDto.setCreated(entity.getCreated());
-        processStateDto.setProcessId(entity.getProcess().getId().getId());
-        processStateDto.setData(entity.getData());
-        processStateDto.setVersion(entity.getVersion());
-        processStateDto.setProcDefRevId(entity.getProcDefRev().getId().getId());
-
-        return processStateDto;
-    }
-
-    private ProcessInstanceDto processToDto(ProcessInstanceEntity entity) {
-
-        if (entity == null) {
-            return null;
-        }
-
-        ProcessInstanceDto processDto = new ProcessInstanceDto();
-        processDto.setId(entity.getId().getId());
-        processDto.setCreated(entity.getCreated());
-        processDto.setModified(entity.getModified());
-        processDto.setRecordRef(RecordRef.valueOf(entity.getRecordRef()));
-        processDto.setProcType(entity.getProcType());
-        processDto.setStateId(entity.getState().getId().getId());
-
-        return processDto;
     }
 }

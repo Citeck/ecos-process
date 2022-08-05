@@ -1,0 +1,345 @@
+package ru.citeck.ecos.process.domain.bpmn.io.convert
+
+import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
+import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.records2.RecordRef
+import javax.xml.bind.JAXBElement
+import javax.xml.namespace.QName
+
+fun Bounds.toDef(): BoundsDef {
+    return BoundsDef(
+        x = this.x,
+        y = this.y,
+        width = this.width,
+        height = this.height
+    )
+}
+
+fun BoundsDef.toOmg(): Bounds {
+    val bounds = Bounds()
+
+    bounds.x = x
+    bounds.y = y
+    bounds.width = width
+    bounds.height = height
+
+    return bounds
+}
+
+fun Point.toDef(): PointDef {
+    return PointDef(
+        x = this.x,
+        y = this.y
+    )
+}
+
+fun PointDef.toOmg(): Point {
+    val point = Point()
+
+    point.x = x
+    point.y = y
+
+    return point
+}
+
+object CamundaFieldCreator {
+
+    fun string(name: String, value: String): CamundaField {
+        val stringValue = CamundaString().apply {
+            this.value = value
+        }
+
+        return CamundaField().apply {
+            this.name = name
+            this.stringValue = stringValue
+        }
+    }
+}
+
+fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {
+    return context.converters.convertToJaxb(this)
+}
+
+fun CamundaFailedJobRetryTimeCycle.jaxb(context: ExportContext): JAXBElement<CamundaFailedJobRetryTimeCycle> {
+    return context.converters.convertToJaxb(this)
+}
+
+inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V?) {
+    if (value == null) return
+
+    when (value) {
+        is String -> {
+            if (value.isNotBlank() && value != "null") put(key, value)
+        }
+        is RecordRef -> {
+            if (RecordRef.isNotEmpty(value)) put(key, value)
+        }
+        else -> error("Type ${V::class} is not supported. Value: $value")
+    }
+}
+
+inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
+    if (value == null) return
+
+    when (value) {
+        is String -> {
+            if (value.isNotBlank() && value != "null") add(value)
+        }
+        is RecordRef -> {
+            if (RecordRef.isNotEmpty(value)) add(value)
+        }
+        is CamundaField -> {
+            if (value.stringValue?.value?.isNotBlank() == true) add(value)
+        }
+        is CamundaFailedJobRetryTimeCycle -> {
+            if (value.value?.isNotBlank() == true) add(value)
+        }
+        else -> error("Type ${T::class} is not supported. $value")
+    }
+}
+
+fun recipientsFromJson(type: RecipientType, jsonData: String): List<Recipient> {
+    if (jsonData.isBlank()) {
+        return emptyList()
+    }
+
+    return Json.mapper.readList(jsonData, String::class.java).map {
+        Recipient(type, it)
+    }
+}
+
+fun recipientsFromJson(jsonData: String): List<Recipient> {
+    if (jsonData.isBlank()) {
+        return emptyList()
+    }
+
+    return Json.mapper.readList(jsonData, Recipient::class.java)
+}
+
+fun recipientsToJsonWithoutType(recipients: List<Recipient>): String {
+    val values = recipients.map { it.value }
+    return Json.mapper.toString(values) ?: ""
+}
+
+fun recipientsToJson(recipients: List<Recipient>): String {
+    return Json.mapper.toString(recipients) ?: ""
+}
+
+fun conditionFromAttributes(atts: Map<QName, String>): BpmnConditionDef {
+    return BpmnConditionDef(
+        type = atts[BPMN_PROP_CONDITION_TYPE]?.let {
+            ConditionType.valueOf(it.uppercase())
+        } ?: ConditionType.NONE,
+        config = atts[BPMN_PROP_CONDITION_CONFIG]?.let {
+            Json.mapper.read(it)?.let { node ->
+                ConditionConfig(
+                    fn = node["fn"].asText(),
+                    expression = node["expression"].asText(),
+                    outcome = Outcome(node["outcome"].asText())
+                )
+            } ?: ConditionConfig()
+        } ?: ConditionConfig()
+    )
+}
+
+fun getCamundaJobRetryTimeCycleFieldConfig(
+    timeCycleValue: String?,
+    context: ExportContext
+): List<JAXBElement<CamundaFailedJobRetryTimeCycle>> {
+    val fields = mutableListOf<CamundaFailedJobRetryTimeCycle>()
+
+    fields.addIfNotBlank(
+        CamundaFailedJobRetryTimeCycle().apply {
+            value = timeCycleValue
+        }
+    )
+
+    return fields.map { it.jaxb(context) }
+}
+
+fun Outcome.toTExpression(): TExpression {
+    val exp = TExpression()
+    exp.content.add(this.toExpressionStr())
+    exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+    return exp
+}
+
+fun Outcome.toExpressionStr(): String {
+    if (this == Outcome.EMPTY) {
+        return ""
+    }
+    return "\${${outcomeId()} == '$value'}"
+}
+
+fun ConditionConfig.expressionToTExpression(): TExpression {
+    return createTExpressionWithContent(expression)
+}
+
+fun createTExpressionWithContent(content: String): TExpression {
+    val exp = TExpression()
+    exp.content.add(content)
+    exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+    return exp
+}
+
+fun ConditionConfig.scriptToTExpression(): TExpression {
+    val exp = TExpression()
+    exp.content.add(fn)
+    exp.otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+    exp.otherAttributes[SCRIPT_LANGUAGE_ATTRIBUTE] = DEFAULT_SCRIPT_ENGINE_LANGUAGE
+    return exp
+}
+
+fun BpmnScriptTaskDef.scriptPayloadToTScript(): TScript {
+    return TScript().apply {
+        content.add(script)
+    }
+}
+
+fun BpmnTextAnnotationDef.toTText(): TText {
+    return TText().apply {
+        content.add(MLText.getClosestValue(text, I18nContext.getLocale()))
+    }
+}
+
+fun TActivity.toMultiInstanceConfig(): MultiInstanceConfig? {
+    if (loopCharacteristics == null) {
+        return null
+    }
+
+    when (val loopConfig = loopCharacteristics.value) {
+        is TMultiInstanceLoopCharacteristics -> {
+            val config = Json.mapper.convert(
+                otherAttributes[BPMN_MULTI_INSTANCE_CONFIG],
+                MultiInstanceConfig::class.java
+            ) ?: MultiInstanceConfig()
+            config.sequential = loopConfig.isIsSequential
+
+            return config
+        }
+        TStandardLoopCharacteristics::class.java -> {
+            error("Loop is not supported by engine")
+        }
+        else -> error("Unsupported type of loop characteristics. Activity id '$id'")
+    }
+}
+
+fun MultiInstanceConfig.toTLoopCharacteristics(context: ExportContext): TLoopCharacteristics {
+    val config = this
+
+    return TMultiInstanceLoopCharacteristics().apply {
+        isIsSequential = sequential
+
+        if (!config.loopCardinality.isNullOrBlank()) {
+            loopCardinality = TExpression().apply {
+                content.add(config.loopCardinality)
+                otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+            }
+        }
+
+        if (!config.completionCondition.isNullOrBlank()) {
+            completionCondition = TExpression().apply {
+                content.add(config.completionCondition)
+                otherAttributes[XSI_TYPE] = BPMN_T_FORMAT_EXPRESSION
+            }
+        }
+
+        otherAttributes.putIfNotBlank(CAMUNDA_COLLECTION, config.collection)
+        otherAttributes.putIfNotBlank(CAMUNDA_ELEMENT_VARIABLE, config.element)
+
+        otherAttributes[CAMUNDA_ASYNC_BEFORE] = config.asyncConfig.asyncBefore.toString()
+        otherAttributes[CAMUNDA_ASYNC_AFTER] = config.asyncConfig.asyncAfter.toString()
+        otherAttributes[CAMUNDA_EXCLUSIVE] = config.asyncConfig.exclusive.toString()
+
+        extensionElements = TExtensionElements().apply {
+            any.addAll(getCamundaJobRetryTimeCycleFieldConfig(config.jobConfig.jobRetryTimeCycle, context))
+        }
+    }
+}
+
+fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEventDef? {
+    if (eventDefinition.size == 0) {
+        return null
+    }
+
+    if (eventDefinition.size != 1) {
+        error("Not supported state. Check implementation.")
+    }
+
+    val eventDef = eventDefinition[0].value
+    val typeToTransform = when (val type = eventDefinition[0].declaredType) {
+        TTimerEventDefinition::class.java -> BpmnTimerEventDef::class.java
+        else -> error("Class $type not supported")
+    }
+
+    provideOtherAttsToEventDef(eventDef, this)
+
+    return context.converters.import(
+        eventDef, typeToTransform, context
+    ).data
+}
+
+fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstractEventDef, context: ExportContext) {
+    when (val eventDef = bpmnEventDef) {
+        is BpmnTimerEventDef -> {
+            otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(eventDef.value))
+        }
+        else -> error("Class $eventDef not supported")
+    }
+
+    val typeToTransform = when (val type = bpmnEventDef.javaClass) {
+        BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
+        else -> error("Class $type not supported")
+    }
+
+    val eventDef = context.converters.export(bpmnEventDef, typeToTransform, context)
+    eventDefinition.add(context.converters.convertToJaxb(eventDef))
+}
+
+fun TCatchEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
+    bpmnEventDef: BpmnAbstractEventDef,
+    jobConfig: JobConfig,
+    context: ExportContext
+) {
+    val typeToTransform = when (val type = bpmnEventDef.javaClass) {
+        BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
+        else -> error("Class $type not supported")
+    }
+
+    val eventDef = context.converters.export(bpmnEventDef, typeToTransform, context)
+    eventDefinition.add(context.converters.convertToJaxb(eventDef))
+
+    extensionElements = TExtensionElements().apply {
+        any.addAll(getCamundaJobRetryTimeCycleFieldConfig(jobConfig.jobRetryTimeCycle, context))
+    }
+}
+
+fun provideOtherAttsToEventDef(eventDef: TEventDefinition, element: TEvent) {
+    element.otherAttributes.forEach { (k, v) ->
+        eventDef.otherAttributes[k] = v
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "bpmn-type-label",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Label Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

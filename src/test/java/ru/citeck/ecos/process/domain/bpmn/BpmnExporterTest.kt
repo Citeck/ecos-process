@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.bpmn
 
 import org.junit.jupiter.api.Test
 import org.springframework.util.ResourceUtils
-import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 
 class BpmnExporterTest {
@@ -15,9 +14,9 @@ class BpmnExporterTest {
 
         val defXml = BpmnXmlUtils.readFromString(procDefXml)
 
-        //val bpmnDef = BpmnIO.importEcosBpmn(defXml)
+        // val bpmnDef = BpmnIO.importEcosBpmn(defXml)
 
-        //println(bpmnDef)
-        //println(defXml)
+        // println(bpmnDef)
+        // println(defXml)
     }
 }

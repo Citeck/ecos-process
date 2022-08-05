@@ -1,16 +1,16 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.plan.event
 
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.cmmn.model.omg.Sentry
-import ru.citeck.ecos.process.domain.cmmn.model.omg.TExitCriterion
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.ExitCriterionDef
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.SentryDef
+import ru.citeck.ecos.process.domain.cmmn.model.omg.Sentry
+import ru.citeck.ecos.process.domain.cmmn.model.omg.TExitCriterion
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import java.util.*
 
-class ExitCriterionConverter: EcosOmgConverter<ExitCriterionDef, TExitCriterion> {
+class ExitCriterionConverter : EcosOmgConverter<ExitCriterionDef, TExitCriterion> {
 
     override fun import(element: TExitCriterion, context: ImportContext): ExitCriterionDef {
         return ExitCriterionDef(

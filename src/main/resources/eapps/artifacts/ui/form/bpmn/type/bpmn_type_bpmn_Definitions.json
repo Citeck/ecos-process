@@ -4,12 +4,10 @@
   "title": {
     "en": "BPMN Definitions Form"
   },
-  "description": {
-    "en": ""
-  },
+  "description": {},
   "customModule": null,
   "typeRef": "",
-  "width": "default",
+  "width": "lg",
   "i18n": {},
   "definition": {
     "components": [
@@ -28,10 +26,23 @@
           "ru": "Имя",
           "en": "Name"
         },
-        "defaultValue": "",
         "key": "name_ml",
         "type": "mlText",
         "input": true
+      },
+      {
+        "label": {
+          "ru": "Форма",
+          "en": "Form"
+        },
+        "key": "formRef",
+        "modalTitle": "",
+        "journalId": "ecos-forms",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "selectJournal",
+        "input": true,
+        "queryData": ""
       },
       {
         "label": "ECOS Type",
@@ -42,6 +53,32 @@
         "customPredicateJs": null,
         "presetFilterPredicatesJs": null,
         "sortAscending": "asc"
+      },
+      {
+        "label": {
+          "ru": "Включен",
+          "en": "Enabled"
+        },
+        "key": "enabled",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Автоматический старт процесса",
+          "en": "Auto start process"
+        },
+        "key": "autoStartEnabled",
+        "tooltip": {
+          "ru": "При создании объекта указанного типа, процесс будет запущен автоматически",
+          "en": "When creating an object of the specified type, the process will be launched automatically"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
+        "input": true
       }
     ]
   },

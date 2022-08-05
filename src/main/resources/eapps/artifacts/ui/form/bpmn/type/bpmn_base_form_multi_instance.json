@@ -1,0 +1,187 @@
+{
+  "id": "bpmn-base-form-multi-instance",
+  "formKey": "",
+  "title": {
+    "en": "BPMN base form Multi Instance"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "addVerticalIndents": true,
+        "customConditional": "let miType = instance.options.editor.getMultiInstanceType();\n\nshow = !!miType",
+        "input": true,
+        "key": "horizontalLine2",
+        "addAnother": "ecos.forms.btn.add-another",
+        "type": "horizontalLine"
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "mi-panel",
+        "title": "Multi Instance",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "customConditional": "let miType = instance.options.editor.getMultiInstanceType();\n\nshow = !!miType",
+        "type": "panel",
+        "input": false,
+        "addAnother": "ecos.forms.btn.add-another",
+        "components": [
+          {
+            "label": {
+              "ru": "Container"
+            },
+            "key": "multiInstanceConfig",
+            "hideLabel": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "container",
+            "input": true,
+            "addAnother": "ecos.forms.btn.add-another",
+            "components": [
+              {
+                "label": {
+                  "ru": "Количество повторений цикла",
+                  "en": "Loop cardinality"
+                },
+                "key": "loopCardinality",
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another"
+              },
+              {
+                "label": {
+                  "ru": "Условие завершения",
+                  "en": "Completion condition"
+                },
+                "key": "completionCondition",
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another"
+              },
+              {
+                "label": {
+                  "ru": "Коллекция",
+                  "en": "Collection"
+                },
+                "key": "collection",
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another"
+              },
+              {
+                "label": {
+                  "ru": "Переменная элемента",
+                  "en": "Element variable"
+                },
+                "key": "element",
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another"
+              },
+              {
+                "label": {
+                  "ru": "async config"
+                },
+                "key": "asyncConfig",
+                "hideLabel": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "container",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Асинхронно \"перед\"",
+                      "en": "Async before"
+                    },
+                    "key": "asyncBefore",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "checkbox",
+                    "input": true,
+                    "addAnother": "ecos.forms.btn.add-another"
+                  },
+                  {
+                    "label": {
+                      "ru": "Асинхронно \"после\"",
+                      "en": "Async after"
+                    },
+                    "key": "asyncAfter",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "checkbox",
+                    "input": true,
+                    "addAnother": "ecos.forms.btn.add-another"
+                  },
+                  {
+                    "label": {
+                      "ru": "Эксклюзивность",
+                      "en": "Exclusive"
+                    },
+                    "key": "exclusive",
+                    "refreshOn": [],
+                    "customDefaultValue": "value = true",
+                    "optionalWhenDisabled": false,
+                    "type": "checkbox",
+                    "input": true,
+                    "addAnother": "ecos.forms.btn.add-another"
+                  }
+                ]
+              },
+              {
+                "label": {
+                  "ru": "job config"
+                },
+                "key": "jobConfig",
+                "hideLabel": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "container",
+                "input": true,
+                "addAnother": "ecos.forms.btn.add-another",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Цикл повтора",
+                      "en": "Retry time cycle"
+                    },
+                    "key": "jobRetryTimeCycle",
+                    "tooltip": {
+                      "ru": "ISO 8601 Repeating intervals"
+                    },
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "customConditional": "var asyncBefore = _.get(data, 'multiInstanceConfig.asyncConfig.asyncBefore') === true;\nvar asyncAfter = _.get(data, 'multiInstanceConfig.asyncConfig.asyncAfter') === true;\n\nshow = asyncBefore || asyncAfter;",
+                    "type": "textfield",
+                    "input": true,
+                    "addAnother": "ecos.forms.btn.add-another"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "attributes": {}
+}

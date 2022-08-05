@@ -26,10 +26,13 @@ class ProcDefEntity {
     var name: String? = null
     var extId: String? = null
     var ecosTypeRef: String? = null
+    var formRef: String? = null
     var alfType: String? = null
     var created: Instant? = null
     var modified: Instant? = null
     var enabled: Boolean? = null
+    var autoStartEnabled: Boolean? = null
+    var sectionRef: String? = null
 
     @DBRef
     var lastRev: ProcDefRevEntity? = null

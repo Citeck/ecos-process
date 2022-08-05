@@ -1,0 +1,45 @@
+---
+id: bpmn-process-elements
+
+name:
+  en: BPMN Process Elements
+  ru: Элементы BPMN Процессов
+
+columns:
+
+  - id: elementId
+    visible: false
+  - id: engine
+    visible: false
+  - id: assignee
+    visible: false
+  - id: procInstanceId
+  - id: procDefVersionLabel
+    name:
+      ru: Версия процесса
+      en: Process version
+  - id: procDefId
+    visible: false
+  - id: elementType
+  - id: name
+  - id: elementDefId
+  - id: created
+  - id: dueDate
+    visible: false
+  - id: completed
+  - id: description
+    visible: false
+  - id: priority
+    visible: false
+  - id: executionId
+    visible: false
+  - id: comment
+    visible: false
+  - id: outcome
+    visible: false
+  - id: outcomeName
+    visible: false
+  - id: document
+    visible: false
+  - id: documentTypeRef
+    visible: false

@@ -1,0 +1,24 @@
+{
+  "id": "bpmn-type-bpmn:EndEvent",
+  "formKey": "",
+  "title": {
+    "en": "BPMN End Event Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      }
+    ]
+  },
+  "attributes": {}
+}
