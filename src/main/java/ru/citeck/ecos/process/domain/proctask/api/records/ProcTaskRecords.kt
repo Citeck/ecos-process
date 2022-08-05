@@ -1,10 +1,11 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
 import mu.KotlinLogging
-import org.apache.commons.lang3.time.FastDateFormat
+import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
@@ -14,24 +15,24 @@ import ru.citeck.ecos.process.domain.proctask.converter.toRecord
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
-import ru.citeck.ecos.process.domain.proctask.service.aggregate.ProcTaskAggregator
 import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import java.time.Instant
 
+//TODO: Remove aggregation from alfresco -> ProcTaskAggregator?
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
-    private val procTaskAggregator: ProcTaskAggregator
+    private val camundaTaskService: TaskService,
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordMutateDao {
 
     companion object {
@@ -48,7 +49,7 @@ class ProcTaskRecords(
             "cm:name" to "id"
         )
 
-        val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
+        //val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
 
         private const val FORM_INFO_ATT = "_formInfo"
     }
@@ -58,7 +59,42 @@ class ProcTaskRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        return procTaskAggregator.queryTasks(recsQuery)
+        // TODO: check actor filter $CURRENT and filter task query
+
+        val currentUser = AuthContext.getCurrentUser()
+        val currentAuthorities = AuthContext.getCurrentAuthorities()
+
+        val camundaCount = camundaTaskService.createTaskQuery()
+            .or()
+            .taskAssigneeIn(currentUser)
+            .taskCandidateUser(currentUser)
+            .taskCandidateGroupIn(currentAuthorities)
+            .endOr()
+            .orderByTaskCreateTime()
+            .desc()
+            .count()
+
+        val tasksFromCamunda = camundaTaskService.createTaskQuery()
+            .or()
+            .taskAssigneeIn(currentUser)
+            .taskCandidateUser(currentUser)
+            .taskCandidateGroupIn(currentAuthorities)
+            .endOr()
+            .orderByTaskCreateTime()
+            .desc()
+            .initializeFormKeys()
+            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
+            .map {
+                RecordRef.valueOf("eproc/proc-task@${it.id}")
+            }
+
+        val result = RecsQueryRes<RecordRef>()
+
+        result.setRecords(tasksFromCamunda)
+        result.setTotalCount(camundaCount)
+        result.setHasMore(camundaCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
+
+        return result
     }
 
     override fun getRecordAtts(recordId: String): ProcTaskRecord? {
@@ -66,9 +102,9 @@ class ProcTaskRecords(
             return null
         }
 
-        if (isAlfTask(recordId)) {
+        /*if (isAlfTask(recordId)) {
             return createTaskRecordFromAlf(recordId)
-        }
+        }*/
 
         val task = procTaskService.getTaskById(recordId) ?: return null
         return task.toRecord()
@@ -134,21 +170,22 @@ class ProcTaskRecords(
         }
 
         fun getAtt(name: String): Any? {
-            val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
+            //val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
 
-            if (isAlfTask(id)) {
+            /*if (isAlfTask(id)) {
                 if (mapping.containsKey(name)) {
                     val fixedAttName = mapping[name]
                     return alfTaskAtts.getAtt(fixedAttName)
                 }
 
                 return alfTaskAtts.getAtt(name)
-            }
+            }*/
 
             if (name == COMMENT_VAR) {
                 return null
             }
 
+            val mapping = ALF_TO_ERPOC_TASK_ATTS
             if (mapping.containsKey(name)) {
                 val fixedAttName = mapping[name]
                 val attValue = when (fixedAttName) {
@@ -174,7 +211,7 @@ class ProcTaskRecords(
         }
     }
 
-    private fun createTaskRecordFromAlf(recordId: String): ProcTaskRecord {
+    /*private fun createTaskRecordFromAlf(recordId: String): ProcTaskRecord {
         val mapping = EPROC_TO_ALF_TASK_ATTS
         val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss")
 
@@ -215,7 +252,7 @@ class ProcTaskRecords(
             alfTaskAtts = alfAtts,
             title = alfAtts.getAtt(mapping["disp"]).asText(),
         )
-    }
+    }*/
 
     inner class TaskMutateVariables(
         private val task: ProcTaskDto,
@@ -294,6 +331,7 @@ class ProcTaskRecords(
     }
 }
 
+//TODO: Remove aggregation
 fun isAlfTask(id: String): Boolean {
     return id.startsWith("workspace")
 }
