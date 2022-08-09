@@ -29,7 +29,7 @@ private const val REVISION_TOTAL_COUNT = REVISION_COUNT + 1
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class BpmnProcDefPerformanceTest {
+class ProcessDefPerformanceTest {
 
     @Autowired
     private lateinit var procDefService: ProcDefService
