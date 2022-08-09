@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
 import mu.KotlinLogging
+import org.apache.commons.lang3.time.FastDateFormat
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
@@ -11,6 +12,7 @@ import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_PREFIX
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords.Companion.ALF_TASK_PREFIX
 import ru.citeck.ecos.process.domain.proctask.converter.toRecord
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
@@ -20,6 +22,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
@@ -28,7 +31,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import java.time.Instant
 
-// TODO: Remove aggregation from alfresco -> ProcTaskAggregator?
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
@@ -39,6 +41,7 @@ class ProcTaskRecords(
         private val log = KotlinLogging.logger {}
 
         const val ID = "proc-task"
+        const val ALF_TASK_PREFIX = "workspace"
 
         val ALF_TO_ERPOC_TASK_ATTS = mapOf(
             "wfm:document" to "documentRef",
@@ -49,7 +52,7 @@ class ProcTaskRecords(
             "cm:name" to "id"
         )
 
-        // val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
+        val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
 
         private const val FORM_INFO_ATT = "_formInfo"
     }
@@ -102,9 +105,10 @@ class ProcTaskRecords(
             return null
         }
 
-        /*if (isAlfTask(recordId)) {
-            return createTaskRecordFromAlf(recordId)
-        }*/
+        val ref = RecordRef.valueOf(recordId)
+        if (ref.isAlfTaskRef()) {
+            return createTaskRecordFromAlf(ref)
+        }
 
         val task = procTaskService.getTaskById(recordId) ?: return null
         return task.toRecord()
@@ -170,22 +174,21 @@ class ProcTaskRecords(
         }
 
         fun getAtt(name: String): Any? {
-            // val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
+            val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
 
-            /*if (isAlfTask(id)) {
+            if (isAlfTask(id)) {
                 if (mapping.containsKey(name)) {
                     val fixedAttName = mapping[name]
                     return alfTaskAtts.getAtt(fixedAttName)
                 }
 
                 return alfTaskAtts.getAtt(name)
-            }*/
+            }
 
             if (name == COMMENT_VAR) {
                 return null
             }
 
-            val mapping = ALF_TO_ERPOC_TASK_ATTS
             if (mapping.containsKey(name)) {
                 val fixedAttName = mapping[name]
                 val attValue = when (fixedAttName) {
@@ -211,12 +214,12 @@ class ProcTaskRecords(
         }
     }
 
-    /*private fun createTaskRecordFromAlf(recordId: String): ProcTaskRecord {
+    private fun createTaskRecordFromAlf(ref: RecordRef): ProcTaskRecord {
         val mapping = EPROC_TO_ALF_TASK_ATTS
         val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss")
 
         val alfAtts = let {
-            if (!isAlfTask(recordId)) {
+            if (!ref.isAlfTaskRef()) {
                 return@let RecordAtts()
             }
 
@@ -230,7 +233,13 @@ class ProcTaskRecords(
                 }
                 .toMap()
 
-            val fullOriginalRef = RecordRef.create("alfresco", "", recordId)
+            val fullOriginalRef = let {
+                if (ref.appName.isBlank()) {
+                    ref.withAppName("alfresco")
+                } else {
+                    ref
+                }
+            }
 
             recordsService.getAtts(fullOriginalRef, attsMap)
         }
@@ -244,7 +253,7 @@ class ProcTaskRecords(
         }
 
         return ProcTaskRecord(
-            id = recordId,
+            id = ref.id,
             documentRef = RecordRef.valueOf(alfAtts.getAtt(mapping["documentRef"]).asText()),
             dueDate = getDateFromAtts("dueDate"),
             priority = alfAtts.getAtt(mapping["priority"]).asInt(),
@@ -252,7 +261,7 @@ class ProcTaskRecords(
             alfTaskAtts = alfAtts,
             title = alfAtts.getAtt(mapping["disp"]).asText(),
         )
-    }*/
+    }
 
     inner class TaskMutateVariables(
         private val task: ProcTaskDto,
@@ -330,9 +339,12 @@ class ProcTaskRecords(
     }
 }
 
-// TODO: Remove aggregation
-fun isAlfTask(id: String): Boolean {
-    return id.startsWith("workspace")
+fun RecordRef.isAlfTaskRef(): Boolean {
+    return id.startsWith(ALF_TASK_PREFIX)
+}
+
+private fun isAlfTask(id: String): Boolean {
+    return id.startsWith(ALF_TASK_PREFIX)
 }
 
 private data class FormInfo(

@@ -9,7 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
-import ru.citeck.ecos.process.domain.proctask.api.records.isAlfTask
+import ru.citeck.ecos.process.domain.proctask.api.records.isAlfTaskRef
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.records2.RecordRef
@@ -90,7 +90,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecords.ProcTaskRecord {
         title = name.getClosestValue(),
         actors = getActors(assignee, candidateUsers + candidateGroups),
         documentAtts = let {
-            if (documentRef == RecordRef.EMPTY || isAlfTask(id)) {
+            if (documentRef == RecordRef.EMPTY || RecordRef.valueOf(id).isAlfTaskRef()) {
                 return@let RecordAtts()
             }
 
