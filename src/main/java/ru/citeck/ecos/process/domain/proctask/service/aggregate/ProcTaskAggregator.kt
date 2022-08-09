@@ -9,7 +9,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 
-//TODO: Remove aggregation from alfresco?
+// TODO: Remove aggregation from alfresco?
 @Component
 class ProcTaskAggregator(
     private val camundaTaskService: TaskService,
