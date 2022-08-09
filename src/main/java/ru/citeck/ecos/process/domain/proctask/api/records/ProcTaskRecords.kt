@@ -28,7 +28,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import java.time.Instant
 
-//TODO: Remove aggregation from alfresco -> ProcTaskAggregator?
+// TODO: Remove aggregation from alfresco -> ProcTaskAggregator?
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
@@ -49,7 +49,7 @@ class ProcTaskRecords(
             "cm:name" to "id"
         )
 
-        //val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
+        // val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
 
         private const val FORM_INFO_ATT = "_formInfo"
     }
@@ -170,7 +170,7 @@ class ProcTaskRecords(
         }
 
         fun getAtt(name: String): Any? {
-            //val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
+            // val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
 
             /*if (isAlfTask(id)) {
                 if (mapping.containsKey(name)) {
@@ -311,7 +311,6 @@ class ProcTaskRecords(
                 }
             }
 
-
             if (outcome.isBlank()) throw IllegalStateException("Task outcome is mandatory for task completion")
             if (task.definitionKey.isNullOrBlank()) {
                 throw IllegalStateException("Task DefinitionKey is mandatory for task completion")
@@ -331,7 +330,7 @@ class ProcTaskRecords(
     }
 }
 
-//TODO: Remove aggregation
+// TODO: Remove aggregation
 fun isAlfTask(id: String): Boolean {
     return id.startsWith("workspace")
 }

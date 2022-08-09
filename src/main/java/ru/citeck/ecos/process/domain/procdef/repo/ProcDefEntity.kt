@@ -34,6 +34,6 @@ class ProcDefEntity {
     var autoStartEnabled: Boolean? = null
     var sectionRef: String? = null
 
-    @DBRef
+    @DBRef(lazy = true)
     var lastRev: ProcDefRevEntity? = null
 }

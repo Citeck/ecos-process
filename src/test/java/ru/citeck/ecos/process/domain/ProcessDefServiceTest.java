@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
-public class ProcessServiceTest {
+public class ProcessDefServiceTest {
 
     public static final String type0Id = "type0";
     public static final RecordRef type0Ref = TypeUtils.getTypeRef(type0Id);
@@ -74,7 +74,7 @@ public class ProcessServiceTest {
     }
 
     @Test
-    void test() {
+    void uploadProcDefContentTest() {
 
         RecordRef ecosTypeRef = type0Ref;
 

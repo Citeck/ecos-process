@@ -17,13 +17,13 @@ class ProcDefRevEntity {
 
     var data: ByteArray? = null
 
-    @DBRef
+    @DBRef(lazy = true)
     var processDef: ProcDefEntity? = null
 
     var created: Instant = Instant.now()
     var version = 0
 
-    @DBRef
+    @DBRef(lazy = true)
     var prevRev: ProcDefRevEntity? = null
 
     var image: ByteArray? = null
