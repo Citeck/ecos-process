@@ -43,7 +43,7 @@ class ProcessDefPerformanceTest {
     @Autowired
     private lateinit var tenantService: ProcTenantService
 
-    private val typeRef = getTypeRef(ProcessDefServiceTest.type0Id)
+    private val typeRef = getTypeRef("type0")
     private val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, "test-id")
     private val procDefDataStr = ResourceUtils.getFile("classpath:test/bpmn/large-test-process.bpmn.xml")
         .readText(StandardCharsets.UTF_8)
@@ -60,7 +60,7 @@ class ProcessDefPerformanceTest {
             MLText.EMPTY,
             BPMN_PROC_TYPE,
             "xml",
-            "{http://www.citeck.ru/model/content/idocs/1.0}contractor",
+            "{http://www.citeck.ru/model/content/idocs/1.0}payment",
             typeRef,
             EntityRef.EMPTY,
             procDefDataStr.toByteArray(StandardCharsets.UTF_8),
@@ -89,9 +89,9 @@ class ProcessDefPerformanceTest {
         val tenant = tenantService.getCurrent()
 
         val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, procDefRef.type, procDefRef.id)!!
-        val found = procDefRevRepo.findAllByProcessDef(procDef)
+        val foundRevisions = procDefRevRepo.findAllByProcessDef(procDef)
 
-        assertEquals(REVISION_TOTAL_COUNT, found.size)
+        assertEquals(REVISION_TOTAL_COUNT, foundRevisions.size)
     }
 
     @Test
@@ -100,12 +100,11 @@ class ProcessDefPerformanceTest {
         val tenant = tenantService.getCurrent()
 
         val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, procDefRef.type, procDefRef.id)!!
-        val found = procDefRevRepo.findAllByProcessDef(procDef)
 
-        procDefRevRepo.deleteAll(found)
+        procDefService.delete(procDefRef)
 
-        val foundAfterDelete = procDefRevRepo.findAllByProcessDef(procDef)
+        val foundRevisionsAfterDelete = procDefRevRepo.findAllByProcessDef(procDef)
 
-        assertEquals(0, foundAfterDelete.size)
+        assertEquals(0, foundRevisionsAfterDelete.size)
     }
 }

@@ -1,14 +1,11 @@
 package ru.citeck.ecos.process.domain;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils;
@@ -43,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class ProcessDefServiceTest {
 
     public static final String type0Id = "type0";
