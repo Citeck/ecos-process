@@ -19,6 +19,7 @@ class CamundaShapeConverter : EcosOmgConverter<BpmnShapeDef, BPMNShape> {
             id = element.id
             bpmnElement = QName("", element.elementRef)
             bounds = element.bounds.toOmg()
+            isIsExpanded = element.expanded
         }
     }
 }

@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnArtifactDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
@@ -18,6 +19,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -342,4 +344,24 @@ fun provideOtherAttsToEventDef(eventDef: TEventDefinition, element: TEvent) {
     element.otherAttributes.forEach { (k, v) ->
         eventDef.otherAttributes[k] = v
     }
+}
+
+fun TFlowElement.toBpmnFlowElementDef(context: ImportContext): BpmnFlowElementDef {
+    val flowElement = context.converters.import(this, context)
+
+    return BpmnFlowElementDef(
+        id = this.id,
+        type = flowElement.type,
+        data = flowElement.data
+    )
+}
+
+fun TArtifact.toBpmnArtifactDef(context: ImportContext): BpmnArtifactDef {
+    val artifact = context.converters.import(this, context)
+
+    return BpmnArtifactDef(
+        id = this.id,
+        type = artifact.type,
+        data = artifact.data
+    )
 }

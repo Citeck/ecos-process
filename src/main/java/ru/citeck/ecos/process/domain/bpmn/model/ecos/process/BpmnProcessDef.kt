@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.model.ecos
+package ru.citeck.ecos.process.domain.bpmn.model.ecos.process
 
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnArtifactDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef

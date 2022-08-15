@@ -15,7 +15,8 @@ class BpmnShapeConverter : EcosOmgConverter<BpmnShapeDef, BPMNShape> {
         return BpmnShapeDef(
             id = element.id,
             elementRef = element.bpmnElement.localPart,
-            bounds = element.bounds.toDef()
+            bounds = element.bounds.toDef(),
+            expanded = element.isIsExpanded
         )
     }
 
@@ -24,6 +25,7 @@ class BpmnShapeConverter : EcosOmgConverter<BpmnShapeDef, BPMNShape> {
             id = element.id
             bpmnElement = QName("", element.elementRef)
             bounds = element.bounds.toOmg()
+            isIsExpanded = element.expanded
         }
     }
 }

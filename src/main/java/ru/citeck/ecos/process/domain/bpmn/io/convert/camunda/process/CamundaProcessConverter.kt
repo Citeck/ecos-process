@@ -1,8 +1,9 @@
-package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda
+package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process
 
-import ru.citeck.ecos.process.domain.bpmn.io.propMandatoryError
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnProcessDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.*
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TArtifact
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -39,21 +40,4 @@ class CamundaProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
         }
     }
 
-    private fun fillElementsRefsFromIdToRealObjects(tFlowElements: List<TBaseElement>, context: ExportContext) {
-        tFlowElements.forEach { element ->
-            if (element is TSequenceFlow) {
-                element.sourceRef = context.bpmnElementsById[element.sourceRef.toString()]
-                    ?: propMandatoryError("sourceRef", element::class)
-                element.targetRef = context.bpmnElementsById[element.targetRef.toString()]
-                    ?: propMandatoryError("targetRef", element::class)
-            }
-
-            if (element is TExclusiveGateway) {
-                if (element.default != null) {
-                    element.default = context.bpmnElementsById[element.default]
-                        ?: propMandatoryError("default", element::class)
-                }
-            }
-        }
-    }
 }

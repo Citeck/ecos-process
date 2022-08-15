@@ -1,0 +1,39 @@
+{
+  "id": "bpmn-type-bpmn:SubProcess",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Sub Process Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-multi-instance",
+        "input": true,
+        "key": "includeForm4",
+        "label": "Форма: BPMN base form Multi Instance",
+        "addAnother": "ecos.forms.btn.add-another",
+        "type": "includeForm"
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      }
+    ]
+  },
+  "attributes": {}
+}
