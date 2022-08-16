@@ -17,6 +17,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.Camun
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaSendTaskConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaUserTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
@@ -33,6 +34,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequ
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnSendTaskConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnUserTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
@@ -72,7 +74,8 @@ object BpmnIO {
             BpmnBoundaryEventConverter::class,
             BpmnTextAnnotationConverter::class,
             BpmnAssociationConverter::class,
-            BpmnSubProcessConverter::class
+            BpmnSubProcessConverter::class,
+            BpmnTaskConverter::class,
         ),
         extensionTypeResolver
     )
@@ -98,8 +101,8 @@ object BpmnIO {
             CamundaBoundaryEventConverter::class,
             CamundaTextAnnotationConverter::class,
             CamundaAssociationConverter::class,
-            CamundaSubProcessConverter::class
-
+            CamundaSubProcessConverter::class,
+            CamundaTaskConverter::class,
         ),
         extensionTypeResolver
     )

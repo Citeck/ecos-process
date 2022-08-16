@@ -21,6 +21,12 @@ fun DelegateExecution.getDocumentRef(): RecordRef {
     return RecordRef.valueOf(documentVar)
 }
 
+fun DelegateExecution.getNotBlankDocumentRef() : RecordRef {
+    val documentFromVar = getDocumentRef()
+    if (RecordRef.isEmpty(documentFromVar)) error("Document Ref can't be empty")
+    return documentFromVar
+}
+
 fun DelegateTask.getDocumentRef(): RecordRef {
     val documentVar = getVariable(VAR_DOCUMENT_REF) as String?
     return RecordRef.valueOf(documentVar)

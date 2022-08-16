@@ -24,6 +24,9 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEven
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAbstractEcosTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnSetStatusTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_SET_STATUS
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
@@ -280,6 +283,31 @@ fun MultiInstanceConfig.toTLoopCharacteristics(context: ExportContext): TLoopCha
         extensionElements = TExtensionElements().apply {
             any.addAll(getCamundaJobRetryTimeCycleFieldConfig(config.jobConfig.jobRetryTimeCycle, context))
         }
+    }
+}
+
+fun TTask.convertToBpmnEcosTaskDef(context: ImportContext): BpmnAbstractEcosTaskDef? {
+    val taskType = otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] ?: return null
+    if (taskType.isBlank()) {
+        return null
+    }
+
+    return when (taskType) {
+        ECOS_TASK_SET_STATUS -> {
+            val status = otherAttributes[BPMN_PROP_ECOS_STATUS] ?: error("Status is not set")
+            BpmnSetStatusTaskDef(status)
+        }
+        else -> error("Unsupported task type: $taskType")
+    }
+}
+
+fun TTask.fillEcosTaskDefToOtherAttributes(ecosTaskDef: BpmnAbstractEcosTaskDef) {
+    when (ecosTaskDef) {
+        is BpmnSetStatusTaskDef -> {
+            otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_SET_STATUS
+            otherAttributes[BPMN_PROP_ECOS_STATUS] = ecosTaskDef.status
+        }
+        else -> error("Unsupported task type: $ecosTaskDef")
     }
 }
 

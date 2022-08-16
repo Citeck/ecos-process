@@ -1,0 +1,77 @@
+{
+  "id": "bpmn-type-bpmn:EcosTaskSetStatus",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Set Status Task Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {
+    "ru": {
+      "task_priority_low": "Низкий",
+      "task_priority_medium": "Средний",
+      "task_priority_high": "Высокий"
+    },
+    "en": {
+      "task_priority_low": "Low",
+      "task_priority_medium": "Medium",
+      "task_priority_high": "High"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "label": "load statuses",
+        "source": {
+          "type": "recordsScript",
+          "recordsScript": {
+            "script": "let ref = instance.options.editor.getEcosType()._id;\n\nif (!!ref) {\n  value = ref;\n}",
+            "attributes": {
+              "statusesData": "model.statuses[]{value:id,label:name}"
+            }
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once",
+          "rate": 300
+        },
+        "key": "statuses",
+        "type": "asyncData",
+        "input": true
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Статус",
+          "en": "Status"
+        },
+        "key": "status",
+        "tooltip": {
+          "ru": "Выбор доступных статусов из типа ecos",
+          "en": "Selection of available statuses from ecos type"
+        },
+        "validate": {
+          "required": true
+        },
+        "dataSrc": "custom",
+        "data": {
+          "custom": "const statuses = _.get(data, 'statuses.statusesData') || [];\nconst filtered = statuses.filter(function( status ) {\n    return status.value !== 'ANY' && status.value !== 'EMPTY';\n});\nvalues = filtered;"
+        },
+        "defaultValue": "",
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}
