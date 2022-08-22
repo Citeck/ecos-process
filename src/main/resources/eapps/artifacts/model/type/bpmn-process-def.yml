@@ -31,3 +31,20 @@ createVariants:
   - id: upload-proc-def
     name: { ru: Загрузить процесс, en: Upload process }
     formRef: uiserv/form@ecos-module-upload
+
+model:
+  roles:
+    - id: admin
+      name:
+        ru: Администратор
+        en: Administrator
+      attribute: ''
+      assignees:
+        - GROUP_ALFRESCO_ADMINISTRATORS
+    - id: EVERYONE
+      name:
+        ru: Все пользователи
+        en: All users
+      attribute: ''
+      assignees:
+        - GROUP_EVERYONE
