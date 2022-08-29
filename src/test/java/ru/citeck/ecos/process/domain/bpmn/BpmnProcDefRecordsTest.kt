@@ -1,9 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn
 
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -31,7 +28,6 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.lib.spring.context.model.ModelServiceFactoryConfig
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
@@ -67,7 +63,6 @@ class BpmnProcDefRecordsTest {
 
     @BeforeAll
     fun setUp() {
-
         val typesRepo = object : TypesRepo {
             override fun getTypeInfo(typeRef: RecordRef): TypeInfo? {
                 if (typeRef.id == BPMN_PROC_DEF_TYPE_ID) {
@@ -80,16 +75,13 @@ class BpmnProcDefRecordsTest {
                                         RoleDef.create()
                                             .withId("admin")
                                             .withAssignees(
-                                                listOf("GROUP_ALFRESCO_ADMINISTRATORS")
+                                                listOf("GROUP_ECOS_ADMINISTRATORS")
                                             )
                                             .build(),
                                         RoleDef.create()
                                             .withId("EVERYONE")
-                                            .withAssignees(
-                                                listOf("GROUP_EVERYONE")
-                                            )
                                             .build()
-                                    ),
+                                    )
                                 )
                                 .build()
                         )
@@ -212,31 +204,13 @@ class BpmnProcDefRecordsTest {
         assertEquals(DelStatus.PROTECTED, result)
     }
 
-    @Test
+    @AfterAll
     fun deleteAsAdmin() {
-        val recordRefToDelete = RecordRef.create(AppName.EPROC, SOURCE_ID, "def-250").toString()
-        val result = AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ALFRESCO_ADMINISTRATORS")) {
-            bpmnProcDefRecords.delete("def-250")
+        AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ECOS_ADMINISTRATORS")) {
+            val result = bpmnProcDefRecords.delete("def-250")
+            assertEquals(DelStatus.OK, result)
+            assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE - 1, procDefService.getCount())
         }
-        assertEquals(DelStatus.OK, result)
-        assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE - 1, procDefService.getCount())
-
-        val id = "def-250"
-        val newProcessDefDto = NewProcessDefDto(
-            id,
-            MLText.EMPTY,
-            BPMN_PROC_TYPE,
-            "xml",
-            "{http://www.citeck.ru/model/content/idocs/1.0}contractor",
-            TypeUtils.getTypeRef("type1"),
-            RecordRef.EMPTY,
-            buildProcDefXml(id),
-            null,
-            true,
-            false
-        )
-        procDefService.uploadProcDef(newProcessDefDto)
-        assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE, procDefService.getCount())
     }
 
     @Test
@@ -266,7 +240,7 @@ class BpmnProcDefRecordsTest {
         val recToMutate = bpmnProcDefRecords.getRecToMutate("def-250")
         recToMutate.enabled = false
 
-        val result = AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ALFRESCO_ADMINISTRATORS")) {
+        val result = AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ECOS_ADMINISTRATORS")) {
             bpmnProcDefRecords.saveMutatedRec(recToMutate)
         }
         assertEquals("def-250", result)
