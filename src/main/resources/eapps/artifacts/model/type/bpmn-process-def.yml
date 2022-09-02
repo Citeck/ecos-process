@@ -40,11 +40,9 @@ model:
         en: Administrator
       attribute: ''
       assignees:
-        - GROUP_ALFRESCO_ADMINISTRATORS
+        - GROUP_ECOS_ADMINISTRATORS
     - id: EVERYONE
       name:
         ru: Все пользователи
         en: All users
       attribute: ''
-      assignees:
-        - GROUP_EVERYONE
