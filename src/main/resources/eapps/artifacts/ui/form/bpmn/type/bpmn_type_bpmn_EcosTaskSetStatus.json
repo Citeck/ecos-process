@@ -64,9 +64,12 @@
         },
         "dataSrc": "custom",
         "data": {
-          "custom": "const statuses = _.get(data, 'statuses.statusesData') || [];\nconst filtered = statuses.filter(function( status ) {\n    return status.value !== 'ANY' && status.value !== 'EMPTY';\n});\nvalues = filtered;"
+          "custom": "const statuses = _.get(data, 'statuses.statusesData') || [];\nconst filtered = statuses.filter(status => !['ANY', 'EMPTY'].includes(status.value));\n\nvalues = filtered;"
         },
         "defaultValue": "",
+        "refreshOn": [
+          "statuses"
+        ],
         "optionalWhenDisabled": false,
         "type": "ecosSelect",
         "input": true
