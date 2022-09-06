@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:SendTask",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN User Send Form"
   },

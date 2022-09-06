@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:ScriptTask",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Script Task Form"
   },

@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:UserTask",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN User Task Form"
   },

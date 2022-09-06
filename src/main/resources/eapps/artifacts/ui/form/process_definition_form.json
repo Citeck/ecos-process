@@ -1,5 +1,6 @@
 {
   "id": "process-definition-form",
+  "system": true,
   "formKey": "process-definition-form",
   "title": {
     "en": "Process definition form"

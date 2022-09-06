@@ -1,6 +1,7 @@
 {
   "id": "bpmn-base-form-elements",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "Bpmn base form elements"
   },

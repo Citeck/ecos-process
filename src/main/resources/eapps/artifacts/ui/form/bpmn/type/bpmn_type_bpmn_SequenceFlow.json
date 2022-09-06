@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:SequenceFlow",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Sequence Flow Form"
   },

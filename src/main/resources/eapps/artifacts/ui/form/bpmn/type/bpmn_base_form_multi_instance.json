@@ -1,6 +1,7 @@
 {
   "id": "bpmn-base-form-multi-instance",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN base form Multi Instance"
   },

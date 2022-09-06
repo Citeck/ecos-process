@@ -1,6 +1,8 @@
 ---
 id: cmmn-process-def
 
+system: true
+
 name:
   en: ECOS CMMN Scenario Definitions
   ru: Описания CMMN сценариев ECOS
@@ -35,4 +37,3 @@ columns:
 
   - id: enabled
     name: { ru: Включен, en: Enabled }
-

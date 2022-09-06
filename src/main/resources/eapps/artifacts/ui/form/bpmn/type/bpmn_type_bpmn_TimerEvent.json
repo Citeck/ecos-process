@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:TimerEvent",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Timer Event Form"
   },

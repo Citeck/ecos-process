@@ -1,6 +1,8 @@
 ---
 id: bpmn-process-def
 
+system: true
+
 name:
   en: BPMN Processes
   ru: Процессы BPMN

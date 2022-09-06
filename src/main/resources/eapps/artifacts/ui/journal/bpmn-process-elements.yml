@@ -1,6 +1,8 @@
 ---
 id: bpmn-process-elements
 
+system: true
+
 name:
   en: BPMN Process Elements
   ru: Элементы BPMN Процессов

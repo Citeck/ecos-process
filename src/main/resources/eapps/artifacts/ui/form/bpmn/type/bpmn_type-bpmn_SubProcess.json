@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:SubProcess",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Sub Process Form"
   },

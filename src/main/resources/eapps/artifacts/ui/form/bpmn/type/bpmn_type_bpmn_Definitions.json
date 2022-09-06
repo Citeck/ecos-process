@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:Definitions",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Definitions Form"
   },

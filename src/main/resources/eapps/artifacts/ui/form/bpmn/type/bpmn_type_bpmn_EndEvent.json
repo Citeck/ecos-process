@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:EndEvent",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN End Event Form"
   },

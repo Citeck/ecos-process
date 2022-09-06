@@ -2,6 +2,7 @@ id: bpmn-active-tasks
 name: { ru: Активные задачи, en: Active tasks }
 
 sourceId: eproc/proc-task
+system: true
 
 actions:
   - uiserv/action@view-task

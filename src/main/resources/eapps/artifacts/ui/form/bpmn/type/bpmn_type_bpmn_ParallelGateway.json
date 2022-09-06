@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:ParallelGateway",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Parallel Gateway Form"
   },

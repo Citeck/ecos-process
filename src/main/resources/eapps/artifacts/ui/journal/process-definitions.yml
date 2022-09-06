@@ -1,6 +1,8 @@
 ---
 id: process-definitions
 
+system: true
+
 name:
   ru: Описания процессов
   en: Process definitions
@@ -22,4 +24,3 @@ columns:
 
   - id: enabled
     name: { ru: Включен, en: Enabled }
-

@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:StartEvent",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Start Event Form"
   },

@@ -1,6 +1,7 @@
 {
   "id": "cmmn-type-ecos:Action",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "CMMN Action Form"
   },

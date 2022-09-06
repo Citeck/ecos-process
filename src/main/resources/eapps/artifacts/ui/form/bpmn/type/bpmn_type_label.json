@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-label",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Label Form"
   },

@@ -1,6 +1,7 @@
 {
   "id": "bpmn-process-def",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Process definition form"
   },

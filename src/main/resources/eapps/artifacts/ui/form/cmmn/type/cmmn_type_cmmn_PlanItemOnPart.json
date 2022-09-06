@@ -1,6 +1,7 @@
 {
   "id": "cmmn-type-cmmn:PlanItemOnPart",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "CMMN PlanItemOnPart Form"
   },

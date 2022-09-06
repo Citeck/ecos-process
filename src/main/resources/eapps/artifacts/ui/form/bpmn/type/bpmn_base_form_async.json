@@ -1,6 +1,7 @@
 {
   "id": "bpmn-base-form-async",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN base form Async"
   },

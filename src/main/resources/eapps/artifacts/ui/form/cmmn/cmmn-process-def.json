@@ -1,6 +1,7 @@
 {
   "id": "cmmn-process-def",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "Process definition form"
   },

@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:ExclusiveGateway",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Exclusive Gateway Form"
   },

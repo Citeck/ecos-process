@@ -1,6 +1,7 @@
 {
   "id": "cmmn-type-cmmn:Definitions",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "CMMN Definitions Form"
   },

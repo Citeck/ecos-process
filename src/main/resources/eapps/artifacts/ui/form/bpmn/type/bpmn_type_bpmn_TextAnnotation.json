@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:TextAnnotation",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Text Annotation Form"
   },

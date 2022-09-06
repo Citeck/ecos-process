@@ -1,6 +1,7 @@
 {
   "id": "cmmn-type-cmmn:CaseFileOnPart",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "CMMN CaseFileOnPart Form"
   },

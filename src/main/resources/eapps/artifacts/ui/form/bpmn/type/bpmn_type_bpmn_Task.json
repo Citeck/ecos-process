@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:Task",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Task Form"
   },

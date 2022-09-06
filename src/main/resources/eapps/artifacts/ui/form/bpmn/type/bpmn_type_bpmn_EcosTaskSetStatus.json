@@ -1,6 +1,7 @@
 {
   "id": "bpmn-type-bpmn:EcosTaskSetStatus",
   "formKey": "",
+  "system": true,
   "title": {
     "en": "BPMN Set Status Task Form"
   },
