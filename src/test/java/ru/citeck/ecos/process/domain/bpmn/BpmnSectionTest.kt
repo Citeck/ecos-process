@@ -87,12 +87,14 @@ class BpmnSectionTest {
         bpmnSectionArtifactHandler.deployArtifact(artifactData2)
 
         val name = recordsService.getAtt(
-            RecordRef.valueOf("$DATA_SOURCE_ID@testSection2"), "name"
+            RecordRef.valueOf("$DATA_SOURCE_ID@testSection2"),
+            "name"
         ).asText()
         assertEquals(name, "testSectionName2")
 
         val parentOfRec2 = recordsService.getAtt(
-            RecordRef.valueOf("$DATA_SOURCE_ID@testSection2-1"), "parentRef?id"
+            RecordRef.valueOf("$DATA_SOURCE_ID@testSection2-1"),
+            "parentRef?id"
         ).asText()
         assertEquals(parentOfRec2, "eproc/bpmn-section@testSection2")
 

@@ -69,5 +69,4 @@ class CamundaSubProcessConverter : EcosOmgConverter<BpmnSubProcessDef, TSubProce
             }
         }
     }
-
 }

@@ -39,5 +39,4 @@ class CamundaProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
             tArtifacts.forEach { artifact.add(context.converters.convertToJaxb(it)) }
         }
     }
-
 }

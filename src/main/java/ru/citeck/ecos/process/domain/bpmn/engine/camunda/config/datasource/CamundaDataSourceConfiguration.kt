@@ -17,7 +17,8 @@ class CamundaDataSourceConfiguration {
     fun camundaTransactionManager(dsManager: EcosDataSourceManager): PlatformTransactionManager {
         return DataSourceTransactionManager(
             dsManager.getDataSource(
-                "camunda", JdbcDataSource::class.java
+                "camunda",
+                JdbcDataSource::class.java
             ).getJavaDataSource()
         )
     }

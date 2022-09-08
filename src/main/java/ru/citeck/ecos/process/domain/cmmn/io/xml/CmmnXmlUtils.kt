@@ -22,8 +22,10 @@ object CmmnXmlUtils {
 
     @JvmField
     val PROP_ECOS_TYPE = QName(NS_ECOS, "ecosType")
+
     @JvmField
     val PROP_ECOS_FORMAT = QName(NS_ECOS, "format")
+
     @JvmField
     val PROP_PROCESS_DEF_ID = QName(NS_ECOS, "processDefId")
     val PROP_NAME_ML = QName(NS_ECOS, "name_ml")

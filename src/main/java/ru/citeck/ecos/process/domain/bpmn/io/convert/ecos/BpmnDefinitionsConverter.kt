@@ -5,8 +5,8 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter

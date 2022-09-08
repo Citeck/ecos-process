@@ -168,6 +168,10 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>ru.citeck.ecos.webapp</groupId>
+                <artifactId>ecos-webapp-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-eclipse-plugin</artifactId>
             </plugin>

@@ -51,7 +51,8 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
         with(element) {
             fields.addIfNotBlank(
                 CamundaFieldCreator.string(
-                    BPMN_PROP_NOTIFICATION_TEMPLATE.localPart, template.toString()
+                    BPMN_PROP_NOTIFICATION_TEMPLATE.localPart,
+                    template.toString()
                 )
             )
             fields.addIfNotBlank(

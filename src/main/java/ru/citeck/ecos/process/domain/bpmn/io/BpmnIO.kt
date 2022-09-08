@@ -4,7 +4,6 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDiagramConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaAssociationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaTextAnnotationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaEdgeConverter
@@ -14,6 +13,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaSendTaskConverter
@@ -21,7 +21,6 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaTaskCon
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaUserTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnAssociationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnTextAnnotationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnEdgeConverter
@@ -31,6 +30,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnSendTaskConverter
