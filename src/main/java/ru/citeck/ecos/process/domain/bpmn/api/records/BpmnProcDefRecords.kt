@@ -166,9 +166,16 @@ class BpmnProcDefRecords(
         if (AuthContext.isRunAsSystem()) {
             return true
         }
+        if (isNewRecord(recordRef) && AuthContext.isRunAsAdmin()) {
+            return true
+        }
         val recordPerms = recordPermsService.getRecordPerms(recordRef)
         val roles = getRoles(recordRef)
         return recordPerms?.isWriteAllowed(roles) ?: false
+    }
+
+    private fun isNewRecord(recordRef: RecordRef): Boolean {
+        return recordRef.getLocalId().isEmpty()
     }
 
     private fun getRoles(recordRef: RecordRef): List<String> {
