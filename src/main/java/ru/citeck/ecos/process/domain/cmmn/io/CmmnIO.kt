@@ -64,7 +64,8 @@ object CmmnIO {
             RequiredRuleConverter::class,
             SetStatusConverter::class
         ),
-        extensionTypeResolver, otherAttsResolver
+        extensionTypeResolver,
+        otherAttsResolver
     )
 
     private val ecosAlfCmmnConverters = EcosOmgConverters(

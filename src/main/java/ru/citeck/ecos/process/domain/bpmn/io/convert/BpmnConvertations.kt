@@ -329,7 +329,9 @@ fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEvent
     provideOtherAttsToEventDef(eventDef, this)
 
     return context.converters.import(
-        eventDef, typeToTransform, context
+        eventDef,
+        typeToTransform,
+        context
     ).data
 }
 
