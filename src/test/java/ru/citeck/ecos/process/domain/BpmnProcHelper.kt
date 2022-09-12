@@ -53,7 +53,7 @@ fun getBpmnProcessDefDto(resource: String, id: String): NewProcessDefDto {
     )
 }
 
-fun saveAndDeployBpmn(resource: String, id: String) {
+fun saveAndDeployBpmnFromResource(resource: String, id: String) {
     val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcDefRecords.SOURCE_ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = ResourceUtils.getFile("classpath:$resource")
@@ -66,9 +66,8 @@ fun saveAndDeployBpmn(resource: String, id: String) {
     }
 }
 
-fun saveAndDeployBpmn(id: String) {
-    saveAndDeployBpmn(
-        "test/bpmn/elements/$id.bpmn.xml",
-        id
+fun saveAndDeployBpmn(elementFolder: String, id: String) {
+    saveAndDeployBpmnFromResource(
+        "test/bpmn/elements/$elementFolder/$id.bpmn.xml", id
     )
 }

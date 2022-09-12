@@ -22,7 +22,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-import javax.script.ScriptEngineManager
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -30,6 +29,8 @@ private const val USER_4_LOOP = "user4Loop"
 
 private const val GROUP_MANAGER = "GROUP_manager"
 private const val GROUP_DEVELOPER = "GROUP_developer"
+
+private const val USER_TASK = "usertask"
 
 /**
  * @author Roman Makarskiy
@@ -63,7 +64,7 @@ class BpmnUserTaskTest {
     @Test
     fun `complete simple task`() {
         val procId = "test-user-task-role"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             it.complete()
@@ -77,7 +78,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task form ref check`() {
         val procId = "test-user-task-role"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasFormKey("uiserv/form@test-bpmn-form-task")
@@ -92,7 +93,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task priority check`() {
         val procId = "test-user-task-priority"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it.priority).isEqualTo(TaskPriority.HIGH.toCamundaCode())
@@ -107,7 +108,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task assignment by roles`() {
         val procId = "test-user-task-role"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
@@ -126,7 +127,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task multi instance auto mode - assignment by roles`() {
         val procId = "test-user-task-role-multi-instance"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -155,7 +156,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task multi instance parallel auto mode - assignment by roles`() {
         val procId = "test-user-task-role-multi-instance-parallel"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -183,7 +184,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task assignment manual multi instance collection`() {
         val procId = "test-user-task-manual-collection-multi-instance"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -214,7 +215,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task assignment manual multi instance parallel collection`() {
         val procId = "test-user-task-manual-collection-multi-instance-parallel"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -245,7 +246,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task assignment manual multi instance loop`() {
         val procId = "test-user-task-manual-loop-multi-instance"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -277,7 +278,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task assignment manual multi instance loop parallel`() {
         val procId = "test-user-task-manual-loop-multi-instance-parallel"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -309,7 +310,7 @@ class BpmnUserTaskTest {
     @Test
     fun `task assignment manual`() {
         val procId = "test-user-task-assign-manual"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
@@ -327,22 +328,8 @@ class BpmnUserTaskTest {
 
     @Test
     fun `task assignment manual with expressions`() {
-        val sem = ScriptEngineManager()
-        val factories = sem.engineFactories
-
-        println("----------TEST ENGINE ----------")
-        for (factory in factories) {
-            println(factory.engineName + " " + factory.engineVersion + " " + factory.names + " - " + factory.languageName)
-        }
-
-        if (factories.isEmpty()) {
-            println("No Script Engines found")
-        }
-
-        println("----------TEST ENGINE END----------")
-
         val procId = "test-user-task-assign-manual-with-expressions"
-        saveAndDeployBpmn(procId)
+        saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
