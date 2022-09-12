@@ -34,6 +34,10 @@ val BPMN_PROP_FORM_REF = QName(NS_ECOS, "formRef")
 val BPMN_PROP_OUTCOMES = QName(NS_ECOS, "outcomes")
 val BPMN_PROP_PRIORITY = QName(NS_ECOS, "priority")
 
+val BPMN_PROP_MULTI_INSTANCE_AUTO_MODE = QName(NS_ECOS, "multiInstanceAutoMode")
+val BPMN_PROP_MANUAL_RECIPIENTS_MODE = QName(NS_ECOS, "manualRecipientsMode")
+val BPMN_PROP_MANUAL_RECIPIENTS = QName(NS_ECOS, "manualRecipients")
+
 val BPMN_PROP_CONDITION_CONFIG = QName(NS_ECOS, "conditionConfig")
 val BPMN_PROP_CONDITION_TYPE = QName(NS_ECOS, "conditionType")
 

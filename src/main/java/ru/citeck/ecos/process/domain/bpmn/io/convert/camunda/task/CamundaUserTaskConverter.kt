@@ -7,9 +7,12 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPA
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_ASSIGNEE_ELEMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_MANUAL_RECIPIENTS_MODE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_MULTI_INSTANCE_AUTO_MODE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
+import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TLoopCharacteristics
@@ -46,23 +49,36 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
-            if (element.multiInstanceConfig != null) {
-                loopCharacteristics = context.converters.convertToJaxb(
-                    element.multiInstanceConfig.toUserTaskTLoopCharacteristics(element)
-                )
+            if (element.manualRecipientsMode) {
+                // use assignee as storage for manual recipients with expression support
+                // see ManualRecipientsModeUserTaskAssignListener
+                otherAttributes[CAMUNDA_ASSIGNEE] = element.manualRecipients.joinToString(CAMUNDA_COLLECTION_SEPARATOR)
+
+                element.multiInstanceConfig?.let {
+                    loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
+                }
             } else {
-                otherAttributes[CAMUNDA_CANDIDATE_USERS] = usersExpression(element.assignees.map { it.value })
-                otherAttributes[CAMUNDA_CANDIDATE_GROUPS] = groupsExpression(element.assignees.map { it.value })
+                if (element.multiInstanceAutoMode && element.multiInstanceConfig != null) {
+                    loopCharacteristics = context.converters.convertToJaxb(
+                        element.multiInstanceConfig.toAutoModeLoopCharacteristics(element)
+                    )
+                } else {
+                    otherAttributes[CAMUNDA_CANDIDATE_USERS] = usersExpression(element.assignees.map { it.value })
+                    otherAttributes[CAMUNDA_CANDIDATE_GROUPS] = groupsExpression(element.assignees.map { it.value })
+                }
             }
 
             otherAttributes[CAMUNDA_PRIORITY] = element.priority.toCamundaCode().toString()
             otherAttributes[CAMUNDA_FORM_KEY] = element.formRef.toString()
 
+            otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE] = element.manualRecipientsMode.toString()
+            otherAttributes[BPMN_PROP_MULTI_INSTANCE_AUTO_MODE] = element.multiInstanceAutoMode.toString()
+
             otherAttributes.putIfNotBlank(BPMN_PROP_OUTCOMES, Json.mapper.toString(element.outcomes))
         }
     }
 
-    private fun MultiInstanceConfig.toUserTaskTLoopCharacteristics(element: BpmnUserTaskDef): TLoopCharacteristics {
+    private fun MultiInstanceConfig.toAutoModeLoopCharacteristics(element: BpmnUserTaskDef): TLoopCharacteristics {
         return TMultiInstanceLoopCharacteristics().apply {
             isIsSequential = sequential
 

@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.multiinstance
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask
 
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.camunda.bpm.engine.delegate.TaskListener
@@ -10,7 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.GROUP_PREFIX
  * @author Roman Makarskiy
  */
 @Component
-class MultiInstanceUserTaskAssignListener : TaskListener {
+class MultiInstanceAutoModeUserTaskAssignListener : TaskListener {
     override fun notify(delegateTask: DelegateTask) {
         val value = delegateTask.getVariable(VAR_ASSIGNEE_ELEMENT) ?: return
         val assignee = value.toString()

@@ -395,3 +395,7 @@ fun TArtifact.toBpmnArtifactDef(context: ImportContext): BpmnArtifactDef {
         data = artifact.data
     )
 }
+
+fun QName.toCamundaKey(): String {
+    return "$namespaceURI:$localPart"
+}

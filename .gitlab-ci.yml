@@ -19,6 +19,7 @@ test:
       - target/
   script:
     - sudo chown -R maven:maven /builds
+    - mvn -v
     - mvn $MAVEN_CLI_OPTS test
 
 mirror:

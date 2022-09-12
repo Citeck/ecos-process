@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain;
+package ru.citeck.ecos.process.domain.procdef;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;

@@ -85,13 +85,13 @@ class CamundaRoleService(
         val usersFromGroup = recordsService.getAtts(groups, GroupInfo::class.java).map { it.containedUsers }.flatten()
         allUsers.addAll(usersFromGroup)
 
-        val emals = recordsService.getAtts(allUsers, UserInfo::class.java)
+        val emails = recordsService.getAtts(allUsers, UserInfo::class.java)
             .filter { it.email?.isNotBlank() ?: false }
             .map { it.email!! }
 
-        log.debug { "Get emails for document: $document, roles: $roles. Result: $emals" }
+        log.debug { "Get emails for document: $document, roles: $roles. Result: $emails" }
 
-        return emals
+        return emails
     }
 
     private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): List<EntityRef> {

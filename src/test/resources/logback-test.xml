@@ -5,4 +5,6 @@
     <include resource="ecos/logback-base.xml" />
 
     <root level="WARN" />
+
+    <logger name="org.camunda.bpm.scenario" level="debug" />
 </configuration>

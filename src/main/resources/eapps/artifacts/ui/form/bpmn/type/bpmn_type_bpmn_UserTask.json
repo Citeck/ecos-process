@@ -1,7 +1,6 @@
 {
   "id": "bpmn-type-bpmn:UserTask",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN User Task Form"
   },
@@ -9,6 +8,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {
     "ru": {
       "task_priority_low": "Низкий",
@@ -52,30 +52,85 @@
       },
       {
         "label": {
-          "en": "Assignees",
-          "ru": "Реципиенты"
+          "ru": "Panel"
         },
-        "key": "assignees",
-        "tooltip": {
-          "ru": "Выбор реципиентов задачи из ролей типа ecos",
-          "en": "Selecting task assignees from roles of the ecos type"
-        },
-        "multiple": true,
-        "validate": {
-          "required": true
-        },
-        "reorder": false,
-        "dataSrc": "custom",
-        "data": {
-          "custom": "values = _.get(data, 'roles.rolesData');"
-        },
-        "defaultValue": "",
-        "refreshOn": [
-          "roles"
-        ],
+        "key": "panel-recipients",
+        "title": "Назначение пользователей",
+        "refreshOn": [],
         "optionalWhenDisabled": false,
-        "type": "ecosSelect",
-        "input": true
+        "type": "panel",
+        "input": false,
+        "addAnother": "ecos.forms.btn.add-another",
+        "components": [
+          {
+            "label": {
+              "ru": "Ручное назначение",
+              "en": "Manual assignment"
+            },
+            "key": "manualRecipientsMode",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "checkbox",
+            "input": true,
+            "addAnother": "ecos.forms.btn.add-another"
+          },
+          {
+            "label": {
+              "en": "Assignees",
+              "ru": "Реципиенты"
+            },
+            "key": "assignees",
+            "tooltip": {
+              "ru": "Выбор реципиентов задачи из ролей типа ecos",
+              "en": "Selecting task assignees from roles of the ecos type"
+            },
+            "multiple": true,
+            "validate": {
+              "required": true
+            },
+            "reorder": false,
+            "dataSrc": "custom",
+            "data": {
+              "custom": "values = _.get(data, 'roles.rolesData');"
+            },
+            "defaultValue": "",
+            "refreshOn": [
+              "roles"
+            ],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = !!!data.manualRecipientsMode;",
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "en": "Assignees",
+              "ru": "Реципиенты"
+            },
+            "key": "manualRecipients",
+            "tooltip": {
+              "ru": "Имя или recordRef реципиента. \n\nПоддерживаются expression для получения реципиентов из переменных или сервисов. Expression может вернуть множественное значение - строки разделенные запятой: user1,user2,user3\n\nНапример:\nivan.petrov\nGROUP_company_accountant\nemodel/authority-group@company_accountant\n${someVariable}\n${someService.getRecipients()},petya.voks",
+              "en": "Name or recordRef of recipient. \n\nExpressions are supported to get recipients from variables or services. Expression can return multiple value - comma separated strings: user1,user2,user3\n\nExample:\nivan.petrov\nGROUP_company_accountant\nemodel/authority-group@company_accountant\n${someVariable}\n${someService.getRecipients()},petya.voks"
+            },
+            "multiple": true,
+            "validate": {
+              "required": true
+            },
+            "reorder": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = !!data.manualRecipientsMode;",
+            "type": "textfield",
+            "input": true,
+            "addAnother": "ecos.forms.btn.add-another"
+          }
+        ]
+      },
+      {
+        "input": true,
+        "key": "horizontalLine2",
+        "addAnother": "ecos.forms.btn.add-another",
+        "type": "horizontalLine"
       },
       {
         "label": {
@@ -192,6 +247,28 @@
             "type": "mlText",
             "input": true,
             "row": "0-1"
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel-advanced-mi",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "customConditional": "show = !!data.manualRecipientsMode;",
+        "type": "panel",
+        "input": false,
+        "addAnother": "ecos.forms.btn.add-another",
+        "components": [
+          {
+            "formRef": "uiserv/form@bpmn-base-form-multi-instance",
+            "input": true,
+            "key": "includeForm3",
+            "label": "Форма: BPMN base form Multi Instance",
+            "addAnother": "ecos.forms.btn.add-another",
+            "type": "includeForm"
           }
         ]
       }
