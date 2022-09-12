@@ -1,14 +1,17 @@
 package ru.citeck.ecos.process.domain.bpmn.elements
 
 import org.assertj.core.api.Assertions.assertThat
+import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
 import org.camunda.bpm.scenario.Scenario.run
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.internal.verification.VerificationModeFactory.times
@@ -16,11 +19,15 @@ import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 private const val USER_IVAN = "ivan.petrov"
@@ -31,13 +38,19 @@ private const val GROUP_MANAGER = "GROUP_manager"
 private const val GROUP_DEVELOPER = "GROUP_developer"
 
 private const val USER_TASK = "usertask"
+private const val GATEWAY = "gateway"
 
 /**
+ * Why all tests places on one class? TODO: fill
+ * *
  * @author Roman Makarskiy
  */
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-class BpmnUserTaskTest {
+class BpmnMonsterElementsTest {
+
+    @Autowired
+    private lateinit var taskService: TaskService
 
     @Mock
     private lateinit var process: ProcessScenario
@@ -45,12 +58,14 @@ class BpmnUserTaskTest {
     @MockBean
     private lateinit var camundaRoleService: CamundaRoleService
 
-    @Autowired
-    private lateinit var taskService: TaskService
+    @MockBean
+    private lateinit var statusSetter: CamundaStatusSetter
 
     private val variables = mapOf(
         "documentRef" to "doc@1"
     )
+
+    // ---BPMN USER TASK TESTS ---
 
     @BeforeEach
     fun setUp() {
@@ -354,6 +369,211 @@ class BpmnUserTaskTest {
         ).execute()
 
         verify(process).hasFinished("endEvent")
+    }
+
+    // ---BPMN SCRIPT TASK TESTS ---
+
+    @Test
+    fun `script task set variables`() {
+        val procId = "test-script-task-set-variables"
+        saveAndDeployBpmn("scripttask", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "foo" to "foo"
+            )
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("fooBar", "foo bar")
+        assertThat(scenario.instance(process)).variables().containsEntry("newVariable", "new var from script")
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    // ---BPMN GATEWAY TESTS ---
+
+    @Test
+    fun `gateway condition javascript compare variable variant top`() {
+        val procId = "test-gateway-condition-javascript"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "flow" to "top",
+            )
+        ).execute()
+
+        verify(process).hasFinished("endTop")
+    }
+
+    @Test
+    fun `gateway condition javascript compare variable variant bottom`() {
+        val procId = "test-gateway-condition-javascript"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "flow" to "bottom",
+            )
+        ).execute()
+
+        verify(process).hasFinished("endBottom")
+    }
+
+    @Test
+    fun `gateway condition javascript none of the conditions are true, should go to default flow`() {
+        val procId = "test-gateway-condition-javascript"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "flow" to "no-one-flow",
+            )
+        ).execute()
+
+        verify(process).hasFinished("endDefault")
+    }
+
+    @Test
+    fun `gateway condition expression compare variable variant top`() {
+        val procId = "test-gateway-condition-expression"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "flow" to "top",
+            )
+        ).execute()
+
+        verify(process).hasFinished("endTop")
+    }
+
+    @Test
+    fun `gateway condition expression compare variable variant bottom`() {
+        val procId = "test-gateway-condition-expression"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "flow" to "bottom",
+            )
+        ).execute()
+
+        verify(process).hasFinished("endBottom")
+    }
+
+    @Test
+    fun `gateway condition expression none of the conditions are true, should go to default flow`() {
+        val procId = "test-gateway-condition-expression"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "flow" to "no-one-flow",
+            )
+        ).execute()
+
+        verify(process).hasFinished("endDefault")
+    }
+
+    @Test
+    fun `gateway condition task outcome variant done`() {
+        val procId = "test-gateway-condition-task-outcome"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        val taskOutcome = Outcome("userTask", "done", MLText.EMPTY)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                taskOutcome.outcomeId() to taskOutcome.value,
+            )
+        ).execute()
+
+        verify(process).hasFinished("endDone")
+    }
+
+    @Test
+    fun `gateway condition task outcome variant cancel`() {
+        val procId = "test-gateway-condition-task-outcome"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        val taskOutcome = Outcome("userTask", "cancel", MLText.EMPTY)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                taskOutcome.outcomeId() to taskOutcome.value,
+            )
+        ).execute()
+
+        verify(process).hasFinished("endCancel")
+    }
+
+    @Test
+    fun `gateway condition task outcome, complete task with incorrect outcome should throw exception`() {
+        val procId = "test-gateway-condition-task-outcome"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        val taskOutcome = Outcome("userTask", "incorrect_task_outcome", MLText.EMPTY)
+
+        assertThrows<ProcessEngineException> {
+            `when`(process.waitsAtUserTask("userTask")).thenReturn {
+                it.complete()
+            }
+
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    "documentRef" to "doc@1",
+                    taskOutcome.outcomeId() to taskOutcome.value,
+                )
+            ).execute()
+        }
+    }
+
+    // --- BPMN SET STATUS TESTS ---
+
+    @Test
+    fun `set status of document`() {
+        val procId = "test-set-status"
+        saveAndDeployBpmn("status", procId)
+
+        val docRef = RecordRef.valueOf("doc@1")
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString()
+            )
+        ).execute()
+
+        verify(process).hasFinished("end")
+        verify(statusSetter, Mockito.times(1)).setStatus(docRef, "approval")
     }
 
     private fun getActiveTasksCountForProcess(procId: String): Long {
