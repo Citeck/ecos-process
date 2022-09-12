@@ -12,13 +12,12 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.internal.verification.VerificationModeFactory.times
-import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
@@ -28,6 +27,9 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 private const val USER_IVAN = "ivan.petrov"
@@ -56,28 +58,49 @@ class BpmnMonsterElementsTest {
     @Autowired
     private lateinit var taskService: TaskService
 
+    @Autowired
+    private lateinit var recordsService: RecordsService
+
     @Mock
     private lateinit var process: ProcessScenario
 
-    @MockBean
+    @SpyBean
     private lateinit var camundaRoleService: CamundaRoleService
 
     @MockBean
     private lateinit var statusSetter: CamundaStatusSetter
 
-    private val variables = mapOf(
-        "documentRef" to "doc@1"
-    )
+    companion object {
+        private val harryRecord = PotterRecord()
+        private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
+
+        private val variables = mapOf(
+            "documentRef" to "doc@1"
+        )
+
+        private val mockRoleUserNames = listOf(USER_IVAN, USER_PETR)
+        private val mockRoleGroupNames = listOf(GROUP_MANAGER, GROUP_DEVELOPER)
+        private val mockRoleAuthorityNames = listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
+    }
+
 
     // ---BPMN USER TASK TESTS ---
 
     @BeforeEach
     fun setUp() {
-        `when`(camundaRoleService.getUserNames(any(), any())).thenReturn(listOf(USER_IVAN, USER_PETR))
-        `when`(camundaRoleService.getGroupNames(any(), any())).thenReturn(listOf(GROUP_MANAGER, GROUP_DEVELOPER))
-        `when`(camundaRoleService.getAuthorityNames(any(), any())).thenReturn(
-            listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
+        recordsService.register(
+            RecordsDaoBuilder.create("hogwarts/people")
+                .addRecord(
+                    harryRef.id,
+                    PotterRecord()
+                )
+                .build()
         )
+
+        `when`(camundaRoleService.getUserNames(anyString(), anyString())).thenReturn(mockRoleUserNames)
+        `when`(camundaRoleService.getGroupNames(anyString(), anyString())).thenReturn(mockRoleGroupNames)
+        `when`(camundaRoleService.getAuthorityNames(anyString(), anyString())).thenReturn(mockRoleAuthorityNames)
+        `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
     }
 
     @Test
@@ -396,6 +419,43 @@ class BpmnMonsterElementsTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `script task get document variables`() {
+        val procId = "test-script-task-get-document-variables"
+        saveAndDeployBpmn("scripttask", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to harryRef.toString()
+            )
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("loadedName", harryRecord.name)
+        assertThat(scenario.instance(process)).variables().containsEntry("loadedEmail", harryRecord.email)
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `script task check role service`() {
+        val procId = "test-script-task-check-role-service"
+        saveAndDeployBpmn("scripttask", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to harryRef.toString()
+            )
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("userNames", mockRoleUserNames)
+        assertThat(scenario.instance(process)).variables().containsEntry("groupNames", mockRoleGroupNames)
+        assertThat(scenario.instance(process)).variables().containsEntry("authorityNames", mockRoleAuthorityNames)
+
+        verify(process).hasFinished("endEvent")
+    }
+
     // ---BPMN GATEWAY TESTS ---
 
     @Test
@@ -587,3 +647,13 @@ class BpmnMonsterElementsTest {
             .count()
     }
 }
+
+class PotterRecord(
+
+    @AttName("email")
+    val email: String = "harry.potter@hogwarts.com",
+
+    @AttName("name")
+    val name: String = "Harry Potter"
+
+)

@@ -27,13 +27,15 @@ class CamundaRoleService(
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        const val KEY = "roles"
     }
 
     private val isGroup = { name: String -> name.startsWith(GROUP_PREFIX) }
     private val isUser = { name: String -> !name.startsWith(GROUP_PREFIX) }
 
     override fun getKey(): String {
-        return "roles"
+        return KEY
     }
 
     fun getUserNames(document: String, roles: String): List<String> {
