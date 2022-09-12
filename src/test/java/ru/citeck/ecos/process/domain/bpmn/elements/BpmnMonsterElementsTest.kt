@@ -41,8 +41,12 @@ private const val USER_TASK = "usertask"
 private const val GATEWAY = "gateway"
 
 /**
- * Why all tests places on one class? TODO: fill
- * *
+ * Why all tests places on one class?
+ * Tests begin to behave unpredictably if placed in different classes. DirtiesContext and TestInstance.Lifecycle
+ * does not help.
+ *
+ * Similar case - https://forum.camunda.io/t/tests-instable/13960
+ *
  * @author Roman Makarskiy
  */
 @ExtendWith(EcosSpringExtension::class)
