@@ -16,23 +16,48 @@ data class BpmnUserTaskDef(
     val outcomes: List<TaskOutcome> = emptyList(),
     val assignees: List<Recipient> = emptyList(),
 
+    val manualRecipientsMode: Boolean = false,
+    val manualRecipients: List<String> = emptyList(),
+
     val formRef: RecordRef,
     val priority: TaskPriority,
 
-    val multiInstanceConfig: MultiInstanceConfig? = null
+    val multiInstanceConfig: MultiInstanceConfig? = null,
+
+    private var multiInstanceAutoMode_: Boolean = false
 ) {
 
+    val multiInstanceAutoMode: Boolean get() = multiInstanceAutoMode_
+
     init {
-        if (assignees.isEmpty()) {
-            throw EcosBpmnDefinitionException("Task assignees cannot be empty")
+        if (!manualRecipientsMode && multiInstanceConfig != null) {
+            multiInstanceAutoMode_ = true
+        }
+
+        if (manualRecipientsMode) {
+            if (manualRecipients.isEmpty()) {
+                throw EcosBpmnDefinitionException(
+                    "Manual recipients mode is enabled, but no manual recipients are specified. Task $id"
+                )
+            }
+        } else {
+            if (assignees.isEmpty()) {
+                throw EcosBpmnDefinitionException("No assignees are specified at Task $id")
+            }
         }
 
         if (RecordRef.isEmpty(formRef)) {
-            throw EcosBpmnDefinitionException("Task form ref cannot be empty")
+            throw EcosBpmnDefinitionException("Task $id form ref cannot be empty.")
         }
 
         if (outcomes.isEmpty()) {
-            throw EcosBpmnDefinitionException("Task outcomes cannot be empty")
+            throw EcosBpmnDefinitionException("Task $id outcomes cannot be empty.")
+        }
+
+        if (multiInstanceAutoMode && manualRecipientsMode) {
+            throw EcosBpmnDefinitionException(
+                "Task $id can't be in multi-instance auto mode and manual recipients mode at the same time"
+            )
         }
     }
 }

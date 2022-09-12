@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.bpmn.elements.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.data.sql.datasource.DbDataSourceImpl
 import ru.citeck.ecos.data.sql.domain.DbDomainConfig
@@ -21,7 +20,6 @@ import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 
-@Profile("!test")
 @Configuration
 class BpmnActivitiesRepoDaoConfig(
     private val dbDomainFactory: DbDomainFactory,

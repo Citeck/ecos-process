@@ -28,6 +28,11 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
             outcomes = Json.mapper.readList(element.otherAttributes[BPMN_PROP_OUTCOMES], TaskOutcome::class.java),
+            manualRecipientsMode = element.otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE]?.toBoolean() ?: false,
+            manualRecipients = Json.mapper.readList(
+                element.otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS],
+                String::class.java
+            ),
             assignees = recipientsFromJson(
                 RecipientType.ROLE,
                 element.otherAttributes[BPMN_PROP_ASSIGNEES] ?: ""
@@ -53,6 +58,9 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))
             otherAttributes.putIfNotBlank(BPMN_PROP_FORM_REF, element.formRef.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_PRIORITY, element.priority.toString())
+
+            otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS_MODE, element.manualRecipientsMode.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS, Json.mapper.toString(element.manualRecipients))
 
             element.multiInstanceConfig?.let {
                 loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
