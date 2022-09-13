@@ -41,9 +41,10 @@ private const val GROUP_DEVELOPER = "GROUP_developer"
 
 private const val USER_TASK = "usertask"
 private const val GATEWAY = "gateway"
+private const val SUB_PROCESS = "subprocess"
 
 /**
- * Why all tests places on one class?
+ * Why all tests places on one monster class?
  * Tests begin to behave unpredictably if placed in different classes. DirtiesContext and TestInstance.Lifecycle
  * does not help.
  *
@@ -53,7 +54,7 @@ private const val GATEWAY = "gateway"
  */
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-class BpmnMonsterElementsTest {
+class BpmnElementsMonsterTest {
 
     @Autowired
     private lateinit var taskService: TaskService
@@ -645,6 +646,104 @@ class BpmnMonsterElementsTest {
             .processDefinitionKey(procId)
             .active()
             .count()
+    }
+
+    // --- BPMN SUB PROCESS TESTS ---
+
+    @Test
+    fun `sub process simple`() {
+        val procId = "test-sub-process"
+        saveAndDeployBpmn(SUB_PROCESS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it).hasCandidateUser(USER_IVAN)
+            assertThat(it).hasCandidateUser(USER_PETR)
+
+            assertThat(it).hasCandidateGroup(GROUP_MANAGER)
+            assertThat(it).hasCandidateGroup(GROUP_DEVELOPER)
+
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endSubProcess")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `sub process multi instance sequential`() {
+        val procId = "test-sub-process-multi-instance-sequential"
+        saveAndDeployBpmn(SUB_PROCESS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn(
+            {
+                assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(1)
+
+                assertThat(it).hasCandidateUser(USER_IVAN)
+                it.complete()
+            },
+            {
+                assertThat(it).hasCandidateUser(USER_PETR)
+                it.complete()
+            },
+            {
+                assertThat(it).hasCandidateGroup(GROUP_MANAGER)
+                it.complete()
+            }
+        )
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
+            )
+        ).execute()
+
+        verify(process, times(3)).hasCompleted("userTask")
+        verify(process, times(3)).hasFinished("endSubProcess")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `sub process multi instance parallel`() {
+        val procId = "test-sub-process-multi-instance-parallel"
+        saveAndDeployBpmn(SUB_PROCESS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn(
+            {
+                assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(3)
+
+                assertThat(it).hasCandidateUser(USER_IVAN)
+                it.complete()
+            },
+            {
+                assertThat(it).hasCandidateUser(USER_PETR)
+                it.complete()
+            },
+            {
+                assertThat(it).hasCandidateGroup(GROUP_MANAGER)
+                it.complete()
+            }
+        )
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
+            )
+        ).execute()
+
+        verify(process, times(3)).hasCompleted("userTask")
+        verify(process, times(3)).hasFinished("endSubProcess")
+        verify(process).hasFinished("endEvent")
     }
 }
 
