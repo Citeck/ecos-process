@@ -10,15 +10,20 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.*
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
 import org.mockito.internal.verification.VerificationModeFactory.times
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.notifications.lib.Notification
+import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
@@ -42,6 +47,7 @@ private const val GROUP_DEVELOPER = "GROUP_developer"
 private const val USER_TASK = "usertask"
 private const val GATEWAY = "gateway"
 private const val SUB_PROCESS = "subprocess"
+private const val SEND_TASK = "sendtask"
 
 /**
  * Why all tests places on one monster class?
@@ -71,9 +77,13 @@ class BpmnElementsMonsterTest {
     @MockBean
     private lateinit var statusSetter: CamundaStatusSetter
 
+    @MockBean
+    private lateinit var notificationService: NotificationService
+
     companion object {
         private val harryRecord = PotterRecord()
         private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
+        private val docRef = RecordRef.valueOf("doc@1")
 
         private val variables = mapOf(
             "documentRef" to "doc@1"
@@ -82,6 +92,8 @@ class BpmnElementsMonsterTest {
         private val mockRoleUserNames = listOf(USER_IVAN, USER_PETR)
         private val mockRoleGroupNames = listOf(GROUP_MANAGER, GROUP_DEVELOPER)
         private val mockRoleAuthorityNames = listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
+
+        private val mockAuthorEmails = listOf("$USER_IVAN@mail.com", "$USER_PETR@mail.com")
     }
 
 
@@ -101,6 +113,9 @@ class BpmnElementsMonsterTest {
         `when`(camundaRoleService.getUserNames(anyString(), anyString())).thenReturn(mockRoleUserNames)
         `when`(camundaRoleService.getGroupNames(anyString(), anyString())).thenReturn(mockRoleGroupNames)
         `when`(camundaRoleService.getAuthorityNames(anyString(), anyString())).thenReturn(mockRoleAuthorityNames)
+
+        `when`(camundaRoleService.getEmails(docRef, listOf("author"))).thenReturn(mockAuthorEmails)
+
         `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
     }
 
@@ -745,6 +760,38 @@ class BpmnElementsMonsterTest {
         verify(process, times(3)).hasFinished("endSubProcess")
         verify(process).hasFinished("endEvent")
     }
+
+    // --- BPMN SEND TASK TESTS ---
+    @Test
+    fun `send task with template`() {
+        val procId = "test-send-task-with-template"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        val docRef = RecordRef.valueOf("doc@1")
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString()
+            )
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(mockAuthorEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .build()
+
+        verify(notificationService).send(org.mockito.kotlin.check {
+            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+        })
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
 }
 
 class PotterRecord(
@@ -756,3 +803,46 @@ class PotterRecord(
     val name: String = "Harry Potter"
 
 )
+
+/**
+ * Wrap equals without id
+ */
+private data class NotificationEqualsWrapper(
+    val dto: Notification
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as NotificationEqualsWrapper
+
+        if (dto.record != other.dto.record) return false
+        if (dto.title != other.dto.title) return false
+        if (dto.body != other.dto.body) return false
+        if (dto.templateRef != other.dto.templateRef) return false
+        if (dto.type != other.dto.type) return false
+        if (dto.recipients != other.dto.recipients) return false
+        if (dto.from != other.dto.from) return false
+        if (dto.cc != other.dto.cc) return false
+        if (dto.bcc != other.dto.bcc) return false
+        if (dto.lang != other.dto.lang) return false
+        if (dto.additionalMeta != other.dto.additionalMeta) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = dto.record.hashCode()
+        result = 31 * result + dto.title.hashCode()
+        result = 31 * result + dto.body.hashCode()
+        result = 31 * result + dto.templateRef.hashCode()
+        result = 31 * result + dto.type.hashCode()
+        result = 31 * result + dto.recipients.hashCode()
+        result = 31 * result + dto.cc.hashCode()
+        result = 31 * result + dto.from.hashCode()
+        result = 31 * result + dto.bcc.hashCode()
+        result = 31 * result + dto.lang.hashCode()
+        result = 31 * result + dto.additionalMeta.hashCode()
+        return result
+    }
+}
