@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="test-timer-value-from-expression" ecos:ecosType="emodel/type@type-ecos-fin-request">
+    <bpmn:process isExecutable="true" id="test-timer-value-from-expression">
+        <bpmn:startEvent name="start" id="StartEvent_1ew9rff" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;start&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_1lv9r57</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="approverTask" name="" id="Flow_1lv9r57" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:userTask name="approve" id="approverTask" ecos:documentation="{}" ecos:manualRecipients="[]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;Done&quot;}}]" ecos:name_ml="{&quot;ru&quot;:&quot;approve&quot;}" ecos:formRef="uiserv/form@test-bpmn-form" ecos:manualRecipientsMode="false" ecos:priority="MEDIUM" ecos:assignees="[&quot;author&quot;]">
+            <bpmn:incoming >Flow_1lv9r57</bpmn:incoming>
+            <bpmn:outgoing >Flow_1przxj1</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent name="end" id="endEvent" ecos:name_ml="{&quot;ru&quot;:&quot;end&quot;}">
+            <bpmn:incoming >Flow_1przxj1</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow sourceRef="approverTask" targetRef="endEvent" name="" id="Flow_1przxj1" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:boundaryEvent  cancelActivity="false" attachedToRef="approverTask" name="daily" id="Event_0g496z5" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;daily&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:timeConfig="{&quot;type&quot;:&quot;CYCLE&quot;,&quot;value&quot;:&quot;${timeValue}&quot;}">
+            <bpmn:outgoing>Flow_18doagl</bpmn:outgoing>
+            <bpmn:timerEventDefinition id="TimerEventDefinition_14hv08s">
+                <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">${timeValue}</bpmn:timeCycle>
+            </bpmn:timerEventDefinition>
+        </bpmn:boundaryEvent>
+        <bpmn:sequenceFlow sourceRef="Event_0g496z5" targetRef="remindSendTask" name="" id="Flow_18doagl" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sendTask name="remind" id="remindSendTask" ecos:notificationCc="[]" ecos:notificationBcc="[]" ecos:notificationLang="ru" ecos:name_ml="{&quot;ru&quot;:&quot;remind&quot;}" ecos:notificationTemplate="notifications/template@test-template" ecos:notificationType="EMAIL_NOTIFICATION" ecos:notificationAdditionalMeta="{}" ecos:notificationTo="[&quot;author&quot;]">
+            <bpmn:incoming >Flow_18doagl</bpmn:incoming>
+        </bpmn:sendTask>
+    </bpmn:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="test-timer-value-from-expression" id="BPMNPlane_1">
+            <bpmndi:BPMNEdge bpmnElement="Flow_1lv9r57" id="Flow_1lv9r57_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="250.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1przxj1" id="Flow_1przxj1_di">
+                <di:waypoint x="350.0" y="99.0"/>
+                <di:waypoint x="452.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_18doagl" id="Flow_18doagl_di">
+                <di:waypoint x="350.0" y="157.0"/>
+                <di:waypoint x="350.0" y="220.0"/>
+                <di:waypoint x="370.0" y="220.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="StartEvent_1ew9rff" isExpanded="true" id="_BPMNShape_StartEvent_2">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="approverTask" isExpanded="true" id="approverTask_di">
+                <dc:Bounds x="250.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" isExpanded="true" id="endEvent_di">
+                <dc:Bounds x="452.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="remindSendTask" isExpanded="true" id="remindSendTask_di">
+                <dc:Bounds x="370.0" y="180.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0g496z5" isExpanded="true" id="Event_1pgfy3m_di">
+                <dc:Bounds x="332.0" y="121.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

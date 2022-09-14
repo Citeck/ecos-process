@@ -10,11 +10,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.*
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.internal.verification.VerificationModeFactory.times
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -37,6 +38,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
+
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
 private const val USER_4_LOOP = "user4Loop"
@@ -48,6 +50,7 @@ private const val USER_TASK = "usertask"
 private const val GATEWAY = "gateway"
 private const val SUB_PROCESS = "subprocess"
 private const val SEND_TASK = "sendtask"
+private const val TIMER = "timer"
 
 /**
  * Why all tests places on one monster class?
@@ -771,6 +774,7 @@ class BpmnElementsMonsterTest {
     }
 
     // --- BPMN SEND TASK TESTS ---
+
     @Test
     fun `send task with template`() {
         val procId = "test-send-task-with-template"
@@ -889,6 +893,94 @@ class BpmnElementsMonsterTest {
         })
 
         verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    // --- BPMN TIMER TESTS ---
+
+    @Test
+    fun `timer boundary non interrupting`() {
+        val procId = "test-timer-boundary-non-interrupting"
+        saveAndDeployBpmn(TIMER, procId)
+
+        `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
+            task.defer("P2DT12H") { task.complete() }
+        }
+
+        run(process).startByKey(procId, variables).execute()
+
+        verify(process, times(2)).hasFinished("remindSendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `timer value from expression`() {
+        val procId = "test-timer-value-from-expression"
+        saveAndDeployBpmn(TIMER, procId)
+
+        `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
+            task.defer("P4DT12H") { task.complete() }
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "timeValue" to "R/P1D"
+            )
+        ).execute()
+
+        verify(process, times(4)).hasFinished("remindSendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `timer boundary duration interrupting - done task flow`() {
+        val procId = "test-timer-boundary-duration-interrupting"
+        saveAndDeployBpmn(TIMER, procId)
+
+        `when`(process.waitsAtUserTask("approverTask")).thenReturn {
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables).execute()
+
+        verify(process).hasFinished("taskDoneFlow")
+        verify(process, never()).hasFinished("taskExpiredFlow")
+    }
+
+    @Test
+    fun `timer boundary duration interrupting - expired task flow`() {
+        val procId = "test-timer-boundary-duration-interrupting"
+        saveAndDeployBpmn(TIMER, procId)
+
+        `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
+            task.defer("P3DT12H") { }
+        }
+
+        run(process).startByKey(procId, variables).execute()
+
+        assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(0)
+
+        verify(process).hasCompleted("expiredSendTask")
+        verify(process).hasFinished("taskExpiredFlow")
+        verify(process, never()).hasFinished("taskDoneFlow")
+    }
+
+    @Test
+    fun `timer intermediate catch`() {
+        val procId = "test-timer-intermediate-catch"
+        saveAndDeployBpmn(TIMER, procId)
+
+        `when`(process.waitsAtTimerIntermediateEvent("timer")).thenReturn {
+            // Do nothing means process moves forward because of the timers
+        }
+        `when`(process.waitsAtUserTask("userTask")).thenReturn { task ->
+            task.complete()
+        }
+
+        run(process).startByKey(procId, variables).execute()
+
         verify(process).hasFinished("endEvent")
     }
 
