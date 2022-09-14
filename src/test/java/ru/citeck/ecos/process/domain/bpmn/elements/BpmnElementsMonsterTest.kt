@@ -199,8 +199,7 @@ class BpmnElementsMonsterTest {
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
-                val count = taskService.createTaskQuery().active().count()
-                assertThat(count).isEqualTo(1)
+                assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(1)
 
                 assertThat(it).isAssignedTo(USER_IVAN)
                 it.complete()
