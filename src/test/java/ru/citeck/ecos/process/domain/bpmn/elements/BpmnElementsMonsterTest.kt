@@ -84,6 +84,7 @@ class BpmnElementsMonsterTest {
         private val harryRecord = PotterRecord()
         private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
         private val docRef = RecordRef.valueOf("doc@1")
+        private val docExplicitRef = RecordRef.valueOf("doc@explicit")
 
         private val variables = mapOf(
             "documentRef" to "doc@1"
@@ -94,6 +95,9 @@ class BpmnElementsMonsterTest {
         private val mockRoleAuthorityNames = listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
 
         private val mockAuthorEmails = listOf("$USER_IVAN@mail.com", "$USER_PETR@mail.com")
+        private val mockInitiatorEmails = listOf("initiator@mail.com")
+        private val mockApproverEmails = listOf("approver@mail.com")
+        private val mockAuthorAccountantEmails = listOf("author@mail.com", "accountant@mail.com")
     }
 
 
@@ -115,6 +119,12 @@ class BpmnElementsMonsterTest {
         `when`(camundaRoleService.getAuthorityNames(anyString(), anyString())).thenReturn(mockRoleAuthorityNames)
 
         `when`(camundaRoleService.getEmails(docRef, listOf("author"))).thenReturn(mockAuthorEmails)
+        `when`(camundaRoleService.getEmails(docExplicitRef, listOf("author"))).thenReturn(mockAuthorEmails)
+        `when`(camundaRoleService.getEmails(docRef, listOf("initiator"))).thenReturn(mockInitiatorEmails)
+        `when`(camundaRoleService.getEmails(docRef, listOf("approver"))).thenReturn(mockApproverEmails)
+        `when`(camundaRoleService.getEmails(docRef, listOf("author", "accountant"))).thenReturn(
+            mockAuthorAccountantEmails
+        )
 
         `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
     }
@@ -767,7 +777,33 @@ class BpmnElementsMonsterTest {
         val procId = "test-send-task-with-template"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        val docRef = RecordRef.valueOf("doc@1")
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString()
+            )
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(mockAuthorEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .build()
+
+        verify(notificationService).send(org.mockito.kotlin.check {
+            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+        })
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task with explicit text`() {
+        val procId = "test-send-task-with-explicit-text"
+        saveAndDeployBpmn(SEND_TASK, procId)
 
         run(process).startByKey(
             procId,
@@ -781,6 +817,71 @@ class BpmnElementsMonsterTest {
             .recipients(mockAuthorEmails)
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
+            .title("Hello Ivan")
+            .body("<p>Hello Ivan, your document is approved</p>")
+            .build()
+
+        verify(notificationService).send(org.mockito.kotlin.check {
+            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+        })
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task recipients check`() {
+        val procId = "test-send-task-recipients-check"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString()
+            )
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(mockAuthorAccountantEmails)
+            .cc(mockInitiatorEmails)
+            .bcc(mockApproverEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .build()
+
+        verify(notificationService).send(org.mockito.kotlin.check {
+            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+        })
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task configuration check`() {
+        val procId = "test-send-task-configuration-check"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString()
+            )
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(docExplicitRef)
+            .recipients(mockAuthorEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("en")
+            .additionalMeta(
+                mapOf(
+                    "foo" to "bar",
+                    "harry" to "potter"
+                )
+            )
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
             .build()
 
