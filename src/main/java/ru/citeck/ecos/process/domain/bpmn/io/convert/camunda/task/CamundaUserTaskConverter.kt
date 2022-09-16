@@ -50,9 +50,19 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
             if (element.manualRecipientsMode) {
-                // use assignee as storage for manual recipients with expression support
+                // Use assignee as storage for manual recipients with expression support.
+                // A comma is added if there is only one recipient, so that the camunda perceive the recipient as string
                 // see ManualRecipientsModeUserTaskAssignListener
-                otherAttributes[CAMUNDA_ASSIGNEE] = element.manualRecipients.joinToString(CAMUNDA_COLLECTION_SEPARATOR)
+                otherAttributes[CAMUNDA_ASSIGNEE] = let {
+                    var recipientsStr = element.manualRecipients.joinToString(CAMUNDA_COLLECTION_SEPARATOR)
+                    val isSingleRecipient = element.manualRecipients.size == 1
+                        && !recipientsStr.contains(CAMUNDA_COLLECTION_SEPARATOR)
+
+                    if (isSingleRecipient) {
+                        recipientsStr += CAMUNDA_COLLECTION_SEPARATOR
+                    }
+                    return@let recipientsStr
+                }
 
                 element.multiInstanceConfig?.let {
                     loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))

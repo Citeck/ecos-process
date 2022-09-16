@@ -426,6 +426,30 @@ class BpmnElementsMonsterTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `task assignment manual single recipient with expressions`() {
+        val procId = "test-user-task-assign-single-manual-with-expressions"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it).hasCandidateUser("userFromVariable")
+
+            assertThat(it).hasCandidateGroup("GROUP_fromVariable")
+
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to "doc@1",
+                "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
     // ---BPMN SCRIPT TASK TESTS ---
 
     @Test
