@@ -19,11 +19,19 @@ import javax.xml.namespace.QName
 class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
     override fun import(element: TUserTask, context: ImportContext): BpmnUserTaskDef {
-        val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
+        val nameMl = let {
+            val name = Json.mapper.convert(element.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java)
+                ?: MLText.EMPTY
+            return@let if (name == MLText.EMPTY) {
+                MLText(element.name)
+            } else {
+                name
+            }
+        }
 
         return BpmnUserTaskDef(
             id = element.id,
-            name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            name = nameMl,
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },

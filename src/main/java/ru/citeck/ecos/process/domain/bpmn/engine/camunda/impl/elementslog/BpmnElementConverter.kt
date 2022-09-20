@@ -3,13 +3,13 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.elementslog
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.elements.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.elements.dto.TaskElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getOutcome
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getTitle
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import javax.annotation.PostConstruct
 
@@ -75,7 +75,7 @@ fun DelegateTask.toTaskElement(): TaskElementEvent {
         description = description,
         priority = priority,
         executionId = executionId,
-        name = MLText(name),
+        name = getTitle(),
         comment = variables[COMMENT_VAR]?.toString(),
         outcome = outcome.value,
         outcomeName = outcome.name,

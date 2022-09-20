@@ -68,6 +68,7 @@ fun saveAndDeployBpmnFromResource(resource: String, id: String) {
 
 fun saveAndDeployBpmn(elementFolder: String, id: String) {
     saveAndDeployBpmnFromResource(
-        "test/bpmn/elements/$elementFolder/$id.bpmn.xml", id
+        "test/bpmn/elements/$elementFolder/$id.bpmn.xml",
+        id
     )
 }

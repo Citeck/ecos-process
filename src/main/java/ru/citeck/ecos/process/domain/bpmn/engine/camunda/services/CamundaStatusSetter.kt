@@ -17,5 +17,4 @@ class CamundaStatusSetter(
 
         recordsService.mutate(recordAtts)
     }
-
 }

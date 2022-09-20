@@ -137,7 +137,7 @@ class ProcTaskRecords(
         val formRef: RecordRef? = null,
         val processInstanceId: RecordRef? = null,
         val documentRef: RecordRef? = null,
-        val title: String? = null,
+        val title: MLText? = null,
         val created: Instant? = null,
         val dueDate: Instant? = null,
         val actors: List<AuthorityDto> = emptyList(),
@@ -159,12 +159,12 @@ class ProcTaskRecords(
         }
 
         @AttName(".disp")
-        fun getDisp(): String? {
+        fun getDisp(): MLText? {
             return title
         }
 
         @AttName("name")
-        fun getName(): String? {
+        fun getName(): MLText? {
             return title
         }
 
@@ -259,7 +259,7 @@ class ProcTaskRecords(
             priority = alfAtts.getAtt(mapping["priority"]).asInt(),
             created = getDateFromAtts("created"),
             alfTaskAtts = alfAtts,
-            title = alfAtts.getAtt(mapping["disp"]).asText(),
+            title = MLText(alfAtts.getAtt(mapping["disp"]).asText()),
         )
     }
 

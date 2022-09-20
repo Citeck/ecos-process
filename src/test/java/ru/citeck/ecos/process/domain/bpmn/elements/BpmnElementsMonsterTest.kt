@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.elements
 
+import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.TaskService
@@ -31,13 +32,13 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusS
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -71,6 +72,9 @@ class BpmnElementsMonsterTest {
     @Autowired
     private lateinit var recordsService: RecordsService
 
+    @Autowired
+    private lateinit var procTaskService: ProcTaskService
+
     @Mock
     private lateinit var process: ProcessScenario
 
@@ -102,7 +106,6 @@ class BpmnElementsMonsterTest {
         private val mockApproverEmails = listOf("approver@mail.com")
         private val mockAuthorAccountantEmails = listOf("author@mail.com", "accountant@mail.com")
     }
-
 
     // ---BPMN USER TASK TESTS ---
 
@@ -444,6 +447,157 @@ class BpmnElementsMonsterTest {
             mapOf(
                 "documentRef" to "doc@1",
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task ml text name`() {
+        val procId = "test-user-task-ml-name"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        val doc = "doc@ml"
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            val task = procTaskService.getTasksByDocument(doc).first()
+            val expectedName = MLText(
+                mapOf(
+                    LocaleUtils.toLocale("ru") to "Пользовательская задача",
+                    LocaleUtils.toLocale("en") to "User task"
+                )
+            )
+
+            it.complete()
+
+            assertThat(task.name).isEqualTo(expectedName)
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to doc
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task ml text name single lang`() {
+        val procId = "test-user-task-ml-name-single-lang"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        val doc = "doc@ml-single-lang"
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            val task = procTaskService.getTasksByDocument(doc).first()
+            val expectedName = MLText(
+                mapOf(
+                    LocaleUtils.toLocale("en") to "User task"
+                )
+            )
+
+            it.complete()
+
+            assertThat(task.name).isEqualTo(expectedName)
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to doc
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task empty json ml text should return default name`() {
+        val procId = "test-user-task-ml-empty-json"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        val doc = "doc@ml-empty-json"
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            val task = procTaskService.getTasksByDocument(doc).first()
+            val expectedName = MLText(
+                mapOf(
+                    LocaleUtils.toLocale("en") to "Пользовательская задача"
+                )
+            )
+
+            it.complete()
+
+            assertThat(task.name).isEqualTo(expectedName)
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to doc
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task blank ml text should return default name`() {
+        val procId = "test-user-task-ml-blank"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        val doc = "doc@ml-blank"
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            val task = procTaskService.getTasksByDocument(doc).first()
+            val expectedName = MLText(
+                mapOf(
+                    LocaleUtils.toLocale("en") to "Пользовательская задача"
+                )
+            )
+
+            it.complete()
+
+            assertThat(task.name).isEqualTo(expectedName)
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to doc
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task without json ml text should return default name`() {
+        val procId = "test-user-task-without-ml-json"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        val doc = "doc@without-ml-json"
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            val task = procTaskService.getTasksByDocument(doc).first()
+            val expectedName = MLText(
+                mapOf(
+                    LocaleUtils.toLocale("en") to "Пользовательская задача"
+                )
+            )
+
+            it.complete()
+
+            assertThat(task.name).isEqualTo(expectedName)
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to doc
             )
         ).execute()
 
@@ -819,9 +973,11 @@ class BpmnElementsMonsterTest {
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
             .build()
 
-        verify(notificationService).send(org.mockito.kotlin.check {
-            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
-        })
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
 
         verify(process, times(1)).hasCompleted("sendTask")
         verify(process).hasFinished("endEvent")
@@ -848,9 +1004,11 @@ class BpmnElementsMonsterTest {
             .body("<p>Hello Ivan, your document is approved</p>")
             .build()
 
-        verify(notificationService).send(org.mockito.kotlin.check {
-            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
-        })
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
 
         verify(process, times(1)).hasCompleted("sendTask")
         verify(process).hasFinished("endEvent")
@@ -878,9 +1036,11 @@ class BpmnElementsMonsterTest {
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
             .build()
 
-        verify(notificationService).send(org.mockito.kotlin.check {
-            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
-        })
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
 
         verify(process, times(1)).hasCompleted("sendTask")
         verify(process).hasFinished("endEvent")
@@ -912,9 +1072,11 @@ class BpmnElementsMonsterTest {
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
             .build()
 
-        verify(notificationService).send(org.mockito.kotlin.check {
-            assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
-        })
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
 
         verify(process, times(1)).hasCompleted("sendTask")
         verify(process).hasFinished("endEvent")
@@ -1007,7 +1169,6 @@ class BpmnElementsMonsterTest {
 
         verify(process).hasFinished("endEvent")
     }
-
 }
 
 class PotterRecord(

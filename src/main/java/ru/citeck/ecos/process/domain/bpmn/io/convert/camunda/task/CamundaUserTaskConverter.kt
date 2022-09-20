@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_MANUAL_RECIPIENTS_MODE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_MULTI_INSTANCE_AUTO_MODE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
@@ -44,7 +45,9 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
     override fun export(element: BpmnUserTaskDef, context: ExportContext): TUserTask {
         return TUserTask().apply {
             id = element.id
+
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
+            otherAttributes[BPMN_PROP_NAME_ML] = element.name.toString()
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
@@ -55,8 +58,8 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 // see ManualRecipientsModeUserTaskAssignListener
                 otherAttributes[CAMUNDA_ASSIGNEE] = let {
                     var recipientsStr = element.manualRecipients.joinToString(CAMUNDA_COLLECTION_SEPARATOR)
-                    val isSingleRecipient = element.manualRecipients.size == 1
-                        && !recipientsStr.contains(CAMUNDA_COLLECTION_SEPARATOR)
+                    val isSingleRecipient = element.manualRecipients.size == 1 &&
+                        !recipientsStr.contains(CAMUNDA_COLLECTION_SEPARATOR)
 
                     if (isSingleRecipient) {
                         recipientsStr += CAMUNDA_COLLECTION_SEPARATOR

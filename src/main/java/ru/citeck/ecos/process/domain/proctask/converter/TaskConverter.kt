@@ -5,9 +5,11 @@ import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_NAME_ML
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.api.records.isAlfTaskRef
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
@@ -38,6 +40,7 @@ private lateinit var cnv: TaskConverter
 fun Task.toProcTask(): ProcTaskDto {
     val links = cnv.camundaTaskService.getIdentityLinksForTask(id)
     val variables = cnv.camundaTaskService.getVariables(id)
+    val localVariables = cnv.camundaTaskService.getVariablesLocal(id)
 
     val candidateUsers = mutableSetOf<String>()
     val candidateGroups = mutableSetOf<String>()
@@ -55,7 +58,14 @@ fun Task.toProcTask(): ProcTaskDto {
 
     return ProcTaskDto(
         id = id,
-        name = MLText(name),
+        name = let {
+            val nameMl = Json.mapper.convert(localVariables[VAR_NAME_ML], MLText::class.java) ?: MLText(name)
+            return@let if (nameMl == MLText.EMPTY) {
+                MLText(name)
+            } else {
+                nameMl
+            }
+        },
         priority = priority,
         formRef = RecordRef.valueOf(formKey),
         processInstanceId = if (processInstanceId.isNullOrBlank()) {
@@ -87,7 +97,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecords.ProcTaskRecord {
         documentRef = documentRef,
         created = created,
         dueDate = dueDate,
-        title = name.getClosestValue(),
+        title = name,
         actors = getActors(assignee, candidateUsers + candidateGroups),
         documentAtts = let {
             if (documentRef == RecordRef.EMPTY || RecordRef.valueOf(id).isAlfTaskRef()) {
