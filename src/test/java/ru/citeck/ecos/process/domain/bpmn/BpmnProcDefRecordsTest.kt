@@ -28,6 +28,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.context.model.ModelServiceFactoryConfig
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
@@ -64,10 +65,10 @@ class BpmnProcDefRecordsTest {
     @BeforeAll
     fun setUp() {
         val typesRepo = object : TypesRepo {
-            override fun getTypeInfo(typeRef: RecordRef): TypeInfo? {
-                if (typeRef.id == BPMN_PROC_DEF_TYPE_ID) {
+            override fun getTypeInfo(typeRef: EntityRef): TypeInfo? {
+                if (typeRef.getLocalId() == BPMN_PROC_DEF_TYPE_ID) {
                     return TypeInfo.create {
-                        withId(typeRef.id)
+                        withId(typeRef.getLocalId())
                         withModel(
                             TypeModelDef.create()
                                 .withRoles(
@@ -90,14 +91,14 @@ class BpmnProcDefRecordsTest {
                 return null
             }
 
-            override fun getChildren(typeRef: RecordRef): List<RecordRef> {
+            override fun getChildren(typeRef: EntityRef): List<RecordRef> {
                 return emptyList()
             }
         }
 
         val permsRepo = object : PermissionsRepo {
-            override fun getPermissionsForType(typeRef: RecordRef): TypePermsDef? {
-                if (typeRef.id == BPMN_PROC_DEF_TYPE_ID) {
+            override fun getPermissionsForType(typeRef: EntityRef): TypePermsDef? {
+                if (typeRef.getLocalId() == BPMN_PROC_DEF_TYPE_ID) {
                     return TypePermsDef.create {
                         withPermissions(
                             PermissionsDef.create {
