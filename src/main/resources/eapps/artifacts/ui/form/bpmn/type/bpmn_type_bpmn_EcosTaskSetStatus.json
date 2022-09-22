@@ -1,7 +1,6 @@
 {
   "id": "bpmn-type-bpmn:EcosTaskSetStatus",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Set Status Task Form"
   },
@@ -9,6 +8,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {
     "ru": {
       "task_priority_low": "Низкий",
@@ -44,11 +44,44 @@
         "input": true
       },
       {
-        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "label": {
+          "ru": "ID элемента",
+          "en": "Element ID"
+        },
+        "key": "id",
+        "validate": {
+          "required": true
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
         "input": true,
-        "key": "includeForm2",
-        "label": "Форма: Bpmn base form elements",
-        "type": "includeForm"
+        "addAnother": "ecos.forms.btn.add-another"
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true,
+        "addAnother": "ecos.forms.btn.add-another"
+      },
+      {
+        "label": {
+          "ru": "Документация",
+          "en": "Documentation"
+        },
+        "key": "documentation",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlTextarea",
+        "input": true,
+        "addAnother": "ecos.forms.btn.add-another"
       },
       {
         "label": {
