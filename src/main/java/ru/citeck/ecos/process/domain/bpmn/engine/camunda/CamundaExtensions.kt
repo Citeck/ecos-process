@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import mu.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
@@ -30,6 +31,8 @@ import javax.xml.bind.JAXBElement
 
 private const val SRC_ID_GROUP = "authority-group"
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class CamundaExtensions(
     val camundaRepoService: RepositoryService
@@ -53,6 +56,8 @@ class CamundaExtensions(
 
         val processDefinitionId = key.first
         val taskDefinitionKey = key.second
+
+        log.debug { "Getting task title with procDefId: $processDefinitionId, taskDefKey: $taskDefinitionKey" }
 
         val modelText = camundaRepoService.getProcessModel(processDefinitionId).reader().readText()
         if (modelText.isBlank()) {
@@ -88,6 +93,8 @@ class CamundaExtensions(
             .firstOrNull { it.id == taskDefinitionKey } ?: error(
             "Task with id $taskDefinitionKey not found on camunda definition $processDefinitionId"
         )
+
+        log.debug { "Found current task: \n$currentTask" }
 
         return Json.mapper.read(currentTask.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java) ?: error(
             "Can't read name from task ${currentTask.id}"
@@ -127,6 +134,8 @@ fun DelegateTask.getOutcome(): Outcome {
 
 fun DelegateTask.getTitle(): MLText {
     val defaultName = MLText(name)
+
+    log.debug { "Getting task title from: \n$this" }
 
     val processDefIdToTaskKey = Pair(processDefinitionId, taskDefinitionKey)
     return ext.taskTitleCache.get(processDefIdToTaskKey) ?: defaultName
