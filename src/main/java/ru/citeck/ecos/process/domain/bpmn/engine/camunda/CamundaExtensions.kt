@@ -31,12 +31,14 @@ import javax.xml.bind.JAXBElement
 
 private const val SRC_ID_GROUP = "authority-group"
 
-private val log = KotlinLogging.logger {}
-
 @Component
 class CamundaExtensions(
     val camundaRepoService: RepositoryService
 ) {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     @PostConstruct
     private fun init() {
@@ -134,8 +136,6 @@ fun DelegateTask.getOutcome(): Outcome {
 
 fun DelegateTask.getTitle(): MLText {
     val defaultName = MLText(name)
-
-    log.debug { "Getting task title from: \n$this" }
 
     val processDefIdToTaskKey = Pair(processDefinitionId, taskDefinitionKey)
     return ext.taskTitleCache.get(processDefIdToTaskKey) ?: defaultName
