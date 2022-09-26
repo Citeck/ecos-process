@@ -1,0 +1,7 @@
+---
+id: open-bpmn-editor
+type: open-url
+config:
+  url: /v2/bpmn-editor?recordRef=${recordRef}
+  withinEcosTab: true
+  openNewTab: true
