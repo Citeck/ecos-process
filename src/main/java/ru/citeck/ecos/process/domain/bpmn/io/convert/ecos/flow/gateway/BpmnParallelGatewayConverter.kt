@@ -43,6 +43,8 @@ class BpmnParallelGatewayConverter : EcosOmgConverter<BpmnParallelGatewayDef, TP
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
+            otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
+
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
         }

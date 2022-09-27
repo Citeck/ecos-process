@@ -36,6 +36,8 @@ class BpmnSequenceFlowConverter : EcosOmgConverter<BpmnSequenceFlowDef, TSequenc
             sourceRef = element.sourceRef
             targetRef = element.targetRef
 
+            otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
+
             otherAttributes[BPMN_PROP_CONDITION_TYPE] = element.condition.type.name
             otherAttributes[BPMN_PROP_CONDITION_CONFIG] = Json.mapper.toString(element.condition.config)
         }
