@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
@@ -75,8 +76,8 @@ class BpmnProcRecords(
         val key: String = ""
     ) : AttValue {
 
-        override fun getDisplayName(): String {
-            return key
+        override fun getDisplayName(): MLText {
+            return MLText(key)
         }
 
         override fun getType(): RecordRef {

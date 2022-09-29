@@ -5,16 +5,15 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
-import ru.citeck.ecos.process.domain.bpmn.elements.dto.FlowElementEvent
-import ru.citeck.ecos.process.domain.bpmn.elements.dto.TaskElementEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_FLOW_ELEMENT_START
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_USER_TASK_COMPLETE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_USER_TASK_CREATE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.request.RequestContext
-
-const val BPMN_EVENT_USER_TASK_CREATE = "bpmn-user-task-create"
-const val BPMN_EVENT_USER_TASK_COMPLETE = "bpmn-user-task-complete"
-const val BPMN_EVENT_FLOW_ELEMENT_START = "bpmn-flow-element-start"
 
 @Component
 class BpmnElementsCreateListener(
@@ -27,9 +26,9 @@ class BpmnElementsCreateListener(
     }
 
     init {
-        eventsService.addListener<TaskElementEvent> {
+        eventsService.addListener<UserTaskEvent> {
             withEventType(BPMN_EVENT_USER_TASK_CREATE)
-            withDataClass(TaskElementEvent::class.java)
+            withDataClass(UserTaskEvent::class.java)
             withAction { event ->
                 execPostTxnAction(event) {
                     createTaskElement(it, false)
@@ -37,9 +36,9 @@ class BpmnElementsCreateListener(
             }
         }
 
-        eventsService.addListener<TaskElementEvent> {
+        eventsService.addListener<UserTaskEvent> {
             withEventType(BPMN_EVENT_USER_TASK_COMPLETE)
-            withDataClass(TaskElementEvent::class.java)
+            withDataClass(UserTaskEvent::class.java)
             withAction { event ->
                 execPostTxnAction(event) {
                     val existingElement = recordsService.queryOne(
@@ -48,7 +47,7 @@ class BpmnElementsCreateListener(
                             withQuery(
                                 Predicates.and(
                                     Predicates.eq("engine", it.engine),
-                                    Predicates.eq("elementId", it.taskId)
+                                    Predicates.eq("elementId", it.taskId?.toString())
                                 )
                             )
                         }
@@ -89,7 +88,7 @@ class BpmnElementsCreateListener(
         }
     }
 
-    private fun createTaskElement(event: TaskElementEvent, completedEvent: Boolean) {
+    private fun createTaskElement(event: UserTaskEvent, completedEvent: Boolean) {
         log.debug { "Create task element. Event: $event. Completed: $completedEvent" }
         val data = ObjectData.create(event)
         if (completedEvent) {
@@ -100,7 +99,7 @@ class BpmnElementsCreateListener(
             data.remove("outcomeName")
             data.remove("comment")
         }
-        data["elementId"] = event.taskId
+        data["elementId"] = event.taskId?.toString()
         data["elementType"] = "UserTask"
         if (data["engine"].asText().isBlank()) {
             data["engine"] = "flowable"

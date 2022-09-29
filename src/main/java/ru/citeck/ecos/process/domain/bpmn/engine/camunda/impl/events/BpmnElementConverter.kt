@@ -1,16 +1,17 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.elementslog
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events
 
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
-import ru.citeck.ecos.process.domain.bpmn.elements.dto.FlowElementEvent
-import ru.citeck.ecos.process.domain.bpmn.elements.dto.TaskElementEvent
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getOutcome
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getTitle
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
+import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.constants.AppName
 import javax.annotation.PostConstruct
 
 private const val CLASS_IMPL_POSTFIX = "Impl"
@@ -54,7 +55,7 @@ fun DelegateExecution.toFlowElement(): FlowElementEvent {
     )
 }
 
-fun DelegateTask.toTaskElement(): TaskElementEvent {
+fun DelegateTask.toTaskEvent(): UserTaskEvent {
     val processDefinition = cnv.bpmnProcService.getProcessDefinition(processDefinitionId) ?: error(
         "Process definition is null. TaskId: $id, name: $name, executionId: $executionId, " +
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
@@ -62,13 +63,15 @@ fun DelegateTask.toTaskElement(): TaskElementEvent {
 
     val outcome = getOutcome()
 
-    return TaskElementEvent(
-        taskId = id,
+    return UserTaskEvent(
+        taskId = RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
         engine = BPMN_CAMUNDA_ENGINE,
+        form = getFormRef(),
         assignee = assignee,
+        roles = getTaskRoles(),
         procDefId = processDefinition.key,
         procDeploymentVersion = processDefinition.version,
-        procInstanceId = processInstanceId,
+        procInstanceId = getProcessInstanceRef(),
         elementDefId = taskDefinitionKey,
         created = createTime?.toInstant(),
         dueDate = dueDate?.toInstant(),

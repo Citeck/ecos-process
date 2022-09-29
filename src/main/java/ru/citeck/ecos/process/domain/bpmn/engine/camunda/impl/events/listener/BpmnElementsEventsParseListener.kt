@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.elementslog.listener
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.listener
 
 import org.camunda.bpm.engine.delegate.ExecutionListener
 import org.camunda.bpm.engine.delegate.TaskListener
@@ -14,10 +14,11 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.addTaskListener
  * @author Roman Makarskiy
  */
 @Component
-class BpmnElementsLogParseListener(
-    private val bpmnLogExecutionListener: BpmnElementsLogExecutionListener,
-    private val bpmnTaskCreateListener: BpmnElementsLogTaskCreateListener,
-    private val bpmnTaskCompleteListener: BpmnElementsLogTaskCompleteListener
+class BpmnElementsEventsParseListener(
+    private val bpmnLogExecutionListener: BpmnFlowElementEventExecutionListener,
+    private val bpmnTaskCreateListener: BpmnTaskCreateEventListener,
+    private val bpmnTaskCompleteListener: BpmnTaskCompleteEventListener,
+    private val bpmnTaskAssignListener: BpmnTaskAssignEventListener
 ) : AbstractBpmnParseListener() {
 
     private fun addActivityFlowElementListener(activity: ActivityImpl) {
@@ -31,6 +32,7 @@ class BpmnElementsLogParseListener(
     private fun addUserTaskListeners(activity: ActivityImpl) {
         activity.addTaskListener(TaskListener.EVENTNAME_CREATE, bpmnTaskCreateListener)
         activity.addTaskListener(TaskListener.EVENTNAME_COMPLETE, bpmnTaskCompleteListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_ASSIGNMENT, bpmnTaskAssignListener)
     }
 
     override fun parseStartEvent(startEventElement: Element, scope: ScopeImpl, startEventActivity: ActivityImpl) {

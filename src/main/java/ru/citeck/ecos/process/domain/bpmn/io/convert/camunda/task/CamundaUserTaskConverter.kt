@@ -7,12 +7,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPA
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_ASSIGNEE_ELEMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_MANUAL_RECIPIENTS_MODE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_MULTI_INSTANCE_AUTO_MODE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
+import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
+import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
@@ -86,6 +84,7 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
             otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE] = element.manualRecipientsMode.toString()
             otherAttributes[BPMN_PROP_MULTI_INSTANCE_AUTO_MODE] = element.multiInstanceAutoMode.toString()
+            otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))
 
             otherAttributes.putIfNotBlank(BPMN_PROP_OUTCOMES, Json.mapper.toString(element.outcomes))
         }

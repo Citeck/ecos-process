@@ -1,20 +1,20 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.elementslog.listener
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.listener
 
 import mu.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.ExecutionListener
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.elementslog.BpmnElementsLogEmitter
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.elementslog.toFlowElement
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toFlowElement
 import ru.citeck.ecos.records3.record.request.RequestContext
 
 /**
  * @author Roman Makarskiy
  */
 @Component
-class BpmnElementsLogExecutionListener(
-    private val emitter: BpmnElementsLogEmitter
+class BpmnFlowElementEventExecutionListener(
+    private val emitter: BpmnEventEmitter
 ) : ExecutionListener {
 
     companion object {
