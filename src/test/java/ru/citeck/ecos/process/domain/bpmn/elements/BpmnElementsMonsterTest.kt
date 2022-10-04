@@ -263,11 +263,11 @@ class BpmnElementsMonsterTest {
             {
                 assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(1)
 
-                assertThat(it).hasCandidateUser(USER_IVAN)
+                assertThat(it).isAssignedTo(USER_IVAN)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_PETR)
+                assertThat(it).isAssignedTo(USER_PETR)
                 it.complete()
             },
             {
@@ -294,11 +294,11 @@ class BpmnElementsMonsterTest {
             {
                 assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(3)
 
-                assertThat(it).hasCandidateUser(USER_IVAN)
+                assertThat(it).isAssignedTo(USER_IVAN)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_PETR)
+                assertThat(it).isAssignedTo(USER_PETR)
                 it.complete()
             },
             {
@@ -325,19 +325,19 @@ class BpmnElementsMonsterTest {
             {
                 assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(1)
 
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             }
         )
@@ -357,19 +357,19 @@ class BpmnElementsMonsterTest {
             {
                 assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(4)
 
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_4_LOOP)
+                assertThat(it).isAssignedTo(USER_4_LOOP)
                 it.complete()
             }
         )
@@ -890,11 +890,11 @@ class BpmnElementsMonsterTest {
             {
                 assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(1)
 
-                assertThat(it).hasCandidateUser(USER_IVAN)
+                assertThat(it).isAssignedTo(USER_IVAN)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_PETR)
+                assertThat(it).isAssignedTo(USER_PETR)
                 it.complete()
             },
             {
@@ -925,11 +925,11 @@ class BpmnElementsMonsterTest {
             {
                 assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(3)
 
-                assertThat(it).hasCandidateUser(USER_IVAN)
+                assertThat(it).isAssignedTo(USER_IVAN)
                 it.complete()
             },
             {
-                assertThat(it).hasCandidateUser(USER_PETR)
+                assertThat(it).isAssignedTo(USER_PETR)
                 it.complete()
             },
             {

@@ -36,7 +36,7 @@ class ManualRecipientsModeUserTaskAssignListener(
         val candidatesNames = getCandidateAuthorityNames(candidatesRaw)
 
         delegateTask.assignee = null
-        fillCandidates(candidatesNames, delegateTask)
+        fillTaskRecipients(candidatesNames, delegateTask)
     }
 
     private fun getCandidateAuthorityNames(candidates: List<String>): List<String> {
@@ -56,14 +56,22 @@ class ManualRecipientsModeUserTaskAssignListener(
         )
     }
 
-    private fun fillCandidates(candidateNames: List<String>, delegateTask: DelegateTask) {
-        candidateNames.forEach {
-            if (it.startsWith(GROUP_PREFIX)) {
-                log.debug { "Add candidate group: $it" }
-                delegateTask.addCandidateGroup(it)
-            } else {
-                log.debug { "Add candidate user: $it" }
-                delegateTask.addCandidateUser(it)
+    private fun fillTaskRecipients(candidateNames: List<String>, delegateTask: DelegateTask) {
+        val isSingleUser = candidateNames.size == 1 && !candidateNames[0].startsWith(GROUP_PREFIX)
+        if (isSingleUser) {
+            val assignee = candidateNames[0]
+
+            log.debug { "Set assignee: $assignee" }
+            delegateTask.assignee = assignee
+        } else {
+            candidateNames.forEach {
+                if (it.startsWith(GROUP_PREFIX)) {
+                    log.debug { "Add candidate group: $it" }
+                    delegateTask.addCandidateGroup(it)
+                } else {
+                    log.debug { "Add candidate user: $it" }
+                    delegateTask.addCandidateUser(it)
+                }
             }
         }
     }
