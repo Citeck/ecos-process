@@ -2,6 +2,8 @@ package ru.citeck.ecos.process.domain.proctask.service
 
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 
+const val TASK_COMPLETED_BY = "completedBy"
+
 interface ProcTaskService {
 
     fun getTasksByProcess(processId: String): List<ProcTaskDto>
@@ -14,5 +16,5 @@ interface ProcTaskService {
 
     fun getTaskById(taskId: String): ProcTaskDto?
 
-    fun submitTaskForm(taskId: String, variables: Map<String, Any?>)
+    fun completeTask(taskId: String, variables: Map<String, Any?>)
 }

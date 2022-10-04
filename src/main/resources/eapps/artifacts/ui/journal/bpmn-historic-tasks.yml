@@ -1,7 +1,7 @@
-id: bpmn-active-tasks
-name: { ru: Активные задачи, en: Active tasks }
+id: bpmn-historic-tasks
+name: { ru: Завершенные задачи, en: Completed tasks }
 
-sourceId: eproc/proc-task
+sourceId: eproc/proc-historic-task
 system: true
 
 actions:
@@ -37,10 +37,10 @@ columns:
     searchable: false
     sortable: false
 
-  - id: dueDate
+  - id: ended
     name:
-      en: Due date
-      ru: Срок
+      en: Completion date
+      ru: Дата выполнения
     type: DATETIME
     searchable: false
     sortable: false

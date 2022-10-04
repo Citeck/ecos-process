@@ -2,26 +2,24 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
+import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_PREFIX
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords.Companion.ALF_TASK_PREFIX
 import ru.citeck.ecos.process.domain.proctask.converter.toRecord
-import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -29,12 +27,15 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.constants.AppName
 import java.time.Instant
+import kotlin.system.measureTimeMillis
 
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
     private val camundaTaskService: TaskService,
+    private val camundaHistoryService: HistoryService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordMutateDao {
 
     companion object {
@@ -110,8 +111,11 @@ class ProcTaskRecords(
             return createTaskRecordFromAlf(ref)
         }
 
-        val task = procTaskService.getTaskById(recordId) ?: return null
-        return task.toRecord()
+        return procTaskService.getTaskById(recordId)?.toRecord()
+            ?: camundaHistoryService.createHistoricTaskInstanceQuery()
+                .taskId(recordId)
+                .singleResult()
+                ?.toRecord()
     }
 
     override fun mutate(record: LocalRecordAtts): String {
@@ -126,92 +130,9 @@ class ProcTaskRecords(
 
         log.debug { "Submit task ${record.id} form with variables: ${mutateInfo.taskVariables}" }
 
-        procTaskService.submitTaskForm(record.id, mutateInfo.taskVariables)
+        procTaskService.completeTask(record.id, mutateInfo.taskVariables)
 
         return record.id
-    }
-
-    class ProcTaskRecord(
-        val id: String,
-        val priority: Int = 0,
-        val formRef: RecordRef? = null,
-        val processInstanceId: RecordRef? = null,
-        val documentRef: RecordRef? = null,
-        val title: MLText? = null,
-        val created: Instant? = null,
-        val dueDate: Instant? = null,
-        val actors: List<AuthorityDto> = emptyList(),
-
-        val documentAtts: RecordAtts = RecordAtts(),
-        val variables: Map<String, Any> = emptyMap(),
-
-        val alfTaskAtts: RecordAtts = RecordAtts()
-    ) {
-
-        // TODO: add default form. simple-form is default?
-        @get:AttName("_formRef")
-        val formKey: RecordRef
-            get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
-
-        @AttName("started")
-        fun getStarted(): Instant? {
-            return created
-        }
-
-        @AttName(".disp")
-        fun getDisp(): MLText? {
-            return title
-        }
-
-        @AttName("name")
-        fun getName(): MLText? {
-            return title
-        }
-
-        @AttName("workflow")
-        fun getWorkflow(): RecordRef? {
-            return processInstanceId
-        }
-
-        fun getAtt(name: String): Any? {
-            val mapping = if (isAlfTask(id)) EPROC_TO_ALF_TASK_ATTS else ALF_TO_ERPOC_TASK_ATTS
-
-            if (isAlfTask(id)) {
-                if (mapping.containsKey(name)) {
-                    val fixedAttName = mapping[name]
-                    return alfTaskAtts.getAtt(fixedAttName)
-                }
-
-                return alfTaskAtts.getAtt(name)
-            }
-
-            if (name == COMMENT_VAR) {
-                return null
-            }
-
-            if (mapping.containsKey(name)) {
-                val fixedAttName = mapping[name]
-                val attValue = when (fixedAttName) {
-                    "documentRef" -> documentRef
-                    "dueDate" -> dueDate
-                    "priority" -> priority
-                    "created" -> created
-                    "disp" -> title
-                    "id" -> id
-                    else -> null
-                }
-
-                if (attValue != null) {
-                    return attValue
-                }
-            }
-
-            if (name.startsWith(DOCUMENT_FIELD_PREFIX)) {
-                return documentAtts.getAtt(name.removePrefix(DOCUMENT_FIELD_PREFIX))
-            }
-
-            return variables[name]
-        }
     }
 
     private fun createTaskRecordFromAlf(ref: RecordRef): ProcTaskRecord {
@@ -287,12 +208,15 @@ class ProcTaskRecords(
                         val docAtt = processDocumentVariable(k, v)
                         documentAtts[docAtt.first] = docAtt.second
                     }
+
                     k.startsWith(SYS_VAR_PREFIX) -> {
                         // do nothing
                     }
+
                     k.startsWith(OUTCOME_PREFIX) -> {
                         // do nothing
                     }
+
                     else -> {
                         taskVariables[k] = v.asJavaObj()
                     }
@@ -340,10 +264,6 @@ class ProcTaskRecords(
 }
 
 fun RecordRef.isAlfTaskRef(): Boolean {
-    return id.startsWith(ALF_TASK_PREFIX)
-}
-
-private fun isAlfTask(id: String): Boolean {
     return id.startsWith(ALF_TASK_PREFIX)
 }
 
