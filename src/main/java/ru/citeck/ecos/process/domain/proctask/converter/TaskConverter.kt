@@ -32,6 +32,8 @@ class TaskConverter(
 private lateinit var cnv: TaskConverter
 
 fun Task.toProcTask(): ProcTaskDto {
+    log.debug { "toProcTask: task=$id" }
+
     val dto = cnv.cacheableTaskConverter.convertTask(this)
 
     log.debug { "Task $id converted to $dto" }
