@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.task.Task
 import org.springframework.stereotype.Component
@@ -13,11 +14,14 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import javax.annotation.PostConstruct
 
+internal val log = KotlinLogging.logger {}
+
 @Component
 class TaskConverter(
     val cacheableTaskConverter: CacheableTaskConverter,
     val recordsService: RecordsService
 ) {
+
 
     @PostConstruct
     private fun init() {
@@ -28,7 +32,11 @@ class TaskConverter(
 private lateinit var cnv: TaskConverter
 
 fun Task.toProcTask(): ProcTaskDto {
-    return cnv.cacheableTaskConverter.convertTask(this)
+    val dto = cnv.cacheableTaskConverter.convertTask(this)
+
+    log.debug { "Task $id converted to $dto" }
+
+    return dto
 }
 
 fun ProcTaskDto.toRecord(): ProcTaskRecord {
