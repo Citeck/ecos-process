@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
-import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
@@ -22,7 +21,7 @@ import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
-import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
+import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -34,9 +33,8 @@ import kotlin.system.measureTimeMillis
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
-    private val camundaTaskService: TaskService,
-    private val camundaHistoryService: HistoryService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordMutateDao {
+    private val camundaTaskService: TaskService
+) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -68,29 +66,38 @@ class ProcTaskRecords(
         val currentUser = AuthContext.getCurrentUser()
         val currentAuthorities = AuthContext.getCurrentAuthorities()
 
-        val camundaCount = camundaTaskService.createTaskQuery()
-            .or()
-            .taskAssigneeIn(currentUser)
-            .taskCandidateUser(currentUser)
-            .taskCandidateGroupIn(currentAuthorities)
-            .endOr()
-            .orderByTaskCreateTime()
-            .desc()
-            .count()
+        val camundaCount: Long
+        val camundaCountTime = measureTimeMillis {
+            camundaCount = camundaTaskService.createTaskQuery()
+                .or()
+                .taskAssigneeIn(currentUser)
+                .taskCandidateUser(currentUser)
+                .taskCandidateGroupIn(currentAuthorities)
+                .endOr()
+                .orderByTaskCreateTime()
+                .desc()
+                .count()
+        }
 
-        val tasksFromCamunda = camundaTaskService.createTaskQuery()
-            .or()
-            .taskAssigneeIn(currentUser)
-            .taskCandidateUser(currentUser)
-            .taskCandidateGroupIn(currentAuthorities)
-            .endOr()
-            .orderByTaskCreateTime()
-            .desc()
-            .initializeFormKeys()
-            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
-            .map {
-                RecordRef.valueOf("eproc/proc-task@${it.id}")
-            }
+        val tasksFromCamunda: List<RecordRef>
+        val tasksFromCamundaTime = measureTimeMillis {
+            tasksFromCamunda = camundaTaskService.createTaskQuery()
+                .or()
+                .taskAssigneeIn(currentUser)
+                .taskCandidateUser(currentUser)
+                .taskCandidateGroupIn(currentAuthorities)
+                .endOr()
+                .orderByTaskCreateTime()
+                .desc()
+                .initializeFormKeys()
+                .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
+                .map {
+                    RecordRef.create(AppName.EPROC, ID, it.id)
+                }
+        }
+
+        log.debug { "Camunda task count: $camundaCountTime ms" }
+        log.debug { "Camunda tasks: $tasksFromCamundaTime ms" }
 
         val result = RecsQueryRes<RecordRef>()
 
@@ -101,21 +108,45 @@ class ProcTaskRecords(
         return result
     }
 
-    override fun getRecordAtts(recordId: String): ProcTaskRecord? {
-        if (recordId.isBlank()) {
-            return null
+    override fun getRecordsAtts(recordsId: List<String>): List<ProcTaskRecord?>? {
+        if (recordsId.isEmpty()) {
+            return emptyList()
         }
 
-        val ref = RecordRef.valueOf(recordId)
-        if (ref.isAlfTaskRef()) {
-            return createTaskRecordFromAlf(ref)
+        val result: List<ProcTaskRecord?>
+        val resultTime = measureTimeMillis {
+            val records = mutableMapOf<String, ProcTaskRecord?>()
+
+            val procRefs = mutableListOf<String>()
+
+            recordsId.forEach {
+                val ref = RecordRef.valueOf(it)
+                if (ref.isAlfTaskRef()) {
+                    records[it] = createTaskRecordFromAlf(ref)
+                } else {
+                    procRefs.add(it)
+                }
+            }
+
+            procTaskService.getTasksByIds(procRefs).map {
+                val record: ProcTaskRecord?
+                val toRecordTime = measureTimeMillis {
+                    record = it?.toRecord()
+                }
+
+                log.trace { "To record: $toRecordTime ms" }
+
+                record?.let { rec ->
+                    records[rec.id] = rec
+                }
+            }
+
+            result = recordsId.map { records.getOrDefault(it, null) }
         }
 
-        return procTaskService.getTaskById(recordId)?.toRecord()
-            ?: camundaHistoryService.createHistoricTaskInstanceQuery()
-                .taskId(recordId)
-                .singleResult()
-                ?.toRecord()
+        log.debug { "Get Camunda Tasks records atts: $resultTime ms" }
+
+        return result
     }
 
     override fun mutate(record: LocalRecordAtts): String {

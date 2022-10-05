@@ -42,6 +42,21 @@ ecos-process:
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
+  tasks:
+    dto-converter:
+      cache:
+        hazelcast:
+          timeToLiveSeconds: 300
+          maxSizeConfig:
+            size: 3000
+          evictionPolicy: LRU
+    historic-dto-converter:
+      cache:
+        hazelcast:
+          timeToLiveSeconds: 3600
+          maxSizeConfig:
+            size: 5000
+          evictionPolicy: LRU
 
 notifications:
   default:

@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.proctask.dto
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.io.Serializable
 import java.time.Instant
 
 data class ProcTaskDto(
@@ -21,6 +22,10 @@ data class ProcTaskDto(
 
     val created: Instant,
 
+    val ended: Instant? = null,
+
+    val durationInMillis: Long? = null,
+
     val dueDate: Instant? = null,
 
     val assignee: EntityRef = RecordRef.EMPTY,
@@ -33,4 +38,9 @@ data class ProcTaskDto(
 
     val variables: Map<String, Any> = emptyMap()
 
-)
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}

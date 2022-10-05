@@ -8,6 +8,7 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
+import kotlin.system.measureTimeMillis
 
 @Service
 class ProcTaskServiceImpl(
@@ -56,11 +57,42 @@ class ProcTaskServiceImpl(
     }
 
     override fun getTaskById(taskId: String): ProcTaskDto? {
-        return camundaTaskService.createTaskQuery()
-            .taskId(taskId)
-            .initializeFormKeys()
-            .singleResult()
-            ?.toProcTask()
+        val result: ProcTaskDto?
+        val time = measureTimeMillis {
+            result = camundaTaskService.createTaskQuery()
+                .taskId(taskId)
+                .initializeFormKeys()
+                .singleResult()
+                ?.toProcTask()
+        }
+
+        log.trace { "Get Camunda Task by id: time=$time ms" }
+
+        return result
+    }
+
+    override fun getTasksByIds(taskIds: List<String>): List<ProcTaskDto?> {
+        val result: List<ProcTaskDto?>
+        val time = measureTimeMillis {
+            result = camundaTaskService.createTaskQuery()
+                .taskIdIn(*taskIds.toTypedArray())
+                .initializeFormKeys()
+                .list()
+                .map {
+                    val procTask: ProcTaskDto?
+                    val time = measureTimeMillis {
+                        procTask = it.toProcTask()
+                    }
+
+                    log.trace { "Task to procTask: $time ms" }
+
+                    procTask
+                }
+        }
+
+        log.debug { "Get Camunda Tasks by ids: $time ms" }
+
+        return result
     }
 
     override fun completeTask(taskId: String, variables: Map<String, Any?>) {

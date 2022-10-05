@@ -1,10 +1,9 @@
 package ru.citeck.ecos.process;
 
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import ru.citeck.ecos.process.config.ApplicationProperties;
-
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import ru.citeck.ecos.process.config.ApplicationProperties;
 import ru.citeck.ecos.webapp.lib.spring.EcosSpringApplication;
 
 @SpringBootApplication
