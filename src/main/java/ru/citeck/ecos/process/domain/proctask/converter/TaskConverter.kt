@@ -32,11 +32,11 @@ class TaskConverter(
 private lateinit var cnv: TaskConverter
 
 fun Task.toProcTask(): ProcTaskDto {
-    log.debug { "toProcTask: task=$id" }
+    log.trace { "toProcTask: task=$id" }
 
     val dto = cnv.cacheableTaskConverter.convertTask(this)
 
-    log.debug { "Task $id converted to $dto" }
+    log.trace { "Task $id converted to $dto" }
 
     return dto
 }
@@ -66,7 +66,8 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
 
             cnv.recordsService.getAtts(documentRef, requiredAtts)
         },
-        variables = variables
+        historic = historic,
+        engineAtts = engineAtts
     )
 }
 

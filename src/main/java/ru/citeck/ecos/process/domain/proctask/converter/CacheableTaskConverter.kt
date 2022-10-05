@@ -78,7 +78,8 @@ class CacheableTaskConverter(
                 candidateUsers = authorityService.getAuthorityRefs(candidateUsers.toList()),
                 candidateGroups = authorityService.getAuthorityRefs(candidateGroups.toList()),
                 definitionKey = taskDefinitionKey,
-                variables = variables
+                historic = false,
+                engineAtts = variables.keys.toList()
             )
         }
     }
@@ -122,7 +123,8 @@ class CacheableTaskConverter(
                     RecordRef.EMPTY
                 } else {
                     RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
-                }
+                },
+                historic = true
             )
         }
     }

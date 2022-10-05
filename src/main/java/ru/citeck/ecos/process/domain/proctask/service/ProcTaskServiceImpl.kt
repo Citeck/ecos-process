@@ -101,4 +101,8 @@ class ProcTaskServiceImpl(
 
         camundaTaskFormService.submitTaskForm(taskId, variables)
     }
+
+    override fun getVariables(taskId: String): Map<String, Any?> {
+        return camundaTaskService.getVariables(taskId)
+    }
 }

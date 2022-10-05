@@ -19,4 +19,6 @@ interface ProcTaskService {
     fun getTasksByIds(taskIds: List<String>): List<ProcTaskDto?>
 
     fun completeTask(taskId: String, variables: Map<String, Any?>)
+
+    fun getVariables(taskId: String): Map<String, Any?>
 }

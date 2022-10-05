@@ -36,7 +36,9 @@ data class ProcTaskDto(
 
     val definitionKey: String? = null,
 
-    val variables: Map<String, Any> = emptyMap()
+    val historic: Boolean = false,
+
+    val engineAtts: List<String> = emptyList()
 
 ) : Serializable {
 

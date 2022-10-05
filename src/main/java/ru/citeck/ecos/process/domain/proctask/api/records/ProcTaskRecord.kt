@@ -1,10 +1,12 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -13,12 +15,15 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import javax.annotation.PostConstruct
 
+internal val log = KotlinLogging.logger {}
+
 /**
  * @author Roman Makarskiy
  */
 @Component
 class ProcTaskRecordServiceProvider(
-    val recordsService: RecordsService
+    val recordsService: RecordsService,
+    val procTaskService: ProcTaskService
 ) {
 
     @PostConstruct
@@ -46,9 +51,12 @@ class ProcTaskRecord(
     val candidateGroups: List<EntityRef> = emptyList(),
 
     val documentAtts: RecordAtts = RecordAtts(),
-    val variables: Map<String, Any> = emptyMap(),
 
-    val alfTaskAtts: RecordAtts = RecordAtts()
+    val alfTaskAtts: RecordAtts = RecordAtts(),
+
+    val engineAtts: List<String> = emptyList(),
+
+    val historic: Boolean = false
 ) {
 
     // TODO: add default form. simple-form is default?
@@ -89,7 +97,8 @@ class ProcTaskRecord(
     }
 
     fun getAtt(name: String): Any? {
-        val mapping = if (isAlfTask(id)) ProcTaskRecords.EPROC_TO_ALF_TASK_ATTS else ProcTaskRecords.ALF_TO_ERPOC_TASK_ATTS
+        val mapping =
+            if (isAlfTask(id)) ProcTaskRecords.EPROC_TO_ALF_TASK_ATTS else ProcTaskRecords.ALF_TO_ERPOC_TASK_ATTS
 
         if (isAlfTask(id)) {
             if (mapping.containsKey(name)) {
@@ -125,7 +134,16 @@ class ProcTaskRecord(
             return documentAtts.getAtt(name.removePrefix(DOCUMENT_FIELD_PREFIX))
         }
 
-        return variables[name]
+        if (!historic && engineAtts.contains(name)) {
+            val variables = prv.procTaskService.getVariables(id)
+            val value = variables[name]
+
+            log.debug { "procTaskRecord $id request to task engine variables $id = $name. Possible performance issues" }
+
+            return value
+        }
+
+        return null
     }
 }
 
