@@ -20,7 +20,7 @@ test:
   script:
     - sudo chown -R maven:maven /builds
     - mvn -v
-    - mvn $MAVEN_CLI_OPTS test
+    - mvn $MAVEN_CLI_OPTS clean test
 
 mirror:
   tags:
