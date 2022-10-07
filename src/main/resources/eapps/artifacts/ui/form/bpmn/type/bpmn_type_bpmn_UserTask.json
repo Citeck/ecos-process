@@ -55,7 +55,10 @@
           "ru": "Panel"
         },
         "key": "panel-recipients",
-        "title": "Назначение пользователей",
+        "title": {
+          "ru": "Назначение пользователей",
+          "en": "User assignment"
+        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "panel",

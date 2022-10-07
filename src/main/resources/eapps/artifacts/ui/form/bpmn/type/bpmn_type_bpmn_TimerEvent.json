@@ -1,7 +1,6 @@
 {
   "id": "bpmn-type-bpmn:TimerEvent",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Timer Event Form"
   },
@@ -9,6 +8,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {
     "ru": {
       "timer_type_date": "Дата",
@@ -35,7 +35,10 @@
           "ru": "Panel"
         },
         "key": "timer-panel",
-        "title": "Timer",
+        "title": {
+          "en": "Timer",
+          "ru": "Таймер"
+        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "panel",
@@ -108,16 +111,19 @@
             "key": "html_hint_date",
             "hideLabel": true,
             "disabled": true,
+            "className": "",
+            "content": {
+              "en": "A specified point in time defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> combned date and time representation.\n\n<li><i>2019-10-01T12:00:00Z</i> - UTC time</li>\n<li><i>2019-10-02T08:09:40+02:00</i> - UTC plus 2 hours zone offset</li>\n",
+              "ru": "Конкретный момент времени, определенный в формате <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a>, как комбинированное представление даты и времени.\n\n<li><i>2019-10-01T12:00:00Z</i> - UTC время</li>\n<li><i>2019-10-02T08:09:40+02:00</i> - UTC плюс смещение зоны на 2 часа</li>\n"
+            },
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
             "conditional": {
               "show": "true",
               "when": "type",
               "eq": "DATE"
             },
-            "className": "",
-            "content": "A specified point in time defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> combned date and time representation.\n\n<li><i>2019-10-01T12:00:00Z</i> - UTC time</li>\n<li><i>2019-10-02T08:09:40+02:00</i> - UTC plus 2 hours zone offset</li>\n",
-            "refreshOnChange": false,
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
             "type": "htmlelement",
             "input": false
           },
@@ -126,16 +132,19 @@
               "ru": "html-duration-hint"
             },
             "key": "html_duration_hint",
+            "className": "",
+            "content": {
+              "en": "A time duration defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format.\n\n<li><i>PT15S</i> - 15 seconds</li>\n<li><i>PT1H30M</i> - 1 hour and 30 minutes</li>\n<li><i>P14D</i> - 14 days</li>\n",
+              "ru": "Продолжительность времени, определенная в <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> формате.\n\n<li><i>PT15S</i> - 15 секунд</li>\n<li><i>PT1H30M</i> - 1 час и 30 минут</li>\n<li><i>P14D</i> - 14 дней</li>\n"
+            },
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
             "conditional": {
               "show": "true",
               "when": "type",
               "eq": "DURATION"
             },
-            "className": "",
-            "content": "A time duration defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format.\n\n<li><i>PT15S</i> - 15 seconds</li>\n<li><i>PT1H30M</i> - 1 hour and 30 minutes</li>\n<li><i>P14D</i> - 14 days</li>\n",
-            "refreshOnChange": false,
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
             "type": "htmlelement",
             "input": false
           },
@@ -144,16 +153,19 @@
               "ru": "html-cycle-hint"
             },
             "key": "html_cycle_hint",
+            "className": "",
+            "content": {
+              "en": "A cycle defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> repeating intervals format.\n\n<li><i>R5/PT10S</i> - every 10 seconds, up to 5 times</li>\n<li><i>R/P1D</i> - every day, infinitely</li>\n",
+              "ru": "Цикл, определенный в формате повторяющихся интервалов <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a>.\n\n<li><i>R5/PT10S</i> - каждые 10 секунд, повтор 5 раз</li>\n<li><i>R/P1D</i> - каждый день, бесконечный повтор</li>\n"
+            },
+            "refreshOnChange": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
             "conditional": {
               "show": "true",
               "when": "type",
               "eq": "CYCLE"
             },
-            "className": "",
-            "content": "A cycle defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> repeating intervals format.\n\n<li><i>R5/PT10S</i> - every 10 seconds, up to 5 times</li>\n<li><i>R/P1D</i> - every day, infinitely</li>\n",
-            "refreshOnChange": false,
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
             "type": "htmlelement",
             "input": false
           },
@@ -164,7 +176,10 @@
             "key": "html_expression_hint",
             "disabled": true,
             "className": "",
-            "content": "You can use expressions for the timer value. By doing so you can influence the timer definition based on process variables. The process variables must contain the <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> (or cron for cycle type) string for the appropriate timer type. For example - <i>${duration}</i>.",
+            "content": {
+              "en": "You can use expressions for the timer value. By doing so you can influence the timer definition based on process variables. The process variables must contain the <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> (or cron for cycle type) string for the appropriate timer type. For example - <i>${duration}</i>.",
+              "ru": "Поддерживаются выражения для возможности задавать значения таймера из переменных процесса или из сервисов. Значение таймера должно быть строкой в формате <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> для соответсвущего типа таймера. Например - <i>${duration}</i>."
+            },
             "refreshOnChange": false,
             "refreshOn": [],
             "optionalWhenDisabled": false,

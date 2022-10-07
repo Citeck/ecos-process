@@ -1,7 +1,6 @@
 {
   "id": "bpmn-type-bpmn:SendTask",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN User Send Form"
   },
@@ -9,6 +8,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {
     "ru": {
       "notification_type_email": "Электронная почта",
@@ -84,7 +84,10 @@
           "ru": "Выберите шаблон уведомления или введите текст уведомления",
           "en": "Select notification template or enter notification text"
         },
-        "title": "Сообщение",
+        "title": {
+          "ru": "Сообщение",
+          "en": "Message"
+        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "panel",
@@ -92,14 +95,17 @@
         "components": [
           {
             "label": {
-              "ru": "Шаблон уведомления"
+              "ru": "Шаблон уведомления",
+              "en": "Notification template"
             },
             "key": "notificationTemplate",
+            "modalTitle": "",
             "journalId": "notification-templates",
+            "queryData": "",
             "refreshOn": [],
+            "optionalWhenDisabled": false,
             "type": "selectJournal",
-            "input": true,
-            "queryData": ""
+            "input": true
           },
           {
             "label": {
@@ -179,7 +185,10 @@
               "ru": "Получатели выбираются из ролей типа ecos",
               "en": "Recipients are selected from roles of ecos type"
             },
-            "title": "Получатели",
+            "title": {
+              "ru": "Получатели",
+              "en": "Recipients"
+            },
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "panel",
@@ -187,7 +196,8 @@
             "components": [
               {
                 "label": {
-                  "ru": "Кому"
+                  "ru": "Кому",
+                  "en": "To"
                 },
                 "key": "notificationTo",
                 "multiple": true,
@@ -253,7 +263,10 @@
           "ru": "Panel"
         },
         "key": "panel-settings",
-        "title": "Настройки",
+        "title": {
+          "ru": "Настройки",
+          "en": "Preferences"
+        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "panel",
@@ -266,7 +279,8 @@
             },
             "key": "notificationRecord",
             "tooltip": {
-              "ru": "Базовый RecordRef по которому отправляется уведомление. Если пусто, то документ, по которому идет бизнес процесс."
+              "ru": "Базовый RecordRef по которому отправляется уведомление. Если пусто, то документ, по которому идет бизнес процесс.",
+              "en": "The base RecordRef on which the notification is sent. If empty, then the document according to which the business process is running."
             },
             "hidden": true,
             "defaultValue": "",

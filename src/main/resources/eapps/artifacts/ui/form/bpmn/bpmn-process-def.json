@@ -27,7 +27,10 @@
                 "input": true
               },
               {
-                "label": "ECOS Type",
+                "label": {
+                  "ru": "Data Type",
+                  "en": "Тип данных"
+                },
                 "journalId": "ecos-types",
                 "key": "ecosType",
                 "type": "selectJournal",

@@ -1,7 +1,6 @@
 {
   "id": "bpmn-base-form-multi-instance",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN base form Multi Instance"
   },
@@ -9,6 +8,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [
@@ -25,7 +25,10 @@
           "ru": "Panel"
         },
         "key": "mi-panel",
-        "title": "Multi Instance",
+        "title": {
+          "en": "Multi Instance",
+          "ru": "Множественный экземпляр"
+        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "customConditional": "let miType = instance.options.editor.getMultiInstanceType();\n\nshow = !!miType",
@@ -167,7 +170,8 @@
                     },
                     "key": "jobRetryTimeCycle",
                     "tooltip": {
-                      "ru": "ISO 8601 Repeating intervals"
+                      "ru": "ISO 8601 Повторяющийся интервал",
+                      "en": "ISO 8601 Repeating intervals"
                     },
                     "refreshOn": [],
                     "optionalWhenDisabled": false,

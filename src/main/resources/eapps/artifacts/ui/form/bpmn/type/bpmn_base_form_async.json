@@ -1,7 +1,6 @@
 {
   "id": "bpmn-base-form-async",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN base form Async"
   },
@@ -9,6 +8,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [
@@ -17,7 +17,10 @@
           "ru": "Panel"
         },
         "key": "async-pant",
-        "title": "Asynchronous Continuations",
+        "title": {
+          "ru": "Асинхронное выполнение",
+          "en": "Asynchronous Continuations"
+        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "panel",
@@ -78,7 +81,10 @@
           "ru": "Panel"
         },
         "key": "job-panel",
-        "title": "Job execution",
+        "title": {
+          "ru": "Исполнение фоновой Задачи",
+          "en": "Job execution"
+        },
         "clearOnHide": true,
         "refreshOn": [],
         "optionalWhenDisabled": false,
@@ -104,7 +110,8 @@
                 },
                 "key": "jobRetryTimeCycle",
                 "tooltip": {
-                  "ru": "ISO 8601 Repeating intervals"
+                  "ru": "ISO 8601 Повторяющийся интервал",
+                  "en": "ISO 8601 Repeating intervals"
                 },
                 "defaultValue": "",
                 "optionalWhenDisabled": false,
