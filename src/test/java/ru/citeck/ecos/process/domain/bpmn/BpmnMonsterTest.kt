@@ -1,7 +1,8 @@
-package ru.citeck.ecos.process.domain.bpmn.elements
+package ru.citeck.ecos.process.domain.bpmn
 
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
@@ -32,6 +33,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusS
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.records2.RecordRef
@@ -55,8 +57,8 @@ private const val TIMER = "timer"
 
 /**
  * Why all tests places on one monster class?
- * Tests begin to behave unpredictably if placed in different classes. DirtiesContext and TestInstance.Lifecycle
- * does not help.
+ * Tests that start the process begin to behave unpredictably if placed in different classes.
+ * DirtiesContext and TestInstance.Lifecycle does not help.
  *
  * Similar case - https://forum.camunda.io/t/tests-instable/13960
  *
@@ -64,7 +66,7 @@ private const val TIMER = "timer"
  */
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-class BpmnElementsMonsterTest {
+class BpmnMonsterTest {
 
     @Autowired
     private lateinit var taskService: TaskService
@@ -74,6 +76,12 @@ class BpmnElementsMonsterTest {
 
     @Autowired
     private lateinit var procTaskService: ProcTaskService
+
+    @Autowired
+    private lateinit var camundaHistoryService: HistoryService
+
+    @Autowired
+    private lateinit var procHistoricTaskService: ProcHistoricTaskService
 
     @Mock
     private lateinit var process: ProcessScenario
@@ -1168,6 +1176,89 @@ class BpmnElementsMonsterTest {
         run(process).startByKey(procId, variables).execute()
 
         verify(process).hasFinished("endEvent")
+    }
+
+    // --- BPMN HISTORIC TASKS TESTS ---
+
+    @Test
+    fun `historic tasks order validation`() {
+        val procId = "test-user-task-role-multi-instance"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn(
+            {
+                it.complete()
+            },
+            {
+                it.complete()
+            },
+            {
+                it.complete()
+            }
+        )
+
+        val scenario = run(process).startByKey(procId, variables).execute()
+
+        verify(process, times(3)).hasCompleted("userTask")
+        verify(process).hasFinished("endEvent")
+
+        val procInstance = scenario.instance(process)
+
+        val historicTasks = camundaHistoryService.createHistoricTaskInstanceQuery()
+            .orderByHistoricTaskInstanceEndTime()
+            .desc()
+            .processInstanceId(procInstance.id)
+            .finished()
+            .list()
+            .map { it.id }
+
+        val historicTaskFromService = procHistoricTaskService.getHistoricTasksByIds(historicTasks)
+            .map { it?.id }
+
+        assertThat(historicTaskFromService).isEqualTo(historicTasks)
+    }
+
+    @Test
+    fun `historic tasks order validation with not exists tasks`() {
+        val notExistsTask = "notExistsTask"
+        val procId = "test-user-task-role-multi-instance"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn(
+            {
+                it.complete()
+            },
+            {
+                it.complete()
+            },
+            {
+                it.complete()
+            }
+        )
+
+        val scenario = run(process).startByKey(procId, variables).execute()
+
+        verify(process, times(3)).hasCompleted("userTask")
+        verify(process).hasFinished("endEvent")
+
+        val procInstance = scenario.instance(process)
+
+        val historicTasks = camundaHistoryService.createHistoricTaskInstanceQuery()
+            .orderByHistoricTaskInstanceEndTime()
+            .desc()
+            .processInstanceId(procInstance.id)
+            .finished()
+            .list()
+            .map { it.id }
+            .toMutableList()
+        historicTasks.add(notExistsTask)
+
+        val historicTaskFromService = procHistoricTaskService.getHistoricTasksByIds(historicTasks)
+            .map { it?.id }
+
+        assertThat(historicTaskFromService).hasSize(4)
+        assertThat(historicTaskFromService).containsAll(historicTasks.filter { it != notExistsTask })
+        assertThat(historicTaskFromService[3]).isNull()
     }
 }
 
