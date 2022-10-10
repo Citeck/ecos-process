@@ -64,7 +64,11 @@ class ProcTaskRecords(
         // TODO: check actor filter $CURRENT and filter task query
 
         val currentUser = AuthContext.getCurrentUser()
-        val currentAuthorities = AuthContext.getCurrentAuthorities()
+        val currentAuthorities = let {
+            mutableSetOf(currentUser).apply {
+                addAll(AuthContext.getCurrentAuthorities())
+            }.toList()
+        }
 
         val camundaCount: Long
         val camundaCountTime = measureTimeMillis {

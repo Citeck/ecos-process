@@ -7,6 +7,7 @@ import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -63,6 +64,10 @@ class ProcTaskRecord(
     @get:AttName("_formRef")
     val formKey: RecordRef
         get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
+
+    @get:AttName(RecordConstants.ATT_CREATED)
+    val recordCreated: Instant?
+        get() = created
 
     @AttName("started")
     fun getStarted(): Instant? {
