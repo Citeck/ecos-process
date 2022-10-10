@@ -49,6 +49,8 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         processInstanceId = processInstanceId,
         documentRef = documentRef,
         created = created,
+        ended = ended,
+        durationInMillis = durationInMillis,
         dueDate = dueDate,
         title = name,
         assignee = assignee,
