@@ -46,7 +46,7 @@ class ProcHistoricTaskServiceImpl(
         val result = mutableListOf<ProcTaskDto?>()
         val resultTime = measureTimeMillis {
             ids.forEach { id ->
-                tasks[id]
+                result.add(tasks[id])
             }
         }
 
