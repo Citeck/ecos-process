@@ -141,7 +141,7 @@ class ProcTaskRecords(
                 }
             }
 
-            result = recordsId.map { records.getOrDefault(it, null) }
+            result = recordsId.map { records[it] }
         }
 
         log.debug { "Get Camunda Tasks records atts: $resultTime ms" }

@@ -30,22 +30,31 @@ class ProcHistoricTaskServiceImpl(
     }
 
     override fun getHistoricTasksByIds(ids: List<String>): List<ProcTaskDto?> {
-        log.debug { "Get Historic Camunda Tasks by ids: $ids" }
+        log.trace { "Get Historic Camunda Tasks by ids: $ids" }
 
-        val result: List<ProcTaskDto?>
-        val time = measureTimeMillis {
-            result = camundaHistoryService.createNativeHistoricTaskInstanceQuery()
+        val tasks: Map<String, ProcTaskDto>
+        val getTasksTime = measureTimeMillis {
+            tasks = camundaHistoryService.createNativeHistoricTaskInstanceQuery()
                 .sql(
                     "select * from ${managementService.getTableName(HistoricTaskInstance::class.java)} " +
                         "where ID_ in ('${ids.joinToString("','")}')"
                 )
                 .list()
-                .map { it?.toProcTask() }
+                .associate { it.id to it.toProcTask() }
         }
 
-        log.debug { "Get Historic Camunda Tasks by ids return: $result" }
+        val result = mutableListOf<ProcTaskDto?>()
+        val resultTime = measureTimeMillis {
+            ids.forEach { id ->
+                tasks[id]
+            }
+        }
 
-        log.debug { "Get Historic Camunda Tasks by ids: $time ms" }
+        log.trace { "Get Historic Camunda Tasks by ids return: $tasks" }
+        log.debug {
+            "Get Historic Camunda Tasks by ids: $getTasksTime ms, mapping: $resultTime, " +
+                "total: ${getTasksTime + resultTime} ms"
+        }
 
         return result
     }
