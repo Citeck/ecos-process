@@ -50,7 +50,7 @@ class ProcHistoricTaskServiceImpl(
             }
         }
 
-        log.trace { "Get Historic Camunda Tasks by ids return: $tasks" }
+        log.trace { "Get Historic Camunda Tasks by ids return: $result" }
         log.debug {
             "Get Historic Camunda Tasks by ids: $getTasksTime ms, mapping: $resultTime, " +
                 "total: ${getTasksTime + resultTime} ms"
