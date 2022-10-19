@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -21,7 +22,8 @@ private const val CLASS_IMPL_POSTFIX = "Impl"
  */
 @Component
 class BpmnElementConverter(
-    val bpmnProcService: BpmnProcService
+    val bpmnProcService: BpmnProcService,
+    val procDefRevRepo: ProcDefRevRepository
 ) {
 
     @PostConstruct
@@ -43,13 +45,15 @@ fun DelegateExecution.toFlowElement(): FlowElementEvent {
         )
     }
 
+    val rev = cnv.procDefRevRepo.findByDeploymentId(processDefinition.deploymentId)
+
     return FlowElementEvent(
         engine = BPMN_CAMUNDA_ENGINE,
         procDefId = processDefinition.key,
         elementType = flowElement.javaClass.simpleName.removeSuffix(CLASS_IMPL_POSTFIX),
         elementDefId = flowElement.id,
-        procDeploymentVersion = processDefinition.version.toString(),
-        procInstanceId = processInstanceId,
+        procDeploymentVersion = rev?.version?.inc(),
+        procInstanceId = getProcessInstanceRef(),
         executionId = id,
         document = getDocumentRef()
     )
@@ -60,6 +64,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         "Process definition is null. TaskId: $id, name: $name, executionId: $executionId, " +
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
     )
+    val rev = cnv.procDefRevRepo.findByDeploymentId(processDefinition.deploymentId)
 
     val outcome = getOutcome()
 
@@ -70,7 +75,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         assignee = assignee,
         roles = getTaskRoles(),
         procDefId = processDefinition.key,
-        procDeploymentVersion = processDefinition.version,
+        procDeploymentVersion = rev?.version?.inc(),
         procInstanceId = getProcessInstanceRef(),
         elementDefId = taskDefinitionKey,
         created = createTime?.toInstant(),

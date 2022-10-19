@@ -23,6 +23,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
+import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -51,11 +53,12 @@ import java.util.*
 
 @Component
 class BpmnProcDefRecords(
-    val procDefService: ProcDefService,
-    val repositoryService: RepositoryService,
-    val webAppsApi: EcosWebAppsApi,
-    val recordPermsService: RecordPermsService,
-    val roleService: RoleService
+    private val procDefService: ProcDefService,
+    private val camundaRepoService: RepositoryService,
+    private val webAppsApi: EcosWebAppsApi,
+    private val recordPermsService: RecordPermsService,
+    private val roleService: RoleService,
+    private val procDefEventEmitter: ProcDefEventEmitter
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -64,6 +67,7 @@ class BpmnProcDefRecords(
 
     companion object {
         const val SOURCE_ID = "bpmn-def"
+
         private const val APP_NAME = AppName.EPROC
         private const val QUERY_BATCH_SIZE = 100
         private const val LIMIT_REQUESTS_COUNT = 100000
@@ -91,7 +95,7 @@ class BpmnProcDefRecords(
         var numberOfExecutedRequests = 0
         val maxItems = if (recsQuery.page.maxItems > 0) recsQuery.page.maxItems else DEFAULT_MAX_ITEMS
         var requiredAmount = maxItems
-        var result = mutableListOf<Any>()
+        val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
         do {
             val unfilteredBatch = procDefService.findAll(
@@ -254,6 +258,7 @@ class BpmnProcDefRecords(
                     it.procType,
                     it.format,
                     it.revisionId,
+                    it.version,
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
@@ -345,6 +350,7 @@ class BpmnProcDefRecords(
         val newRef = ProcDefRef.create(BPMN_PROC_TYPE, record.processDefId)
 
         val currentProc = procDefService.getProcessDefById(newRef)
+        val procDefResult: ProcDefDto
 
         if ((record.id != record.processDefId) && currentProc != null) {
             error("Process definition with id " + newRef.id + " already exists")
@@ -368,7 +374,7 @@ class BpmnProcDefRecords(
                 image = record.imageBytes
             )
 
-            procDefService.uploadProcDef(newProcDef)
+            procDefResult = procDefService.uploadProcDef(newProcDef)
         } else {
 
             if (newDefData != null) {
@@ -380,6 +386,7 @@ class BpmnProcDefRecords(
                 currentProc.enabled = record.enabled
                 currentProc.autoStartEnabled = record.autoStartEnabled
                 currentProc.sectionRef = record.sectionRef
+                currentProc.createdFromVersion = record.createdFromVersion
                 currentProc.image = record.imageBytes
             } else {
 
@@ -389,6 +396,7 @@ class BpmnProcDefRecords(
                 currentProc.enabled = record.enabled
                 currentProc.autoStartEnabled = record.autoStartEnabled
                 currentProc.sectionRef = record.sectionRef
+                currentProc.createdFromVersion = record.createdFromVersion
                 currentProc.image = record.imageBytes
 
                 if (currentProc.format == BPMN_FORMAT) {
@@ -405,20 +413,28 @@ class BpmnProcDefRecords(
                 }
             }
 
-            procDefService.uploadNewRev(currentProc)
+            procDefResult = procDefService.uploadNewRev(currentProc)
         }
 
         if (record.action == BpmnProcDefActions.DEPLOY.toString()) {
             val camundaFormat = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
-            val result = repositoryService.createDeployment()
+            val deployResult = camundaRepoService.createDeployment()
                 .addInputStream(record.processDefId + ".bpmn", camundaFormat.byteInputStream())
                 .name(record.name.getClosest())
                 .source("Ecos Modeler")
                 .deployWithResult()
 
-            log.debug { "Camunda deploy result: $result" }
+            log.debug { "Camunda deploy result: $deployResult" }
+
+            procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
+            procDefEventEmitter.emitProcDefDeployed(
+                ProcDefEvent(
+                    procDefRef = recordRef,
+                    version = procDefResult.version.toDouble().inc()
+                )
+            )
         }
 
         return record.processDefId
@@ -602,7 +618,8 @@ class BpmnProcDefRecords(
         var action: String = "",
         var autoStartEnabled: Boolean,
         var sectionRef: EntityRef,
-        var imageBytes: ByteArray?
+        var imageBytes: ByteArray?,
+        var createdFromVersion: EntityRef = EntityRef.EMPTY
     ) {
 
         fun setImage(imageUrl: String) {
@@ -623,9 +640,11 @@ class BpmnProcDefRecords(
                 "text/xml" -> {
                     contentText
                 }
+
                 "application/json" -> {
                     error("Json is not supported")
                 }
+
                 else -> {
                     error("Unknown format: $format")
                 }

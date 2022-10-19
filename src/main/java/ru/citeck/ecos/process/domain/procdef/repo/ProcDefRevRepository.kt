@@ -8,4 +8,6 @@ import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 interface ProcDefRevRepository : MongoRepository<ProcDefRevEntity, EntityUuid> {
 
     fun findAllByProcessDef(procDef: ProcDefEntity): List<ProcDefRevEntity>
+
+    fun findByDeploymentId(deploymentId: String): ProcDefRevEntity?
 }

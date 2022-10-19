@@ -56,6 +56,8 @@ public class ProcDefWithDataDto {
 
     private EntityRef sectionRef = EntityRef.EMPTY;
 
+    private EntityRef createdFromVersion = EntityRef.EMPTY;
+
     public ProcDefWithDataDto() {
     }
 
@@ -211,6 +213,14 @@ public class ProcDefWithDataDto {
 
     public EntityRef getSectionRef() {
         return sectionRef;
+    }
+
+    public EntityRef getCreatedFromVersion() {
+        return createdFromVersion;
+    }
+
+    public void setCreatedFromVersion(EntityRef createdFromVersion) {
+        this.createdFromVersion = createdFromVersion;
     }
 
     public void setSectionRef(EntityRef sectionRef) {

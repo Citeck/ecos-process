@@ -191,6 +191,14 @@ fun DelegateTask.getProcessInstanceRef(): RecordRef {
     }
 }
 
+fun DelegateExecution.getProcessInstanceRef(): RecordRef {
+    return if (processInstanceId.isNotBlank()) {
+        RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
+    } else {
+        RecordRef.EMPTY
+    }
+}
+
 fun DelegateTask.getOutcome(): Outcome {
     val outcomeValue = getVariable("${taskDefinitionKey}$OUTCOME_POSTFIX")?.toString()
         ?: return Outcome.EMPTY

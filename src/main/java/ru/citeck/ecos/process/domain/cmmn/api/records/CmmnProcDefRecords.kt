@@ -43,8 +43,8 @@ class CmmnProcDefRecords(
     RecordMutateDtoDao<CmmnProcDefRecords.CmmnMutateRecord> {
 
     companion object {
-        private const val SOURCE_ID = "cmmn-def"
-        private const val PROC_TYPE = "cmmn"
+        const val SOURCE_ID = "cmmn-def"
+        const val CMMN_PROC_TYPE = "cmmn"
 
         private val log = KotlinLogging.logger {}
     }
@@ -57,7 +57,7 @@ class CmmnProcDefRecords(
 
         val predicate = Predicates.and(
             query.getQuery(Predicate::class.java),
-            Predicates.eq("procType", PROC_TYPE)
+            Predicates.eq("procType", CMMN_PROC_TYPE)
         )
 
         val result = procDefService.findAll(
@@ -75,7 +75,7 @@ class CmmnProcDefRecords(
 
     override fun getRecordAtts(record: String): Any? {
 
-        val ref = ProcDefRef.create(PROC_TYPE, record)
+        val ref = ProcDefRef.create(CMMN_PROC_TYPE, record)
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {
@@ -86,6 +86,7 @@ class CmmnProcDefRecords(
                     it.procType,
                     it.format,
                     it.revisionId,
+                    it.version,
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
@@ -103,7 +104,7 @@ class CmmnProcDefRecords(
         return if (recordId.isBlank()) {
             CmmnMutateRecord("", "", MLText(), RecordRef.EMPTY, null, true)
         } else {
-            val procDef = procDefService.getProcessDefById(ProcDefRef.create(PROC_TYPE, recordId))
+            val procDef = procDefService.getProcessDefById(ProcDefRef.create(CMMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
             CmmnMutateRecord(
                 recordId,
@@ -138,7 +139,7 @@ class CmmnProcDefRecords(
             error("processDefId is missing")
         }
 
-        val newRef = ProcDefRef.create(PROC_TYPE, record.processDefId)
+        val newRef = ProcDefRef.create(CMMN_PROC_TYPE, record.processDefId)
 
         val currentProc = procDefService.getProcessDefById(newRef)
 
@@ -181,7 +182,7 @@ class CmmnProcDefRecords(
                     data = defData,
                     ecosTypeRef = record.ecosType,
                     format = format.code,
-                    procType = PROC_TYPE,
+                    procType = CMMN_PROC_TYPE,
                     image = null,
                     enabled = record.enabled
                 )
@@ -232,7 +233,7 @@ class CmmnProcDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-        procDefService.delete(ProcDefRef.create(PROC_TYPE, recordId))
+        procDefService.delete(ProcDefRef.create(CMMN_PROC_TYPE, recordId))
         return DelStatus.OK
     }
 
@@ -291,7 +292,7 @@ class CmmnProcDefRecords(
         fun getProcessDefId() = procDef.id
 
         fun getDefinition(): String? {
-            val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
+            val rev = procDefService.getProcessDefRev(CMMN_PROC_TYPE, procDef.revisionId) ?: return null
             if (rev.format == CmmnFormat.ECOS_CMMN.code) {
                 return mapper.read(rev.data, CmmnProcessDef::class.java)?.let {
                     try {
@@ -308,7 +309,7 @@ class CmmnProcDefRecords(
 
         @AttName("?json")
         fun getJson(): CmmnProcessDef? {
-            val rev = procDefService.getProcessDefRev(PROC_TYPE, procDef.revisionId) ?: return null
+            val rev = procDefService.getProcessDefRev(CMMN_PROC_TYPE, procDef.revisionId) ?: return null
             if (rev.format != CmmnFormat.ECOS_CMMN.code) {
                 error("Json representation allowed only for ECOS_CMMN processes")
             }

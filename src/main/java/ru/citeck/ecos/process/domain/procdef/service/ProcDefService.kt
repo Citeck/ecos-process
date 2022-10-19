@@ -27,6 +27,12 @@ interface ProcDefService {
 
     fun getProcessDefRev(procType: String, procDefRevId: UUID): ProcDefRevDto?
 
+    fun saveProcessDefRevDeploymentId(procDefRevId: UUID, deploymentId: String)
+
+    fun getProcessDefRevs(procDefRevIds: List<UUID>): List<ProcDefRevDto>
+
+    fun getProcessDefRevs(ref: ProcDefRef): List<ProcDefRevDto>
+
     fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto?
 
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?

@@ -15,7 +15,8 @@ data class NewProcessDefDto(
     val image: ByteArray?,
     val enabled: Boolean = false,
     val autoStartEnabled: Boolean = false,
-    val sectionRef: EntityRef = EntityRef.EMPTY
+    val sectionRef: EntityRef = EntityRef.EMPTY,
+    val createdFromVersion: EntityRef = EntityRef.EMPTY,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -32,6 +33,7 @@ data class NewProcessDefDto(
         if (!data.contentEquals(other.data)) return false
         if (!image.contentEquals(other.image)) return false
         if (sectionRef != other.sectionRef) return false
+        if (createdFromVersion != other.createdFromVersion) return false
 
         return true
     }
@@ -47,12 +49,13 @@ data class NewProcessDefDto(
         result = 31 * result + data.contentHashCode()
         result = 31 * result + image.contentHashCode()
         result = 31 * result + sectionRef.hashCode()
+        result = 31 * result + createdFromVersion.hashCode()
         return result
     }
 
     override fun toString(): String {
         return "NewProcessDefDto(id='$id', name=$name, procType='$procType', format='$format', " +
             "alfType=$alfType, ecosTypeRef=$ecosTypeRef, formRef=$formRef, enabled=$enabled, " +
-            "autoStartEnabled=$autoStartEnabled, sectionRef=$sectionRef)"
+            "autoStartEnabled=$autoStartEnabled, sectionRef=$sectionRef, createdFromVersion=$createdFromVersion)"
     }
 }

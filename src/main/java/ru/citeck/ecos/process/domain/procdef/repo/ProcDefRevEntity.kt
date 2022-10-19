@@ -21,10 +21,16 @@ class ProcDefRevEntity {
     var processDef: ProcDefEntity? = null
 
     var created: Instant = Instant.now()
+
+    var createdBy: String? = null
+
+    var deploymentId: String? = null
+
     var version = 0
 
     @DBRef(lazy = true)
     var prevRev: ProcDefRevEntity? = null
 
     var image: ByteArray? = null
+
 }

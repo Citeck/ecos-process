@@ -26,6 +26,9 @@ public class ProcDefDto {
     private UUID revisionId;
 
     @NotNull
+    private Integer version;
+
+    @NotNull
     private EntityRef ecosTypeRef;
 
     @NotNull
@@ -53,6 +56,7 @@ public class ProcDefDto {
                       @NotNull String procType,
                       @NotNull String format,
                       @NotNull UUID revisionId,
+                      @NotNull Integer version,
                       @NotNull EntityRef ecosTypeRef,
                       @NotNull String alfType,
                       EntityRef formRef,
@@ -67,6 +71,7 @@ public class ProcDefDto {
         this.procType = procType;
         this.format = format;
         this.revisionId = revisionId;
+        this.version = version;
         this.ecosTypeRef = ecosTypeRef;
         this.alfType = alfType;
         this.formRef = formRef;
@@ -125,6 +130,14 @@ public class ProcDefDto {
 
     public void setEcosTypeRef(EntityRef ecosTypeRef) {
         this.ecosTypeRef = ecosTypeRef;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 
     public String getAlfType() {

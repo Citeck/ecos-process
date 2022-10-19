@@ -30,6 +30,26 @@ public class ProcDefRevDto {
     @NotNull
     private Instant created;
 
+    private String createdBy;
+
+    private String deploymentId;
+
+    public String getDeploymentId() {
+        return deploymentId;
+    }
+
+    public void setDeploymentId(String deploymentId) {
+        this.deploymentId = deploymentId;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
     @NotNull
     private int version;
 

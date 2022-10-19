@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.constants.AppName
 
 @Component
 class BpmnProcessElementsDao : RecordsDaoProxy(
@@ -27,17 +28,20 @@ class BpmnProcessElementsDao : RecordsDaoProxy(
         }
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val newPredicate = PredicateUtils.mapValuePredicates(predicate) { pred ->
-            if (pred.getAttribute() == "procDefRef") {
-                preProcessProcDefQueryAtt(RecordRef.valueOf(pred.getValue().asText()))
-            } else {
-                pred
+            when (pred.getAttribute()) {
+                "procDefRef" -> preProcessProcDefQueryAtt(RecordRef.valueOf(pred.getValue().asText()))
+                "procDefVersionLabel" -> {
+                    pred.setAttribute("procDeploymentVersion")
+                    pred
+                }
+                else -> pred
             }
         } ?: Predicates.alwaysTrue()
         return super.queryRecords(recsQuery.copy { withQuery(newPredicate) })
     }
 
     private fun preProcessProcDefQueryAtt(value: RecordRef): Predicate {
-        return if (value.appName == "alfresco") {
+        return if (value.appName == AppName.ALFRESCO) {
             val procDefId = recordsService.getAtt(value, "ecosbpm:processId").asText()
             Predicates.and(
                 Predicates.eq("procDefId", procDefId),

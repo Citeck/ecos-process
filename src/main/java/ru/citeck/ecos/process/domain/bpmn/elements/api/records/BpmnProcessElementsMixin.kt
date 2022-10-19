@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
@@ -27,7 +28,6 @@ class BpmnProcessElementsMixin(private val records: RecordsService) : AttMixin {
         .maximumSize(100)
         .build(CacheLoader.from { key -> evalVersionLabel(key) })
 
-    // TODO: add support for camunda
     override fun getAtt(path: String, value: AttValueCtx): Any? {
         if (path != ATT_PROC_DEF_VERSION_LABEL) {
             return null
@@ -36,6 +36,11 @@ class BpmnProcessElementsMixin(private val records: RecordsService) : AttMixin {
         if (depAtts.procDeploymentVersion.isNullOrBlank() || depAtts.procDefId.isBlank()) {
             return "1.0"
         }
+
+        if (depAtts.engine == BPMN_CAMUNDA_ENGINE) {
+            return depAtts.procDeploymentVersion
+        }
+
         val res = cache.getUnchecked(depAtts)
         if (res.isNull()) {
             return "1.0"

@@ -23,7 +23,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             val name = Json.mapper.convert(element.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java)
                 ?: MLText.EMPTY
             return@let if (name == MLText.EMPTY) {
-                MLText(element.name)
+                MLText(element.name ?: "")
             } else {
                 name
             }

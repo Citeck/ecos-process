@@ -3,13 +3,18 @@ package ru.citeck.ecos.process.domain.procdef.service
 import com.querydsl.core.types.dsl.BooleanExpression
 import lombok.Data
 import lombok.RequiredArgsConstructor
+import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json.mapper
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
+import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
@@ -17,6 +22,8 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
+import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
+import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.repo.*
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
 import ru.citeck.ecos.records2.RecordRef
@@ -24,12 +31,14 @@ import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.system.measureTimeMillis
 
 @Service
 @RequiredArgsConstructor
@@ -38,11 +47,15 @@ class ProcDefServiceImpl(
     private val procDefRevRepo: ProcDefRevRepository,
     private val procStateRepo: ProcStateRepository,
     private val tenantService: ProcTenantService,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+    private val procDefEventEmitter: ProcDefEventEmitter
 ) : ProcDefService {
 
     companion object {
         private val STARTUP_TIME_STR = Instant.now().toEpochMilli().toString()
+        private const val FIRST_VERSION = 1.0
+
+        private val log = KotlinLogging.logger {}
     }
 
     private val procDefListeners = ConcurrentHashMap<String, MutableList<(ProcDefDto) -> Unit>>()
@@ -71,6 +84,9 @@ class ProcDefServiceImpl(
         newRevision.data = processDef.data
         newRevision.image = processDef.image
         newRevision.format = processDef.format
+        newRevision.createdBy = AuthContext.getCurrentUser()
+
+        val sendProcDefEvent: () -> Unit
 
         if (currentProcDef == null) {
 
@@ -90,6 +106,12 @@ class ProcDefServiceImpl(
 
             currentProcDef = procDefRepo.save<ProcDefEntity>(currentProcDef)
             newRevision.version = 0
+
+            sendProcDefEvent = {
+                procDefEventEmitter.emitProcDefCreate(
+                    createEvent(processDef.procType, processDef.id, FIRST_VERSION, processDef.createdFromVersion)
+                )
+            }
         } else {
 
             currentProcDef.alfType = processDef.alfType
@@ -103,6 +125,17 @@ class ProcDefServiceImpl(
 
             newRevision.version = currentProcDef.lastRev!!.version + 1
             newRevision.prevRev = currentProcDef.lastRev
+
+            sendProcDefEvent = {
+                procDefEventEmitter.emitProcDefUpdate(
+                    createEvent(
+                        procType = currentProcDef!!.procType!!,
+                        currentProcDef!!.extId!!,
+                        newRevision.version.toDouble().inc(),
+                        processDef.createdFromVersion
+                    )
+                )
+            }
         }
 
         newRevision.processDef = currentProcDef
@@ -111,7 +144,31 @@ class ProcDefServiceImpl(
         currentProcDef.lastRev = newRevision
         currentProcDef = procDefRepo.save(currentProcDef)
 
+        sendProcDefEvent.invoke()
+
         return procDefToDto(currentProcDef)
+    }
+
+    private fun createEvent(procType: String, id: String, version: Double, createdFromVersion: EntityRef): ProcDefEvent {
+        return ProcDefEvent(
+            procDefRef = when (procType) {
+                BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BpmnProcDefRecords.SOURCE_ID, id)
+                CmmnProcDefRecords.CMMN_PROC_TYPE -> {
+                    RecordRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
+                }
+                else -> throw IllegalArgumentException("Unknown proc type: $procType")
+            },
+            version = version,
+            createdFromVersion = let {
+                if (createdFromVersion == EntityRef.EMPTY) {
+                    0.0
+                } else {
+                    recordsService.getAtt(
+                        createdFromVersion, "version").asDouble(0.0
+                    )
+                }
+            }
+        )
     }
 
     override fun findAll(predicate: Predicate, max: Int, skip: Int): List<ProcDefDto> {
@@ -179,7 +236,8 @@ class ProcDefServiceImpl(
                 procType = dto.procType,
                 enabled = dto.enabled,
                 autoStartEnabled = dto.autoStartEnabled,
-                sectionRef = dto.sectionRef
+                sectionRef = dto.sectionRef,
+                createdFromVersion = dto.createdFromVersion
             )
             result = uploadProcDefImpl(newProcessDefDto)
         } else {
@@ -200,7 +258,8 @@ class ProcDefServiceImpl(
                     formRef = dto.formRef,
                     format = dto.format,
                     procType = dto.procType,
-                    sectionRef = dto.sectionRef
+                    sectionRef = dto.sectionRef,
+                    createdFromVersion = dto.createdFromVersion
                 )
                 result = uploadProcDefImpl(newProcessDefDto)
             } else {
@@ -227,6 +286,39 @@ class ProcDefServiceImpl(
         val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
         val revEntity = procDefRevRepo.findById(revId).orElse(null) ?: return null
         return procDefRevToDto(revEntity)
+    }
+
+    override fun saveProcessDefRevDeploymentId(procDefRevId: UUID, deploymentId: String) {
+        val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
+        val revEntity = procDefRevRepo.findById(revId).orElseThrow {
+            error("Proc def rev with id $revId not found")
+        }
+
+        revEntity.deploymentId = deploymentId
+
+        procDefRevRepo.save(revEntity)
+    }
+
+    override fun getProcessDefRevs(procDefRevIds: List<UUID>): List<ProcDefRevDto> {
+        val ids = procDefRevIds.map { EntityUuid(tenantService.getCurrent(), it) }
+        return procDefRevRepo.findAllById(ids).map { procDefRevToDto(it) }
+    }
+
+    override fun getProcessDefRevs(ref: ProcDefRef): List<ProcDefRevDto> {
+        val tenant = tenantService.getCurrent()
+        val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, ref.type, ref.id)
+            ?: return emptyList()
+
+        val result: List<ProcDefRevDto>
+        val time = measureTimeMillis {
+            result = procDefRevRepo.findAllByProcessDef(procDef)
+                .map { procDefRevToDto(it) }
+                .sortedByDescending { it.created }
+        }
+
+        log.debug { "getProcessDefRevs: $time ms" }
+
+        return result
     }
 
     override fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto? {
@@ -322,6 +414,7 @@ class ProcDefServiceImpl(
         procDefDto.procType = entity.procType
         procDefDto.name = mapper.read(entity.name, MLText::class.java)
         procDefDto.revisionId = entity.lastRev!!.id!!.id
+        procDefDto.version = entity.lastRev!!.version
         procDefDto.alfType = entity.alfType
         procDefDto.ecosTypeRef = RecordRef.valueOf(entity.ecosTypeRef)
         procDefDto.formRef = RecordRef.valueOf(entity.formRef)
@@ -343,6 +436,8 @@ class ProcDefServiceImpl(
         val procDefRevDto = ProcDefRevDto()
         procDefRevDto.id = entity.id!!.id
         procDefRevDto.created = entity.created
+        procDefRevDto.createdBy = entity.createdBy
+        procDefRevDto.deploymentId = entity.deploymentId
         procDefRevDto.procDefId = entity.processDef!!.extId
         procDefRevDto.data = entity.data
         procDefRevDto.image = entity.image
