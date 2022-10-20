@@ -128,15 +128,15 @@ class BpmnProcDefVersionRecords(
         @get:AttName(".disp")
         val disp: String
             get() = let {
-                val defName = procDefService.getProcessDefById(
+                var defName = procDefService.getProcessDefById(
                     ProcDefRef.create(BPMN_PROC_TYPE, procDefId)
                 )?.name?.getClosest(I18nContext.getLocale()) ?: ""
 
-                return if (defName.isBlank()) {
-                    version.toString()
-                } else {
-                    "$defName $version"
+                if (defName.isBlank()) {
+                    defName = procDefId
                 }
+
+                return "$defName $version"
             }
 
         @get:AttName("definition")
