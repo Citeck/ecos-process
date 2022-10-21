@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.task.TaskQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
@@ -16,7 +17,11 @@ import ru.citeck.ecos.process.domain.proctask.converter.toRecord
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
@@ -25,9 +30,11 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import java.time.Instant
+import java.util.*
 import kotlin.system.measureTimeMillis
 
 @Component
@@ -63,10 +70,12 @@ class ProcTaskRecords(
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
         // TODO: check actor filter $CURRENT and filter task query
 
-        val currentUser = AuthContext.getCurrentUser()
+        val fullAuth = AuthContext.getCurrentFullAuth()
+
+        val currentUser = fullAuth.getUser()
         val currentAuthorities = let {
             mutableSetOf(currentUser).apply {
-                addAll(AuthContext.getCurrentAuthorities())
+                addAll(fullAuth.getAuthorities())
             }.toList()
         }
 
@@ -78,8 +87,7 @@ class ProcTaskRecords(
                 .taskCandidateUser(currentUser)
                 .taskCandidateGroupIn(currentAuthorities)
                 .endOr()
-                .orderByTaskCreateTime()
-                .desc()
+                .filterByCreated(recsQuery)
                 .count()
         }
 
@@ -91,8 +99,8 @@ class ProcTaskRecords(
                 .taskCandidateUser(currentUser)
                 .taskCandidateGroupIn(currentAuthorities)
                 .endOr()
-                .orderByTaskCreateTime()
-                .desc()
+                .filterByCreated(recsQuery)
+                .sortByQuery(recsQuery)
                 .initializeFormKeys()
                 .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
                 .map {
@@ -295,6 +303,62 @@ class ProcTaskRecords(
             return name.substring(DOCUMENT_FIELD_PREFIX.length)
                 .replace("_".toRegex(), ":")
         }
+    }
+}
+
+fun TaskQuery.filterByCreated(recsQuery: RecordsQuery): TaskQuery {
+    val createdAttPredicate = recsQuery.getAttCreatedValuePredicate() ?: return this
+
+    return when (createdAttPredicate.getType()) {
+        ValuePredicate.Type.GT -> {
+            this.taskCreatedAfter(Date.from(createdAttPredicate.getValue().getAsInstant()))
+        }
+
+        ValuePredicate.Type.LE -> {
+            this.taskCreatedBefore(Date.from(createdAttPredicate.getValue().getAsInstant()))
+        }
+
+        else -> {
+            error(
+                "Unsupported predicate type: ${createdAttPredicate.getType()} " +
+                    "for attribute ${createdAttPredicate.getAttribute()}"
+            )
+        }
+    }
+}
+
+fun TaskQuery.sortByQuery(recsQuery: RecordsQuery): TaskQuery {
+    val sortByCreated = recsQuery.getSortByCreated()
+        ?: return this.orderByTaskCreateTime()
+            .desc()
+
+    if (sortByCreated.attribute != RecordConstants.ATT_CREATED) {
+        error("Unsupported sort attribute: ${sortByCreated.attribute}")
+    }
+
+    return if (sortByCreated.ascending) {
+        this.orderByTaskCreateTime().asc()
+    } else {
+        this.orderByTaskCreateTime().desc()
+    }
+}
+
+fun RecordsQuery.getSortByCreated(): SortBy? {
+    return this.sortBy.firstOrNull {
+        it.attribute == RecordConstants.ATT_CREATED
+    }
+}
+
+fun RecordsQuery.getAttCreatedValuePredicate(): ValuePredicate? {
+    if (language != PredicateService.LANGUAGE_PREDICATE) {
+        error("Unsupported language: $language")
+    }
+
+    val predicate = getQuery(Predicate::class.java)
+    return if (predicate is ValuePredicate && predicate.getAttribute() == RecordConstants.ATT_CREATED) {
+        predicate
+    } else {
+        null
     }
 }
 

@@ -45,14 +45,14 @@ columns:
     searchable: false
     sortable: false
 
-  - id: created
+  - id: _created
     name:
       en: Start date
       ru: Дата начала
     visible: false
     type: DATETIME
     searchable: false
-    sortable: false
+    sortable: true
 
   - id: id
     name:

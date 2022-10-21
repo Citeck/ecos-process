@@ -4,6 +4,10 @@ name: { ru: Завершенные задачи, en: Completed tasks }
 sourceId: eproc/proc-historic-task
 system: true
 
+sortBy:
+  - attribute: ended
+    ascending: false
+
 actions:
   - uiserv/action@view-task
   - uiserv/action@view-task-in-background
@@ -43,9 +47,9 @@ columns:
       ru: Дата выполнения
     type: DATETIME
     searchable: false
-    sortable: false
+    sortable: true
 
-  - id: created
+  - id: _created
     name:
       en: Start date
       ru: Дата начала
