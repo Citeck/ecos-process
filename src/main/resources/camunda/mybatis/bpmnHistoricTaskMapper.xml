@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+    Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+    under one or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information regarding copyright
+    ownership. Camunda licenses this file to you under the Apache License,
+    Version 2.0; you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.camunda.bpm.engine.impl.persistence.entity.HistoricTaskInstanceEntity">
+
+    <select id="selectHistoricTaskInstanceByIds" parameterType="java.lang.String"
+            resultMap="historicTaskInstanceResultMap">
+        select * from ${prefix}ACT_HI_TASKINST T
+        <where>
+            <foreach collection="taskIds" item="taskId" open="T.ID_ in (" separator=", " close=")">
+                #{taskId}
+            </foreach>
+        </where>
+    </select>
+
+    <!--from org/camunda/bpm/engine/impl/mapping/entity/HistoricTaskInstance.xml-->
+    <resultMap id="historicTaskInstanceResultMap"
+               type="org.camunda.bpm.engine.impl.persistence.entity.HistoricTaskInstanceEntity">
+        <id property="id" column="ID_" jdbcType="VARCHAR"/>
+        <result property="processDefinitionKey" column="PROC_DEF_KEY_" jdbcType="VARCHAR"/>
+        <result property="processDefinitionId" column="PROC_DEF_ID_" jdbcType="VARCHAR"/>
+        <result property="rootProcessInstanceId" column="ROOT_PROC_INST_ID_" jdbcType="VARCHAR"/>
+        <result property="processInstanceId" column="PROC_INST_ID_" jdbcType="VARCHAR"/>
+        <result property="executionId" column="EXECUTION_ID_" jdbcType="VARCHAR"/>
+        <result property="caseDefinitionKey" column="CASE_DEF_KEY_" jdbcType="VARCHAR"/>
+        <result property="caseDefinitionId" column="CASE_DEF_ID_" jdbcType="VARCHAR"/>
+        <result property="caseInstanceId" column="CASE_INST_ID_" jdbcType="VARCHAR"/>
+        <result property="caseExecutionId" column="CASE_EXECUTION_ID_" jdbcType="VARCHAR"/>
+        <result property="activityInstanceId" column="ACT_INST_ID_" jdbcType="VARCHAR"/>
+        <result property="name" column="NAME_" jdbcType="VARCHAR"/>
+        <result property="parentTaskId" column="PARENT_TASK_ID_" jdbcType="VARCHAR"/>
+        <result property="description" column="DESCRIPTION_" jdbcType="VARCHAR"/>
+        <result property="owner" column="OWNER_" jdbcType="VARCHAR"/>
+        <result property="assignee" column="ASSIGNEE_" jdbcType="VARCHAR"/>
+        <result property="startTime" column="START_TIME_" jdbcType="TIMESTAMP"/>
+        <result property="endTime" column="END_TIME_" jdbcType="TIMESTAMP"/>
+        <result property="durationInMillis" column="DURATION_" jdbcType="BIGINT"/>
+        <result property="deleteReason" column="DELETE_REASON_" jdbcType="VARCHAR"/>
+        <result property="taskDefinitionKey" column="TASK_DEF_KEY_" jdbcType="VARCHAR"/>
+        <result property="priority" column="PRIORITY_" jdbcType="INTEGER"/>
+        <result property="dueDate" column="DUE_DATE_" jdbcType="TIMESTAMP"/>
+        <result property="followUpDate" column="FOLLOW_UP_DATE_" jdbcType="TIMESTAMP"/>
+        <result property="tenantId" column="TENANT_ID_" jdbcType="VARCHAR"/>
+        <result property="removalTime" column="REMOVAL_TIME_" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+</mapper>
