@@ -11,7 +11,7 @@ import java.io.InputStream
 class BpmnMyBatisExtendedSessionFactory : StandaloneProcessEngineConfiguration() {
 
     companion object {
-        private const val MY_BATIS_CONFIG_FILE = "classpath:camunda/mybatis/bpmnMybatisConfiguration.xml"
+        private const val MY_BATIS_CONFIG_FILE = "classpath:camunda/mybatis/bpmnMyBatisConfiguration.xml"
     }
 
     override fun init() {
