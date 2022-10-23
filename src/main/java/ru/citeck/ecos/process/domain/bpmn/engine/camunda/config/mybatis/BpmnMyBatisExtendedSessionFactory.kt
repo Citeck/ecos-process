@@ -5,13 +5,13 @@ import org.camunda.bpm.engine.impl.cfg.StandaloneProcessEngineConfiguration
 import org.camunda.bpm.engine.impl.interceptor.CommandContextInterceptor
 import org.camunda.bpm.engine.impl.interceptor.CommandInterceptor
 import org.camunda.bpm.engine.impl.interceptor.LogInterceptor
-import org.camunda.bpm.engine.impl.util.ReflectUtil
+import org.springframework.util.ResourceUtils
 import java.io.InputStream
 
 class BpmnMyBatisExtendedSessionFactory : StandaloneProcessEngineConfiguration() {
 
     companion object {
-        private const val MY_BATIS_CONFIG_FILE = "camunda/mybatis/bpmnMybatisConfiguration.xml"
+        private const val MY_BATIS_CONFIG_FILE = "classpath:camunda/mybatis/bpmnMybatisConfiguration.xml"
     }
 
     override fun init() {
@@ -48,6 +48,6 @@ class BpmnMyBatisExtendedSessionFactory : StandaloneProcessEngineConfiguration()
     }
 
     override fun getMyBatisXmlConfigurationSteam(): InputStream {
-        return ReflectUtil.getResourceAsStream(MY_BATIS_CONFIG_FILE)
+        return ResourceUtils.getFile(MY_BATIS_CONFIG_FILE).inputStream()
     }
 }
