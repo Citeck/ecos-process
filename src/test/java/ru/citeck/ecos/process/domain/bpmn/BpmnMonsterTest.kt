@@ -634,6 +634,24 @@ class BpmnMonsterTest {
     }
 
     @Test
+    fun `script task can running without document ref`() {
+        val procId = "test-script-task-set-variables"
+        saveAndDeployBpmn("scripttask", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "foo"
+            )
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("fooBar", "foo bar")
+        assertThat(scenario.instance(process)).variables().containsEntry("newVariable", "new var from script")
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
     fun `script task get document variables`() {
         val procId = "test-script-task-get-document-variables"
         saveAndDeployBpmn("scripttask", procId)

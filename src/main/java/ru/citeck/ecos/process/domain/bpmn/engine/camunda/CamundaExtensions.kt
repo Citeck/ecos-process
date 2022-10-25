@@ -114,6 +114,10 @@ class CamundaExtensions(
 
     internal fun getTaskTitle(key: Pair<String, String>): MLText {
         val taskDefinition = taskDeployedCamundaDefCache.get(key).task ?: return MLText.EMPTY
+        val propNameMlValue = taskDefinition.otherAttributes[BPMN_PROP_NAME_ML]
+        if (propNameMlValue.isNullOrBlank()) {
+            return MLText.EMPTY
+        }
 
         return Json.mapper.read(taskDefinition.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java) ?: error(
             "Can't read name from task ${taskDefinition.id}"
@@ -216,7 +220,7 @@ fun DelegateTask.getTaskRoles(): List<TaskRole> {
 }
 
 fun DelegateTask.getTitle(): MLText {
-    val defaultName = MLText(name)
+    val defaultName = MLText(name ?: id)
     val titleFromDef = ext.getTaskTitle(processDefinitionId to taskDefinitionKey)
     return if (titleFromDef != MLText.EMPTY) titleFromDef else defaultName
 }
