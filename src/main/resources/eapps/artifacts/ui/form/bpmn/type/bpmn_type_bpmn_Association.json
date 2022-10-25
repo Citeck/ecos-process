@@ -1,0 +1,34 @@
+{
+  "id": "bpmn-type-bpmn:Association",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Association Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "ID элемента",
+          "en": "Element ID"
+        },
+        "key": "id",
+        "validate": {
+          "required": true
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true,
+        "addAnother": "ecos.forms.btn.add-another"
+      }
+    ]
+  },
+  "attributes": {}
+}
