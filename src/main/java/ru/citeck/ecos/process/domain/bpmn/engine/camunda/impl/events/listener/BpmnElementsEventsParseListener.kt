@@ -96,7 +96,7 @@ class BpmnElementsEventsParseListener(
         scope: ScopeImpl,
         activity: ActivityImpl
     ) {
-        super.parseIntermediateThrowEvent(intermediateEventElement, scope, activity)
+        addActivityFlowElementListener(activity)
     }
 
     override fun parseIntermediateCatchEvent(
@@ -104,7 +104,7 @@ class BpmnElementsEventsParseListener(
         scope: ScopeImpl,
         activity: ActivityImpl
     ) {
-        super.parseIntermediateCatchEvent(intermediateEventElement, scope, activity)
+        addActivityFlowElementListener(activity)
     }
 
     override fun parseBoundaryEvent(
@@ -112,7 +112,7 @@ class BpmnElementsEventsParseListener(
         scopeElement: ScopeImpl,
         nestedActivity: ActivityImpl
     ) {
-        super.parseBoundaryEvent(boundaryEventElement, scopeElement, nestedActivity)
+        addActivityFlowElementListener(nestedActivity)
     }
 
     override fun parseSubProcess(subProcessElement: Element?, scope: ScopeImpl?, activity: ActivityImpl) {
