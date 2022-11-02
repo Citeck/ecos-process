@@ -16,13 +16,13 @@ class BpmnProcServiceImpl(
     private val procDefService: ProcDefService
 ) : BpmnProcService {
 
-    override fun startProcess(processKey: String, variables: Map<String, Any?>): ProcessInstance {
+    override fun startProcess(processKey: String, businessKey: String?, variables: Map<String, Any?>): ProcessInstance {
         val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, processKey))
             ?: throw IllegalArgumentException("Process definition with key $processKey not found")
 
         if (!definition.enabled) throw IllegalStateException("Starting a disabled process is not possible")
 
-        return camundaRuntimeService.startProcessInstanceByKey(processKey, variables)
+        return camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, variables)
     }
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {

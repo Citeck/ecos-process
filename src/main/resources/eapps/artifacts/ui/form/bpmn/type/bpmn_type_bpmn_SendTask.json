@@ -29,7 +29,7 @@
             "attributes": {
               "rolesData": "model.roles[]{value:id,label:name}"
             },
-            "script": "let ref = instance.options.editor.getEcosType()._id;\n\nif (!!ref) {\n  value = ref;\n}"
+            "script": "let ref = instance.options.editor.getEcosType();\n\nif (!!ref) {\n  value = ref;\n}"
           },
           "forceLoad": false
         },

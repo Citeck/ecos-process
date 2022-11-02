@@ -56,18 +56,24 @@ class BpmnProcRecords(
         }
 
         val processVariables = mutableMapOf<String, Any?>()
+        var businessKey: String? = null
 
         record.attributes.forEach { key, value ->
             // filter system props
             if (!key.startsWith(SYS_VAR_PREFIX)) {
                 when (key) {
-                    VAR_DOCUMENT -> processVariables[VAR_DOCUMENT_REF] = value.asJavaObj()
+                    VAR_DOCUMENT -> {
+                        processVariables[VAR_DOCUMENT_REF] = value.asJavaObj()
+                        businessKey = value.asJavaObj().toString()
+                    }
                     else -> processVariables[key] = value.asJavaObj()
                 }
             }
         }
 
-        val processInstance = bpmnProcService.startProcess(record.id, processVariables.toMap())
+        val processInstance = bpmnProcService.startProcess(
+            record.id, businessKey, processVariables.toMap()
+        )
 
         return processInstance.id
     }

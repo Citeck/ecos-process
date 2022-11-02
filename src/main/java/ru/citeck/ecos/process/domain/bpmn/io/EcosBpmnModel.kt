@@ -34,6 +34,15 @@ val BPMN_PROP_FORM_REF = QName(NS_ECOS, "formRef")
 val BPMN_PROP_OUTCOMES = QName(NS_ECOS, "outcomes")
 val BPMN_PROP_PRIORITY = QName(NS_ECOS, "priority")
 
+val BPMN_PROP_MANUAL_SIGNAL_NAME = QName(NS_ECOS, "manualSignalName")
+val BPMN_PROP_EVENT_MANUAL_MODE = QName(NS_ECOS, "eventManualMode")
+val BPMN_PROP_EVENT_TYPE = QName(NS_ECOS, "eventType")
+val BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE = QName(NS_ECOS, "eventFilterByRecordType")
+val BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE = QName(NS_ECOS, "eventFilterByEcosType")
+val BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE = QName(NS_ECOS, "eventFilterByRecordVariable")
+val BPMN_PROP_EVENT_FILTER_VALUE = QName(NS_ECOS, "eventFilterValue")
+
+
 val BPMN_PROP_MULTI_INSTANCE_AUTO_MODE = QName(NS_ECOS, "multiInstanceAutoMode")
 val BPMN_PROP_MANUAL_RECIPIENTS_MODE = QName(NS_ECOS, "manualRecipientsMode")
 val BPMN_PROP_MANUAL_RECIPIENTS = QName(NS_ECOS, "manualRecipients")

@@ -27,6 +27,8 @@ class CamundaStartEventConverter : EcosOmgConverter<BpmnStartEventDef, TStartEve
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
+            isIsInterrupting = element.isInterrupting
+
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)

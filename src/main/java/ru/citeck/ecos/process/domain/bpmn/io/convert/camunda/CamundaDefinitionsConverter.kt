@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_DEF_ID
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignal
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -20,6 +21,10 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
     }
 
     override fun export(element: BpmnDefinitionDef, context: ExportContext): TDefinitions {
+        element.signals.forEach {
+            context.bpmnSignalsByNames.computeIfAbsent(it.name) { _ -> it }
+        }
+
         return TDefinitions().apply {
             id = element.definitionsId
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
@@ -27,9 +32,15 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
             exporterVersion = element.exporterVersion
             targetNamespace = element.targetNamespace
 
-            // TODO: process single element?
-            val process = context.converters.export<TProcess>(element.process)
-            rootElement.add(context.converters.convertToJaxb(process))
+            element.process.forEach { process ->
+                val tProcess = context.converters.export<TProcess>(process, context)
+                rootElement.add(context.converters.convertToJaxb(tProcess))
+            }
+
+            element.signals.forEach {
+                val signal = context.converters.export<TSignal>(it, context)
+                rootElement.add(context.converters.convertToJaxb(signal))
+            }
 
             element.diagrams.forEach {
                 bpmnDiagram.add(context.converters.export(it))

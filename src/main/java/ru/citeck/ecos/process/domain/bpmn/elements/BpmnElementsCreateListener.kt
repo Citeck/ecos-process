@@ -89,7 +89,7 @@ class BpmnElementsCreateListener(
     }
 
     private fun createTaskElement(event: UserTaskEvent, completedEvent: Boolean) {
-        log.debug { "Create task element. Event: $event. Completed: $completedEvent" }
+        log.trace { "Create task element. Event: $event. Completed: $completedEvent" }
         val data = ObjectData.create(event)
         if (completedEvent) {
             data["started"] = event.time
@@ -109,10 +109,10 @@ class BpmnElementsCreateListener(
 
     private fun createFlowElement(event: FlowElementEvent) {
         if (event.elementType == "UserTask") {
-            log.debug { "User task flow take skipped: $event" }
+            log.trace { "User task flow take skipped: $event" }
             return
         }
-        log.debug { "Create BPMN element by event: $event" }
+        log.trace { "Create BPMN element by event: $event" }
         val data = ObjectData.create(event)
         data["created"] = event.time
         data["completed"] = event.time

@@ -22,6 +22,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAbstractEcosTaskDef
@@ -32,6 +33,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
@@ -100,9 +102,11 @@ inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V?
         is String -> {
             if (value.isNotBlank() && value != "null") put(key, value)
         }
-        is RecordRef -> {
-            if (RecordRef.isNotEmpty(value)) put(key, value)
+
+        is EntityRef -> {
+            if (EntityRef.isNotEmpty(value)) put(key, value)
         }
+
         else -> error("Type ${V::class} is not supported. Value: $value")
     }
 }
@@ -114,15 +118,19 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
         is String -> {
             if (value.isNotBlank() && value != "null") add(value)
         }
+
         is RecordRef -> {
             if (RecordRef.isNotEmpty(value)) add(value)
         }
+
         is CamundaField -> {
             if (value.stringValue?.value?.isNotBlank() == true) add(value)
         }
+
         is CamundaFailedJobRetryTimeCycle -> {
             if (value.value?.isNotBlank() == true) add(value)
         }
+
         else -> error("Type ${T::class} is not supported. $value")
     }
 }
@@ -246,9 +254,11 @@ fun TActivity.toMultiInstanceConfig(): MultiInstanceConfig? {
 
             return config
         }
+
         TStandardLoopCharacteristics::class.java -> {
             error("Loop is not supported by engine")
         }
+
         else -> error("Unsupported type of loop characteristics. Activity id '$id'")
     }
 }
@@ -297,6 +307,7 @@ fun TTask.convertToBpmnEcosTaskDef(context: ImportContext): BpmnAbstractEcosTask
             val status = otherAttributes[BPMN_PROP_ECOS_STATUS] ?: error("Status is not set")
             BpmnSetStatusTaskDef(status)
         }
+
         else -> error("Unsupported task type: $taskType")
     }
 }
@@ -307,6 +318,7 @@ fun TTask.fillEcosTaskDefToOtherAttributes(ecosTaskDef: BpmnAbstractEcosTaskDef)
             otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_SET_STATUS
             otherAttributes[BPMN_PROP_ECOS_STATUS] = ecosTaskDef.status
         }
+
         else -> error("Unsupported task type: $ecosTaskDef")
     }
 }
@@ -323,6 +335,7 @@ fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEvent
     val eventDef = eventDefinition[0].value
     val typeToTransform = when (val type = eventDefinition[0].declaredType) {
         TTimerEventDefinition::class.java -> BpmnTimerEventDef::class.java
+        TSignalEventDefinition::class.java -> BpmnSignalEventDef::class.java
         else -> error("Class $type not supported")
     }
 
@@ -336,15 +349,34 @@ fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEvent
 }
 
 fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstractEventDef, context: ExportContext) {
-    when (val eventDef = bpmnEventDef) {
+    when (bpmnEventDef) {
         is BpmnTimerEventDef -> {
-            otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(eventDef.value))
+            otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(bpmnEventDef.value))
         }
-        else -> error("Class $eventDef not supported")
+
+        is BpmnSignalEventDef -> {
+            otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE] = bpmnEventDef.eventManualMode.toString()
+            otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_SIGNAL_NAME, bpmnEventDef.manualSignalName)
+            otherAttributes.putIfNotBlank(BPMN_PROP_EVENT_TYPE, bpmnEventDef.eventType?.name)
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE,
+                bpmnEventDef.eventFilterByRecordType?.name
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE, bpmnEventDef.eventFilterByEcosType.toString()
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE,
+                bpmnEventDef.eventFilterByRecordVariable
+            )
+        }
+
+        else -> error("Class $bpmnEventDef not supported")
     }
 
     val typeToTransform = when (val type = bpmnEventDef.javaClass) {
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
+        BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
         else -> error("Class $type not supported")
     }
 
@@ -359,6 +391,7 @@ fun TCatchEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
 ) {
     val typeToTransform = when (val type = bpmnEventDef.javaClass) {
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
+        BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
         else -> error("Class $type not supported")
     }
 
@@ -399,3 +432,4 @@ fun TArtifact.toBpmnArtifactDef(context: ImportContext): BpmnArtifactDef {
 fun QName.toCamundaKey(): String {
     return "$namespaceURI:$localPart"
 }
+

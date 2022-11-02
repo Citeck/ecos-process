@@ -15,6 +15,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.Camund
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.signal.CamundaSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaSendTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaTaskConverter
@@ -32,6 +33,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParal
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.signal.BpmnSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnScriptTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnSendTaskConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnTaskConverter
@@ -76,6 +78,8 @@ object BpmnIO {
             BpmnAssociationConverter::class,
             BpmnSubProcessConverter::class,
             BpmnTaskConverter::class,
+            BpmnSignalEventDefinitionConverter::class,
+            BpmnSignalConverter::class
         ),
         extensionTypeResolver
     )
@@ -103,6 +107,8 @@ object BpmnIO {
             CamundaAssociationConverter::class,
             CamundaSubProcessConverter::class,
             CamundaTaskConverter::class,
+            CamundaSignalEventDefinitionConverter::class,
+            CamundaSignalConverter::class
         ),
         extensionTypeResolver
     )

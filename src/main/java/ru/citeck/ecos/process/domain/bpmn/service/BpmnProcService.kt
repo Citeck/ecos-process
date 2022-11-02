@@ -5,7 +5,7 @@ import org.camunda.bpm.engine.runtime.ProcessInstance
 
 interface BpmnProcService {
 
-    fun startProcess(processKey: String, variables: Map<String, Any?>): ProcessInstance
+    fun startProcess(processKey: String, businessKey: String? = null, variables: Map<String, Any?>): ProcessInstance
 
     fun getProcessInstance(processInstanceId: String): ProcessInstance?
 

@@ -28,7 +28,7 @@
         "source": {
           "type": "recordsScript",
           "recordsScript": {
-            "script": "let ref = instance.options.editor.getEcosType()._id;\n\nif (!!ref) {\n  value = ref;\n}",
+            "script": "let ref = instance.options.editor.getEcosType();\n\nif (!!ref) {\n  value = ref;\n}",
             "attributes": {
               "statusesData": "model.statuses[]{value:id,label:name}"
             }

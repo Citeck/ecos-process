@@ -27,6 +27,7 @@ class BpmnStartEventConverter : EcosOmgConverter<BpmnStartEventDef, TStartEvent>
         return BpmnStartEventDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            isInterrupting = element.isIsInterrupting,
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             outgoing = element.outgoing.map { it.localPart },
             asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
@@ -41,6 +42,8 @@ class BpmnStartEventConverter : EcosOmgConverter<BpmnStartEventDef, TStartEvent>
         return TStartEvent().apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
+
+            isIsInterrupting = element.isInterrupting
 
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 

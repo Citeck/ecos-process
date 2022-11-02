@@ -40,10 +40,11 @@ class BpmnProcessAutoStarter(
             return
         }
 
-        val processVariables = mapOf(VAR_DOCUMENT_REF to eventData.eventRef.toString())
+        val documentRef = eventData.eventRef.toString()
+        val processVariables = mapOf(VAR_DOCUMENT_REF to documentRef)
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
-        bpmnProcService.startProcess(procDef.id, processVariables)
+        bpmnProcService.startProcess(procDef.id, documentRef, processVariables)
     }
 
     data class EventData(

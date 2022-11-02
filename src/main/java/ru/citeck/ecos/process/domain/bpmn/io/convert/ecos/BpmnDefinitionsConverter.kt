@@ -7,8 +7,10 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.signal.BpmnSignalDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignal
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -18,12 +20,10 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
 
     override fun import(element: TDefinitions, context: ImportContext): BpmnDefinitionDef {
 
-        if (element.rootElement.size > 1) error("Root elements is more than one not supported.")
-
-        val process = element.rootElement[0].value as TProcess
-
         val processDefId = element.otherAttributes[BPMN_PROP_PROCESS_DEF_ID]
         if (processDefId.isNullOrBlank()) propMandatoryError(BPMN_PROP_PROCESS_DEF_ID, BpmnDefinitionDef::class)
+
+        val processes = element.extractRootElements(context).processes
 
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
 
@@ -39,7 +39,9 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             diagrams = element.bpmnDiagram.map {
                 context.converters.import(it, BpmnDiagramDef::class.java, context).data
             },
-            process = context.converters.import(process, BpmnProcessDef::class.java, context).data,
+            process = processes,
+            signals = context.generateSignalsFromDefs(),
+            /*messages = emptyList(),*/
             exporter = element.exporter,
             exporterVersion = element.exporterVersion,
             targetNamespace = element.targetNamespace
@@ -49,6 +51,10 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
     }
 
     override fun export(element: BpmnDefinitionDef, context: ExportContext): TDefinitions {
+        element.signals.forEach {
+            context.bpmnSignalsByNames.computeIfAbsent(it.name) { _ -> it }
+        }
+
         return TDefinitions().apply {
             id = element.definitionsId
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
@@ -56,9 +62,15 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             exporterVersion = element.exporterVersion
             targetNamespace = element.targetNamespace
 
-            // TODO: process single element?
-            val process = context.converters.export<TProcess>(element.process)
-            rootElement.add(context.converters.convertToJaxb(process))
+            element.process.forEach { process ->
+                val tProcess = context.converters.export<TProcess>(process, context)
+                rootElement.add(context.converters.convertToJaxb(tProcess))
+            }
+
+            element.signals.forEach {
+                val signal = context.converters.export<TSignal>(it, context)
+                rootElement.add(context.converters.convertToJaxb(signal))
+            }
 
             element.diagrams.forEach {
                 bpmnDiagram.add(context.converters.export(it))
@@ -72,4 +84,49 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             otherAttributes[BPMN_PROP_FORM_REF] = element.formRef.toString()
         }
     }
+}
+
+
+private fun TDefinitions.extractRootElements(context: ImportContext): RootElements {
+    val process = mutableListOf<BpmnProcessDef>()
+
+    rootElement.forEach { rootElement ->
+        when (rootElement.value) {
+            is TProcess -> {
+                val bpmnProcessDef =
+                    context.converters.import(rootElement.value, BpmnProcessDef::class.java, context).data
+                process.add(bpmnProcessDef)
+            }
+
+            is TSignal -> {
+                //do nothing, we ourselves create signals from signal definitions
+            }
+
+            else -> error("Unsupported root element: ${rootElement.value}")
+        }
+    }
+
+    return RootElements(process)
+}
+
+
+private data class RootElements(
+    val processes: List<BpmnProcessDef>
+)
+
+private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
+    return this.bpmnSignalNames.map { signalName ->
+        BpmnSignalDef(
+            id = generateElementId("Signal"),
+            name = signalName
+        )
+    }
+        .toList()
+}
+
+private fun generateElementId(prefix: String): String {
+    val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+    return "${prefix}_" + (1..7)
+        .map { allowedChars.random() }
+        .joinToString("")
 }

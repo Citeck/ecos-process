@@ -76,23 +76,24 @@ class CamundaExtensions(
         }
 
         val definition = BpmnXmlUtils.readFromString(modelText)
-        val process = let {
-            if (definition.rootElement.size > 1) {
-                error("Root elements is more than one not supported.")
+        val allFlowElements = definition.rootElement.map {
+            val element = it.value
+            if (element is TProcess) {
+                element.flowElement
+            } else {
+                emptyList()
             }
-
-            return@let definition.rootElement.first().value as TProcess
-        }
+        }.flatten()
 
         fun getUserTasksFromFlowElements(flowElements: List<JAXBElement<out TFlowElement>>): List<TUserTask> {
             return flowElements.map { flowElement ->
-                when (flowElement.value) {
+                when (val element = flowElement.value) {
                     is TUserTask -> {
-                        return@map listOf(flowElement.value as TUserTask)
+                        return@map listOf(element)
                     }
 
                     is TSubProcess -> {
-                        return@map getUserTasksFromFlowElements((flowElement.value as TSubProcess).flowElement)
+                        return@map getUserTasksFromFlowElements(element.flowElement)
                     }
 
                     else -> return@map emptyList()
@@ -100,7 +101,7 @@ class CamundaExtensions(
             }.flatten()
         }
 
-        val currentTask = getUserTasksFromFlowElements(process.flowElement)
+        val currentTask = getUserTasksFromFlowElements(allFlowElements)
             .firstOrNull { it.id == taskDefinitionKey } ?: error(
             "Task with id $taskDefinitionKey not found on camunda definition $processDefinitionId"
         )

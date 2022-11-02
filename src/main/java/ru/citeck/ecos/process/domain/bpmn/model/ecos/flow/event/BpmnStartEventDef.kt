@@ -11,6 +11,8 @@ data class BpmnStartEventDef(
 
     val outgoing: List<String>,
 
+    val isInterrupting: Boolean = true,
+
     val asyncConfig: AsyncConfig,
     val jobConfig: JobConfig,
 
