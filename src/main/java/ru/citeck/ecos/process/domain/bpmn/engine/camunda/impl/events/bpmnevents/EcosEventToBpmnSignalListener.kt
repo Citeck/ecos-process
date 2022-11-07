@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
 import org.camunda.bpm.engine.RuntimeService
+import org.camunda.bpm.engine.impl.interceptor.CommandExecutor
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_EVENT
@@ -14,6 +15,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 class EcosEventToBpmnSignalListener(
     eventsService: EventsService,
     private val cRuntimeService: RuntimeService,
+    private val commandExecutor: CommandExecutor
 ) {
 
     init {
@@ -38,7 +40,7 @@ class EcosEventToBpmnSignalListener(
 
 
     private fun fireSignals(eventType: String, eventData: CommentEvent, recordData: RecordData) {
-        sendSignal(eventData, "${eventType}\$${FilterEventByRecord.ANY.name}")
+        /*sendSignal(eventData, "${eventType}\$${FilterEventByRecord.ANY.name}")
 
         val (record, type) = recordData
 
@@ -48,10 +50,18 @@ class EcosEventToBpmnSignalListener(
 
         type?.let {
             sendSignal(eventData, "${eventType}\$${FilterEventByRecord.ANY.name}\$$type")
-        }
+        }*/
+
+       /* cRuntimeService.createMessageCorrelation("message1")
+            .correlateAll()*/
+
+        val idCmd = SignalByIdCmd()
+        commandExecutor.execute(idCmd)
     }
 
     private fun sendSignal(eventData: CommentEvent, signalName: String) {
+
+
         cRuntimeService.createSignalEvent(signalName)
             .setVariables(
                 mapOf(

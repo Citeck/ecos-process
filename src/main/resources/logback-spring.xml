@@ -3,4 +3,5 @@
 
 <configuration>
     <include resource="ecos/logback-base.xml" />
+    <logger name="ru.citeck.ecos.data.sql.datasource" level="INFO" />
 </configuration>
