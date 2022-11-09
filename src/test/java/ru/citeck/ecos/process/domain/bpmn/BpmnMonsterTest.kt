@@ -1285,7 +1285,7 @@ class BpmnMonsterTest {
     @Test
     fun `pool with single participant and multiple lines - check call all activities on lines`() {
         val procId = "test-pool-single-participants-with-multiple-lines"
-        saveAndDeployBpmn(USER_TASK, procId)
+        saveAndDeployBpmn(POOL, procId)
 
         `when`(process.waitsAtUserTask("userTask_1")).thenReturn {
             it.complete()
