@@ -32,6 +32,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
@@ -100,8 +101,8 @@ inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V?
         is String -> {
             if (value.isNotBlank() && value != "null") put(key, value)
         }
-        is RecordRef -> {
-            if (RecordRef.isNotEmpty(value)) put(key, value)
+        is EntityRef -> {
+            if (EntityRef.isNotEmpty(value)) put(key, value)
         }
         else -> error("Type ${V::class} is not supported. Value: $value")
     }

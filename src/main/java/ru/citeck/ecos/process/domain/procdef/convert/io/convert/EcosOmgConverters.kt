@@ -29,9 +29,11 @@ class EcosOmgConverters(
     private val convertersByOmgType: Map<Class<*>, ConverterInfo>
     private val jaxbCreateMethods: MutableMap<Class<*>, (Any) -> JAXBElement<Any>> = mutableMapOf()
 
+    private val omgObjectFactory = ru.citeck.ecos.process.domain.bpmn.model.omg.ObjectFactory()
+
     private val jaxbFactories = listOf(
         ObjectFactory(),
-        ru.citeck.ecos.process.domain.bpmn.model.omg.ObjectFactory(),
+        omgObjectFactory,
         ru.citeck.ecos.process.domain.bpmn.model.camunda.ObjectFactory()
     )
 
@@ -94,7 +96,7 @@ class EcosOmgConverters(
     fun <T : Any> export(type: String, element: Any, context: ExportContext): T {
 
         val converter = convertersByType[type] ?: base?.convertersByType?.get(type)
-            ?: error("Type is not registered: $type")
+        ?: error("Type is not registered: $type")
 
         val convertedElement = Json.mapper.convert(element, converter.ecosType)
             ?: error("Conversion failed for $element of type $type and class ${converter.ecosType}")
@@ -121,6 +123,11 @@ class EcosOmgConverters(
         return jaxbCreate.invoke(item) as JAXBElement<T>
     }
 
+    fun <T : Any> convertToJaxbFlowNodeRef(item: T): JAXBElement<T> {
+        @Suppress("UNCHECKED_CAST")
+        return omgObjectFactory.createTLaneFlowNodeRef(item) as JAXBElement<T>
+    }
+
     fun import(item: Any): EcosElementData<ObjectData> {
         return import(item, ImportContext(this))
     }
@@ -139,11 +146,11 @@ class EcosOmgConverters(
 
         val converter = if (!extensionType.isNullOrBlank()) {
             convertersByType[extensionType] ?: base?.convertersByType?.get(extensionType)
-                ?: error("Type is not registered: $extensionType")
+            ?: error("Type is not registered: $extensionType")
         } else {
             val type: Class<*> = item::class.java
             getConverterByOmgType(type) ?: base?.getConverterByOmgType(type)
-                ?: error("Type is not registered: ${item::class.java}")
+            ?: error("Type is not registered: ${item::class.java}")
         }
 
         val ecosData = converter.converter.import(item, context)

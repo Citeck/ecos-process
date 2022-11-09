@@ -13,6 +13,10 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaCollaborationConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaLaneConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaLaneSetConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaParticipantConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaScriptTaskConverter
@@ -30,6 +34,10 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnCollaborationConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnLaneConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnLaneSetConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnParticipantConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnScriptTaskConverter
@@ -76,6 +84,10 @@ object BpmnIO {
             BpmnAssociationConverter::class,
             BpmnSubProcessConverter::class,
             BpmnTaskConverter::class,
+            BpmnParticipantConverter::class,
+            BpmnCollaborationConverter::class,
+            BpmnLaneSetConverter::class,
+            BpmnLaneConverter::class
         ),
         extensionTypeResolver
     )
@@ -103,6 +115,10 @@ object BpmnIO {
             CamundaAssociationConverter::class,
             CamundaSubProcessConverter::class,
             CamundaTaskConverter::class,
+            CamundaParticipantConverter::class,
+            CamundaCollaborationConverter::class,
+            CamundaLaneSetConverter::class,
+            CamundaLaneConverter::class
         ),
         extensionTypeResolver
     )
