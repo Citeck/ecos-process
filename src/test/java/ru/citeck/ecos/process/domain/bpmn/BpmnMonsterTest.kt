@@ -1282,7 +1282,7 @@ class BpmnMonsterTest {
     // --- BPMN POOL PARTICIPANTS TESTS ---
 
     @Test
-    fun `pool with single participant and multiple lines, check call all activities on lines`() {
+    fun `pool with single participant and multiple lines - check call all activities on lines`() {
         val procId = "test-pool-single-participants-with-multiple-lines"
         saveAndDeployBpmn(USER_TASK, procId)
 
