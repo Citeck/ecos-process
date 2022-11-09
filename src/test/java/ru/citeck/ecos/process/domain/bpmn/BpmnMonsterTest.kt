@@ -50,6 +50,7 @@ private const val GROUP_MANAGER = "GROUP_manager"
 private const val GROUP_DEVELOPER = "GROUP_developer"
 
 private const val USER_TASK = "usertask"
+private const val POOL = "pool"
 private const val GATEWAY = "gateway"
 private const val SUB_PROCESS = "subprocess"
 private const val SEND_TASK = "sendtask"
