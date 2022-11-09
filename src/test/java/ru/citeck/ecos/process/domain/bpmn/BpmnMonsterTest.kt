@@ -101,7 +101,7 @@ class BpmnMonsterTest {
         private val docRef = RecordRef.valueOf("doc@1")
         private val docExplicitRef = RecordRef.valueOf("doc@explicit")
 
-        private val variables = mapOf(
+        private val variables_docRef = mapOf(
             "documentRef" to "doc@1"
         )
 
@@ -152,7 +152,7 @@ class BpmnMonsterTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -167,7 +167,7 @@ class BpmnMonsterTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -182,7 +182,7 @@ class BpmnMonsterTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -201,7 +201,7 @@ class BpmnMonsterTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -228,7 +228,7 @@ class BpmnMonsterTest {
             }
         )
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -256,7 +256,7 @@ class BpmnMonsterTest {
             }
         )
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -402,7 +402,7 @@ class BpmnMonsterTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -1119,7 +1119,7 @@ class BpmnMonsterTest {
             task.defer("P2DT12H") { task.complete() }
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, times(2)).hasFinished("remindSendTask")
         verify(process).hasFinished("endEvent")
@@ -1155,7 +1155,7 @@ class BpmnMonsterTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("taskDoneFlow")
         verify(process, never()).hasFinished("taskExpiredFlow")
@@ -1170,7 +1170,7 @@ class BpmnMonsterTest {
             task.defer("P3DT12H") { }
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(0)
 
@@ -1191,7 +1191,7 @@ class BpmnMonsterTest {
             task.complete()
         }
 
-        run(process).startByKey(procId, variables).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -1215,7 +1215,7 @@ class BpmnMonsterTest {
             }
         )
 
-        val scenario = run(process).startByKey(procId, variables).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -1254,7 +1254,7 @@ class BpmnMonsterTest {
             }
         )
 
-        val scenario = run(process).startByKey(procId, variables).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -1277,6 +1277,35 @@ class BpmnMonsterTest {
         assertThat(historicTaskFromService).hasSize(4)
         assertThat(historicTaskFromService).containsAll(historicTasks.filter { it != notExistsTask })
         assertThat(historicTaskFromService[3]).isNull()
+    }
+
+    // --- BPMN POOL PARTICIPANTS TESTS ---
+
+    @Test
+    fun `pool with single participant and multiple lines, check call all activities on lines`() {
+        val procId = "test-pool-single-participants-with-multiple-lines"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        `when`(process.waitsAtUserTask("userTask_1")).thenReturn {
+            it.complete()
+        }
+
+        `when`(process.waitsAtUserTask("userTask_2")).thenReturn {
+            it.complete()
+        }
+
+        val scenario = run(process).startByKey(
+            procId,
+            variables_docRef
+        ).execute()
+
+        verify(process, times(1)).hasCompleted("userTask_1")
+        verify(process, times(1)).hasCompleted("userTask_2")
+        verify(process, times(1)).hasCompleted("scriptTask")
+
+        assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
+
+        verify(process).hasFinished("endEvent")
     }
 }
 
