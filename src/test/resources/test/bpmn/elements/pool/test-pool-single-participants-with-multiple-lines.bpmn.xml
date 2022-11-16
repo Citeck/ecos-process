@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="test-pool-single-participants-with-multiple-lines" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="test-pool-single-participants-with-multiple-lines">
+        <bpmn:laneSet id="LaneSet_0nra0bn">
+            <bpmn:lane name="script" id="Lane_1awwttl" ecos:name_ml="{&quot;ru&quot;:&quot;script&quot;}">
+                <bpmn:flowNodeRef>StartEvent_1ew9rff</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>scriptTask</bpmn:flowNodeRef>
+            </bpmn:lane>
+            <bpmn:lane name="task 1" id="Lane_02aiysf" ecos:name_ml="{&quot;ru&quot;:&quot;task 1&quot;}">
+                <bpmn:flowNodeRef>userTask_1</bpmn:flowNodeRef>
+            </bpmn:lane>
+            <bpmn:lane name="task 2" id="Lane_1unetje" ecos:name_ml="{&quot;ru&quot;:&quot;task 2&quot;}">
+                <bpmn:flowNodeRef>endEvent</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>userTask_2</bpmn:flowNodeRef>
+            </bpmn:lane>
+        </bpmn:laneSet>
+        <bpmn:startEvent name="" id="StartEvent_1ew9rff" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_1abmfhf</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:scriptTask scriptFormat="javascript" name="set foo bar" id="scriptTask" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;set foo bar&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="execution.setVariable(&quot;foo&quot;, &quot;bar&quot;);">
+            <bpmn:incoming >Flow_1abmfhf</bpmn:incoming>
+            <bpmn:outgoing >Flow_0bq02b1</bpmn:outgoing>
+            <bpmn:script>execution.setVariable("foo", "bar");</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:sequenceFlow sourceRef="scriptTask" targetRef="userTask_1" name="" id="Flow_0bq02b1" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="scriptTask" name="" id="Flow_1abmfhf" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:userTask name="task 1" id="userTask_1" ecos:documentation="{}" ecos:manualRecipients="[&quot;user&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;done&quot;}}]" ecos:name_ml="{&quot;ru&quot;:&quot;task 1&quot;}" ecos:formRef="uiserv/form@test-bpmn-form" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">
+            <bpmn:incoming >Flow_0bq02b1</bpmn:incoming>
+            <bpmn:outgoing >Flow_1lociy6</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:sequenceFlow sourceRef="userTask_1" targetRef="userTask_2" name="" id="Flow_1lociy6" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;// some script;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="userTask_2" targetRef="endEvent" name="" id="Flow_09bxkoz" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:endEvent name="" id="endEvent" ecos:name_ml="{}">
+            <bpmn:incoming >Flow_09bxkoz</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:userTask name="task 2" id="userTask_2" ecos:documentation="{}" ecos:manualRecipients="[&quot;user&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;done&quot;}}]" ecos:name_ml="{&quot;ru&quot;:&quot;task 2&quot;}" ecos:formRef="uiserv/form@test-bpmn-form" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">
+            <bpmn:incoming >Flow_1lociy6</bpmn:incoming>
+            <bpmn:outgoing >Flow_09bxkoz</bpmn:outgoing>
+        </bpmn:userTask>
+    </bpmn:process>
+    <bpmn:collaboration id="Collaboration_0l6uoj7">
+        <bpmn:participant  name="process" processRef="test-user-task-assign-manual-with-expressions" id="Participant_0wz0uko" ecos:name_ml="{&quot;ru&quot;:&quot;process&quot;}"/>
+    </bpmn:collaboration>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="Collaboration_0l6uoj7" id="BPMNPlane_1">
+            <bpmndi:BPMNShape bpmnElement="Participant_0wz0uko" isExpanded="true" id="Participant_0wz0uko_di">
+                <dc:Bounds x="100.0" y="39.0" width="760.0" height="411.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Lane_1unetje" isExpanded="true" id="Lane_1unetje_di">
+                <dc:Bounds x="130.0" y="280.0" width="730.0" height="170.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Lane_02aiysf" isExpanded="true" id="Lane_02aiysf_di">
+                <dc:Bounds x="130.0" y="150.0" width="730.0" height="130.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Lane_1awwttl" isExpanded="true" id="Lane_1awwttl_di">
+                <dc:Bounds x="130.0" y="39.0" width="730.0" height="111.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_09bxkoz" id="Flow_09bxkoz_di">
+                <di:waypoint x="670.0" y="360.0"/>
+                <di:waypoint x="722.0" y="360.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1lociy6" id="Flow_1lociy6_di">
+                <di:waypoint x="500.0" y="220.0"/>
+                <di:waypoint x="520.0" y="220.0"/>
+                <di:waypoint x="520.0" y="360.0"/>
+                <di:waypoint x="570.0" y="360.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1abmfhf" id="Flow_1abmfhf_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="250.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0bq02b1" id="Flow_0bq02b1_di">
+                <di:waypoint x="350.0" y="99.0"/>
+                <di:waypoint x="375.0" y="99.0"/>
+                <di:waypoint x="375.0" y="220.0"/>
+                <di:waypoint x="400.0" y="220.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="StartEvent_1ew9rff" isExpanded="true" id="_BPMNShape_StartEvent_2">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="scriptTask" isExpanded="true" id="Activity_0tgycwg_di">
+                <dc:Bounds x="250.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="userTask_1" isExpanded="true" id="userTask_1_di">
+                <dc:Bounds x="400.0" y="180.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" isExpanded="true" id="endEvent_di">
+                <dc:Bounds x="722.0" y="342.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="userTask_2" isExpanded="true" id="Activity_1dvmmcj_di">
+                <dc:Bounds x="570.0" y="320.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

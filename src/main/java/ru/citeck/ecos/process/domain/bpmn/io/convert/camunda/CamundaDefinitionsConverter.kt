@@ -7,6 +7,8 @@ import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_DEF_ID
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCollaboration
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCollaboration
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignal
@@ -35,6 +37,11 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
             element.process.forEach { process ->
                 val tProcess = context.converters.export<TProcess>(process, context)
                 rootElement.add(context.converters.convertToJaxb(tProcess))
+            }
+
+            element.collaboration?.let {
+                val tCollaboration = context.converters.export<TCollaboration>(it, context)
+                rootElement.add(context.converters.convertToJaxb(tCollaboration))
             }
 
             element.signals.forEach {

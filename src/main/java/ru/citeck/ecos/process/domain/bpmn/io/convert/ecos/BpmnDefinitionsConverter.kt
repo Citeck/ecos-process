@@ -6,8 +6,10 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnCollaborationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.signal.BpmnSignalDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCollaboration
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignal
@@ -21,9 +23,11 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
     override fun import(element: TDefinitions, context: ImportContext): BpmnDefinitionDef {
 
         val processDefId = element.otherAttributes[BPMN_PROP_PROCESS_DEF_ID]
-        if (processDefId.isNullOrBlank()) propMandatoryError(BPMN_PROP_PROCESS_DEF_ID, BpmnDefinitionDef::class)
+        if (processDefId.isNullOrBlank()) {
+            propMandatoryError(BPMN_PROP_PROCESS_DEF_ID, BpmnDefinitionDef::class)
+        }
 
-        val processes = element.extractRootElements(context).processes
+        val (processes, collaboration) = element.extractRootElements(context)
 
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
 
@@ -40,6 +44,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
                 context.converters.import(it, BpmnDiagramDef::class.java, context).data
             },
             process = processes,
+            collaboration = collaboration,
             signals = context.generateSignalsFromDefs(),
             /*messages = emptyList(),*/
             exporter = element.exporter,
@@ -67,6 +72,11 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
                 rootElement.add(context.converters.convertToJaxb(tProcess))
             }
 
+            element.collaboration?.let {
+                val tCollaboration = context.converters.export<TCollaboration>(it, context)
+                rootElement.add(context.converters.convertToJaxb(tCollaboration))
+            }
+
             element.signals.forEach {
                 val signal = context.converters.export<TSignal>(it, context)
                 rootElement.add(context.converters.convertToJaxb(signal))
@@ -86,9 +96,9 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
     }
 }
 
-
 private fun TDefinitions.extractRootElements(context: ImportContext): RootElements {
     val process = mutableListOf<BpmnProcessDef>()
+    var collaboration: BpmnCollaborationDef? = null
 
     rootElement.forEach { rootElement ->
         when (rootElement.value) {
@@ -102,16 +112,27 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
                 //do nothing, we ourselves create signals from signal definitions
             }
 
+            is TCollaboration -> {
+                if (collaboration != null) {
+                    throw IllegalStateException("Only one collaboration is supported")
+                }
+
+                collaboration = context.converters.import(
+                    rootElement.value, BpmnCollaborationDef::class.java, context
+                ).data
+            }
+
             else -> error("Unsupported root element: ${rootElement.value}")
         }
     }
 
-    return RootElements(process)
+    return RootElements(process, collaboration)
 }
 
 
 private data class RootElements(
-    val processes: List<BpmnProcessDef>
+    val processes: List<BpmnProcessDef>,
+    val collaboration: BpmnCollaborationDef? = null
 )
 
 private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
@@ -130,3 +151,4 @@ private fun generateElementId(prefix: String): String {
         .map { allowedChars.random() }
         .joinToString("")
 }
+
