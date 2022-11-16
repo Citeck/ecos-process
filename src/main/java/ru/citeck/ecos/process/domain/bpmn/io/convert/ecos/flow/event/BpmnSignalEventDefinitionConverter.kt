@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event
 
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
@@ -9,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignalEventDefinition
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
@@ -36,6 +38,12 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
                 typeRef.withSourceId("type")
             } ?: EntityRef.EMPTY,
             eventFilterByRecordVariable = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE],
+            eventFilterByPredicate = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_PREDICATE]?.let {
+                Json.mapper.convert(it, Predicate::class.java)
+            },
+            eventModel = element.otherAttributes[BPMN_PROP_EVENT_MODEL]?.let {
+                Json.mapper.readMap(it, String::class.java, String::class.java)
+            } ?: emptyMap()
         )
 
         context.bpmnSignalNames.add(signal.signalName)

@@ -87,7 +87,7 @@ object BpmnIO {
             BpmnSubProcessConverter::class,
             BpmnTaskConverter::class,
             BpmnSignalEventDefinitionConverter::class,
-            BpmnSignalConverter::class
+            BpmnSignalConverter::class,
             BpmnParticipantConverter::class,
             BpmnCollaborationConverter::class,
             BpmnLaneSetConverter::class,
@@ -120,7 +120,7 @@ object BpmnIO {
             CamundaSubProcessConverter::class,
             CamundaTaskConverter::class,
             CamundaSignalEventDefinitionConverter::class,
-            CamundaSignalConverter::class
+            CamundaSignalConverter::class,
             CamundaParticipantConverter::class,
             CamundaCollaborationConverter::class,
             CamundaLaneSetConverter::class,

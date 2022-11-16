@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal
 import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private const val SIGNAL_NAME_MAX_LENGTH = 255
@@ -18,6 +19,10 @@ data class BpmnSignalEventDef(
     val eventFilterByRecordType: FilterEventByRecord? = null,
     val eventFilterByEcosType: EntityRef = EntityRef.EMPTY,
     val eventFilterByRecordVariable: String? = null,
+    val eventFilterByPredicate: Predicate? = null,
+
+    val eventModel: Map<String, String> = emptyMap(),
+
 
     val manualSignalName: String? = null
 ) : BpmnAbstractEventDef()
@@ -54,8 +59,6 @@ val BpmnSignalEventDef.signalName: String
         if (eventFilterByEcosType.isNotEmpty()) {
             result += "$${eventFilterByEcosType}"
         }
-
-        //TODO: add filter by value
 
         if (result.length > SIGNAL_NAME_MAX_LENGTH) {
             error("Signal name is too long, contact you administrator. Name: $result")

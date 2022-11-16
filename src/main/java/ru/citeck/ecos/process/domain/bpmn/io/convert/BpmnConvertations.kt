@@ -369,6 +369,14 @@ fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstra
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE,
                 bpmnEventDef.eventFilterByRecordVariable
             )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_EVENT_FILTER_BY_PREDICATE,
+                Json.mapper.toString(bpmnEventDef.eventFilterByPredicate)
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_EVENT_MODEL,
+                Json.mapper.toString(bpmnEventDef.eventModel)
+            )
         }
 
         else -> error("Class $bpmnEventDef not supported")

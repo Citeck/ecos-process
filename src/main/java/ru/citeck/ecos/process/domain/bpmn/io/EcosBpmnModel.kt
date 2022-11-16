@@ -40,7 +40,8 @@ val BPMN_PROP_EVENT_TYPE = QName(NS_ECOS, "eventType")
 val BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE = QName(NS_ECOS, "eventFilterByRecordType")
 val BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE = QName(NS_ECOS, "eventFilterByEcosType")
 val BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE = QName(NS_ECOS, "eventFilterByRecordVariable")
-val BPMN_PROP_EVENT_FILTER_VALUE = QName(NS_ECOS, "eventFilterValue")
+val BPMN_PROP_EVENT_FILTER_BY_PREDICATE = QName(NS_ECOS, "eventFilterByPredicate")
+val BPMN_PROP_EVENT_MODEL = QName(NS_ECOS, "eventModel")
 
 
 val BPMN_PROP_MULTI_INSTANCE_AUTO_MODE = QName(NS_ECOS, "multiInstanceAutoMode")
