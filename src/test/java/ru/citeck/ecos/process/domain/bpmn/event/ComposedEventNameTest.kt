@@ -2,8 +2,8 @@ package ru.citeck.ecos.process.domain.bpmn.event
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.COMPOSED_EVENT_NAME_DOCUMENT_ANY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import kotlin.test.assertEquals
 
 private const val EVENT_TYPE = "comment.added"
@@ -142,5 +142,4 @@ class ComposedEventNameTest {
             ComposedEventName(event200, document200)
         }
     }
-
 }

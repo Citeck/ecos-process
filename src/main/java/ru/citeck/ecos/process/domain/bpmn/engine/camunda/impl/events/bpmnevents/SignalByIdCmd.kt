@@ -7,9 +7,8 @@ import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
 
-//TODO: rewrite
+// TODO: rewrite
 class SignalByIdCmd : Command<Unit> {
-
 
     override fun execute(commandContext: CommandContext?) {
         sendSignal(commandContext, "_none_")
@@ -88,15 +87,18 @@ class SignalByIdCmd : Command<Unit> {
     private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {
         for (signalEventSubscriptionEntity in catchSignalEventSubscription) {
             if (isActiveEventSubscription(signalEventSubscriptionEntity)) {
-                //signalEventSubscriptionEntity.eventReceived(builder.getVariables(), false)
-                signalEventSubscriptionEntity.eventReceived(mapOf(
-                    "event" to mapOf(
-                        "rec" to "alfresco/comment@3dfa87ab-23f6-4de6-a1ec-549eaf22e805",
-                        "commentRec" to "alfresco/comment@3dfa87ab-23f6-4de6-a1ec-549eaf22e805",
-                        "textBefore" to "its before",
-                        "textAfter" to "its after"
-                    )
-                ), false)
+                // signalEventSubscriptionEntity.eventReceived(builder.getVariables(), false)
+                signalEventSubscriptionEntity.eventReceived(
+                    mapOf(
+                        "event" to mapOf(
+                            "rec" to "alfresco/comment@3dfa87ab-23f6-4de6-a1ec-549eaf22e805",
+                            "commentRec" to "alfresco/comment@3dfa87ab-23f6-4de6-a1ec-549eaf22e805",
+                            "textBefore" to "its before",
+                            "textAfter" to "its after"
+                        )
+                    ),
+                    false
+                )
             }
         }
     }
@@ -115,7 +117,7 @@ class SignalByIdCmd : Command<Unit> {
             if (processDefinition != null) {
                 val signalStartEvent = processDefinition.findActivity(signalStartEventSubscription.activityId)
                 val processInstance = processDefinition.createProcessInstanceForInitial(signalStartEvent)
-                //processInstance.start(builder.getVariables())
+                // processInstance.start(builder.getVariables())
                 processInstance.start(emptyMap())
             }
         }

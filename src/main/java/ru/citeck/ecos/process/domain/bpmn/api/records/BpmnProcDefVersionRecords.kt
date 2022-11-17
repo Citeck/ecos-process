@@ -79,7 +79,6 @@ class BpmnProcDefVersionRecords(
         }
     }
 
-
     private fun ProcDefRevDto.toVersionRecord(): VersionRecord {
 
         val externalVersion = version.toDouble().inc()
@@ -143,9 +142,7 @@ class BpmnProcDefVersionRecords(
         val definition: String
             get() = String(data, Charsets.UTF_8)
     }
-
 }
-
 
 private fun ProcDefRevDto.getRef(): EntityRef {
     return RecordRef.create(AppName.EPROC, BpmnProcDefVersionRecords.ID, id.toString())

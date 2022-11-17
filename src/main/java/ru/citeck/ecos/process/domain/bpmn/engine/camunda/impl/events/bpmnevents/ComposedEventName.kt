@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
-
 const val COMPOSED_EVENT_NAME_DOCUMENT_ANY = "ANY"
 const val COMPOSED_EVENT_NAME_MAX_LENGTH = 255
 
@@ -53,5 +52,4 @@ data class ComposedEventName(
 
         return parts.joinToString(DELIMITER)
     }
-
 }

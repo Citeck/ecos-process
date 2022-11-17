@@ -110,7 +110,7 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
             }
 
             is TSignal -> {
-                //do nothing, we ourselves create signals from signal definitions
+                // do nothing, we ourselves create signals from signal definitions
             }
 
             is TCollaboration -> {
@@ -119,7 +119,9 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
                 }
 
                 collaboration = context.converters.import(
-                    rootElement.value, BpmnCollaborationDef::class.java, context
+                    rootElement.value,
+                    BpmnCollaborationDef::class.java,
+                    context
                 ).data
             }
 
@@ -129,7 +131,6 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
 
     return RootElements(process, collaboration)
 }
-
 
 private data class RootElements(
     val processes: List<BpmnProcessDef>,
@@ -153,4 +154,3 @@ private fun generateElementId(prefix: String): String {
         .map { allowedChars.random() }
         .joinToString("")
 }
-

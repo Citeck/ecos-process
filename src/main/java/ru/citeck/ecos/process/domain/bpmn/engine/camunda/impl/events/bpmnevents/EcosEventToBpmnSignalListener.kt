@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_EVENT
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.FilterEventByRecord
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -38,7 +37,6 @@ class EcosEventToBpmnSignalListener(
         }
     }
 
-
     private fun fireSignals(eventType: String, eventData: CommentEvent, recordData: RecordData) {
         /*sendSignal(eventData, "${eventType}\$${FilterEventByRecord.ANY.name}")
 
@@ -61,7 +59,6 @@ class EcosEventToBpmnSignalListener(
 
     private fun sendSignal(eventData: CommentEvent, signalName: String) {
 
-
         cRuntimeService.createSignalEvent(signalName)
             .setVariables(
                 mapOf(
@@ -75,7 +72,6 @@ class EcosEventToBpmnSignalListener(
             )
             .send()
     }
-
 }
 
 private data class RecordData(

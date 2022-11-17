@@ -22,7 +22,6 @@ class TaskConverter(
     val recordsService: RecordsService
 ) {
 
-
     @PostConstruct
     private fun init() {
         cnv = this

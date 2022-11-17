@@ -72,7 +72,9 @@ class BpmnProcRecords(
         }
 
         val processInstance = bpmnProcService.startProcess(
-            record.id, businessKey, processVariables.toMap()
+            record.id,
+            businessKey,
+            processVariables.toMap()
         )
 
         return processInstance.id

@@ -164,7 +164,10 @@ class ProcDefServiceImpl(
                     0.0
                 } else {
                     recordsService.getAtt(
-                        createdFromVersion, "version").asDouble(0.0
+                        createdFromVersion,
+                        "version"
+                    ).asDouble(
+                        0.0
                     )
                 }
             }

@@ -14,7 +14,6 @@ class BpmnCollaborationConverter : EcosOmgConverter<BpmnCollaborationDef, TColla
             id = element.id,
             participants = element.participant.map {
                 context.converters.import(it, BpmnParticipantDef::class.java, context).data
-
             }
         )
     }

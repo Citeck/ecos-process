@@ -21,8 +21,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAbstractEcosTaskDef
@@ -388,7 +388,8 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
                 bpmnEventDef.eventFilterByRecordType?.name
             )
             event.otherAttributes.putIfNotBlank(
-                BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE, bpmnEventDef.eventFilterByEcosType.toString()
+                BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE,
+                bpmnEventDef.eventFilterByEcosType.toString()
             )
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE,
@@ -483,4 +484,3 @@ fun TArtifact.toBpmnArtifactDef(context: ImportContext): BpmnArtifactDef {
 fun QName.toCamundaKey(): String {
     return "$namespaceURI:$localPart"
 }
-

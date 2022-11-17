@@ -43,7 +43,6 @@ val BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE = QName(NS_ECOS, "eventFilterByRec
 val BPMN_PROP_EVENT_FILTER_BY_PREDICATE = QName(NS_ECOS, "eventFilterByPredicate")
 val BPMN_PROP_EVENT_MODEL = QName(NS_ECOS, "eventModel")
 
-
 val BPMN_PROP_MULTI_INSTANCE_AUTO_MODE = QName(NS_ECOS, "multiInstanceAutoMode")
 val BPMN_PROP_MANUAL_RECIPIENTS_MODE = QName(NS_ECOS, "manualRecipientsMode")
 val BPMN_PROP_MANUAL_RECIPIENTS = QName(NS_ECOS, "manualRecipients")

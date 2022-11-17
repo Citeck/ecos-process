@@ -1349,7 +1349,8 @@ class BpmnMonsterTest {
                     "val": "approval",
                     "t": "eq"
                 }
-                    """.trimIndent(), Predicate::class.java
+                """.trimIndent(),
+                Predicate::class.java
             )!!
         )
 
@@ -1480,7 +1481,6 @@ class BpmnMonsterTest {
         )
     }
 }
-
 
 class PotterRecord(
 

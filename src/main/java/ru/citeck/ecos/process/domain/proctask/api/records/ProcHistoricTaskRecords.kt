@@ -121,7 +121,7 @@ fun HistoricTaskInstanceQuery.sortByQuery(recsQuery: RecordsQuery): HistoricTask
     val sortByCreated = recsQuery.sortBy.firstOrNull {
         it.attribute == RecordConstants.ATT_CREATED || it.attribute == ProcHistoricTaskRecords.ENDED_ATT
     } ?: return this.orderByHistoricTaskInstanceEndTime()
-            .desc()
+        .desc()
 
     return when (sortByCreated.attribute) {
         RecordConstants.ATT_CREATED -> {

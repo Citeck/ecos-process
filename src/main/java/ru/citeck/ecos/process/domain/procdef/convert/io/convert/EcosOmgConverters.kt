@@ -96,7 +96,7 @@ class EcosOmgConverters(
     fun <T : Any> export(type: String, element: Any, context: ExportContext): T {
 
         val converter = convertersByType[type] ?: base?.convertersByType?.get(type)
-        ?: error("Type is not registered: $type")
+            ?: error("Type is not registered: $type")
 
         val convertedElement = Json.mapper.convert(element, converter.ecosType)
             ?: error("Conversion failed for $element of type $type and class ${converter.ecosType}")
@@ -146,11 +146,11 @@ class EcosOmgConverters(
 
         val converter = if (!extensionType.isNullOrBlank()) {
             convertersByType[extensionType] ?: base?.convertersByType?.get(extensionType)
-            ?: error("Type is not registered: $extensionType")
+                ?: error("Type is not registered: $extensionType")
         } else {
             val type: Class<*> = item::class.java
             getConverterByOmgType(type) ?: base?.getConverterByOmgType(type)
-            ?: error("Type is not registered: ${item::class.java}")
+                ?: error("Type is not registered: ${item::class.java}")
         }
 
         val ecosData = converter.converter.import(item, context)

@@ -35,11 +35,9 @@ class CamundaMyBatisExtension(
 
         return factory.commandExecutorTxRequired.execute(command)
     }
-
 }
 
 private lateinit var ext: CamundaMyBatisExtension
-
 
 fun HistoryService.getHistoricTasksByIds(ids: List<String>): List<HistoricTaskInstance> {
     return ext.getHistoricTasksByIds(ids)

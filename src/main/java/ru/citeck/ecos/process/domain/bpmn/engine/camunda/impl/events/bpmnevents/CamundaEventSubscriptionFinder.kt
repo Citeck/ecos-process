@@ -45,7 +45,6 @@ class CamundaEventSubscriptionFinder(
                 )
             }
 
-
         /*val allCamundaSubcriptions = camundaRuntimeService.createEventSubscriptionQuery()
             .unlimitedList().forEach { sub ->
                 val procInstanceId = sub.processInstanceId
@@ -57,7 +56,6 @@ class CamundaEventSubscriptionFinder(
 
         return subscriptions
     }
-
 }
 
 data class EventSubscription(
@@ -65,4 +63,3 @@ data class EventSubscription(
     val model: Map<String, String>,
     val predicate: Predicate?
 )
-

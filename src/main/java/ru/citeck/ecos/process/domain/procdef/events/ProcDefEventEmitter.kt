@@ -52,5 +52,4 @@ class ProcDefEventEmitter(
     fun emitProcDefDeployed(event: ProcDefEvent) {
         procDefDeployedEmitter.emit(event)
     }
-
 }

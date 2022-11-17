@@ -32,5 +32,4 @@ class ProcDefRevEntity {
     var prevRev: ProcDefRevEntity? = null
 
     var image: ByteArray? = null
-
 }

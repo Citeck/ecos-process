@@ -22,7 +22,6 @@ data class BpmnSignalEventDef(
 
     val eventModel: Map<String, String> = emptyMap(),
 
-
     val manualSignalName: String? = null
 ) : BpmnAbstractEventDef()
 
