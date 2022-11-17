@@ -18,6 +18,29 @@
         "key": "includeForm2",
         "label": "Форма: Bpmn base form elements",
         "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "ID Процесса",
+          "en": "Process ID"
+        },
+        "key": "processRef",
+        "disabled": true,
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": "ECOS Type",
+        "journalId": "ecos-types",
+        "key": "ecosType",
+        "type": "selectJournal",
+        "input": true,
+        "customPredicateJs": null,
+        "presetFilterPredicatesJs": null,
+        "sortAscending": "asc"
       }
     ],
     "formId": "bpmn-type-bpmn:Participant"
