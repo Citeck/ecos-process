@@ -29,14 +29,16 @@ data class BpmnSignalEventDef(
 val BpmnSignalEventDef.signalName: String
     get() = let {
 
-        if (it.eventManualMode) {
+        val finalEventName = if (it.eventManualMode) {
             if (manualSignalName.isNullOrBlank()) {
                 error("Signal name in mandatory for manual mode of Bpmn Signal")
             }
-            return manualSignalName
+            manualSignalName
+        } else {
+            checkNotNull(eventType) { "Event type is mandatory for Bpmn Signal" }
+            eventType.name
         }
 
-        checkNotNull(eventType) { "Event type is mandatory for Bpmn Signal" }
         checkNotNull(eventFilterByRecordType) { "Event filter by record type is mandatory for Bpmn Signal" }
 
         if (eventFilterByEcosType.isNotEmpty() && eventFilterByRecordType != FilterEventByRecord.ANY) {
@@ -55,7 +57,7 @@ val BpmnSignalEventDef.signalName: String
         }
 
         return ComposedEventName(
-            event = eventType.value,
+            event = finalEventName,
             document = filterByRecord,
             type = eventFilterByEcosType.toString()
         ).toComposedString()

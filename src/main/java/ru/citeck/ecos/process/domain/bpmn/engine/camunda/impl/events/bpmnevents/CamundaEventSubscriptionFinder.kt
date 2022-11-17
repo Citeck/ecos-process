@@ -39,7 +39,7 @@ class CamundaEventSubscriptionFinder(
             }.flatten()
             .map {
                 EventSubscription(
-                    name = it.signalName,
+                    name = ComposedEventName.fromString(it.signalName),
                     model = it.eventModel,
                     predicate = it.eventFilterByPredicate
                 )
@@ -61,7 +61,7 @@ class CamundaEventSubscriptionFinder(
 }
 
 data class EventSubscription(
-    val name: String,
+    val name: ComposedEventName,
     val model: Map<String, String>,
     val predicate: Predicate?
 )

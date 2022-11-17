@@ -30,7 +30,9 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EventSubscription
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
@@ -41,7 +43,6 @@ import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
-import ru.citeck.ecos.process.domain.saveAndDeployBpmnFromResource
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
@@ -1336,7 +1337,7 @@ class BpmnMonsterTest {
         saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
 
         val eventSubscription = EventSubscription(
-            name = "ecos.comment.create;ANY",
+            name = "COMMENT_CREATE;ANY".toComposedEventName(),
             model = mapOf(
                 "keyFoo" to "valueFoo",
                 "keyBar" to "valueBar"
@@ -1376,7 +1377,7 @@ class BpmnMonsterTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "ecos.comment.create;\${execution.businessKey}",
+                name = "COMMENT_CREATE;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
                 predicate = null
             )
@@ -1393,7 +1394,7 @@ class BpmnMonsterTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "ecos.comment.create;\${execution.businessKey}",
+                name = "COMMENT_CREATE;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
                 predicate = null
             )
@@ -1410,7 +1411,7 @@ class BpmnMonsterTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "some-signal",
+                name = "some-signal;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
                 predicate = null
             )
@@ -1427,7 +1428,7 @@ class BpmnMonsterTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "some-signal",
+                name = "some-signal;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
                 predicate = null
             )
@@ -1445,12 +1446,12 @@ class BpmnMonsterTest {
         assertThat(foundSubscription).hasSize(2)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             EventSubscription(
-                name = "start-1",
+                name = "start-1;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
                 predicate = null
             ),
             EventSubscription(
-                name = "start-2",
+                name = "start-2;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
                 predicate = null
             )
@@ -1465,7 +1466,7 @@ class BpmnMonsterTest {
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
         val eventSubscription = EventSubscription(
-            name = "signal-1",
+            name = "signal-1;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
             model = emptyMap(),
             predicate = null
         )
@@ -1473,9 +1474,9 @@ class BpmnMonsterTest {
         assertThat(foundSubscription).hasSize(4)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             eventSubscription,
-            eventSubscription.copy(name = "signal-2"),
-            eventSubscription.copy(name = "signal-3"),
-            eventSubscription.copy(name = "signal-4")
+            eventSubscription.copy(name = "signal-2;ANY".toComposedEventName()),
+            eventSubscription.copy(name = "signal-3;\${$VAR_BUSINESS_KEY}".toComposedEventName()),
+            eventSubscription.copy(name = "signal-4;\${$VAR_BUSINESS_KEY}".toComposedEventName())
         )
     }
 }
@@ -1532,4 +1533,8 @@ private data class NotificationEqualsWrapper(
         result = 31 * result + dto.additionalMeta.hashCode()
         return result
     }
+}
+
+private fun String.toComposedEventName(): ComposedEventName {
+    return ComposedEventName.fromString(this)
 }
