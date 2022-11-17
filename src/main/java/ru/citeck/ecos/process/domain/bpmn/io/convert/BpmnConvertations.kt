@@ -324,7 +324,19 @@ fun TTask.fillEcosTaskDefToOtherAttributes(ecosTaskDef: BpmnAbstractEcosTaskDef)
 }
 
 fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEventDef? {
-    if (eventDefinition.size == 0) {
+    return convertTEventDefinitionToBpmnEventDef(eventDefinition, this, context)
+}
+
+fun TThrowEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEventDef? {
+    return convertTEventDefinitionToBpmnEventDef(eventDefinition, this, context)
+}
+
+private fun convertTEventDefinitionToBpmnEventDef(
+    eventDefinition: List<JAXBElement<out TEventDefinition>>,
+    event: TEvent,
+    context: ImportContext
+): BpmnAbstractEventDef? {
+    if (eventDefinition.isEmpty()) {
         return null
     }
 
@@ -339,7 +351,7 @@ fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEvent
         else -> error("Class $type not supported")
     }
 
-    provideOtherAttsToEventDef(eventDef, this)
+    provideOtherAttsToEventDef(eventDef, event)
 
     return context.converters.import(
         eventDef,
@@ -349,31 +361,44 @@ fun TCatchEvent.convertToBpmnEventDef(context: ImportContext): BpmnAbstractEvent
 }
 
 fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstractEventDef, context: ExportContext) {
+    fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef, this, this.eventDefinition, context)
+}
+
+fun TThrowEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstractEventDef, context: ExportContext) {
+    fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef, this, this.eventDefinition, context)
+}
+
+private fun fillBpmnEventDefPayloadFromBpmnEventDef(
+    bpmnEventDef: BpmnAbstractEventDef,
+    event: TEvent,
+    eventDefinition: MutableList<JAXBElement<out TEventDefinition>>,
+    context: ExportContext
+) {
     when (bpmnEventDef) {
         is BpmnTimerEventDef -> {
-            otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(bpmnEventDef.value))
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_TIME_CONFIG, Json.mapper.toString(bpmnEventDef.value))
         }
 
         is BpmnSignalEventDef -> {
-            otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE] = bpmnEventDef.eventManualMode.toString()
-            otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_SIGNAL_NAME, bpmnEventDef.manualSignalName)
-            otherAttributes.putIfNotBlank(BPMN_PROP_EVENT_TYPE, bpmnEventDef.eventType?.name)
-            otherAttributes.putIfNotBlank(
+            event.otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE] = bpmnEventDef.eventManualMode.toString()
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_SIGNAL_NAME, bpmnEventDef.manualSignalName)
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_EVENT_TYPE, bpmnEventDef.eventType?.name)
+            event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE,
                 bpmnEventDef.eventFilterByRecordType?.name
             )
-            otherAttributes.putIfNotBlank(
+            event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE, bpmnEventDef.eventFilterByEcosType.toString()
             )
-            otherAttributes.putIfNotBlank(
+            event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE,
                 bpmnEventDef.eventFilterByRecordVariable
             )
-            otherAttributes.putIfNotBlank(
+            event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_PREDICATE,
                 Json.mapper.toString(bpmnEventDef.eventFilterByPredicate)
             )
-            otherAttributes.putIfNotBlank(
+            event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_MODEL,
                 Json.mapper.toString(bpmnEventDef.eventModel)
             )
@@ -397,6 +422,24 @@ fun TCatchEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
     jobConfig: JobConfig,
     context: ExportContext
 ) {
+    fillCamundaEventDefPayloadFromBpmnEventDef(bpmnEventDef, this, this.eventDefinition, jobConfig, context)
+}
+
+fun TThrowEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
+    bpmnEventDef: BpmnAbstractEventDef,
+    jobConfig: JobConfig,
+    context: ExportContext
+) {
+    fillCamundaEventDefPayloadFromBpmnEventDef(bpmnEventDef, this, this.eventDefinition, jobConfig, context)
+}
+
+private fun fillCamundaEventDefPayloadFromBpmnEventDef(
+    bpmnEventDef: BpmnAbstractEventDef,
+    event: TEvent,
+    eventDefinition: MutableList<JAXBElement<out TEventDefinition>>,
+    jobConfig: JobConfig,
+    context: ExportContext
+) {
     val typeToTransform = when (val type = bpmnEventDef.javaClass) {
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
         BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
@@ -406,7 +449,7 @@ fun TCatchEvent.fillCamundaEventDefPayloadFromBpmnEventDef(
     val eventDef = context.converters.export(bpmnEventDef, typeToTransform, context)
     eventDefinition.add(context.converters.convertToJaxb(eventDef))
 
-    extensionElements = TExtensionElements().apply {
+    event.extensionElements = TExtensionElements().apply {
         any.addAll(getCamundaJobRetryTimeCycleFieldConfig(jobConfig.jobRetryTimeCycle, context))
     }
 }

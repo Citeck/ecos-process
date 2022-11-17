@@ -12,23 +12,27 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.fillBpmnEventDefPayloadFrom
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnEndEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TEndEvent
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnIntermediateThrowEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TIntermediateThrowEvent
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
-class BpmnEndEventConverter : EcosOmgConverter<BpmnEndEventDef, TEndEvent> {
+/**
+ * @author Roman Makarskiy
+ */
+class BpmnIntermediateThrowEventConverter : EcosOmgConverter<BpmnIntermediateThrowEventDef, TIntermediateThrowEvent> {
 
-    override fun import(element: TEndEvent, context: ImportContext): BpmnEndEventDef {
+    override fun import(element: TIntermediateThrowEvent, context: ImportContext): BpmnIntermediateThrowEventDef {
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
 
-        return BpmnEndEventDef(
+        return BpmnIntermediateThrowEventDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
+            outgoing = element.outgoing.map { it.localPart },
             asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
                 ?: AsyncConfig(),
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
@@ -37,12 +41,13 @@ class BpmnEndEventConverter : EcosOmgConverter<BpmnEndEventDef, TEndEvent> {
         )
     }
 
-    override fun export(element: BpmnEndEventDef, context: ExportContext): TEndEvent {
-        return TEndEvent().apply {
+    override fun export(element: BpmnIntermediateThrowEventDef, context: ExportContext): TIntermediateThrowEvent {
+        return TIntermediateThrowEvent().apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             element.incoming.forEach { incoming.add(QName("", it)) }
+            element.outgoing.forEach { outgoing.add(QName("", it)) }
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 

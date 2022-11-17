@@ -22,6 +22,7 @@ data class BpmnDefinitionDef(
 
     val process: List<BpmnProcessDef>,
     val collaboration: BpmnCollaborationDef?,
+
     val signals: List<BpmnSignalDef>,
     /*val messages: List<BpmnMessageDef>,*/
 

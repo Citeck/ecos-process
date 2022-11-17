@@ -8,6 +8,7 @@ import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
 import org.camunda.bpm.scenario.Scenario.run
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,19 +25,25 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EventSubscription
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
+import ru.citeck.ecos.process.domain.saveAndDeployBpmnFromResource
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -55,6 +62,7 @@ private const val GATEWAY = "gateway"
 private const val SUB_PROCESS = "subprocess"
 private const val SEND_TASK = "sendtask"
 private const val TIMER = "timer"
+private const val SUBSCRIPTION = "subscription"
 
 /**
  * Why all tests places on one monster class?
@@ -80,6 +88,9 @@ class BpmnMonsterTest {
 
     @Autowired
     private lateinit var camundaHistoryService: HistoryService
+
+    @Autowired
+    private lateinit var camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder
 
     @Autowired
     private lateinit var procHistoricTaskService: ProcHistoricTaskService
@@ -142,6 +153,11 @@ class BpmnMonsterTest {
         )
 
         `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
+    }
+
+    @AfterEach
+    fun clearDefinitions() {
+        deleteAllProcDefinitions()
     }
 
     @Test
@@ -1308,7 +1324,162 @@ class BpmnMonsterTest {
 
         verify(process).hasFinished("endEvent")
     }
+
+    // --- BPMN EVENT SUBSCRIPTION FINDER TESTS ---
+
+    @Test
+    fun `find all deployed subscriptions with different versions payload`() {
+        val procId = "test-subscriptions-start-signal-event"
+        val procIdModified = "test-subscriptions-start-signal-event_2"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+
+        val eventSubscription = EventSubscription(
+            name = "ecos.comment.create;ANY",
+            model = mapOf(
+                "keyFoo" to "valueFoo",
+                "keyBar" to "valueBar"
+            ),
+            predicate = Json.mapper.convert(
+                """
+                {
+                    "att": "event.statusBefore",
+                    "val": "approval",
+                    "t": "eq"
+                }
+                    """.trimIndent(), Predicate::class.java
+            )!!
+        )
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+
+        assertThat(foundSubscription).hasSize(2)
+        assertThat(foundSubscription).containsExactlyInAnyOrder(
+            eventSubscription,
+            eventSubscription.copy(
+                model = mapOf(
+                    "keyFoo" to "valueFoo",
+                    "keyBar" to "valueBar2"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `find all deployed subscriptions of signal boundary non inerrupting event with current document`() {
+        val procId = "test-subscriptions-boundary-non-interrupting-signal-events"
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+        assertThat(foundSubscription).hasSize(1)
+
+        assertThat(foundSubscription[0]).isEqualTo(
+            EventSubscription(
+                name = "ecos.comment.create;\${execution.businessKey}",
+                model = emptyMap(),
+                predicate = null
+            )
+        )
+    }
+
+    @Test
+    fun `find all deployed subscriptions of signal boundary event with current document`() {
+        val procId = "test-subscriptions-boundary-signal-events"
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+        assertThat(foundSubscription).hasSize(1)
+
+        assertThat(foundSubscription[0]).isEqualTo(
+            EventSubscription(
+                name = "ecos.comment.create;\${execution.businessKey}",
+                model = emptyMap(),
+                predicate = null
+            )
+        )
+    }
+
+    @Test
+    fun `final all deployed subscriptions of end signal event`() {
+        val procId = "test-subscriptions-end-signal-events"
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+        assertThat(foundSubscription).hasSize(1)
+
+        assertThat(foundSubscription[0]).isEqualTo(
+            EventSubscription(
+                name = "some-signal",
+                model = emptyMap(),
+                predicate = null
+            )
+        )
+    }
+
+    @Test
+    fun `final all deployed subscriptions of throw signal event`() {
+        val procId = "test-subscriptions-throw-signal-events"
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+        assertThat(foundSubscription).hasSize(1)
+
+        assertThat(foundSubscription[0]).isEqualTo(
+            EventSubscription(
+                name = "some-signal",
+                model = emptyMap(),
+                predicate = null
+            )
+        )
+    }
+
+    @Test
+    fun `find all deployed subscriptions of start signal events with event sub process`() {
+        val procId = "test-subscriptions-start-signals-event-subprocess-events"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+
+        assertThat(foundSubscription).hasSize(2)
+        assertThat(foundSubscription).containsExactlyInAnyOrder(
+            EventSubscription(
+                name = "start-1",
+                model = emptyMap(),
+                predicate = null
+            ),
+            EventSubscription(
+                name = "start-2",
+                model = emptyMap(),
+                predicate = null
+            )
+        )
+    }
+
+    @Test
+    fun `find all deployed subscriptions of pool participant with hierarchy sub process`() {
+        val procId = "test-subscriptions-pool-participants-with-hierarchy-subprocess-events"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscription()
+        val eventSubscription = EventSubscription(
+            name = "signal-1",
+            model = emptyMap(),
+            predicate = null
+        )
+
+        assertThat(foundSubscription).hasSize(4)
+        assertThat(foundSubscription).containsExactlyInAnyOrder(
+            eventSubscription,
+            eventSubscription.copy(name = "signal-2"),
+            eventSubscription.copy(name = "signal-3"),
+            eventSubscription.copy(name = "signal-4")
+        )
+    }
 }
+
 
 class PotterRecord(
 

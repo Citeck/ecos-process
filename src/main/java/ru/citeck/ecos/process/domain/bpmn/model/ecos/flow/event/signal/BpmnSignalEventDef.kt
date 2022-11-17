@@ -2,11 +2,10 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal
 
 import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-
-private const val SIGNAL_NAME_MAX_LENGTH = 255
 
 @JsonTypeName("signalEvent")
 data class BpmnSignalEventDef(
@@ -44,7 +43,7 @@ val BpmnSignalEventDef.signalName: String
             error("Event filter by Ecos Type supported only for ANY document")
         }
 
-        val filterByRecord: String = when(eventFilterByRecordType) {
+        val filterByRecord: String = when (eventFilterByRecordType) {
             FilterEventByRecord.ANY -> FilterEventByRecord.ANY.name
             FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
             FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
@@ -55,16 +54,11 @@ val BpmnSignalEventDef.signalName: String
             }
         }
 
-        var result = "${eventType.value}$${filterByRecord}"
-        if (eventFilterByEcosType.isNotEmpty()) {
-            result += "$${eventFilterByEcosType}"
-        }
-
-        if (result.length > SIGNAL_NAME_MAX_LENGTH) {
-            error("Signal name is too long, contact you administrator. Name: $result")
-        }
-
-        return result;
+        return ComposedEventName(
+            event = eventType.value,
+            document = filterByRecord,
+            type = eventFilterByEcosType.toString()
+        ).toComposedString()
     }
 
 enum class EventType(val value: String) {

@@ -9,25 +9,30 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_ASYNC_BEFOR
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_JOB_PRIORITY
 import ru.citeck.ecos.process.domain.bpmn.io.convert.fillCamundaEventDefPayloadFromBpmnEventDef
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnEndEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TEndEvent
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnIntermediateThrowEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TIntermediateThrowEvent
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
-class CamundaEndEventConverter : EcosOmgConverter<BpmnEndEventDef, TEndEvent> {
+/**
+ * @author Roman Makarskiy
+ */
+class CamundaIntermediateThrowEventConverter :
+    EcosOmgConverter<BpmnIntermediateThrowEventDef, TIntermediateThrowEvent> {
 
-    override fun import(element: TEndEvent, context: ImportContext): BpmnEndEventDef {
+    override fun import(element: TIntermediateThrowEvent, context: ImportContext): BpmnIntermediateThrowEventDef {
         error("Not supported")
     }
 
-    override fun export(element: BpmnEndEventDef, context: ExportContext): TEndEvent {
-        return TEndEvent().apply {
+    override fun export(element: BpmnIntermediateThrowEventDef, context: ExportContext): TIntermediateThrowEvent {
+        return TIntermediateThrowEvent().apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             element.incoming.forEach { incoming.add(QName("", it)) }
+            element.outgoing.forEach { outgoing.add(QName("", it)) }
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 

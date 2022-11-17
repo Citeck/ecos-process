@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="test-subscriptions-boundary-signal-events" ecos:ecosType="emodel/type@type-ecos-fin-request">
+    <bpmn:process isExecutable="true" id="test-subscriptions-boundary-signal-events">
+        <bpmn:sequenceFlow sourceRef="startEvent" targetRef="Activity_0wn7c7x" name="" id="Flow_0tdo8j8" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;// some script;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:startEvent isInterrupting="true" name="" id="startEvent" ecos:eventFilterByRecordType="ANY" ecos:eventModel="{&quot;keyFoo&quot;:&quot;valueFoo&quot;,&quot;keyBar&quot;:&quot;valueBar2&quot;}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="false" ecos:eventType="COMMENT_CREATE" ecos:eventFilterByPredicate="{&quot;att&quot;:&quot;event.statusBefore&quot;,&quot;val&quot;:&quot;approval&quot;,&quot;t&quot;:&quot;eq&quot;}">
+            <bpmn:outgoing >Flow_0tdo8j8</bpmn:outgoing>
+            <bpmn:signalEventDefinition  signalRef="Signal_VSf58RM" id="SignalEventDefinition_18bj1du"/>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="Activity_0wn7c7x" targetRef="Event_1qdr4ml" name="" id="Flow_181u5aj" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:scriptTask scriptFormat="javascript" name="script" id="Activity_0wn7c7x" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;script&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="var comment = Records.get(event.rec)&#10;var created = comment.load(&quot;cm:created&quot;) &#10; &#10; print(&quot;-------&quot;)&#10; print(&quot;new comment: &quot; + event.textAfter)&#10; print(&quot;comment rec: &quot; + event.rec)&#10; print(&quot;comment created at: &quot; + created)&#10;print(&quot;-------&quot;)">
+            <bpmn:incoming >Flow_0tdo8j8</bpmn:incoming>
+            <bpmn:outgoing >Flow_181u5aj</bpmn:outgoing>
+            <bpmn:script>var comment = Records.get(event.rec)
+var created = comment.load("cm:created")
+
+ print("-------")
+ print("new comment2: " + event.textAfter)
+ print("comment rec: " + event.rec)
+ print("comment created at: " + created)
+print("-------")</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:endEvent name="" id="Event_1qdr4ml" ecos:name_ml="{}">
+            <bpmn:incoming >Flow_181u5aj</bpmn:incoming>
+        </bpmn:endEvent>
+    </bpmn:process>
+    <bpmn:signal name="ecos.comment.create;ANY" id="Signal_VSf58RM"/>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="test-subscriptions-boundary-signal-events" id="BPMNPlane_1">
+            <bpmndi:BPMNEdge bpmnElement="Flow_181u5aj" id="Flow_181u5aj_di">
+                <di:waypoint x="420.0" y="110.0"/>
+                <di:waypoint x="542.0" y="110.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0tdo8j8" id="Flow_0tdo8j8_di">
+                <di:waypoint x="188.0" y="110.0"/>
+                <di:waypoint x="320.0" y="110.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="startEvent" isExpanded="true" id="Event_0t8zcfj_di">
+                <dc:Bounds x="152.0" y="92.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_0wn7c7x" isExpanded="true" id="Activity_0an3pcj_di">
+                <dc:Bounds x="320.0" y="70.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_1qdr4ml" isExpanded="true" id="Event_0dna3mo_di">
+                <dc:Bounds x="542.0" y="92.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

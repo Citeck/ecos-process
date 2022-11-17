@@ -10,4 +10,6 @@ interface ProcDefRevRepository : MongoRepository<ProcDefRevEntity, EntityUuid> {
     fun findAllByProcessDef(procDef: ProcDefEntity): List<ProcDefRevEntity>
 
     fun findByDeploymentId(deploymentId: String): ProcDefRevEntity?
+
+    fun queryAllByDeploymentIdIsNotNull(): List<ProcDefRevEntity>
 }

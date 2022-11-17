@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="test-subscriptions-throw-signal-events" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="test-subscriptions-throw-signal-events">
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_1ew9rff" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_0ii2jqg</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:endEvent name="" id="Event_02y6ewj" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_0tczfvx</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="Event_0kj2k5c" name="" id="Flow_0ii2jqg" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Event_0kj2k5c" targetRef="Event_02y6ewj" name="" id="Flow_0tczfvx" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:intermediateThrowEvent name="" id="Event_0kj2k5c" ecos:manualSignalName="some-signal" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
+            <bpmn:incoming >Flow_0ii2jqg</bpmn:incoming>
+            <bpmn:outgoing >Flow_0tczfvx</bpmn:outgoing>
+            <bpmn:signalEventDefinition  signalRef="Signal_ZMVKqJN" id="SignalEventDefinition_0ozx40m"/>
+        </bpmn:intermediateThrowEvent>
+    </bpmn:process>
+    <bpmn:signal name="some-signal" id="Signal_ZMVKqJN"/>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="test-subscriptions-throw-signal-events" id="BPMNPlane_1">
+            <bpmndi:BPMNEdge bpmnElement="Flow_0ii2jqg" id="Flow_0ii2jqg_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="242.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0tczfvx" id="Flow_0tczfvx_di">
+                <di:waypoint x="278.0" y="99.0"/>
+                <di:waypoint x="352.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="StartEvent_1ew9rff" isExpanded="true" id="_BPMNShape_StartEvent_2">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_02y6ewj" isExpanded="true" id="Event_02y6ewj_di">
+                <dc:Bounds x="352.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0kj2k5c" isExpanded="true" id="Event_020wt2b_di">
+                <dc:Bounds x="242.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

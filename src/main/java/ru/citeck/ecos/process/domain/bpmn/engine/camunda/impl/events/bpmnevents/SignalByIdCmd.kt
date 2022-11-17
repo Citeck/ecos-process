@@ -7,6 +7,7 @@ import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
 
+//TODO: rewrite
 class SignalByIdCmd : Command<Unit> {
 
 

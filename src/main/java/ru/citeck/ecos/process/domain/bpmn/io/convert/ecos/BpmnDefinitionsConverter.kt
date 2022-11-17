@@ -6,6 +6,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnCollaborationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.signal.BpmnSignalDef
@@ -136,10 +137,11 @@ private data class RootElements(
 )
 
 private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
-    return this.bpmnSignalNames.map { signalName ->
+    return this.bpmnSignalEventDef.map {
         BpmnSignalDef(
             id = generateElementId("Signal"),
-            name = signalName
+            name = it.signalName,
+            eventDef = it
         )
     }
         .toList()

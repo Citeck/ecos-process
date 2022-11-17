@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="test-subscriptions-boundary-signal-events" ecos:ecosType="emodel/type@type-ecos-fin-request">
+    <bpmn:process isExecutable="true" id="test-subscriptions-boundary-signal-events">
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_1ew9rff" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_0m5qza0</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="userTask" name="" id="Flow_0m5qza0" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:userTask name="" id="userTask" ecos:documentation="{}" ecos:manualRecipients="[&quot;admin&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;Done&quot;}}]" ecos:name_ml="{}" ecos:formRef="uiserv/form@meet_issue" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">
+            <bpmn:incoming >Flow_0m5qza0</bpmn:incoming>
+            <bpmn:outgoing >Flow_165s9hy</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent name="" id="Event_1h2x5d2" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_165s9hy</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow sourceRef="userTask" targetRef="Event_1h2x5d2" name="" id="Flow_165s9hy" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Event_14j280n" targetRef="Activity_0drp7bc" name="" id="Flow_0rmfnsb" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:scriptTask scriptFormat="javascript" name="" id="Activity_0drp7bc" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script=" //some script">
+            <bpmn:incoming >Flow_0rmfnsb</bpmn:incoming>
+            <bpmn:script> //some script</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:boundaryEvent  cancelActivity="true" attachedToRef="userTask" name="" id="Event_14j280n" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="false" ecos:eventType="COMMENT_CREATE">
+            <bpmn:outgoing>Flow_0rmfnsb</bpmn:outgoing>
+            <bpmn:signalEventDefinition signalRef="Signal_WBdiDbX" id="SignalEventDefinition_1wckdz3"/>
+        </bpmn:boundaryEvent>
+    </bpmn:process>
+    <bpmn:signal name="ecos.comment.create;${execution.businessKey}" id="Signal_WBdiDbX"/>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="test-subscriptions-boundary-signal-events" id="BPMNPlane_1">
+            <bpmndi:BPMNEdge bpmnElement="Flow_0rmfnsb" id="Flow_0rmfnsb_di">
+                <di:waypoint x="320.0" y="178.0"/>
+                <di:waypoint x="320.0" y="240.0"/>
+                <di:waypoint x="390.0" y="240.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_165s9hy" id="Flow_165s9hy_di">
+                <di:waypoint x="370.0" y="120.0"/>
+                <di:waypoint x="492.0" y="120.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0m5qza0" id="Flow_0m5qza0_di">
+                <di:waypoint x="192.0" y="120.0"/>
+                <di:waypoint x="270.0" y="120.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="StartEvent_1ew9rff" isExpanded="true" id="_BPMNShape_StartEvent_2">
+                <dc:Bounds x="156.0" y="102.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="userTask" isExpanded="true" id="userTask_di">
+                <dc:Bounds x="270.0" y="80.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_1h2x5d2" isExpanded="true" id="Event_1h2x5d2_di">
+                <dc:Bounds x="492.0" y="102.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_0drp7bc" isExpanded="true" id="Activity_17v2z67_di">
+                <dc:Bounds x="390.0" y="200.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_14j280n" isExpanded="true" id="Event_1jdpemc_di">
+                <dc:Bounds x="302.0" y="142.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

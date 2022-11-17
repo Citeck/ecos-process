@@ -9,6 +9,8 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -24,7 +26,9 @@ private val typeRef = TypeUtils.getTypeRef("type0")
  */
 @Component
 class BpmnProcHelper(
-    val recordsService: RecordsService
+    val recordsService: RecordsService,
+    val procDefRepo: ProcDefRepository,
+    val procDefRevRepo: ProcDefRevRepository,
 ) {
     @PostConstruct
     private fun init() {
@@ -71,4 +75,9 @@ fun saveAndDeployBpmn(elementFolder: String, id: String) {
         "test/bpmn/elements/$elementFolder/$id.bpmn.xml",
         id
     )
+}
+
+fun deleteAllProcDefinitions() {
+    helper.procDefRevRepo.deleteAll()
+    helper.procDefRepo.deleteAll()
 }
