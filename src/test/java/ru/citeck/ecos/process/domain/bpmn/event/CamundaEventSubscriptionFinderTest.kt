@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -59,8 +59,8 @@ class CamundaEventSubscriptionFinderTest {
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
 
-        Assertions.assertThat(foundSubscription).hasSize(2)
-        Assertions.assertThat(foundSubscription).containsExactlyInAnyOrder(
+        assertThat(foundSubscription).hasSize(2)
+        assertThat(foundSubscription).containsExactlyInAnyOrder(
             eventSubscription,
             eventSubscription.copy(
                 model = mapOf(
@@ -77,9 +77,9 @@ class CamundaEventSubscriptionFinderTest {
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
-        Assertions.assertThat(foundSubscription).hasSize(1)
+        assertThat(foundSubscription).hasSize(1)
 
-        Assertions.assertThat(foundSubscription[0]).isEqualTo(
+        assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 name = "COMMENT_CREATE;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
@@ -93,9 +93,9 @@ class CamundaEventSubscriptionFinderTest {
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
-        Assertions.assertThat(foundSubscription).hasSize(1)
+        assertThat(foundSubscription).hasSize(1)
 
-        Assertions.assertThat(foundSubscription[0]).isEqualTo(
+        assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 name = "COMMENT_CREATE;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap()
@@ -109,9 +109,9 @@ class CamundaEventSubscriptionFinderTest {
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
-        Assertions.assertThat(foundSubscription).hasSize(1)
+        assertThat(foundSubscription).hasSize(1)
 
-        Assertions.assertThat(foundSubscription[0]).isEqualTo(
+        assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 name = "some-signal;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap()
@@ -125,9 +125,9 @@ class CamundaEventSubscriptionFinderTest {
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
-        Assertions.assertThat(foundSubscription).hasSize(1)
+        assertThat(foundSubscription).hasSize(1)
 
-        Assertions.assertThat(foundSubscription[0]).isEqualTo(
+        assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 name = "some-signal;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap()
@@ -143,8 +143,8 @@ class CamundaEventSubscriptionFinderTest {
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
 
-        Assertions.assertThat(foundSubscription).hasSize(2)
-        Assertions.assertThat(foundSubscription).containsExactlyInAnyOrder(
+        assertThat(foundSubscription).hasSize(2)
+        assertThat(foundSubscription).containsExactlyInAnyOrder(
             EventSubscription(
                 name = "start-1;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
@@ -169,8 +169,8 @@ class CamundaEventSubscriptionFinderTest {
             predicate = null
         )
 
-        Assertions.assertThat(foundSubscription).hasSize(4)
-        Assertions.assertThat(foundSubscription).containsExactlyInAnyOrder(
+        assertThat(foundSubscription).hasSize(4)
+        assertThat(foundSubscription).containsExactlyInAnyOrder(
             eventSubscription,
             eventSubscription.copy(name = "signal-2;ANY".toComposedEventName()),
             eventSubscription.copy(name = "signal-3;\${$VAR_BUSINESS_KEY}".toComposedEventName()),
