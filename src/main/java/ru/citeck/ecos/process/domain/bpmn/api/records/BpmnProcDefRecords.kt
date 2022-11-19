@@ -17,6 +17,7 @@ import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.BpmnEventSubscriptionService
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
@@ -58,7 +59,8 @@ class BpmnProcDefRecords(
     private val webAppsApi: EcosWebAppsApi,
     private val recordPermsService: RecordPermsService,
     private val roleService: RoleService,
-    private val procDefEventEmitter: ProcDefEventEmitter
+    private val procDefEventEmitter: ProcDefEventEmitter,
+    private val bpmnEventSubscriptionService: BpmnEventSubscriptionService
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -417,6 +419,8 @@ class BpmnProcDefRecords(
         }
 
         if (record.action == BpmnProcDefActions.DEPLOY.toString()) {
+            // TODO: move to separate service
+
             val camundaFormat = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
@@ -426,15 +430,17 @@ class BpmnProcDefRecords(
                 .source("Ecos Modeler")
                 .deployWithResult()
 
-            log.debug { "Camunda deploy result: $deployResult" }
-
             procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
+            bpmnEventSubscriptionService.addSubscriptionsForDefRev(procDefResult.revisionId)
+
             procDefEventEmitter.emitProcDefDeployed(
                 ProcDefEvent(
                     procDefRef = recordRef,
                     version = procDefResult.version.toDouble().inc()
                 )
             )
+
+            log.debug { "Camunda deploy result: $deployResult" }
         }
 
         return record.processDefId

@@ -149,13 +149,19 @@ class ProcDefServiceImpl(
         return procDefToDto(currentProcDef)
     }
 
-    private fun createEvent(procType: String, id: String, version: Double, createdFromVersion: EntityRef): ProcDefEvent {
+    private fun createEvent(
+        procType: String,
+        id: String,
+        version: Double,
+        createdFromVersion: EntityRef
+    ): ProcDefEvent {
         return ProcDefEvent(
             procDefRef = when (procType) {
                 BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BpmnProcDefRecords.SOURCE_ID, id)
                 CmmnProcDefRecords.CMMN_PROC_TYPE -> {
                     RecordRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
                 }
+
                 else -> throw IllegalArgumentException("Unknown proc type: $procType")
             },
             version = version,
@@ -388,6 +394,10 @@ class ProcDefServiceImpl(
         }
 
         return processDef?.let { procDefRevToDto(it.lastRev!!) }
+    }
+
+    override fun findAllRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto> {
+        return procDefRevRepo.queryAllByDeploymentIdIsNotNull().map { procDefRevToDto(it) }
     }
 
     override fun delete(ref: ProcDefRef) {

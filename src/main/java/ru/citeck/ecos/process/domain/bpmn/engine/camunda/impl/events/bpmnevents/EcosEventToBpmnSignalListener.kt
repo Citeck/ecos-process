@@ -5,7 +5,6 @@ import org.camunda.bpm.engine.impl.interceptor.CommandExecutor
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_EVENT
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -18,7 +17,7 @@ class EcosEventToBpmnSignalListener(
 ) {
 
     init {
-        eventsService.addListener<CommentEvent> {
+        /*eventsService.addListener<CommentEvent> {
             withEventType(EventType.COMMENT_CREATE.value)
             withDataClass(CommentEvent::class.java)
             withAction { event -> fireSignals(EventType.COMMENT_CREATE.value, event, event.toData()) }
@@ -34,7 +33,7 @@ class EcosEventToBpmnSignalListener(
             withEventType(EventType.COMMENT_DELETE.value)
             withDataClass(CommentEvent::class.java)
             withAction { event -> fireSignals(EventType.COMMENT_DELETE.value, event, event.toData()) }
-        }
+        }*/
     }
 
     private fun fireSignals(eventType: String, eventData: CommentEvent, recordData: RecordData) {
