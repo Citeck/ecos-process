@@ -19,6 +19,8 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportCo
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
+private const val SIGNAL_PREFIX = "Signal"
+
 class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinitions> {
 
     override fun import(element: TDefinitions, context: ImportContext): BpmnDefinitionDef {
@@ -47,6 +49,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             process = processes,
             collaboration = collaboration,
             signals = context.generateSignalsFromDefs(),
+            signalsEventDefsMeta = context.bpmnSignalEventDefs,
             /*messages = emptyList(),*/
             exporter = element.exporter,
             exporterVersion = element.exporterVersion,
@@ -138,14 +141,16 @@ private data class RootElements(
 )
 
 private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
-    return this.bpmnSignalEventDef.map {
-        BpmnSignalDef(
-            id = generateElementId("Signal"),
-            name = it.signalName,
-            eventDef = it
-        )
+    return this.bpmnSignalEventDefs.map {
+        it.signalName
     }
-        .toList()
+        .distinct()
+        .map {
+            BpmnSignalDef(
+                id = generateElementId(SIGNAL_PREFIX),
+                name = it
+            )
+        }
 }
 
 private fun generateElementId(prefix: String): String {

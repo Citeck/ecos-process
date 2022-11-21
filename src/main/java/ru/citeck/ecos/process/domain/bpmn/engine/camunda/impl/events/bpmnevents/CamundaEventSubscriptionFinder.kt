@@ -80,9 +80,7 @@ class CamundaEventSubscriptionFinder(
             ?: error("Deployed definition cannot be empty")
 
         return try {
-            BpmnIO.importEcosBpmn(defXml).signals.map {
-                it.eventDef
-            }
+            BpmnIO.importEcosBpmn(defXml).signalsEventDefsMeta
         } catch (e: Exception) {
             log.debug(e) { "Cannot parse definition: ${this.id}" }
 

@@ -53,11 +53,17 @@ class BpmnEventSubscriptionService(
                 // TODO: At current implementation we just re-registered listener.
                 // In future we can just update model - https://citeck.atlassian.net/browse/ECOSENT-2452.
 
+                val currentAtts = listeners[eventName]!!.first.attributes
+                val concatenatedAttsSubscription = subscription.copy(attributes = currentAtts + attributes)
+
                 listeners[eventName]?.second?.remove()
                 listeners.remove(eventName)
 
-                addListener(subscription)
-                log.info { "Update BPMN Ecos Event Subscription Event: $eventName, atts: $attributes" }
+                addListener(concatenatedAttsSubscription)
+                log.info {
+                    "Update BPMN Ecos Event Subscription Event: $eventName, " +
+                        "atts: ${concatenatedAttsSubscription.attributes}"
+                }
             } else {
                 addListener(subscription)
                 log.info { "Register new BPMN Ecos Event Subscription Event: $eventName, atts: $attributes" }

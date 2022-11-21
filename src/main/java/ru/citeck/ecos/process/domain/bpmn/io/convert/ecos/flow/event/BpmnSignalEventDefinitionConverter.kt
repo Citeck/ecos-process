@@ -59,7 +59,7 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
             } ?: emptyMap()
         )
 
-        context.bpmnSignalEventDef.add(signal)
+        context.bpmnSignalEventDefs.add(signal)
 
         return signal
     }

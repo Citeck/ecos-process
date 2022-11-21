@@ -30,18 +30,20 @@ val BpmnSignalEventDef.signalName: String
 
         val finalEventName = if (it.eventManualMode) {
             if (manualSignalName.isNullOrBlank()) {
-                error("Signal name in mandatory for manual mode of Bpmn Signal")
+                error("Signal name in mandatory for manual mode of Bpmn Signal. Id: ${it.id}")
             }
             manualSignalName
         } else {
-            checkNotNull(eventType) { "Event type is mandatory for Bpmn Signal" }
+            checkNotNull(eventType) { "Event type is mandatory for Bpmn Signal. Id: ${it.id}" }
             eventType.name
         }
 
-        checkNotNull(eventFilterByRecordType) { "Event filter by record type is mandatory for Bpmn Signal" }
+        checkNotNull(eventFilterByRecordType) {
+            "Event filter by record type is mandatory for Bpmn Signal. Id: ${it.id}"
+        }
 
         if (eventFilterByEcosType.isNotEmpty() && eventFilterByRecordType != FilterEventByRecord.ANY) {
-            error("Event filter by Ecos Type supported only for ANY document")
+            error("Event filter by Ecos Type supported only for ANY document. Id: ${it.id}")
         }
 
         val filterByRecord: String = when (eventFilterByRecordType) {
@@ -49,7 +51,7 @@ val BpmnSignalEventDef.signalName: String
             FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
             FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
                 if (eventFilterByRecordVariable.isNullOrBlank()) {
-                    error("Document variable is mandatory for filtering event by document")
+                    error("Document variable is mandatory for filtering event by document. Id: ${it.id}")
                 }
                 "\${$eventFilterByRecordVariable}"
             }

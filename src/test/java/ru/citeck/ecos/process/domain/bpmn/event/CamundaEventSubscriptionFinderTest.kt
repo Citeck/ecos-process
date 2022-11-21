@@ -17,7 +17,7 @@ import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
-private const val SUBSCRIPTION = "subscription"
+const val SUBSCRIPTION = "subscription"
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
