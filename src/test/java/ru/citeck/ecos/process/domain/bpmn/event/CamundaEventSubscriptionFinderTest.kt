@@ -1,20 +1,18 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
+import com.hazelcast.core.HazelcastInstance
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EventSubscription
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
-import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 const val SUBSCRIPTION = "subscription"
@@ -26,9 +24,31 @@ class CamundaEventSubscriptionFinderTest {
     @Autowired
     private lateinit var camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder
 
+    @Autowired
+    private lateinit var hazelCast: HazelcastInstance
+
     @AfterEach
-    fun clearDefinitions() {
+    fun clearSubscriptions() {
         deleteAllProcDefinitions()
+    }
+
+    @Test
+    fun `call find all deployed subscriptions should warmup cache`() {
+        val procId = "test-subscriptions-start-signal-event"
+        val procIdModified = "test-subscriptions-start-signal-event_2"
+
+        val cache = hazelCast.getMap<String, EventSubscription>(
+            BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME
+        )
+        cache.clear()
+
+        assertThat(cache).hasSize(0)
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+        camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+
+        assertThat(cache).hasSize(2)
     }
 
     @Test
@@ -40,21 +60,21 @@ class CamundaEventSubscriptionFinderTest {
         saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
 
         val eventSubscription = EventSubscription(
-            name = "COMMENT_CREATE;ANY".toComposedEventName(),
+            name = ComposedEventName(
+                event = EventType.COMMENT_CREATE.value,
+                document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
+            ),
             model = mapOf(
                 "keyFoo" to "valueFoo",
                 "keyBar" to "valueBar"
             ),
-            predicate = Json.mapper.convert(
-                """
+            predicate = """
                 {
                     "att": "event.statusBefore",
                     "val": "approval",
                     "t": "eq"
                 }
-                """.trimIndent(),
-                Predicate::class.java
-            )!!
+                """.trimIndent()
         )
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
@@ -72,7 +92,7 @@ class CamundaEventSubscriptionFinderTest {
     }
 
     @Test
-    fun `find all deployed subscriptions of signal boundary non inerrupting event with current document`() {
+    fun `find all deployed subscriptions of signal boundary non interrupting event with current document`() {
         val procId = "test-subscriptions-boundary-non-interrupting-signal-events"
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
@@ -81,7 +101,7 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "COMMENT_CREATE;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                name = "${EventType.COMMENT_CREATE.value};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -97,7 +117,7 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "COMMENT_CREATE;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                name = "${EventType.COMMENT_CREATE.value};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap()
             )
         )

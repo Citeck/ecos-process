@@ -330,6 +330,10 @@ class ProcDefServiceImpl(
         return result
     }
 
+    override fun getProcessDefRevByDeploymentId(deploymentId: String): ProcDefRevDto? {
+        return procDefRevRepo.findByDeploymentId(deploymentId)?.let { procDefRevToDto(it) }
+    }
+
     override fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto? {
         val currentTenant = tenantService.getCurrent()
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, id.type, id.id)
@@ -396,7 +400,7 @@ class ProcDefServiceImpl(
         return processDef?.let { procDefRevToDto(it.lastRev!!) }
     }
 
-    override fun findAllRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto> {
+    override fun findAllProcessRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto> {
         return procDefRevRepo.queryAllByDeploymentIdIsNotNull().map { procDefRevToDto(it) }
     }
 

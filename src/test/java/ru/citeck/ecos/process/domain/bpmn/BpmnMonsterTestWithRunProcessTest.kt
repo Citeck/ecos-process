@@ -1,13 +1,16 @@
 package ru.citeck.ecos.process.domain.bpmn
 
+import com.hazelcast.core.HazelcastInstance
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
+import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
 import org.camunda.bpm.scenario.Scenario.run
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -23,17 +26,23 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.cache.CacheManager
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
+import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
@@ -41,7 +50,9 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -68,7 +79,7 @@ private const val TIMER = "timer"
  */
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-class BpmnMonsterTest {
+class BpmnMonsterTestWithRunProcessTest {
 
     @Autowired
     private lateinit var taskService: TaskService
@@ -84,6 +95,9 @@ class BpmnMonsterTest {
 
     @Autowired
     private lateinit var camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder
+
+    @Autowired
+    private lateinit var camundaMyBatisExtension: CamundaMyBatisExtension
 
     @Autowired
     private lateinit var procHistoricTaskService: ProcHistoricTaskService
@@ -146,6 +160,12 @@ class BpmnMonsterTest {
         )
 
         `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
+    }
+
+    @AfterEach
+    fun clearSubscriptions() {
+        deleteAllProcDefinitions()
+        camundaMyBatisExtension.deleteAllEventSubscriptions()
     }
 
     @Test
@@ -1311,6 +1331,224 @@ class BpmnMonsterTest {
         assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
 
         verify(process).hasFinished("endEvent")
+    }
+
+    // --- CamundaEventSubscriptionFinder TESTS ---
+
+    @Test
+    fun `get actual camunda subscriptions of 2 different process with start event`() {
+        val procId = "test-subscriptions-start-signal-event"
+        val procIdModified = "test-subscriptions-start-signal-event_2"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            IncomingEventData(name = "ecos.comment.create")
+        ).map { it.event }
+
+        val eventSubscription = EventSubscription(
+            name = ComposedEventName(
+                event = EventType.COMMENT_CREATE.value,
+                document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
+            ),
+            model = mapOf(
+                "keyFoo" to "valueFoo",
+                "keyBar" to "valueBar"
+            ),
+            predicate = """
+                {
+                    "att": "event.statusBefore",
+                    "val": "approval",
+                    "t": "eq"
+                }
+                """.trimIndent()
+        )
+
+        assertThat(foundSubscriptions).hasSize(2)
+        assertThat(foundSubscriptions).containsExactlyInAnyOrder(
+            eventSubscription,
+            eventSubscription.copy(
+                model = mapOf(
+                    "keyFoo" to "valueFoo",
+                    "keyBar" to "valueBar2"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `get actual camunda subscriptions of 2 versions process with start event - start event should be last version`() {
+        val procId = "test-subscriptions-start-signal-event"
+        val procIdVersion2 = "test-subscriptions-start-signal-event-version_2"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        saveAndDeployBpmn(SUBSCRIPTION, procIdVersion2)
+
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            IncomingEventData(name = "ecos.comment.create")
+        ).map { it.event }
+
+        assertThat(foundSubscriptions).hasSize(1)
+        assertThat(foundSubscriptions).containsExactlyInAnyOrder(
+            EventSubscription(
+                name = ComposedEventName(
+                    event = EventType.COMMENT_CREATE.value,
+                    document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
+                ),
+                model = mapOf(
+                    "keyFoo2" to "valueFoo2",
+                    "keyBar" to "valueBar"
+                ),
+                predicate = """
+                {
+                    "att": "event.statusBefore",
+                    "val": "approval2",
+                    "t": "eq"
+                }
+                """.trimIndent()
+            )
+        )
+    }
+
+    @Test
+    fun `get actual camunda subscriptions of boundary event`() {
+        val procId = "test-subscriptions-event-boundary"
+        val document = "doc@1"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            IncomingEventData(name = "ecos.comment.create")
+        ).map { it.event }
+
+        assertThat(foundSubscriptions).isEmpty()
+
+        `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+                IncomingEventData(
+                    name = "ecos.comment.create",
+                    document = EntityRef.valueOf(document)
+                )
+            ).map { it.event }
+
+            assertThat(subscriptionWhenTaskRun).hasSize(1)
+            assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
+                EventSubscription(
+                    name = ComposedEventName(
+                        event = EventType.COMMENT_CREATE.value,
+                        document = "\${$VAR_BUSINESS_KEY}"
+                    ),
+                    model = mapOf(
+                        "foo" to "bar",
+                        "key" to "value"
+                    ),
+                    predicate = """
+                {
+                    "att": "event.statusBefore",
+                    "val": "approval",
+                    "t": "eq"
+                }
+                """.trimIndent()
+                )
+            )
+
+            task.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            document,
+            mapOf(
+                "documentRef" to document
+            )
+        ).execute()
+
+        val subscriptionWhenTaskComplete = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            IncomingEventData(name = "ecos.comment.create")
+        ).map { it.event }
+
+        assertThat(subscriptionWhenTaskComplete).hasSize(0)
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `get actual camunda subscriptions of boundary event parallel process`() {
+        val procId = "test-subscriptions-event-boundary-parallel"
+        val document = "doc@1"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            IncomingEventData(name = "ecos.comment.create")
+        ).map { it.event }
+
+        assertThat(foundSubscriptions).isEmpty()
+
+        val eventComment = EventSubscription(
+            name = ComposedEventName(
+                event = EventType.COMMENT_CREATE.value,
+                document = "\${$VAR_BUSINESS_KEY}"
+            ),
+            model = mapOf(
+                "foo" to "bar",
+                "key" to "value"
+            ),
+            predicate = """
+                {
+                    "att": "event.statusBefore",
+                    "val": "approval",
+                    "t": "eq"
+                }
+                """.trimIndent()
+        )
+        val eventManual = EventSubscription(
+            name = ComposedEventName(
+                event = "manual-event",
+                document = COMPOSED_EVENT_NAME_DOCUMENT_ANY,
+                type = "emodel/type@hr-person"
+            ),
+            model = emptyMap()
+        )
+
+        `when`(process.waitsAtUserTask("task_1")).thenReturn {
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+                IncomingEventData(
+                    name = "ecos.comment.create",
+                    document = EntityRef.valueOf(document)
+                )
+            ).map { it.event }
+
+            assertThat(subscriptionWhenTaskRun).hasSize(2)
+            assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
+                eventComment,
+                eventManual
+            )
+        }
+
+        `when`(process.waitsAtUserTask("task_2")).thenReturn {
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+                IncomingEventData(
+                    name = "ecos.comment.create",
+                    document = EntityRef.valueOf(document)
+                )
+            ).map { it.event }
+
+            assertThat(subscriptionWhenTaskRun).hasSize(2)
+            assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
+                eventComment,
+                eventManual
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            document,
+            mapOf(
+                "documentRef" to document
+            )
+        ).execute()
     }
 }
 

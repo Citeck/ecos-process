@@ -33,9 +33,11 @@ interface ProcDefService {
 
     fun getProcessDefRevs(ref: ProcDefRef): List<ProcDefRevDto>
 
+    fun getProcessDefRevByDeploymentId(deploymentId: String): ProcDefRevDto?
+
     fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto?
 
-    fun findAllRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto>
+    fun findAllProcessRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto>
 
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?
 

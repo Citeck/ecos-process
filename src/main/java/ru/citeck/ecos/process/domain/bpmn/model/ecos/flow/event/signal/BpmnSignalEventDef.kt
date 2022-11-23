@@ -35,7 +35,7 @@ val BpmnSignalEventDef.signalName: String
             manualSignalName
         } else {
             checkNotNull(eventType) { "Event type is mandatory for Bpmn Signal. Id: ${it.id}" }
-            eventType.name
+            EventType.valueOf(eventType.name).value
         }
 
         checkNotNull(eventFilterByRecordType) {

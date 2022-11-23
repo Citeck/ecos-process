@@ -1,5 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
+import java.io.Serializable
+
 const val COMPOSED_EVENT_NAME_DOCUMENT_ANY = "ANY"
 const val COMPOSED_EVENT_NAME_MAX_LENGTH = 255
 
@@ -15,7 +17,7 @@ data class ComposedEventName(
     val event: String,
     val document: String,
     val type: String? = null
-) {
+) : Serializable {
 
     init {
         require(event.isNotEmpty()) { "Event cannot be empty: $this" }
@@ -34,6 +36,8 @@ data class ComposedEventName(
     }
 
     companion object {
+        private const val serialVersionUID = 1L
+
         fun fromString(composedEventName: String): ComposedEventName {
             val parts = composedEventName.split(DELIMITER)
             return when (parts.size) {

@@ -14,7 +14,7 @@ import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-class BpmnEventSubscriptionServiceTest {
+class UpdateEventSubscriptionsListenerModelTest {
 
     @Autowired
     private lateinit var eventsService: EventsService

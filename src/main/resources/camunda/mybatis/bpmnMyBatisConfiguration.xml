@@ -8,5 +8,6 @@
     </settings>
     <mappers>
         <mapper resource="camunda/mybatis/bpmnHistoricTaskMapper.xml"/>
+        <mapper resource="camunda/mybatis/bpmnEventSubscriptionMapper.xml"/>
     </mappers>
 </configuration>

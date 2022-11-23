@@ -1,9 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services
 
 import org.camunda.bpm.engine.HistoryService
+import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.impl.interceptor.Command
+import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis.BpmnMyBatisExtendedSessionFactory
 import javax.annotation.PostConstruct
@@ -35,10 +37,36 @@ class CamundaMyBatisExtension(
 
         return factory.commandExecutorTxRequired.execute(command)
     }
+
+    internal fun getEventSubscriptionsByEventNames(eventNames: List<String>): List<EventSubscriptionEntity> {
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "eventSubscriptionEventNames" to eventNames
+            )
+            it.dbSqlSession.selectList(
+                "selectEventSubscriptionsByEventNames",
+                params
+            ) as List<EventSubscriptionEntity>
+        }
+
+        return factory.commandExecutorTxRequired.execute(command)
+    }
+
+    fun deleteAllEventSubscriptions() {
+        val command = Command {
+            it.dbSqlSession.sqlSession.update("truncateEventSubscriptions")
+        }
+
+        factory.commandExecutorTxRequired.execute(command)
+    }
 }
 
 private lateinit var ext: CamundaMyBatisExtension
 
 fun HistoryService.getHistoricTasksByIds(ids: List<String>): List<HistoricTaskInstance> {
     return ext.getHistoricTasksByIds(ids)
+}
+
+fun RuntimeService.getEventSubscriptionsByEventNames(eventNames: List<String>): List<EventSubscriptionEntity> {
+    return ext.getEventSubscriptionsByEventNames(eventNames)
 }
