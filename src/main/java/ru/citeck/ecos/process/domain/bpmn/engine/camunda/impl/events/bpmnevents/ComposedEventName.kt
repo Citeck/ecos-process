@@ -9,7 +9,7 @@ private const val DELIMITER = ";"
 
 /**
  * Composed event name is a string that contains [event], [document] and [type] separated by [DELIMITER].
- * Example: comment.added;ANY;emodel/type@doc
+ * Example: COMMENT_CREATE;ANY;emodel/type@doc
  *
  * @author Roman Makarskiy
  */

@@ -61,7 +61,7 @@ class CamundaEventSubscriptionFinderTest {
 
         val eventSubscription = EventSubscription(
             name = ComposedEventName(
-                event = EventType.COMMENT_CREATE.value,
+                event = EventType.COMMENT_CREATE.name,
                 document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
             ),
             model = mapOf(
@@ -74,7 +74,7 @@ class CamundaEventSubscriptionFinderTest {
                     "val": "approval",
                     "t": "eq"
                 }
-                """.trimIndent()
+            """.trimIndent()
         )
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
@@ -101,7 +101,7 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "${EventType.COMMENT_CREATE.value};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                name = "${EventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -117,7 +117,7 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "${EventType.COMMENT_CREATE.value};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                name = "${EventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap()
             )
         )

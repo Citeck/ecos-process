@@ -9,7 +9,5 @@ class CamundaEventProcessor {
     fun processEvent(event: ObjectData) {
 
         println("Received event: \n$event")
-
     }
-
 }

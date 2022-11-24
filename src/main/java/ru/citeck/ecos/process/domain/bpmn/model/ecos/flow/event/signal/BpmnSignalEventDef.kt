@@ -34,8 +34,7 @@ val BpmnSignalEventDef.signalName: String
             }
             manualSignalName
         } else {
-            checkNotNull(eventType) { "Event type is mandatory for Bpmn Signal. Id: ${it.id}" }
-            EventType.valueOf(eventType.name).value
+            eventType?.name ?: error("Event type is mandatory for Bpmn Signal. Id: ${it.id}")
         }
 
         checkNotNull(eventFilterByRecordType) {
@@ -64,10 +63,17 @@ val BpmnSignalEventDef.signalName: String
         ).toComposedString()
     }
 
-enum class EventType(val value: String) {
-    COMMENT_CREATE("ecos.comment.create"),
-    COMMENT_UPDATE("ecos.comment.update"),
-    COMMENT_DELETE("ecos.comment.delete");
+enum class EventType(val availableEventNames: List<String>) {
+    UNDEFINED(emptyList()),
+    COMMENT_CREATE(listOf("ecos.comment.create", "comment-create")),
+    COMMENT_UPDATE(listOf("ecos.comment.update", "comment-update")),
+    COMMENT_DELETE(listOf("ecos.comment.delete", "comment-delete"));
+
+    companion object {
+        fun from(value: String): EventType = values().find { it.availableEventNames.contains(value) } ?: let {
+            EventType.values().find { it.name == value } ?: UNDEFINED
+        }
+    }
 }
 
 enum class FilterEventByRecord {

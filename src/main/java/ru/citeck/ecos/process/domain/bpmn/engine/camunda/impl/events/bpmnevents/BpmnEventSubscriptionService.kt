@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import java.util.*
 import javax.annotation.PostConstruct
 
@@ -19,7 +20,7 @@ class BpmnEventSubscriptionService(
         private val log = KotlinLogging.logger {}
     }
 
-    private val listeners = mutableMapOf<String, Pair<CombinedEventSubscription, ListenerHandle>>()
+    private val listeners = mutableMapOf<String, Pair<CombinedEventSubscription, List<ListenerHandle>>>()
 
     @PostConstruct
     fun initListeners() {
@@ -57,17 +58,16 @@ class BpmnEventSubscriptionService(
                 val currentAtts = listeners[eventName]!!.first.attributes
                 val concatenatedAttsSubscription = subscription.copy(attributes = currentAtts + attributes)
 
-                listeners[eventName]?.second?.remove()
+                listeners[eventName]?.second?.forEach { it.remove() }
                 listeners.remove(eventName)
 
-                addListener(concatenatedAttsSubscription)
-                log.info {
-                    "Update BPMN Ecos Event Subscription Event: $eventName, " +
-                        "atts: ${concatenatedAttsSubscription.attributes}"
+                log.debug {
+                    "Update BPMN Ecos Event Subscription Event: $eventName"
                 }
+                addListener(concatenatedAttsSubscription)
             } else {
+                log.debug { "Register new BPMN Ecos Event Subscription Event: $eventName" }
                 addListener(subscription)
-                log.info { "Register new BPMN Ecos Event Subscription Event: $eventName, atts: $attributes" }
             }
         }
     }
@@ -75,16 +75,32 @@ class BpmnEventSubscriptionService(
     private fun addListener(subscription: CombinedEventSubscription) {
         val (eventName, attributes) = subscription
 
-        val listener = eventsService.addListener<ObjectData> {
-            withDataClass(ObjectData::class.java)
-            withEventType(eventName)
-            withAttributes(attributes.associateBy { it })
-            withAction { event ->
-                camundaEventProcessor.processEvent(event)
+        val listenerEventNames = let {
+            val eventType = EventType.from(eventName)
+            if (eventType == EventType.UNDEFINED) {
+                listOf(eventName)
+            } else {
+                eventType.availableEventNames
             }
         }
 
-        listeners[eventName] = subscription to listener
+        log.debug {
+            "BPMN Ecos Events Subscription <$eventName> add listeners to EventsService with " +
+                "eventTypes: $listenerEventNames, atts: $attributes"
+        }
+
+        val addedListeners = listenerEventNames.map { listenerEventName ->
+            eventsService.addListener<ObjectData> {
+                withDataClass(ObjectData::class.java)
+                withEventType(listenerEventName)
+                withAttributes(attributes.associateBy { it })
+                withAction { event ->
+                    camundaEventProcessor.processEvent(event)
+                }
+            }
+        }
+
+        listeners[eventName] = subscription to addedListeners
     }
 
     private fun requireUpdateExistingListener(newSubscription: CombinedEventSubscription): Boolean {

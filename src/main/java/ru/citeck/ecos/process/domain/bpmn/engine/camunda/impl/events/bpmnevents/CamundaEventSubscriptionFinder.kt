@@ -41,7 +41,6 @@ class CamundaEventSubscriptionFinder(
         return eventDefsOfDeploymentId.values.flatten()
     }
 
-
     fun getActualCamundaSubscriptionsByEventName(eventData: IncomingEventData): List<CamundaEventSubscription> {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
             .map { it.toComposedString() }
@@ -140,7 +139,7 @@ data class EventSubscription(
     val name: ComposedEventName,
     val model: Map<String, String>,
 
-    //store predicates as string for Hazelcast serialization
+    // store predicates as string for Hazelcast serialization
     val predicate: String? = null
 ) : Serializable {
     companion object {
@@ -164,9 +163,7 @@ data class EventSubscription(
         result = 31 * result + (predicate?.hashCode() ?: 0)
         return result
     }
-
 }
-
 
 data class CamundaEventSubscription(
     val id: String,

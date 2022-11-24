@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn
 
-import com.hazelcast.core.HazelcastInstance
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.HistoryService
@@ -26,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.cache.CacheManager
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
@@ -52,7 +50,6 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -1349,7 +1346,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         val eventSubscription = EventSubscription(
             name = ComposedEventName(
-                event = EventType.COMMENT_CREATE.value,
+                event = EventType.COMMENT_CREATE.name,
                 document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
             ),
             model = mapOf(
@@ -1362,7 +1359,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     "val": "approval",
                     "t": "eq"
                 }
-                """.trimIndent()
+            """.trimIndent()
         )
 
         assertThat(foundSubscriptions).hasSize(2)
@@ -1393,7 +1390,7 @@ class BpmnMonsterTestWithRunProcessTest {
         assertThat(foundSubscriptions).containsExactlyInAnyOrder(
             EventSubscription(
                 name = ComposedEventName(
-                    event = EventType.COMMENT_CREATE.value,
+                    event = EventType.COMMENT_CREATE.name,
                     document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
                 ),
                 model = mapOf(
@@ -1436,7 +1433,7 @@ class BpmnMonsterTestWithRunProcessTest {
             assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
                 EventSubscription(
                     name = ComposedEventName(
-                        event = EventType.COMMENT_CREATE.value,
+                        event = EventType.COMMENT_CREATE.name,
                         document = "\${$VAR_BUSINESS_KEY}"
                     ),
                     model = mapOf(
@@ -1449,7 +1446,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     "val": "approval",
                     "t": "eq"
                 }
-                """.trimIndent()
+                    """.trimIndent()
                 )
             )
 
@@ -1488,7 +1485,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         val eventComment = EventSubscription(
             name = ComposedEventName(
-                event = EventType.COMMENT_CREATE.value,
+                event = EventType.COMMENT_CREATE.name,
                 document = "\${$VAR_BUSINESS_KEY}"
             ),
             model = mapOf(
@@ -1501,7 +1498,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     "val": "approval",
                     "t": "eq"
                 }
-                """.trimIndent()
+            """.trimIndent()
         )
         val eventManual = EventSubscription(
             name = ComposedEventName(

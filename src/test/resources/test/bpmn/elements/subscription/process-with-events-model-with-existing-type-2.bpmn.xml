@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="process-with-events-model-with-existing-type-2" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="process-with-events-model-with-existing-type-2">
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_1ew9rff" ecos:manualSignalName="signal-name-ex1" ecos:eventFilterByRecordType="ANY" ecos:eventModel="{&quot;key2&quot;:&quot;value2_1&quot;}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
+            <bpmn:outgoing >Flow_0906ju9</bpmn:outgoing>
+            <bpmn:signalEventDefinition  signalRef="Signal_tMz8JQ6" id="SignalEventDefinition_140o9jn"/>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="Activity_1jrkfr7" name="" id="Flow_0906ju9" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;// some script;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:scriptTask scriptFormat="javascript" name="" id="Activity_1jrkfr7" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script=" //some script">
+            <bpmn:incoming >Flow_0906ju9</bpmn:incoming>
+            <bpmn:outgoing >Flow_0bvzgvw</bpmn:outgoing>
+            <bpmn:script> //some script</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:sequenceFlow sourceRef="Activity_1jrkfr7" targetRef="Event_0fht5s3" name="" id="Flow_0bvzgvw" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:boundaryEvent  cancelActivity="true" attachedToRef="Activity_1jrkfr7" name="" id="Event_0fc8lly" ecos:manualSignalName="signal-name-ex2" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{&quot;commentKey3&quot;:&quot;commentValue3_2&quot;,&quot;commentKey4&quot;:&quot;commentValue4_1&quot;,&quot;commentKey5&quot;:&quot;commentValue5&quot;}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="false" ecos:eventType="COMMENT_CREATE">
+            <bpmn:signalEventDefinition signalRef="Signal_wIobrXF" id="SignalEventDefinition_06a2cd9"/>
+        </bpmn:boundaryEvent>
+        <bpmn:endEvent name="" id="Event_00oew5c" ecos:manualSignalName="signal-name-ex1" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
+            <bpmn:incoming >Flow_0j7hg4k</bpmn:incoming>
+            <bpmn:signalEventDefinition  signalRef="Signal_nxOIa3G" id="SignalEventDefinition_0btpcwx"/>
+        </bpmn:endEvent>
+        <bpmn:intermediateCatchEvent name="" id="Event_0fht5s3" ecos:manualSignalName="signal-name-3" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{&quot;commentKey1&quot;:&quot;commentValue1&quot;}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="false" ecos:eventType="COMMENT_CREATE">
+            <bpmn:incoming >Flow_0bvzgvw</bpmn:incoming>
+            <bpmn:outgoing >Flow_0j7hg4k</bpmn:outgoing>
+            <bpmn:signalEventDefinition  signalRef="Signal_wIobrXF" id="SignalEventDefinition_0og64a6"/>
+        </bpmn:intermediateCatchEvent>
+        <bpmn:sequenceFlow sourceRef="Event_0fht5s3" targetRef="Event_00oew5c" name="" id="Flow_0j7hg4k" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+    </bpmn:process>
+    <bpmn:signal name="signal-name-ex1;ANY" id="Signal_tMz8JQ6"/>
+    <bpmn:signal name="COMMENT_CREATE;${execution.businessKey}" id="Signal_wIobrXF"/>
+    <bpmn:signal name="signal-name-ex1;${execution.businessKey}" id="Signal_nxOIa3G"/>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="process-with-events-model-with-existing-type-2" id="process-with-events-model-with-existing-type-2_di">
+            <bpmndi:BPMNShape bpmnElement="StartEvent_1ew9rff" isExpanded="true" id="Event_1j7rgbs_di">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_1jrkfr7" isExpanded="true" id="Activity_1r7cdu8_di">
+                <dc:Bounds x="250.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_00oew5c" isExpanded="true" id="Event_1xl5d7f_di">
+                <dc:Bounds x="512.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0fht5s3" isExpanded="true" id="Event_0eso393_di">
+                <dc:Bounds x="412.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0fc8lly" isExpanded="true" id="Event_0xvjm8f_di">
+                <dc:Bounds x="292.0" y="121.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0906ju9" id="Flow_0906ju9_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="250.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0bvzgvw" id="Flow_0bvzgvw_di">
+                <di:waypoint x="350.0" y="99.0"/>
+                <di:waypoint x="412.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0j7hg4k" id="Flow_0j7hg4k_di">
+                <di:waypoint x="448.0" y="99.0"/>
+                <di:waypoint x="512.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>
