@@ -12,7 +12,7 @@ import javax.annotation.PostConstruct
 class BpmnEventSubscriptionService(
     private val camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder,
     private val eventsService: EventsService,
-    private val camundaEventExploder: CamundaEventExploder
+    private val camundaEventProcessor: CamundaEventProcessor
 ) {
 
     companion object {
@@ -80,7 +80,7 @@ class BpmnEventSubscriptionService(
             withEventType(eventName)
             withAttributes(attributes.associateBy { it })
             withAction { event ->
-                camundaEventExploder.fireEvent(event)
+                camundaEventProcessor.processEvent(event)
             }
         }
 
