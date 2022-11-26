@@ -4,7 +4,6 @@ import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
-import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
@@ -38,7 +37,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusS
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
@@ -1340,14 +1338,14 @@ class BpmnMonsterTestWithRunProcessTest {
         saveAndDeployBpmn(SUBSCRIPTION, procId)
         saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
 
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
-            IncomingEventData(name = "ecos.comment.create")
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(eventName = "ecos.comment.create")
         ).map { it.event }
 
         val eventSubscription = EventSubscription(
             name = ComposedEventName(
-                event = EventType.COMMENT_CREATE.name,
-                document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
+                event = EcosEventType.COMMENT_CREATE.name,
+                record = ComposedEventName.RECORD_ANY
             ),
             model = mapOf(
                 "keyFoo" to "valueFoo",
@@ -1382,16 +1380,16 @@ class BpmnMonsterTestWithRunProcessTest {
         saveAndDeployBpmn(SUBSCRIPTION, procId)
         saveAndDeployBpmn(SUBSCRIPTION, procIdVersion2)
 
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
-            IncomingEventData(name = "ecos.comment.create")
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(eventName = "ecos.comment.create")
         ).map { it.event }
 
         assertThat(foundSubscriptions).hasSize(1)
         assertThat(foundSubscriptions).containsExactlyInAnyOrder(
             EventSubscription(
                 name = ComposedEventName(
-                    event = EventType.COMMENT_CREATE.name,
-                    document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
+                    event = EcosEventType.COMMENT_CREATE.name,
+                    record = ComposedEventName.RECORD_ANY
                 ),
                 model = mapOf(
                     "keyFoo2" to "valueFoo2",
@@ -1415,17 +1413,17 @@ class BpmnMonsterTestWithRunProcessTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
-            IncomingEventData(name = "ecos.comment.create")
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(eventName = "ecos.comment.create")
         ).map { it.event }
 
         assertThat(foundSubscriptions).isEmpty()
 
         `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
-            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
                 IncomingEventData(
-                    name = "ecos.comment.create",
-                    document = EntityRef.valueOf(document)
+                    eventName = "ecos.comment.create",
+                    record = EntityRef.valueOf(document)
                 )
             ).map { it.event }
 
@@ -1433,8 +1431,8 @@ class BpmnMonsterTestWithRunProcessTest {
             assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
                 EventSubscription(
                     name = ComposedEventName(
-                        event = EventType.COMMENT_CREATE.name,
-                        document = "\${$VAR_BUSINESS_KEY}"
+                        event = EcosEventType.COMMENT_CREATE.name,
+                        record = "\${$VAR_BUSINESS_KEY}"
                     ),
                     model = mapOf(
                         "foo" to "bar",
@@ -1461,8 +1459,8 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).execute()
 
-        val subscriptionWhenTaskComplete = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
-            IncomingEventData(name = "ecos.comment.create")
+        val subscriptionWhenTaskComplete = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(eventName = "ecos.comment.create")
         ).map { it.event }
 
         assertThat(subscriptionWhenTaskComplete).hasSize(0)
@@ -1477,16 +1475,16 @@ class BpmnMonsterTestWithRunProcessTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
-            IncomingEventData(name = "ecos.comment.create")
+        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(eventName = "ecos.comment.create")
         ).map { it.event }
 
         assertThat(foundSubscriptions).isEmpty()
 
         val eventComment = EventSubscription(
             name = ComposedEventName(
-                event = EventType.COMMENT_CREATE.name,
-                document = "\${$VAR_BUSINESS_KEY}"
+                event = EcosEventType.COMMENT_CREATE.name,
+                record = "\${$VAR_BUSINESS_KEY}"
             ),
             model = mapOf(
                 "foo" to "bar",
@@ -1503,17 +1501,17 @@ class BpmnMonsterTestWithRunProcessTest {
         val eventManual = EventSubscription(
             name = ComposedEventName(
                 event = "manual-event",
-                document = COMPOSED_EVENT_NAME_DOCUMENT_ANY,
+                record = ComposedEventName.RECORD_ANY,
                 type = "emodel/type@hr-person"
             ),
             model = emptyMap()
         )
 
         `when`(process.waitsAtUserTask("task_1")).thenReturn {
-            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
                 IncomingEventData(
-                    name = "ecos.comment.create",
-                    document = EntityRef.valueOf(document)
+                    eventName = "ecos.comment.create",
+                    record = EntityRef.valueOf(document)
                 )
             ).map { it.event }
 
@@ -1525,10 +1523,10 @@ class BpmnMonsterTestWithRunProcessTest {
         }
 
         `when`(process.waitsAtUserTask("task_2")).thenReturn {
-            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptionsByEventName(
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
                 IncomingEventData(
-                    name = "ecos.comment.create",
-                    document = EntityRef.valueOf(document)
+                    eventName = "ecos.comment.create",
+                    record = EntityRef.valueOf(document)
                 )
             ).map { it.event }
 

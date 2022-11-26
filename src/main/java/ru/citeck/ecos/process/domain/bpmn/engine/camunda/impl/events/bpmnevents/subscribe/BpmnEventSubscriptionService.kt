@@ -1,11 +1,14 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventProcessor
+import java.time.Instant
 import java.util.*
 import javax.annotation.PostConstruct
 
@@ -76,8 +79,8 @@ class BpmnEventSubscriptionService(
         val (eventName, attributes) = subscription
 
         val listenerEventNames = let {
-            val eventType = EventType.from(eventName)
-            if (eventType == EventType.UNDEFINED) {
+            val eventType = EcosEventType.from(eventName)
+            if (eventType == EcosEventType.UNDEFINED) {
                 listOf(eventName)
             } else {
                 eventType.availableEventNames
@@ -95,7 +98,8 @@ class BpmnEventSubscriptionService(
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
                 withAction { event ->
-                    camundaEventProcessor.processEvent(event)
+                    log.trace { "Receive event: $event" }
+                    camundaEventProcessor.processEvent(event.toGeneralEvent())
                 }
             }
         }
@@ -113,3 +117,56 @@ class BpmnEventSubscriptionService(
         return !existingSubscription.attributes.containsAll(newSubscription.attributes)
     }
 }
+
+private fun ObjectData.toGeneralEvent(): GeneralEvent {
+
+    lateinit var id: String
+    lateinit var time: Instant
+    lateinit var type: String
+    lateinit var user: String
+    val attributes = mutableMapOf<String, DataValue>()
+
+    this.forEach { att, dataValue ->
+        when (att) {
+            "\$event.id" -> id = dataValue.textValue()
+            "\$event.time" -> time = dataValue.getAsInstant()!!
+            "\$event.type" -> type = dataValue.textValue()
+            "\$event.user" -> user = dataValue.textValue()
+            else -> attributes[att] = dataValue
+        }
+    }
+
+    require(id.isNotBlank()) { "Event id is blank" }
+    require(type.isNotBlank()) { "Event type is blank" }
+    require(user.isNotBlank()) { "Event user is blank" }
+
+    val record = resolveRecord(this)
+
+    return GeneralEvent(id, record, time, type, user, attributes)
+}
+
+private fun resolveRecord(event: ObjectData): String? {
+    val type = event["\$event.type"].textValue()
+
+    val ecosEventType = EcosEventType.from(type)
+    if (ecosEventType != EcosEventType.UNDEFINED) {
+        ecosEventType.attsForFindRecord.forEach { att ->
+            val recordValue = event[att].textValue()
+            if (recordValue.isNotBlank()) {
+                return recordValue
+            }
+        }
+    } else {
+        return event["record"].textValue()
+    }
+    return null
+}
+
+data class GeneralEvent(
+    val id: String,
+    val record: String? = null,
+    val time: Instant,
+    val type: String,
+    val user: String,
+    val attributes: Map<String, DataValue>
+)

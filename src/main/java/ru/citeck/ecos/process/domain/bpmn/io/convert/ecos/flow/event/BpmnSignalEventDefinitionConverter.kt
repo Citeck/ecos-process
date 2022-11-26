@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event
 
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.FilterEventByRecord
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignalEventDefinition
@@ -28,7 +28,7 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
                 error("Event type is not specified: ${element.id}")
             }
 
-            EventType.valueOf(eventTypeAttr)
+            EcosEventType.valueOf(eventTypeAttr)
         }
 
         val signal = BpmnSignalEventDef(

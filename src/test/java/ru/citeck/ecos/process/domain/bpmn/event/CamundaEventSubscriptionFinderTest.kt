@@ -10,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -61,8 +60,8 @@ class CamundaEventSubscriptionFinderTest {
 
         val eventSubscription = EventSubscription(
             name = ComposedEventName(
-                event = EventType.COMMENT_CREATE.name,
-                document = COMPOSED_EVENT_NAME_DOCUMENT_ANY
+                event = EcosEventType.COMMENT_CREATE.name,
+                record = ComposedEventName.RECORD_ANY
             ),
             model = mapOf(
                 "keyFoo" to "valueFoo",
@@ -101,7 +100,7 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "${EventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -117,7 +116,7 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "${EventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
                 model = emptyMap()
             )
         )

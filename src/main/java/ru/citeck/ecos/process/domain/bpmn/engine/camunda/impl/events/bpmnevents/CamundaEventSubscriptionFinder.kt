@@ -41,7 +41,7 @@ class CamundaEventSubscriptionFinder(
         return eventDefsOfDeploymentId.values.flatten()
     }
 
-    fun getActualCamundaSubscriptionsByEventName(eventData: IncomingEventData): List<CamundaEventSubscription> {
+    fun getActualCamundaSubscriptions(eventData: IncomingEventData): List<CamundaEventSubscription> {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
             .map { it.toComposedString() }
 

@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object ComposedEventNameGenerator {
@@ -8,14 +7,14 @@ object ComposedEventNameGenerator {
     fun generateFromIncomingEcosEvent(
         event: IncomingEventData
     ): List<ComposedEventName> {
-        if (event.name.isBlank()) {
+        if (event.eventName.isBlank()) {
             return emptyList()
         }
 
         val composedName = let {
-            val foundEventType = EventType.from(event.name)
-            if (foundEventType == EventType.UNDEFINED) {
-                event.name
+            val foundEventType = EcosEventType.from(event.eventName)
+            if (foundEventType == EcosEventType.UNDEFINED) {
+                event.eventName
             } else {
                 foundEventType.name
             }
@@ -23,16 +22,16 @@ object ComposedEventNameGenerator {
 
         val result = mutableListOf<ComposedEventName>()
 
-        result.add(ComposedEventName(composedName, COMPOSED_EVENT_NAME_DOCUMENT_ANY))
+        result.add(ComposedEventName(composedName, ComposedEventName.RECORD_ANY))
 
-        if (event.type != EntityRef.EMPTY) {
-            result.add(ComposedEventName(composedName, COMPOSED_EVENT_NAME_DOCUMENT_ANY, event.type.toString()))
+        if (event.recordType != EntityRef.EMPTY) {
+            result.add(ComposedEventName(composedName, ComposedEventName.RECORD_ANY, event.recordType.toString()))
         }
 
-        if (event.document != EntityRef.EMPTY) {
-            result.add(ComposedEventName(composedName, event.document.toString()))
-            if (event.type != EntityRef.EMPTY) {
-                result.add(ComposedEventName(composedName, event.document.toString(), event.type.toString()))
+        if (event.record != EntityRef.EMPTY) {
+            result.add(ComposedEventName(composedName, event.record.toString()))
+            if (event.recordType != EntityRef.EMPTY) {
+                result.add(ComposedEventName(composedName, event.record.toString(), event.recordType.toString()))
             }
         }
 
@@ -41,7 +40,7 @@ object ComposedEventNameGenerator {
 }
 
 data class IncomingEventData(
-    val name: String,
-    val document: EntityRef = EntityRef.EMPTY,
-    val type: EntityRef = EntityRef.EMPTY
+    val eventName: String,
+    val record: EntityRef = EntityRef.EMPTY,
+    val recordType: EntityRef = EntityRef.EMPTY
 )

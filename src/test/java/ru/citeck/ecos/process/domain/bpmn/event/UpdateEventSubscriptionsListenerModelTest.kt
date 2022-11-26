@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.EventType
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -39,30 +39,43 @@ class UpdateEventSubscriptionsListenerModelTest {
         saveAndDeployBpmn(SUBSCRIPTION, processModel)
         val firstDeployListeners = eventsService.getListeners()
 
-        assertThat(firstDeployListeners["signal-name-a1"]!!.attributes).containsExactlyInAnyOrder("value1", "value2")
-        assertThat(firstDeployListeners["signal-name-a2"]!!.attributes).containsExactlyInAnyOrder(
-            "value3",
-            "value4",
-            "value3_1"
+        assertThat(firstDeployListeners["signal-name-a1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf(
+                "value1",
+                "value2"
+            ).addDefaultEventAtts()
+        )
+        assertThat(firstDeployListeners["signal-name-a2"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf(
+                "value3",
+                "value4",
+                "value3_1"
+            ).addDefaultEventAtts()
         )
 
         saveAndDeployBpmn(SUBSCRIPTION, processModel2)
         val secondDeployListeners = eventsService.getListeners()
 
-        assertThat(secondDeployListeners["signal-name-a1"]!!.attributes).containsExactlyInAnyOrder(
-            "value1",
-            "value2",
-            "value2_1"
+        assertThat(secondDeployListeners["signal-name-a1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf(
+                "value1",
+                "value2",
+                "value2_1"
+            ).addDefaultEventAtts()
         )
-        assertThat(secondDeployListeners["signal-name-a2"]!!.attributes).containsExactlyInAnyOrder(
-            "value3",
-            "value4",
-            "value3_1",
-            "value3_2",
-            "value4_1",
-            "value5"
+        assertThat(secondDeployListeners["signal-name-a2"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf(
+                "value3",
+                "value4",
+                "value3_1",
+                "value3_2",
+                "value4_1",
+                "value5"
+            ).addDefaultEventAtts()
         )
-        assertThat(secondDeployListeners["signal-name-a3"]!!.attributes).containsExactlyInAnyOrder("value1")
+        assertThat(secondDeployListeners["signal-name-a3"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf("value1").addDefaultEventAtts()
+        )
     }
 
     @Test
@@ -73,34 +86,42 @@ class UpdateEventSubscriptionsListenerModelTest {
         saveAndDeployBpmn(SUBSCRIPTION, processModel)
         val firstDeployListeners = eventsService.getListeners()
 
-        assertThat(firstDeployListeners["signal-name-ex1"]!!.attributes).containsExactlyInAnyOrder("value1", "value2")
+        assertThat(firstDeployListeners["signal-name-ex1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf("value1", "value2").addDefaultEventAtts()
+        )
 
-        EventType.COMMENT_CREATE.availableEventNames.forEach { eventName ->
-            assertThat(firstDeployListeners[eventName]!!.attributes).containsExactlyInAnyOrder(
-                "commentValue1",
-                "commentValue1_1",
-                "commentValue2",
-                "commentValue3"
+        EcosEventType.COMMENT_CREATE.availableEventNames.forEach { eventName ->
+            assertThat(firstDeployListeners[eventName]!!.attributes).containsExactlyInAnyOrderElementsOf(
+                listOf(
+                    "commentValue1",
+                    "commentValue1_1",
+                    "commentValue2",
+                    "commentValue3"
+                ).addDefaultEventAtts()
             )
         }
 
         saveAndDeployBpmn(SUBSCRIPTION, processModel2)
         val secondDeployListeners = eventsService.getListeners()
 
-        assertThat(secondDeployListeners["signal-name-ex1"]!!.attributes).containsExactlyInAnyOrder(
-            "value1",
-            "value2",
-            "value2_1"
+        assertThat(secondDeployListeners["signal-name-ex1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
+            listOf(
+                "value1",
+                "value2",
+                "value2_1"
+            ).addDefaultEventAtts()
         )
-        EventType.COMMENT_CREATE.availableEventNames.forEach { eventName ->
-            assertThat(secondDeployListeners[eventName]!!.attributes).containsExactlyInAnyOrder(
-                "commentValue1",
-                "commentValue1_1",
-                "commentValue2",
-                "commentValue3",
-                "commentValue3_2",
-                "commentValue4_1",
-                "commentValue5"
+        EcosEventType.COMMENT_CREATE.availableEventNames.forEach { eventName ->
+            assertThat(secondDeployListeners[eventName]!!.attributes).containsExactlyInAnyOrderElementsOf(
+                listOf(
+                    "commentValue1",
+                    "commentValue1_1",
+                    "commentValue2",
+                    "commentValue3",
+                    "commentValue3_2",
+                    "commentValue4_1",
+                    "commentValue5"
+                ).addDefaultEventAtts()
             )
         }
     }

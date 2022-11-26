@@ -2,9 +2,17 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
 object EventSubscriptionCombiner {
 
+    val DEFAULT_ATTS = listOf(
+        "\$event.id",
+        "\$event.time",
+        "\$event.type",
+        "\$event.user"
+    )
+
     /**
      * Combine subscriptions with same event name.
      * Model will be merged by values.
+     * Default models added specified by event name.
      */
     fun combine(subscriptions: List<EventSubscription>): List<CombinedEventSubscription> {
 
@@ -17,10 +25,15 @@ object EventSubscriptionCombiner {
             mapping.computeIfAbsent(eventName) { mutableSetOf() }.addAll(values)
         }
 
-        return mapping.map { (eventName, values) ->
+        // TODO: add default atts to mode, add default atts by event name?
+
+        return mapping.map { (eventName, atts) ->
+
+            atts.addAll(DEFAULT_ATTS)
+
             CombinedEventSubscription(
                 eventName = eventName,
-                attributes = values
+                attributes = atts
             )
         }
     }

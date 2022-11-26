@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal
 import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -13,7 +14,7 @@ data class BpmnSignalEventDef(
 
     val eventManualMode: Boolean = false,
 
-    val eventType: EventType? = null,
+    val eventType: EcosEventType? = null,
 
     val eventFilterByRecordType: FilterEventByRecord? = null,
     val eventFilterByEcosType: EntityRef = EntityRef.EMPTY,
@@ -58,23 +59,11 @@ val BpmnSignalEventDef.signalName: String
 
         return ComposedEventName(
             event = finalEventName,
-            document = filterByRecord,
+            record = filterByRecord,
             type = eventFilterByEcosType.toString()
         ).toComposedString()
     }
 
-enum class EventType(val availableEventNames: List<String>) {
-    UNDEFINED(emptyList()),
-    COMMENT_CREATE(listOf("ecos.comment.create", "comment-create")),
-    COMMENT_UPDATE(listOf("ecos.comment.update", "comment-update")),
-    COMMENT_DELETE(listOf("ecos.comment.delete", "comment-delete"));
-
-    companion object {
-        fun from(value: String): EventType = values().find { it.availableEventNames.contains(value) } ?: let {
-            EventType.values().find { it.name == value } ?: UNDEFINED
-        }
-    }
-}
 
 enum class FilterEventByRecord {
     ANY, DOCUMENT, DOCUMENT_BY_VARIABLE

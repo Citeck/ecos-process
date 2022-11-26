@@ -2,29 +2,27 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
 import java.io.Serializable
 
-const val COMPOSED_EVENT_NAME_DOCUMENT_ANY = "ANY"
-const val COMPOSED_EVENT_NAME_MAX_LENGTH = 255
-
+private const val COMPOSED_EVENT_NAME_MAX_LENGTH = 255
 private const val DELIMITER = ";"
 
 /**
- * Composed event name is a string that contains [event], [document] and [type] separated by [DELIMITER].
+ * Composed event name is a string that contains [event], [record] and [type] separated by [DELIMITER].
  * Example: COMMENT_CREATE;ANY;emodel/type@doc
  *
  * @author Roman Makarskiy
  */
 data class ComposedEventName(
     val event: String,
-    val document: String,
+    val record: String,
     val type: String? = null
 ) : Serializable {
 
     init {
         require(event.isNotEmpty()) { "Event cannot be empty: $this" }
-        require(document.isNotEmpty()) { "Document cannot be empty: $this" }
+        require(record.isNotEmpty()) { "Record cannot be empty: $this" }
 
         require(event.contains(DELIMITER).not()) { "Event cannot contain delimiter: $this" }
-        require(document.contains(DELIMITER).not()) { "Document cannot contain delimiter: $this" }
+        require(record.contains(DELIMITER).not()) { "Record cannot contain delimiter: $this" }
 
         type?.contains(DELIMITER)?.let { require(it.not()) { "Type cannot contain delimiter: $this" } }
 
@@ -36,6 +34,8 @@ data class ComposedEventName(
     }
 
     companion object {
+        const val RECORD_ANY = "ANY"
+
         private const val serialVersionUID = 1L
 
         fun fromString(composedEventName: String): ComposedEventName {
@@ -49,7 +49,7 @@ data class ComposedEventName(
     }
 
     fun toComposedString(): String {
-        val parts: MutableList<String> = mutableListOf(event, document)
+        val parts: MutableList<String> = mutableListOf(event, record)
         if (!type.isNullOrBlank()) {
             parts += type
         }

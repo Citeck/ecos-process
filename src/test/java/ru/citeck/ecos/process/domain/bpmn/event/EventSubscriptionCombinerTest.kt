@@ -56,24 +56,24 @@ class EventSubscriptionCombinerTest {
         assertThat(combined).containsExactlyInAnyOrder(
             CombinedEventSubscription(
                 eventName = "event1",
-                attributes = setOf(
+                attributes = mutableSetOf(
                     "value1",
                     "value1_1",
                     "value2",
                     "value2_1",
                     "value3"
-                )
+                ).addDefaultEventAtts().toSet()
             ),
             CombinedEventSubscription(
                 eventName = "event2",
-                attributes = setOf(
+                attributes = mutableSetOf(
                     "value1",
-                    "value2",
-                )
+                    "value2"
+                ).addDefaultEventAtts().toSet()
             ),
             CombinedEventSubscription(
                 eventName = "event3",
-                attributes = emptySet()
+                attributes = EventSubscriptionCombiner.DEFAULT_ATTS.toSet()
             )
         )
     }

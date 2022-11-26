@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish
 
 import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.interceptor.Command
