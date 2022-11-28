@@ -90,7 +90,7 @@ class UpdateEventSubscriptionsListenerModelTest {
             listOf("value1", "value2").addDefaultEventAtts()
         )
 
-        EcosEventType.COMMENT_CREATE.availableEventNames.forEach { eventName ->
+        EcosEventType.COMMENT_CREATE.availableEventNames().forEach { eventName ->
             assertThat(firstDeployListeners[eventName]!!.attributes).containsExactlyInAnyOrderElementsOf(
                 listOf(
                     "commentValue1",
@@ -111,7 +111,7 @@ class UpdateEventSubscriptionsListenerModelTest {
                 "value2_1"
             ).addDefaultEventAtts()
         )
-        EcosEventType.COMMENT_CREATE.availableEventNames.forEach { eventName ->
+        EcosEventType.COMMENT_CREATE.availableEventNames().forEach { eventName ->
             assertThat(secondDeployListeners[eventName]!!.attributes).containsExactlyInAnyOrderElementsOf(
                 listOf(
                     "commentValue1",

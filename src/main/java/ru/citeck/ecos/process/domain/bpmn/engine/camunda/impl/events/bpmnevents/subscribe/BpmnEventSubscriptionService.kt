@@ -83,7 +83,7 @@ class BpmnEventSubscriptionService(
             if (eventType == EcosEventType.UNDEFINED) {
                 listOf(eventName)
             } else {
-                eventType.availableEventNames
+                eventType.availableEventNames()
             }
         }
 
@@ -148,17 +148,14 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
 private fun resolveRecord(event: ObjectData): String? {
     val type = event["\$event.type"].textValue()
 
-    val ecosEventType = EcosEventType.from(type)
-    if (ecosEventType != EcosEventType.UNDEFINED) {
-        ecosEventType.attsForFindRecord.forEach { att ->
-            val recordValue = event[att].textValue()
-            if (recordValue.isNotBlank()) {
-                return recordValue
-            }
-        }
-    } else {
+    EcosEventType.findRepresentation(type)?.let {
+        return event[it.recordAttribute].textValue()
+    }
+
+    if (event.has("record")) {
         return event["record"].textValue()
     }
+
     return null
 }
 

@@ -35,13 +35,21 @@ class CamundaEventProcessor(
 
         val foundSubscriptions = eventSubscriptionFinder.getActualCamundaSubscriptions(incomingEventData)
 
-        //TODO: refactor after tests
+        // TODO: refactor after tests
         foundSubscriptions.forEach { subscription ->
 
             val finalAttributesMap = mutableMapOf<String, DataValue>()
 
-            //TODO: hardcoded?
-            val additionalMeta = mapOf("record" to incomingEventData.record)
+            // TODO: hardcoded?
+            val additionalMeta = mapOf(
+                "record" to incomingEventData.record,
+                "event" to mapOf(
+                    "id" to incomingEvent.id,
+                    "type" to incomingEvent.type,
+                    "time" to incomingEvent.time,
+                    "user" to incomingEvent.user
+                )
+            )
 
             RequestContext.doWithCtx(
                 recordsServiceFactory,
@@ -79,11 +87,9 @@ class CamundaEventProcessor(
     }
 }
 
-
 fun GeneralEvent.toIncomingEventData(): IncomingEventData {
     return IncomingEventData(
         eventName = this.type,
-        record = EntityRef.valueOf(this.record),
-        recordType = EntityRef.EMPTY
+        record = EntityRef.valueOf(this.record)
     )
 }

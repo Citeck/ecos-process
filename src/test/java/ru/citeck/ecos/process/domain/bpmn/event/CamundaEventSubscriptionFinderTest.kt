@@ -13,6 +13,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.util.concurrent.TimeUnit
 
 const val SUBSCRIPTION = "subscription"
 

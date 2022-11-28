@@ -64,7 +64,6 @@ val BpmnSignalEventDef.signalName: String
         ).toComposedString()
     }
 
-
 enum class FilterEventByRecord {
     ANY, DOCUMENT, DOCUMENT_BY_VARIABLE
 }

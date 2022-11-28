@@ -12,7 +12,7 @@ object EventSubscriptionCombiner {
     /**
      * Combine subscriptions with same event name.
      * Model will be merged by values.
-     * Default models added specified by event name.
+     * Default models [DEFAULT_ATTS] added to request event information.
      */
     fun combine(subscriptions: List<EventSubscription>): List<CombinedEventSubscription> {
 

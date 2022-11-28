@@ -111,7 +111,7 @@ class ComposedEventNameGeneratorTest {
 
     @Test
     fun `generate composed event name from existing event type should generate enum event name`() {
-        val ecosEventName = EcosEventType.COMMENT_CREATE.availableEventNames[0]
+        val ecosEventName = EcosEventType.COMMENT_CREATE.availableEventNames()[0]
         val document = EntityRef.EMPTY
         val type = EntityRef.EMPTY
         val eventData = IncomingEventData(ecosEventName, document, type)
@@ -125,7 +125,7 @@ class ComposedEventNameGeneratorTest {
 
     @Test
     fun `generate composed event name from existing event type var2 should generate enum event name`() {
-        val ecosEventName = EcosEventType.COMMENT_CREATE.availableEventNames[1]
+        val ecosEventName = EcosEventType.COMMENT_CREATE.availableEventNames()[1]
         val document = EntityRef.EMPTY
         val type = EntityRef.EMPTY
         val eventData = IncomingEventData(ecosEventName, document, type)

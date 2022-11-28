@@ -1,9 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
-import org.junit.jupiter.api.Test
-
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.never
@@ -49,7 +48,6 @@ internal class CamundaEventProcessorTest {
     companion object {
         private val harryRecord = PotterRecord()
         private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
-
     }
 
     @BeforeEach
@@ -62,7 +60,6 @@ internal class CamundaEventProcessorTest {
                 )
                 .build()
         )
-
     }
 
     @Test
@@ -84,7 +81,7 @@ internal class CamundaEventProcessorTest {
         val incomingEvent = GeneralEvent(
             id = UUID.randomUUID().toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create(commentValue))
         )
@@ -99,14 +96,6 @@ internal class CamundaEventProcessorTest {
             ObjectData.create(
                 mapOf(
                     "comment" to commentValue
-                    //TODO: default event attributes?
-                    /*"_id" to "event-1",
-                    "_user" to "ivan",
-                    "_type" to EcosEventType.COMMENT_CREATE.availableEventNames[0],
-                    "_time" to eventTime
-                    "_record to ?"
-                    "_type to ?"
-                    */
                 )
             )
         )
@@ -134,7 +123,7 @@ internal class CamundaEventProcessorTest {
             id = UUID.randomUUID().toString(),
             record = harryRef.toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = emptyMap()
         )
@@ -156,7 +145,54 @@ internal class CamundaEventProcessorTest {
     }
 
     @Test
-    fun `event processor model record and event attributes test`() {
+    fun `event processor model event attributes test`() {
+        val subscriptionId = UUID.randomUUID().toString()
+
+        val subscription = CamundaEventSubscription(
+            id = subscriptionId,
+            event = EventSubscription(
+                name = ComposedEventName(
+                    event = EcosEventType.COMMENT_CREATE.name,
+                    record = harryRef.toString()
+                ),
+                model = mapOf(
+                    "eventId" to "\$event.id",
+                    "eventTime" to "\$event.time",
+                    "eventType" to "\$event.type",
+                    "eventUser" to "\$event.user"
+                )
+            )
+        )
+
+        val incomingEvent = GeneralEvent(
+            id = UUID.randomUUID().toString(),
+            record = harryRef.toString(),
+            time = Instant.now(),
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
+            user = "ivan",
+            attributes = emptyMap()
+        )
+
+        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
+            .thenReturn(listOf(subscription))
+
+        camundaEventProcessor.processEvent(incomingEvent)
+
+        verify(camundaEventExploder).fireEvent(
+            subscriptionId,
+            ObjectData.create(
+                mapOf(
+                    "eventId" to incomingEvent.id,
+                    "eventTime" to incomingEvent.time.toString(),
+                    "eventType" to incomingEvent.type,
+                    "eventUser" to incomingEvent.user
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `event processor model event with context attributes test`() {
         val subscriptionId = UUID.randomUUID().toString()
         val commentValue = "its comment"
 
@@ -170,6 +206,7 @@ internal class CamundaEventProcessorTest {
                 model = mapOf(
                     "harryName" to "\$record.name",
                     "harryMail" to "\$record.email",
+                    "eventId" to "\$event.id",
                     "comment" to "text"
                 )
             )
@@ -179,7 +216,7 @@ internal class CamundaEventProcessorTest {
             id = UUID.randomUUID().toString(),
             record = harryRef.toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create(commentValue))
         )
@@ -195,6 +232,7 @@ internal class CamundaEventProcessorTest {
                 mapOf(
                     "harryName" to harryRecord.name,
                     "harryMail" to harryRecord.email,
+                    "eventId" to incomingEvent.id,
                     "comment" to commentValue
                 )
             )
@@ -220,7 +258,7 @@ internal class CamundaEventProcessorTest {
         val incomingEvent = GeneralEvent(
             id = UUID.randomUUID().toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create("its comment"))
         )
@@ -259,14 +297,14 @@ internal class CamundaEventProcessorTest {
                     "val": "$commentValue",
                     "t": "eq"
                 }
-            """.trimIndent()
+                """.trimIndent()
             )
         )
 
         val incomingEvent = GeneralEvent(
             id = UUID.randomUUID().toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create(commentValue))
         )
@@ -306,14 +344,14 @@ internal class CamundaEventProcessorTest {
                     "val": "$commentValue",
                     "t": "eq"
                 }
-            """.trimIndent()
+                """.trimIndent()
             )
         )
 
         val incomingEvent = GeneralEvent(
             id = UUID.randomUUID().toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create(anotherCommentValue))
         )
@@ -351,7 +389,7 @@ internal class CamundaEventProcessorTest {
                     "val": "${harryRecord.name}",
                     "t": "eq"
                 }
-            """.trimIndent()
+                """.trimIndent()
             )
         )
 
@@ -359,7 +397,7 @@ internal class CamundaEventProcessorTest {
             id = UUID.randomUUID().toString(),
             record = harryRef.toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = emptyMap()
         )
@@ -397,7 +435,7 @@ internal class CamundaEventProcessorTest {
                     "val": "hermione",
                     "t": "eq"
                 }
-            """.trimIndent()
+                """.trimIndent()
             )
         )
 
@@ -405,7 +443,7 @@ internal class CamundaEventProcessorTest {
             id = UUID.randomUUID().toString(),
             record = harryRef.toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = emptyMap()
         )
@@ -465,7 +503,7 @@ internal class CamundaEventProcessorTest {
             id = UUID.randomUUID().toString(),
             record = harryRef.toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create(commentValue))
         )
@@ -526,7 +564,7 @@ internal class CamundaEventProcessorTest {
             id = UUID.randomUUID().toString(),
             record = harryRef.toString(),
             time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames[0],
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
             attributes = mapOf("text" to DataValue.create(commentValue))
         )

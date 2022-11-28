@@ -17,7 +17,7 @@ class ComposedEventNameTest {
     @Test
     fun `create composed event name from full string`() {
         val composedEventName = ComposedEventName.fromString(
-            "$EVENT_TYPE;$ComposedEventName.DOCUMENT_ANY;$DOCUMENT_TYPE"
+            "$EVENT_TYPE;${ComposedEventName.RECORD_ANY};$DOCUMENT_TYPE"
         )
 
         assertEquals(
