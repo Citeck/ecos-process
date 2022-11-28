@@ -97,7 +97,7 @@ class UpdateEventSubscriptionsListenerModelTest {
                     "commentValue1_1",
                     "commentValue2",
                     "commentValue3"
-                ).addDefaultEventAtts()
+                ).addDefaultEventAtts().addDefaultAttsOfEventRepresentations(eventName)
             )
         }
 
@@ -121,7 +121,7 @@ class UpdateEventSubscriptionsListenerModelTest {
                     "commentValue3_2",
                     "commentValue4_1",
                     "commentValue5"
-                ).addDefaultEventAtts()
+                ).addDefaultEventAtts().addDefaultAttsOfEventRepresentations(eventName)
             )
         }
     }

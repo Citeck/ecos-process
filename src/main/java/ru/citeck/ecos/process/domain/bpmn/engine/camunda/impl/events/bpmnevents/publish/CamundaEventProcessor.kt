@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.IncomingEventData
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.records2.RecordRef
@@ -32,58 +33,79 @@ class CamundaEventProcessor(
     fun processEvent(incomingEvent: GeneralEvent) {
 
         val incomingEventData = incomingEvent.toIncomingEventData()
-
         val foundSubscriptions = eventSubscriptionFinder.getActualCamundaSubscriptions(incomingEventData)
-
-        // TODO: refactor after tests
-        foundSubscriptions.forEach { subscription ->
-
-            val finalAttributesMap = mutableMapOf<String, DataValue>()
-
-            // TODO: hardcoded?
-            val additionalMeta = mapOf(
-                "record" to incomingEventData.record,
-                "event" to mapOf(
-                    "id" to incomingEvent.id,
-                    "type" to incomingEvent.type,
-                    "time" to incomingEvent.time,
-                    "user" to incomingEvent.user
-                )
-            )
-
-            RequestContext.doWithCtx(
-                recordsServiceFactory,
-                { data ->
-                    data.withCtxAtts(additionalMeta)
-                }
-            ) {
-                recordsService.getAtts(incomingEvent.attributes, subscription.event.model).forEach { key, attr ->
-                    finalAttributesMap[key] = attr
-                }
-            }
-
-            val predicate = if (subscription.event.predicate.isNullOrBlank()) {
-                VoidPredicate.INSTANCE
-            } else {
-                Json.mapper.read(subscription.event.predicate, Predicate::class.java)
-            }
-
-            val attributes = ObjectData.create(finalAttributesMap)
-
-            if (predicate != null && predicate !is VoidPredicate) {
-                val resolvedFilter = recordsTemplateService.resolve(
-                    predicate,
-                    RecordRef.create("meta", "")
-                )
-
-                val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, attributes))
-                if (!predicateService.isMatch(element, resolvedFilter)) {
-                    return@forEach
-                }
-            }
-
-            exploder.fireEvent(subscription.id, attributes)
+        if (foundSubscriptions.isEmpty()) {
+            return
         }
+
+        val defaultModelForIncomingEvent = let {
+            if (foundSubscriptions.isEmpty()) {
+                emptyMap()
+            } else {
+                EcosEventType.findRepresentation(incomingEventData.eventName)?.defaultModel ?: emptyMap()
+            }
+        }
+
+        val additionalMeta = mapOf(
+            "record" to incomingEventData.record,
+            "event" to mapOf(
+                "id" to incomingEvent.id,
+                "type" to incomingEvent.type,
+                "time" to incomingEvent.time,
+                "user" to incomingEvent.user
+            )
+        )
+
+        for (subscription in foundSubscriptions) {
+            val finalEventModel = mutableMapOf<String, String>()
+            finalEventModel.putAll(defaultModelForIncomingEvent)
+            finalEventModel.putAll(subscription.event.model)
+
+            val eventAttributes = evaluateAttributes(incomingEvent.attributes, finalEventModel, additionalMeta)
+            if (eventAttributes.isMatchPredicates(subscription.event.predicate)) {
+                exploder.fireEvent(subscription.id, eventAttributes)
+            }
+        }
+    }
+
+    private fun evaluateAttributes(
+        attributes: Map<String, DataValue>,
+        model: Map<String, String>,
+        additionalMeta: Map<String, Any>
+    ): ObjectData {
+        val result = mutableMapOf<String, DataValue>()
+
+        RequestContext.doWithCtx(
+            recordsServiceFactory,
+            { data ->
+                data.withCtxAtts(additionalMeta)
+            }
+        ) {
+            recordsService.getAtts(attributes, model).forEach { key, attr ->
+                result[key] = attr
+            }
+        }
+
+        return ObjectData.create(result)
+    }
+
+    private fun ObjectData.isMatchPredicates(predicateData: String?): Boolean {
+        if (predicateData.isNullOrBlank()) {
+            return true
+        }
+
+        val predicate = Json.mapper.read(predicateData, Predicate::class.java)
+        if (predicate == null || predicate is VoidPredicate) {
+            return true
+        }
+
+        val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, this))
+        val resolvedFilter = recordsTemplateService.resolve(
+            predicate,
+            RecordRef.create("meta", "")
+        )
+
+        return predicateService.isMatch(element, resolvedFilter)
     }
 }
 

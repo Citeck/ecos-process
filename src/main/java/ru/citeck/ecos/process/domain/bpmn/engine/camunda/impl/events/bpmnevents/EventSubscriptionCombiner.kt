@@ -12,7 +12,7 @@ object EventSubscriptionCombiner {
     /**
      * Combine subscriptions with same event name.
      * Model will be merged by values.
-     * Default models [DEFAULT_ATTS] added to request event information.
+     * Default models added from [EcosEventType] and [DEFAULT_ATTS].
      */
     fun combine(subscriptions: List<EventSubscription>): List<CombinedEventSubscription> {
 
@@ -25,11 +25,14 @@ object EventSubscriptionCombiner {
             mapping.computeIfAbsent(eventName) { mutableSetOf() }.addAll(values)
         }
 
-        // TODO: add default atts to mode, add default atts by event name?
-
         return mapping.map { (eventName, atts) ->
 
             atts.addAll(DEFAULT_ATTS)
+
+            val defaultAttsForEvent = EcosEventType.from(eventName).eventRepresentations.map {
+                it.defaultModel.values
+            }.flatten()
+            atts.addAll(defaultAttsForEvent)
 
             CombinedEventSubscription(
                 eventName = eventName,

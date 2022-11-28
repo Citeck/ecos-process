@@ -95,7 +95,141 @@ internal class CamundaEventProcessorTest {
             subscriptionId,
             ObjectData.create(
                 mapOf(
-                    "comment" to commentValue
+                    "comment" to commentValue,
+                    "text" to commentValue,
+                    "commentRecord" to null
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `event processor default comment model attributes test`() {
+        val subscriptionId = UUID.randomUUID().toString()
+        val commentValue = "its comment"
+        val commentRecord = "store/comment@1"
+
+        val subscription = CamundaEventSubscription(
+            id = subscriptionId,
+            event = EventSubscription(
+                name = ComposedEventName(
+                    event = EcosEventType.COMMENT_CREATE.name,
+                    record = ComposedEventName.RECORD_ANY
+                ),
+                model = emptyMap()
+            )
+        )
+
+        val incomingEvent = GeneralEvent(
+            id = UUID.randomUUID().toString(),
+            time = Instant.now(),
+            type = "comment-create",
+            user = "ivan",
+            attributes = mapOf(
+                "text" to DataValue.create(commentValue),
+                "commentRecord" to DataValue.create(commentRecord)
+            )
+        )
+
+        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
+            .thenReturn(listOf(subscription))
+
+        camundaEventProcessor.processEvent(incomingEvent)
+
+        verify(camundaEventExploder).fireEvent(
+            subscriptionId,
+            ObjectData.create(
+                mapOf(
+                    "text" to commentValue,
+                    "commentRecord" to commentRecord
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `event processor default comment model of second representation should maps to generic attributes`() {
+        val subscriptionId = UUID.randomUUID().toString()
+        val commentValue = "its comment"
+        val commentRecord = "store/comment@1"
+
+        val subscription = CamundaEventSubscription(
+            id = subscriptionId,
+            event = EventSubscription(
+                name = ComposedEventName(
+                    event = EcosEventType.COMMENT_CREATE.name,
+                    record = ComposedEventName.RECORD_ANY
+                ),
+                model = emptyMap()
+            )
+        )
+
+        val incomingEvent = GeneralEvent(
+            id = UUID.randomUUID().toString(),
+            time = Instant.now(),
+            type = "ecos.comment.create",
+            user = "ivan",
+            attributes = mapOf(
+                "textAfter" to DataValue.create(commentValue),
+                "commentRec" to DataValue.create(commentRecord)
+            )
+        )
+
+        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
+            .thenReturn(listOf(subscription))
+
+        camundaEventProcessor.processEvent(incomingEvent)
+
+        verify(camundaEventExploder).fireEvent(
+            subscriptionId,
+            ObjectData.create(
+                mapOf(
+                    "text" to commentValue,
+                    "commentRecord" to commentRecord
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `event processor user model should be override default comment model attributes`() {
+        val subscriptionId = UUID.randomUUID().toString()
+        val commentValue = "its comment"
+        val commentRecord = "store/comment@1"
+
+        val subscription = CamundaEventSubscription(
+            id = subscriptionId,
+            event = EventSubscription(
+                name = ComposedEventName(
+                    event = EcosEventType.COMMENT_CREATE.name,
+                    record = ComposedEventName.RECORD_ANY
+                ),
+                model = mapOf("text" to "\$event.user")
+            )
+        )
+
+        val incomingEvent = GeneralEvent(
+            id = UUID.randomUUID().toString(),
+            time = Instant.now(),
+            type = "comment-create",
+            user = "ivan",
+            attributes = mapOf(
+                "text" to DataValue.create(commentValue),
+                "commentRecord" to DataValue.create(commentRecord)
+            )
+        )
+
+        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
+            .thenReturn(listOf(subscription))
+
+        camundaEventProcessor.processEvent(incomingEvent)
+
+        verify(camundaEventExploder).fireEvent(
+            subscriptionId,
+            ObjectData.create(
+                mapOf(
+                    "text" to incomingEvent.user,
+                    "commentRecord" to commentRecord
                 )
             )
         )
@@ -138,7 +272,9 @@ internal class CamundaEventProcessorTest {
             ObjectData.create(
                 mapOf(
                     "harryName" to harryRecord.name,
-                    "harryMail" to harryRecord.email
+                    "harryMail" to harryRecord.email,
+                    "text" to null,
+                    "commentRecord" to null
                 )
             )
         )
@@ -185,7 +321,9 @@ internal class CamundaEventProcessorTest {
                     "eventId" to incomingEvent.id,
                     "eventTime" to incomingEvent.time.toString(),
                     "eventType" to incomingEvent.type,
-                    "eventUser" to incomingEvent.user
+                    "eventUser" to incomingEvent.user,
+                    "text" to null,
+                    "commentRecord" to null
                 )
             )
         )
@@ -233,7 +371,9 @@ internal class CamundaEventProcessorTest {
                     "harryName" to harryRecord.name,
                     "harryMail" to harryRecord.email,
                     "eventId" to incomingEvent.id,
-                    "comment" to commentValue
+                    "comment" to commentValue,
+                    "text" to commentValue,
+                    "commentRecord" to null
                 )
             )
         )
@@ -318,7 +458,9 @@ internal class CamundaEventProcessorTest {
             subscriptionId,
             ObjectData.create(
                 mapOf(
-                    "comment" to commentValue
+                    "comment" to commentValue,
+                    "text" to commentValue,
+                    "commentRecord" to null
                 )
             )
         )
@@ -411,7 +553,9 @@ internal class CamundaEventProcessorTest {
             subscriptionId,
             ObjectData.create(
                 mapOf(
-                    "harryName" to harryRecord.name
+                    "harryName" to harryRecord.name,
+                    "text" to null,
+                    "commentRecord" to null
                 )
             )
         )
@@ -518,7 +662,9 @@ internal class CamundaEventProcessorTest {
             ObjectData.create(
                 mapOf(
                     "harryName" to harryRecord.name,
-                    "comment" to commentValue
+                    "comment" to commentValue,
+                    "text" to commentValue,
+                    "commentRecord" to null
                 )
             )
         )

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
 enum class EcosEventType(
-    val eventsRepresentation: List<EventRepresentation>
+    val eventRepresentations: List<EventRepresentation>
 ) {
     UNDEFINED(emptyList()),
 
@@ -10,12 +10,12 @@ enum class EcosEventType(
             EventRepresentation(
                 eventName = "comment-create",
                 recordAttribute = "record",
-                defaultAttributes = mapOf("text" to "text", "commentRecord" to "commentRecord")
+                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord")
             ),
             EventRepresentation(
                 eventName = "ecos.comment.create",
                 recordAttribute = "rec",
-                defaultAttributes = mapOf("text" to "textAfter", "commentRecord" to "commentRec")
+                defaultModel = mapOf("text" to "textAfter", "commentRecord" to "commentRec")
             )
         )
     ),
@@ -24,7 +24,7 @@ enum class EcosEventType(
             EventRepresentation(
                 eventName = "comment-update",
                 recordAttribute = "record",
-                defaultAttributes = mapOf(
+                defaultModel = mapOf(
                     "textBefore" to "textBefore",
                     "textAfter" to "textAfter",
                     "commentRecord" to "commentRecord"
@@ -33,7 +33,7 @@ enum class EcosEventType(
             EventRepresentation(
                 eventName = "ecos.comment.update",
                 recordAttribute = "rec",
-                defaultAttributes = mapOf(
+                defaultModel = mapOf(
                     "textBefore" to "textBefore",
                     "textAfter" to "textAfter",
                     "commentRecord" to "commentRec"
@@ -46,28 +46,20 @@ enum class EcosEventType(
             EventRepresentation(
                 eventName = "comment-delete",
                 recordAttribute = "record",
-                defaultAttributes = mapOf("text" to "text", "commentRecord" to "commentRecord")
+                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord")
             ),
             EventRepresentation(
                 eventName = "ecos.comment.delete",
                 recordAttribute = "rec",
-                defaultAttributes = mapOf("text" to "textBefore", "commentRecord" to "commentRec")
+                defaultModel = mapOf("text" to "textBefore", "commentRecord" to "commentRec")
             )
         )
     );
 
-    val representation = fun(eventName: String): EventRepresentation? {
-        return eventsRepresentation.firstOrNull { it.eventName == eventName }
-    }
-
-    val availableEventNames = fun(): List<String> {
-        return eventsRepresentation.map { it.eventName }
-    }
-
     companion object {
         fun from(value: String): EcosEventType =
             EcosEventType.values().find { event ->
-                event.eventsRepresentation.any { it.eventName == value }
+                event.eventRepresentations.any { it.eventName == value }
             } ?: let {
                 EcosEventType.values().find { it.name == value } ?: UNDEFINED
             }
@@ -76,10 +68,18 @@ enum class EcosEventType(
             return from(eventName).representation(eventName)
         }
     }
+
+    val representation = fun(eventName: String): EventRepresentation? {
+        return eventRepresentations.firstOrNull { it.eventName == eventName }
+    }
+
+    val availableEventNames = fun(): List<String> {
+        return eventRepresentations.map { it.eventName }
+    }
 }
 
 data class EventRepresentation(
     val eventName: String,
     val recordAttribute: String,
-    val defaultAttributes: Map<String, String>
+    val defaultModel: Map<String, String>
 )
