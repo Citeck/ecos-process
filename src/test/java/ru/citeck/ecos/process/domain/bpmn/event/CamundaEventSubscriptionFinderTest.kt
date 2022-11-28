@@ -7,18 +7,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-import java.util.concurrent.TimeUnit
 
 const val SUBSCRIPTION = "subscription"
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CamundaEventSubscriptionFinderTest {
 
     @Autowired
