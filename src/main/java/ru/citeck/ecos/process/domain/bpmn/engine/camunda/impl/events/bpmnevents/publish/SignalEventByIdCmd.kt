@@ -6,20 +6,27 @@ import org.camunda.bpm.engine.impl.interceptor.CommandContext
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
+import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EVENT_ATT
 
-// TODO: rewrite
-class SignalByIdCmd : Command<Unit> {
+class SignalEventByIdCmd(
+    private val signalId: String,
+    eventData: ObjectData
+) : Command<Unit> {
 
-    override fun execute(commandContext: CommandContext?) {
-        sendSignal(commandContext, "_none_")
+    private val eventVariable = mapOf(EVENT_ATT to eventData.asMap(String::class.java, Any::class.java))
+
+    override fun execute(commandContext: CommandContext) {
+        sendSignal(commandContext)
     }
 
-    protected fun sendSignal(commandContext: CommandContext?, signalName: String?) {
-        val signalEventSubscriptions = findSignalEventSubscriptions(commandContext!!, signalName)
+    private fun sendSignal(commandContext: CommandContext) {
+        val signalEventSubscriptions = findSignalEventSubscriptions(commandContext)
         val catchSignalEventSubscription = filterIntermediateSubscriptions(signalEventSubscriptions)
         val startSignalEventSubscriptions = filterStartSubscriptions(signalEventSubscriptions)
 
-        val processDefinitions: Map<String, ProcessDefinitionEntity> = getProcessDefinitionsOfSubscriptions(startSignalEventSubscriptions)
+        val processDefinitions: Map<String, ProcessDefinitionEntity> =
+            getProcessDefinitionsOfSubscriptions(startSignalEventSubscriptions)
         checkAuthorizationOfCatchSignals(commandContext, catchSignalEventSubscription)
         checkAuthorizationOfStartSignals(commandContext, startSignalEventSubscriptions, processDefinitions)
 
@@ -27,18 +34,13 @@ class SignalByIdCmd : Command<Unit> {
         startProcessInstances(startSignalEventSubscriptions, processDefinitions)
     }
 
-    protected fun findSignalEventSubscriptions(
-        commandContext: CommandContext,
-        signalName: String?
-    ): List<EventSubscriptionEntity> {
+    private fun findSignalEventSubscriptions(commandContext: CommandContext): List<EventSubscriptionEntity> {
         val eventSubscriptionManager = commandContext.eventSubscriptionManager
-
-        val subs = eventSubscriptionManager.findEventSubscriptionById("9ae9d2c0-5ac7-11ed-8771-de2233304a99")
-
+        val subs = eventSubscriptionManager.findEventSubscriptionById(signalId)
         return listOf(subs)
     }
 
-    protected fun checkAuthorizationOfCatchSignals(
+    private fun checkAuthorizationOfCatchSignals(
         commandContext: CommandContext,
         catchSignalEventSubscription: List<EventSubscriptionEntity>
     ) {
@@ -67,13 +69,16 @@ class SignalByIdCmd : Command<Unit> {
         }
     }
 
-    protected fun getProcessDefinitionsOfSubscriptions(startSignalEventSubscriptions: List<EventSubscriptionEntity>): Map<String, ProcessDefinitionEntity> {
+    private fun getProcessDefinitionsOfSubscriptions(
+        startSignalEventSubscriptions: List<EventSubscriptionEntity>
+    ): Map<String, ProcessDefinitionEntity> {
         val deploymentCache = Context.getProcessEngineConfiguration().deploymentCache
         val processDefinitions: MutableMap<String, ProcessDefinitionEntity> = HashMap()
         for (eventSubscription in startSignalEventSubscriptions) {
             val processDefinitionId = eventSubscription.configuration
             EnsureUtil.ensureNotNull(
-                "Configuration of signal start event subscription '" + eventSubscription.id + "' contains no process definition id.",
+                "Configuration of signal start event subscription '" + eventSubscription.id +
+                    "' contains no process definition id.",
                 processDefinitionId
             )
             val processDefinition = deploymentCache.findDeployedProcessDefinitionById(processDefinitionId)
@@ -87,18 +92,7 @@ class SignalByIdCmd : Command<Unit> {
     private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {
         for (signalEventSubscriptionEntity in catchSignalEventSubscription) {
             if (isActiveEventSubscription(signalEventSubscriptionEntity)) {
-                // signalEventSubscriptionEntity.eventReceived(builder.getVariables(), false)
-                signalEventSubscriptionEntity.eventReceived(
-                    mapOf(
-                        "event" to mapOf(
-                            "rec" to "alfresco/comment@3dfa87ab-23f6-4de6-a1ec-549eaf22e805",
-                            "commentRec" to "alfresco/comment@3dfa87ab-23f6-4de6-a1ec-549eaf22e805",
-                            "textBefore" to "its before",
-                            "textAfter" to "its after"
-                        )
-                    ),
-                    false
-                )
+                signalEventSubscriptionEntity.eventReceived(eventVariable, false)
             }
         }
     }
@@ -117,13 +111,14 @@ class SignalByIdCmd : Command<Unit> {
             if (processDefinition != null) {
                 val signalStartEvent = processDefinition.findActivity(signalStartEventSubscription.activityId)
                 val processInstance = processDefinition.createProcessInstanceForInitial(signalStartEvent)
-                // processInstance.start(builder.getVariables())
-                processInstance.start(emptyMap())
+                processInstance.start(eventVariable)
             }
         }
     }
 
-    protected fun filterIntermediateSubscriptions(subscriptions: List<EventSubscriptionEntity>): List<EventSubscriptionEntity> {
+    private fun filterIntermediateSubscriptions(
+        subscriptions: List<EventSubscriptionEntity>
+    ): List<EventSubscriptionEntity> {
         val result: MutableList<EventSubscriptionEntity> = ArrayList()
         for (subscription in subscriptions) {
             if (subscription.executionId != null) {
@@ -133,7 +128,7 @@ class SignalByIdCmd : Command<Unit> {
         return result
     }
 
-    protected fun filterStartSubscriptions(subscriptions: List<EventSubscriptionEntity>): List<EventSubscriptionEntity> {
+    private fun filterStartSubscriptions(subscriptions: List<EventSubscriptionEntity>): List<EventSubscriptionEntity> {
         val result: MutableList<EventSubscriptionEntity> = ArrayList()
         for (subscription in subscriptions) {
             if (subscription.executionId == null) {

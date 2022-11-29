@@ -9,13 +9,11 @@ enum class EcosEventType(
         listOf(
             EventRepresentation(
                 eventName = "comment-create",
-                recordAttribute = "record",
-                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord")
+                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord?id")
             ),
             EventRepresentation(
                 eventName = "ecos.comment.create",
-                recordAttribute = "rec",
-                defaultModel = mapOf("text" to "textAfter", "commentRecord" to "commentRec")
+                defaultModel = mapOf("text" to "textAfter", "commentRecord" to "commentRec?id")
             )
         )
     ),
@@ -23,20 +21,18 @@ enum class EcosEventType(
         listOf(
             EventRepresentation(
                 eventName = "comment-update",
-                recordAttribute = "record",
                 defaultModel = mapOf(
                     "textBefore" to "textBefore",
                     "textAfter" to "textAfter",
-                    "commentRecord" to "commentRecord"
+                    "commentRecord" to "commentRecord?id"
                 )
             ),
             EventRepresentation(
                 eventName = "ecos.comment.update",
-                recordAttribute = "rec",
                 defaultModel = mapOf(
                     "textBefore" to "textBefore",
                     "textAfter" to "textAfter",
-                    "commentRecord" to "commentRec"
+                    "commentRecord" to "commentRec?id"
                 )
             )
         )
@@ -45,13 +41,11 @@ enum class EcosEventType(
         listOf(
             EventRepresentation(
                 eventName = "comment-delete",
-                recordAttribute = "record",
-                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord")
+                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord?id")
             ),
             EventRepresentation(
                 eventName = "ecos.comment.delete",
-                recordAttribute = "rec",
-                defaultModel = mapOf("text" to "textBefore", "commentRecord" to "commentRec")
+                defaultModel = mapOf("text" to "textBefore", "commentRecord" to "commentRec?id")
             )
         )
     );
@@ -80,6 +74,5 @@ enum class EcosEventType(
 
 data class EventRepresentation(
     val eventName: String,
-    val recordAttribute: String,
     val defaultModel: Map<String, String>
 )

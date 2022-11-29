@@ -4,9 +4,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.IncomingEventData
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
@@ -14,20 +12,14 @@ import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
-import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
-import ru.citeck.ecos.records3.record.request.RequestContext
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class CamundaEventProcessor(
     private val exploder: CamundaEventExploder,
     private val eventSubscriptionFinder: CamundaEventSubscriptionFinder,
     private val predicateService: PredicateService,
-    private val recordsTemplateService: RecordsTemplateService,
-    private val recordsServiceFactory: RecordsServiceFactory,
-    private val recordsService: RecordsService
+    private val recordsTemplateService: RecordsTemplateService
 ) {
 
     fun processEvent(incomingEvent: GeneralEvent) {
@@ -46,22 +38,12 @@ class CamundaEventProcessor(
             }
         }
 
-        val additionalMeta = mapOf(
-            "record" to incomingEventData.record,
-            "event" to mapOf(
-                "id" to incomingEvent.id,
-                "type" to incomingEvent.type,
-                "time" to incomingEvent.time,
-                "user" to incomingEvent.user
-            )
-        )
-
         for (subscription in foundSubscriptions) {
             val finalEventModel = mutableMapOf<String, String>()
             finalEventModel.putAll(defaultModelForIncomingEvent)
             finalEventModel.putAll(subscription.event.model)
 
-            val eventAttributes = evaluateAttributes(incomingEvent.attributes, finalEventModel, additionalMeta)
+            val eventAttributes = evaluateAttributes(incomingEvent, finalEventModel)
             if (eventAttributes.isMatchPredicates(subscription.event.predicate)) {
                 exploder.fireEvent(subscription.id, eventAttributes)
             }
@@ -69,22 +51,19 @@ class CamundaEventProcessor(
     }
 
     private fun evaluateAttributes(
-        attributes: Map<String, DataValue>,
-        model: Map<String, String>,
-        additionalMeta: Map<String, Any>
+        incomingEvent: GeneralEvent,
+        model: Map<String, String>
     ): ObjectData {
+        val atts = incomingEvent.attributes
         val result = mutableMapOf<String, DataValue>()
 
-        RequestContext.doWithCtx(
-            recordsServiceFactory,
-            { data ->
-                data.withCtxAtts(additionalMeta)
-            }
-        ) {
-            recordsService.getAtts(attributes, model).forEach { key, attr ->
-                result[key] = attr
+        for ((attKey, attValueKey) in model) {
+            if (atts.containsKey(attValueKey)) {
+                result[attKey] = atts[attValueKey]!!
             }
         }
+
+        result[EVENT_META_ATT] = incomingEvent.toEventMeta()
 
         return ObjectData.create(result)
     }
@@ -111,7 +90,17 @@ class CamundaEventProcessor(
 
 fun GeneralEvent.toIncomingEventData(): IncomingEventData {
     return IncomingEventData(
-        eventName = this.type,
-        record = EntityRef.valueOf(this.record)
+        eventName = this.type
+    )
+}
+
+fun GeneralEvent.toEventMeta(): DataValue {
+    return DataValue.create(
+        mapOf(
+            EVENT_META_ID_ATT to this.id,
+            EVENT_META_TYPE_ATT to this.type,
+            EVENT_META_TIME_ATT to this.time,
+            EVENT_META_USER_ATT to this.user
+        )
     )
 }

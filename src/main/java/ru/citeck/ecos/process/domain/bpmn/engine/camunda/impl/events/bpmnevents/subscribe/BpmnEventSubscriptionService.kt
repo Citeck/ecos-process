@@ -98,7 +98,7 @@ class BpmnEventSubscriptionService(
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
                 withAction { event ->
-                    log.trace { "Receive event: $event" }
+                    log.debug { "Receive subscription event: $event" }
                     camundaEventProcessor.processEvent(event.toGeneralEvent())
                 }
             }
@@ -128,10 +128,10 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
 
     this.forEach { att, dataValue ->
         when (att) {
-            "\$event.id" -> id = dataValue.textValue()
+            "\$event.id" -> id = dataValue.asText()
             "\$event.time" -> time = dataValue.getAsInstant()!!
-            "\$event.type" -> type = dataValue.textValue()
-            "\$event.user" -> user = dataValue.textValue()
+            "\$event.type" -> type = dataValue.asText()
+            "\$event.user" -> user = dataValue.asText()
             else -> attributes[att] = dataValue
         }
     }
@@ -140,28 +140,11 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
     require(type.isNotBlank()) { "Event type is blank" }
     require(user.isNotBlank()) { "Event user is blank" }
 
-    val record = resolveRecord(this)
-
-    return GeneralEvent(id, record, time, type, user, attributes)
-}
-
-private fun resolveRecord(event: ObjectData): String? {
-    val type = event["\$event.type"].textValue()
-
-    EcosEventType.findRepresentation(type)?.let {
-        return event[it.recordAttribute].textValue()
-    }
-
-    if (event.has("record")) {
-        return event["record"].textValue()
-    }
-
-    return null
+    return GeneralEvent(id, time, type, user, attributes)
 }
 
 data class GeneralEvent(
     val id: String,
-    val record: String? = null,
     val time: Instant,
     val type: String,
     val user: String,

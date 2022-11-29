@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.`when`
@@ -18,13 +17,10 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventExploder
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventProcessor
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.toEventMeta
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.toIncomingEventData
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
-import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
-import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.time.Instant
 import java.util.UUID
@@ -36,29 +32,47 @@ internal class CamundaEventProcessorTest {
     @Autowired
     private lateinit var camundaEventProcessor: CamundaEventProcessor
 
-    @Autowired
-    private lateinit var recordsService: RecordsService
-
     @MockBean
     private lateinit var camundaEventExploder: CamundaEventExploder
 
     @SpyBean
     private lateinit var camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder
 
-    companion object {
-        private val harryRecord = PotterRecord()
-        private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
-    }
+    @Test
+    fun `event processor model event meta attributes test`() {
+        val subscriptionId = UUID.randomUUID().toString()
 
-    @BeforeEach
-    fun setUp() {
-        recordsService.register(
-            RecordsDaoBuilder.create("hogwarts/people")
-                .addRecord(
-                    harryRef.id,
-                    PotterRecord()
+        val subscription = CamundaEventSubscription(
+            id = subscriptionId,
+            event = EventSubscription(
+                name = ComposedEventName(
+                    event = EcosEventType.COMMENT_CREATE.name,
+                    record = "some-ref"
+                ),
+                model = emptyMap()
+            )
+        )
+
+        val incomingEvent = GeneralEvent(
+            id = UUID.randomUUID().toString(),
+            time = Instant.now(),
+            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
+            user = "ivan",
+            attributes = emptyMap()
+        )
+
+        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
+            .thenReturn(listOf(subscription))
+
+        camundaEventProcessor.processEvent(incomingEvent)
+
+        verify(camundaEventExploder).fireEvent(
+            subscriptionId,
+            ObjectData.create(
+                mapOf(
+                    EVENT_META_ATT to incomingEvent.toEventMeta()
                 )
-                .build()
+            )
         )
     }
 
@@ -97,7 +111,7 @@ internal class CamundaEventProcessorTest {
                 mapOf(
                     "comment" to commentValue,
                     "text" to commentValue,
-                    "commentRecord" to null
+                    EVENT_META_ATT to incomingEvent.toEventMeta()
                 )
             )
         )
@@ -127,7 +141,7 @@ internal class CamundaEventProcessorTest {
             user = "ivan",
             attributes = mapOf(
                 "text" to DataValue.create(commentValue),
-                "commentRecord" to DataValue.create(commentRecord)
+                "commentRecord?id" to DataValue.create(commentRecord)
             )
         )
 
@@ -141,7 +155,8 @@ internal class CamundaEventProcessorTest {
             ObjectData.create(
                 mapOf(
                     "text" to commentValue,
-                    "commentRecord" to commentRecord
+                    "commentRecord" to commentRecord,
+                    EVENT_META_ATT to incomingEvent.toEventMeta()
                 )
             )
         )
@@ -171,7 +186,7 @@ internal class CamundaEventProcessorTest {
             user = "ivan",
             attributes = mapOf(
                 "textAfter" to DataValue.create(commentValue),
-                "commentRec" to DataValue.create(commentRecord)
+                "commentRec?id" to DataValue.create(commentRecord)
             )
         )
 
@@ -185,7 +200,8 @@ internal class CamundaEventProcessorTest {
             ObjectData.create(
                 mapOf(
                     "text" to commentValue,
-                    "commentRecord" to commentRecord
+                    "commentRecord" to commentRecord,
+                    EVENT_META_ATT to incomingEvent.toEventMeta()
                 )
             )
         )
@@ -204,7 +220,7 @@ internal class CamundaEventProcessorTest {
                     event = EcosEventType.COMMENT_CREATE.name,
                     record = ComposedEventName.RECORD_ANY
                 ),
-                model = mapOf("text" to "\$event.user")
+                model = mapOf("text" to "commentRecord?id")
             )
         )
 
@@ -215,7 +231,7 @@ internal class CamundaEventProcessorTest {
             user = "ivan",
             attributes = mapOf(
                 "text" to DataValue.create(commentValue),
-                "commentRecord" to DataValue.create(commentRecord)
+                "commentRecord?id" to DataValue.create(commentRecord)
             )
         )
 
@@ -228,152 +244,9 @@ internal class CamundaEventProcessorTest {
             subscriptionId,
             ObjectData.create(
                 mapOf(
-                    "text" to incomingEvent.user,
-                    "commentRecord" to commentRecord
-                )
-            )
-        )
-    }
-
-    @Test
-    fun `event processor model record attributes test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf(
-                    "harryName" to "\$record.name",
-                    "harryMail" to "\$record.email"
-                )
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = emptyMap()
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "harryName" to harryRecord.name,
-                    "harryMail" to harryRecord.email,
-                    "text" to null,
-                    "commentRecord" to null
-                )
-            )
-        )
-    }
-
-    @Test
-    fun `event processor model event attributes test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf(
-                    "eventId" to "\$event.id",
-                    "eventTime" to "\$event.time",
-                    "eventType" to "\$event.type",
-                    "eventUser" to "\$event.user"
-                )
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = emptyMap()
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "eventId" to incomingEvent.id,
-                    "eventTime" to incomingEvent.time.toString(),
-                    "eventType" to incomingEvent.type,
-                    "eventUser" to incomingEvent.user,
-                    "text" to null,
-                    "commentRecord" to null
-                )
-            )
-        )
-    }
-
-    @Test
-    fun `event processor model event with context attributes test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-        val commentValue = "its comment"
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf(
-                    "harryName" to "\$record.name",
-                    "harryMail" to "\$record.email",
-                    "eventId" to "\$event.id",
-                    "comment" to "text"
-                )
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = mapOf("text" to DataValue.create(commentValue))
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "harryName" to harryRecord.name,
-                    "harryMail" to harryRecord.email,
-                    "eventId" to incomingEvent.id,
-                    "comment" to commentValue,
-                    "text" to commentValue,
-                    "commentRecord" to null
+                    "text" to commentRecord,
+                    "commentRecord" to commentRecord,
+                    EVENT_META_ATT to incomingEvent.toEventMeta()
                 )
             )
         )
@@ -460,7 +333,7 @@ internal class CamundaEventProcessorTest {
                 mapOf(
                     "comment" to commentValue,
                     "text" to commentValue,
-                    "commentRecord" to null
+                    EVENT_META_ATT to incomingEvent.toEventMeta()
                 )
             )
         )
@@ -512,231 +385,4 @@ internal class CamundaEventProcessorTest {
             )
         )
     }
-
-    @Test
-    fun `event processor predicates based on record atts test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf("harryName" to "\$record.name"),
-                predicate = """
-                {
-                    "att": "harryName",
-                    "val": "${harryRecord.name}",
-                    "t": "eq"
-                }
-                """.trimIndent()
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = emptyMap()
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "harryName" to harryRecord.name,
-                    "text" to null,
-                    "commentRecord" to null
-                )
-            )
-        )
-    }
-
-    @Test
-    fun `event processor predicates based on record atts false test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf("harryName" to "\$record.name"),
-                predicate = """
-                {
-                    "att": "harryName",
-                    "val": "hermione",
-                    "t": "eq"
-                }
-                """.trimIndent()
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = emptyMap()
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder, never()).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "harryName" to harryRecord.name
-                )
-            )
-        )
-    }
-
-    @Test
-    fun `event processor predicates based on record and event atts test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-        val commentValue = "its comment"
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf(
-                    "harryName" to "\$record.name",
-                    "comment" to "text"
-                ),
-                predicate = """
-                    {
-                        "t": "and",
-                        "v": [
-                            {
-                                "t": "eq",
-                                "att": "harryName",
-                                "val": "${harryRecord.name}"
-                            },
-                            {
-                                "t": "eq",
-                                "att": "comment",
-                                "val": "$commentValue"
-                            }
-                        ]
-                    }
-                """.trimIndent()
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = mapOf("text" to DataValue.create(commentValue))
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "harryName" to harryRecord.name,
-                    "comment" to commentValue,
-                    "text" to commentValue,
-                    "commentRecord" to null
-                )
-            )
-        )
-    }
-
-    @Test
-    fun `event processor predicates based on record and event atts false test`() {
-        val subscriptionId = UUID.randomUUID().toString()
-        val commentValue = "its comment"
-
-        val subscription = CamundaEventSubscription(
-            id = subscriptionId,
-            event = EventSubscription(
-                name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = harryRef.toString()
-                ),
-                model = mapOf(
-                    "harryName" to "\$record.name",
-                    "comment" to "text"
-                ),
-                predicate = """
-                    {
-                        "t": "and",
-                        "v": [
-                            {
-                                "t": "eq",
-                                "att": "harryName",
-                                "val": "${harryRecord.name}"
-                            },
-                            {
-                                "t": "not-eq",
-                                "att": "comment",
-                                "val": "$commentValue"
-                            }
-                        ]
-                    }
-                """.trimIndent()
-            )
-        )
-
-        val incomingEvent = GeneralEvent(
-            id = UUID.randomUUID().toString(),
-            record = harryRef.toString(),
-            time = Instant.now(),
-            type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
-            user = "ivan",
-            attributes = mapOf("text" to DataValue.create(commentValue))
-        )
-
-        `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
-            .thenReturn(listOf(subscription))
-
-        camundaEventProcessor.processEvent(incomingEvent)
-
-        verify(camundaEventExploder, never()).fireEvent(
-            subscriptionId,
-            ObjectData.create(
-                mapOf(
-                    "harryName" to harryRecord.name,
-                    "comment" to commentValue
-                )
-            )
-        )
-    }
 }
-
-class PotterRecord(
-
-    @AttName("email")
-    val email: String = "harry.potter@hogwarts.com",
-
-    @AttName("name")
-    val name: String = "Harry Potter"
-)
