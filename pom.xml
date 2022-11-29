@@ -17,6 +17,7 @@
     <properties>
 
         <camunda.spring-boot.version>7.17.0</camunda.spring-boot.version>
+        <camunda.spin.version>1.18.0</camunda.spin.version>
 
         <querydsl.version>4.2.1</querydsl.version>
         <mongock.version>3.0.2.BETA</mongock.version>
@@ -32,6 +33,14 @@
                 <version>${camunda.spring-boot.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.camunda.spin</groupId>
+                <artifactId>camunda-spin-bom</artifactId>
+                <scope>import</scope>
+                <type>pom</type>
+                <version>${camunda.spin.version}</version>
             </dependency>
 
         </dependencies>
@@ -80,6 +89,11 @@
             <groupId>org.camunda.bpm.springboot</groupId>
             <artifactId>camunda-bpm-spring-boot-starter-webapp</artifactId>
             <version>${camunda.spring-boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.camunda.spin</groupId>
+            <artifactId>camunda-spin-core</artifactId>
         </dependency>
 
         <dependency>

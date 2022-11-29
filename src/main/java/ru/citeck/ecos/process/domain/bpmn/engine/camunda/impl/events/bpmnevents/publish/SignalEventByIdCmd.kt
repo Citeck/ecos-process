@@ -14,7 +14,8 @@ class SignalEventByIdCmd(
     eventData: ObjectData
 ) : Command<Unit> {
 
-    private val eventVariable = mapOf(EVENT_ATT to eventData.asMap(String::class.java, Any::class.java))
+    //TODO: private val eventVariable = mapOf(EVENT_ATT to JSON(eventData.toString()))
+    private val eventVariable = mapOf(EVENT_ATT to eventData.getData())
 
     override fun execute(commandContext: CommandContext) {
         sendSignal(commandContext)

@@ -54,20 +54,27 @@ class BpmnEventSubscriptionService(
         for (subscription in subscriptions) {
             val (eventName, attributes) = subscription
 
-            if (requireUpdateExistingListener(subscription)) {
-                // TODO: At current implementation we just re-registered listener.
-                // In future we can just update model - https://citeck.atlassian.net/browse/ECOSENT-2452.
+            if (listeners.containsKey(eventName)) {
+                if (requireUpdateExistingListener(subscription)) {
+                    log.debug {
+                        "BPMN Ecos Event Subscription Event: $eventName exists and need to update model"
+                    }
 
-                val currentAtts = listeners[eventName]!!.first.attributes
-                val concatenatedAttsSubscription = subscription.copy(attributes = currentAtts + attributes)
+                    // TODO: At current implementation we just re-registered listener.
+                    // In future we can just update model - https://citeck.atlassian.net/browse/ECOSENT-2452.
 
-                listeners[eventName]?.second?.forEach { it.remove() }
-                listeners.remove(eventName)
+                    val currentAtts = listeners[eventName]!!.first.attributes
+                    val concatenatedAttsSubscription = subscription.copy(attributes = currentAtts + attributes)
 
-                log.debug {
-                    "Update BPMN Ecos Event Subscription Event: $eventName"
+                    listeners[eventName]?.second?.forEach { it.remove() }
+                    listeners.remove(eventName)
+
+                    addListener(concatenatedAttsSubscription)
+                } else {
+                    log.debug {
+                        "BPMN Ecos Event Subscription Event: $eventName exists and no need to update"
+                    }
                 }
-                addListener(concatenatedAttsSubscription)
             } else {
                 log.debug { "Register new BPMN Ecos Event Subscription Event: $eventName" }
                 addListener(subscription)
@@ -108,12 +115,7 @@ class BpmnEventSubscriptionService(
     }
 
     private fun requireUpdateExistingListener(newSubscription: CombinedEventSubscription): Boolean {
-        if (!listeners.containsKey(newSubscription.eventName)) {
-            return false
-        }
-
         val existingSubscription = listeners[newSubscription.eventName]!!.first
-
         return !existingSubscription.attributes.containsAll(newSubscription.attributes)
     }
 }
