@@ -2,9 +2,10 @@
 <!DOCTYPE configuration>
 
 <configuration>
-    <include resource="ecos/logback-base.xml" />
+    <include resource="ecos/logback-base.xml"/>
 
-    <root level="WARN" />
+    <root level="WARN"/>
 
-    <logger name="org.camunda.bpm.scenario" level="debug" />
+    <logger name="org.camunda.bpm.scenario" level="debug"/>
+    <logger name="ru.citeck.ecos.process" level="debug"/>
 </configuration>

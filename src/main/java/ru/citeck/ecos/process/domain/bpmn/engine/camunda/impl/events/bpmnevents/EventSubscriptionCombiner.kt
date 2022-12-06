@@ -1,12 +1,23 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
+import ru.citeck.ecos.records2.RecordConstants
+
 object EventSubscriptionCombiner {
 
+    const val EVENT_ID_ATT = "\$event.id"
+    const val EVENT_TIME_ATT = "\$event.time"
+    const val EVENT_TYPE_ATT = "\$event.type"
+    const val EVENT_USER_ATT = "\$event.user"
+    const val EVENT_RECORD_ID_ATT = "${EcosEventType.RECORD_ATT}?id"
+    const val EVENT_RECORD_TYPE_ID_ATT = "${EcosEventType.RECORD_ATT}.${RecordConstants.ATT_TYPE}?id"
+
     val DEFAULT_ATTS = listOf(
-        "\$event.id",
-        "\$event.time",
-        "\$event.type",
-        "\$event.user"
+        EVENT_ID_ATT,
+        EVENT_TIME_ATT,
+        EVENT_TYPE_ATT,
+        EVENT_USER_ATT,
+        EVENT_RECORD_ID_ATT,
+        EVENT_RECORD_TYPE_ID_ATT,
     )
 
     /**

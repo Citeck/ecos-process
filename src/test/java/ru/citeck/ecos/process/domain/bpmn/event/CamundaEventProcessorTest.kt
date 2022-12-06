@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import ru.citeck.ecos.commons.data.DataValue
-import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
@@ -20,6 +19,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.toEventMeta
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.toIncomingEventData
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.time.Instant
@@ -42,6 +42,9 @@ internal class CamundaEventProcessorTest {
     fun `event processor model event meta attributes test`() {
         val subscriptionId = UUID.randomUUID().toString()
 
+        val record = "doc@1"
+        val recordType = "type@1"
+
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
@@ -58,7 +61,10 @@ internal class CamundaEventProcessorTest {
             time = Instant.now(),
             type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
-            attributes = emptyMap()
+            attributes = mapOf(
+                EcosEventType.RECORD_ATT to DataValue.create(record),
+                EcosEventType.RECORD_TYPE_ATT to DataValue.create(recordType)
+            )
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -68,9 +74,11 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
-                    EVENT_META_ATT to incomingEvent.toEventMeta()
+                    EVENT_META_ATT to incomingEvent.toEventMeta(),
+                    EcosEventType.RECORD_ATT to DataValue.create(record),
+                    EcosEventType.RECORD_TYPE_ATT to DataValue.create(recordType)
                 )
             )
         )
@@ -107,11 +115,13 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "comment" to commentValue,
                     "text" to commentValue,
-                    EVENT_META_ATT to incomingEvent.toEventMeta()
+                    EVENT_META_ATT to incomingEvent.toEventMeta(),
+                    EcosEventType.RECORD_ATT to "",
+                    EcosEventType.RECORD_TYPE_ATT to ""
                 )
             )
         )
@@ -152,11 +162,13 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "text" to commentValue,
                     "commentRecord" to commentRecord,
-                    EVENT_META_ATT to incomingEvent.toEventMeta()
+                    EVENT_META_ATT to incomingEvent.toEventMeta(),
+                    EcosEventType.RECORD_ATT to "",
+                    EcosEventType.RECORD_TYPE_ATT to ""
                 )
             )
         )
@@ -197,11 +209,13 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "text" to commentValue,
                     "commentRecord" to commentRecord,
-                    EVENT_META_ATT to incomingEvent.toEventMeta()
+                    EVENT_META_ATT to incomingEvent.toEventMeta(),
+                    EcosEventType.RECORD_ATT to "",
+                    EcosEventType.RECORD_TYPE_ATT to ""
                 )
             )
         )
@@ -242,11 +256,13 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "text" to commentRecord,
                     "commentRecord" to commentRecord,
-                    EVENT_META_ATT to incomingEvent.toEventMeta()
+                    EVENT_META_ATT to incomingEvent.toEventMeta(),
+                    EcosEventType.RECORD_ATT to "",
+                    EcosEventType.RECORD_TYPE_ATT to ""
                 )
             )
         )
@@ -283,7 +299,7 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder, never()).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "comment" to "its comment"
                 )
@@ -329,11 +345,13 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "comment" to commentValue,
                     "text" to commentValue,
-                    EVENT_META_ATT to incomingEvent.toEventMeta()
+                    EVENT_META_ATT to incomingEvent.toEventMeta(),
+                    EcosEventType.RECORD_ATT to "",
+                    EcosEventType.RECORD_TYPE_ATT to ""
                 )
             )
         )
@@ -378,7 +396,7 @@ internal class CamundaEventProcessorTest {
 
         verify(camundaEventExploder, never()).fireEvent(
             subscriptionId,
-            ObjectData.create(
+            BpmnDataValue.create(
                 mapOf(
                     "comment" to commentValue
                 )

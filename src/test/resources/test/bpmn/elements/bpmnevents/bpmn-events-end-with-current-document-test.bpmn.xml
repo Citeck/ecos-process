@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_0hq0c8n" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{}" ecos:formRef="" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:processDefId="bpmn-events-end-with-current-document-test" ecos:ecosType="emodel/type@type-ecos-fin-request">
+    <bpmn:process isExecutable="true" id="bpmn-events-end-with-current-document-test">
+        <bpmn:laneSet id="LaneSet_1mkyjsh">
+            <bpmn:lane name="" id="Lane_0zbqdoj" ecos:name_ml="{}">
+                <bpmn:flowNodeRef>StartEvent_1ew9rff</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>endThrow</bpmn:flowNodeRef>
+            </bpmn:lane>
+            <bpmn:lane name="" id="Lane_064in9b" ecos:name_ml="{}">
+                <bpmn:flowNodeRef>Activity_15jdcbg</bpmn:flowNodeRef>
+            </bpmn:lane>
+        </bpmn:laneSet>
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_1ew9rff" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_0m5qza0</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="endThrow" name="" id="Flow_0m5qza0" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:subProcess triggeredByEvent="true" name="" id="Activity_15jdcbg" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:sequenceFlow sourceRef="startEvent" targetRef="endEventFromStart" name="" id="Flow_0mqr2xf" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+            <bpmn:endEvent name="" id="endEventFromStart" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+                <bpmn:incoming >Flow_0mqr2xf</bpmn:incoming>
+            </bpmn:endEvent>
+            <bpmn:startEvent isInterrupting="false" name="" id="startEvent" ecos:manualSignalName="manual-throw-signal" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
+                <bpmn:outgoing >Flow_0mqr2xf</bpmn:outgoing>
+                <bpmn:signalEventDefinition  signalRef="Signal_OTW5TTe" id="SignalEventDefinition_05w8z37"/>
+            </bpmn:startEvent>
+        </bpmn:subProcess>
+        <bpmn:endEvent name="" id="endThrow" ecos:manualSignalName="manual-throw-signal" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
+            <bpmn:incoming >Flow_0m5qza0</bpmn:incoming>
+            <bpmn:signalEventDefinition  signalRef="Signal_OTW5TTe" id="SignalEventDefinition_0kbsmo2"/>
+        </bpmn:endEvent>
+    </bpmn:process>
+    <bpmn:collaboration id="Collaboration_0njwcrl">
+        <bpmn:participant  name="" processRef="bpmn-events-end-with-current-document-test" id="Participant_0e0ipg" ecos:name_ml="{}"/>
+    </bpmn:collaboration>
+    <bpmn:signal name="manual-throw-signal;${execution.businessKey}" id="Signal_OTW5TTe"/>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="Collaboration_0njwcrl" id="BPMNPlane_1">
+            <bpmndi:BPMNShape bpmnElement="Participant_0e0ipg" isExpanded="true" id="Participant_0e0ipg_di">
+                <dc:Bounds x="80.0" y="60.0" width="600.0" height="410.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Lane_064in9b" isExpanded="true" id="Lane_064in9b_di">
+                <dc:Bounds x="110.0" y="210.0" width="570.0" height="260.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Lane_0zbqdoj" isExpanded="true" id="Lane_0zbqdoj_di">
+                <dc:Bounds x="110.0" y="60.0" width="570.0" height="150.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="StartEvent_1ew9rff" isExpanded="true" id="_BPMNShape_StartEvent_2">
+                <dc:Bounds x="156.0" y="102.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_15jdcbg" isExpanded="true" id="Activity_0z7hspo_di">
+                <dc:Bounds x="190.0" y="240.0" width="350.0" height="200.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEventFromStart" isExpanded="true" id="endEventFromStart_di">
+                <dc:Bounds x="482.0" y="322.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="startEvent" isExpanded="true" id="Event_0a60geq_di">
+                <dc:Bounds x="230.0" y="322.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0mqr2xf" id="Flow_0mqr2xf_di">
+                <di:waypoint x="266.0" y="340.0"/>
+                <di:waypoint x="482.0" y="340.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="endThrow" isExpanded="true" id="endThrow_di">
+                <dc:Bounds x="572.0" y="102.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0m5qza0" id="Flow_0m5qza0_di">
+                <di:waypoint x="192.0" y="120.0"/>
+                <di:waypoint x="572.0" y="120.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

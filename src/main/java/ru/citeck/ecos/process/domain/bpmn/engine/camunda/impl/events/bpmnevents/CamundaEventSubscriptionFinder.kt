@@ -27,6 +27,10 @@ class CamundaEventSubscriptionFinder(
     private val cachedEventSubscriptionProvider: CachedEventSubscriptionProvider
 ) {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     fun findAllDeployedSubscriptions(): List<EventSubscription> {
         val eventDefsOfDeploymentId = mutableMapOf<String, List<EventSubscription>>()
 
@@ -44,6 +48,13 @@ class CamundaEventSubscriptionFinder(
     fun getActualCamundaSubscriptions(eventData: IncomingEventData): List<CamundaEventSubscription> {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
             .map { it.toComposedString() }
+
+        if (log.isDebugEnabled) {
+            log.debug { "Generate composed event names: $composedEventNames" }
+
+            val allNames = camundaRuntimeService.createEventSubscriptionQuery().unlimitedList().map { it.eventName }
+            log.debug { "All actual camunda event names: $allNames" }
+        }
 
         val result = camundaRuntimeService.getEventSubscriptionsByEventNames(composedEventNames)
             .map { sub ->

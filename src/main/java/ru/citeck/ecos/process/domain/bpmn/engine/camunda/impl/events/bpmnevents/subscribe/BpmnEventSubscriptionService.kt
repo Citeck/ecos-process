@@ -130,10 +130,12 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
 
     this.forEach { att, dataValue ->
         when (att) {
-            "\$event.id" -> id = dataValue.asText()
-            "\$event.time" -> time = dataValue.getAsInstant()!!
-            "\$event.type" -> type = dataValue.asText()
-            "\$event.user" -> user = dataValue.asText()
+            EventSubscriptionCombiner.EVENT_ID_ATT -> id = dataValue.asText()
+            EventSubscriptionCombiner.EVENT_TIME_ATT -> time = dataValue.getAsInstant()!!
+            EventSubscriptionCombiner.EVENT_TYPE_ATT -> type = dataValue.asText()
+            EventSubscriptionCombiner.EVENT_USER_ATT -> user = dataValue.asText()
+            EventSubscriptionCombiner.EVENT_RECORD_ID_ATT -> attributes[EcosEventType.RECORD_ATT] = dataValue
+            EventSubscriptionCombiner.EVENT_RECORD_TYPE_ID_ATT -> attributes[EcosEventType.RECORD_TYPE_ATT] = dataValue
             else -> attributes[att] = dataValue
         }
     }

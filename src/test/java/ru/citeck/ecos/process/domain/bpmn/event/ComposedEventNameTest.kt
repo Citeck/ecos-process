@@ -90,6 +90,15 @@ class ComposedEventNameTest {
     }
 
     @Test
+    fun `composed event name with blank type and any document to composed string`() {
+        val composedEventName = ComposedEventName(EVENT_TYPE, ComposedEventName.RECORD_ANY, "")
+        assertEquals(
+            "$EVENT_TYPE;${ComposedEventName.RECORD_ANY}",
+            composedEventName.toComposedString()
+        )
+    }
+
+    @Test
     fun `create composed event name from invalid string must throw`() {
         assertThrows<IllegalArgumentException> {
             ComposedEventName.fromString("invalid string")

@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 import mu.KotlinLogging
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 
 @Component
 class CamundaEventExploder(
@@ -14,7 +14,7 @@ class CamundaEventExploder(
         private val log = KotlinLogging.logger {}
     }
 
-    fun fireEvent(signalId: String, event: ObjectData) {
+    fun fireEvent(signalId: String, event: BpmnDataValue) {
         log.debug { "Fire signal $signalId with data $event" }
 
         val signal = SignalEventByIdCmd(signalId, event)

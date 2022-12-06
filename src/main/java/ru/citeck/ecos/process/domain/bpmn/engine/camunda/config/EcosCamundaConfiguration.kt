@@ -26,6 +26,11 @@ class EcosCamundaConfiguration {
     }
 
     @Bean
+    fun camundaSerializationConfiguration(): CamundaProcessEngineConfiguration {
+        return CamundaSerializationConfiguration()
+    }
+
+    @Bean
     fun camundaResolveVariablesConfiguration(): CamundaProcessEngineConfiguration {
         return CamundaResolveVariablesConfiguration()
     }

@@ -7,6 +7,7 @@ import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
+import org.camunda.bpm.scenario.Scenario
 import org.camunda.bpm.scenario.Scenario.run
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -31,6 +32,7 @@ import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
@@ -62,6 +64,7 @@ private const val GATEWAY = "gateway"
 private const val SUB_PROCESS = "subprocess"
 private const val SEND_TASK = "sendtask"
 private const val TIMER = "timer"
+private const val BPMN_EVENTS = "bpmnevents"
 
 /**
  * Why all tests places on one monster class?
@@ -97,6 +100,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Autowired
     private lateinit var procHistoricTaskService: ProcHistoricTaskService
 
+    @Autowired
+    private lateinit var bpmnEventHelper: BpmnEventHelper
+
     @Mock
     private lateinit var process: ProcessScenario
 
@@ -112,11 +118,13 @@ class BpmnMonsterTestWithRunProcessTest {
     companion object {
         private val harryRecord = PotterRecord()
         private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
-        private val docRef = RecordRef.valueOf("doc@1")
+
+        private val docRecord = DocRecord()
+        private val docRef = RecordRef.valueOf("store/doc@1")
         private val docExplicitRef = RecordRef.valueOf("doc@explicit")
 
         private val variables_docRef = mapOf(
-            "documentRef" to "doc@1"
+            "documentRef" to docRef.toString()
         )
 
         private val mockRoleUserNames = listOf(USER_IVAN, USER_PETR)
@@ -138,6 +146,15 @@ class BpmnMonsterTestWithRunProcessTest {
                 .addRecord(
                     harryRef.id,
                     PotterRecord()
+                )
+                .build()
+        )
+
+        recordsService.register(
+            RecordsDaoBuilder.create("store/doc")
+                .addRecord(
+                    docRef.id,
+                    DocRecord()
                 )
                 .build()
         )
@@ -449,7 +466,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
             )
         ).execute()
@@ -473,7 +490,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
             )
         ).execute()
@@ -642,7 +659,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val scenario = run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "foo" to "foo"
             )
         ).execute()
@@ -718,7 +735,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "flow" to "top",
             )
         ).execute()
@@ -734,7 +751,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "flow" to "bottom",
             )
         ).execute()
@@ -750,7 +767,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "flow" to "no-one-flow",
             )
         ).execute()
@@ -766,7 +783,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "flow" to "top",
             )
         ).execute()
@@ -782,7 +799,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "flow" to "bottom",
             )
         ).execute()
@@ -798,7 +815,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "flow" to "no-one-flow",
             )
         ).execute()
@@ -820,7 +837,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 taskOutcome.outcomeId() to taskOutcome.value,
             )
         ).execute()
@@ -842,7 +859,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 taskOutcome.outcomeId() to taskOutcome.value,
             )
         ).execute()
@@ -865,7 +882,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to "doc@1",
+                    "documentRef" to docRef.toString(),
                     taskOutcome.outcomeId() to taskOutcome.value,
                 )
             ).execute()
@@ -879,7 +896,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-set-status"
         saveAndDeployBpmn("status", procId)
 
-        val docRef = RecordRef.valueOf("doc@1")
+        val docRef = RecordRef.valueOf(docRef.toString())
 
         run(process).startByKey(
             procId,
@@ -919,7 +936,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1"
+                "documentRef" to docRef.toString()
             )
         ).execute()
 
@@ -952,7 +969,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
             )
         ).execute()
@@ -987,7 +1004,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
             )
         ).execute()
@@ -1157,7 +1174,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to "doc@1",
+                "documentRef" to docRef.toString(),
                 "timeValue" to "R/P1D"
             )
         ).execute()
@@ -1409,7 +1426,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `get actual camunda subscriptions of boundary event`() {
         val procId = "test-subscriptions-event-boundary"
-        val document = "doc@1"
+        val document = docRef.toString()
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
@@ -1471,7 +1488,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `get actual camunda subscriptions of boundary event parallel process`() {
         val procId = "test-subscriptions-event-boundary-parallel"
-        val document = "doc@1"
+        val document = docRef.toString()
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
@@ -1545,6 +1562,753 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).execute()
     }
+
+    // --- BPMN EVENTS TESTS ---
+
+    @Test
+    fun `bpmn event manual current document`() {
+        val procId = "bpmn-events-manual-current-document-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = mapOf(
+                    "record" to docRef.toString()
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event manual current document must not call while document not match`() {
+        val procId = "bpmn-events-manual-current-document-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = mapOf(
+                    "record" to "another-document"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event manual current document must not call while event name not match`() {
+        val procId = "bpmn-events-manual-current-document-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test-another",
+                eventData = mapOf(
+                    "record" to docRef.toString()
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event manual any document`() {
+        val procId = "bpmn-events-manual-any-document-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = emptyMap()
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event manual any document must not call while event name not match`() {
+        val procId = "bpmn-events-manual-any-document-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test-another",
+                eventData = emptyMap()
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event manual filter by type`() {
+        val procId = "bpmn-events-manual-filter-by-type-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = mapOf(
+                    "record" to docRef
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event manual filter by type must not call while type not match`() {
+        val procId = "bpmn-events-manual-filter-by-type-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = mapOf(
+                    "record" to harryRef
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event manual filter by document from variable`() {
+        val procId = "bpmn-events-manual-filter-by-document-from-variable-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val filterDocument = docRef.toString()
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = mapOf(
+                    "record" to filterDocument
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to harryRef.toString(),
+                "docForFilter" to filterDocument
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event manual filter by document from variable must not call while document not match`() {
+        val procId = "bpmn-events-manual-filter-by-document-from-variable-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val filterDocument = docRef.toString()
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-int-catch-test",
+                eventData = mapOf(
+                    "record" to filterDocument + "another"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to harryRef.toString(),
+                "docForFilter" to filterDocument
+            )
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event predefined`() {
+        val procId = "bpmn-events-predefined-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event predefined must not call while event is not match`() {
+        val procId = "bpmn-events-predefined-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendUpdateCommentEvent(
+                CommentUpdateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    textBefore = "text comment before",
+                    textAfter = "test comment after"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event predefined attributes test`() {
+        val procId = "bpmn-events-predefined-variables-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val commentRecord = EntityRef.valueOf("eproc/comment@1")
+        val commentText = "test comment"
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = commentRecord,
+                    text = commentText
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["text"].asText()
+        }.isEqualTo(commentText)
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["commentRecord"].asText()
+        }.isEqualTo(commentRecord.toString())
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["record"].asText()
+        }.isEqualTo(docRef.toString())
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["recordType"].asText()
+        }.isEqualTo(docRecord.type.toString())
+    }
+
+    @Test
+    fun `bpmn event meta attributes test`() {
+        val procId = "bpmn-events-predefined-variables-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val commentRecord = EntityRef.valueOf("eproc/comment@1")
+        val commentText = "test comment"
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = commentRecord,
+                    text = commentText
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it[EVENT_META_ATT][EVENT_META_ID_ATT].asText()
+        }.isNotNull
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it[EVENT_META_ATT][EVENT_META_TIME_ATT].asText()
+        }.isNotNull
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it[EVENT_META_ATT][EVENT_META_TYPE_ATT].asText()
+        }.isEqualTo(CommentCreateEvent.TYPE)
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it[EVENT_META_ATT][EVENT_META_USER_ATT].asText()
+        }.isEqualTo(TEST_USER)
+    }
+
+    @Test
+    fun `bpmn event user model attributes test`() {
+        val procId = "bpmn-events-predefined-user-model-variables-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val commentRecord = EntityRef.valueOf("eproc/comment@1")
+        val commentText = "test comment"
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = harryRef,
+                    commentRecord = commentRecord,
+                    text = commentText
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["harryName"].asText()
+        }.isEqualTo(harryRecord.name)
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["harryEmail"].asText()
+        }.isEqualTo(harryRecord.email)
+    }
+
+    @Test
+    fun `bpmn event user model variables predicate`() {
+        val procId = "bpmn-events-user-model-variables-predicate-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = harryRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event user model variables predicate not match`() {
+        val procId = "bpmn-events-user-model-variables-predicate-false-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = harryRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event predefined model variables predicate`() {
+        val procId = "bpmn-events-predefined-variables-predicate-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event predefined model variables predicate not match`() {
+        val procId = "bpmn-events-predefined-variables-predicate-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "not match comment"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }
+
+    // TODO: uncomment
+    /*@Test
+    fun `bpmn event meta variables predicate`() {
+        val procId = "bpmn-events-meta-variables-predicate-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event meta variables predicate not match`() {
+        val procId = "bpmn-events-meta-variables-predicate-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "not match comment"
+                ),
+                "notMatchUser"
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        scenario.deleteProcessInstance()
+    }*/
+
+    @Test
+    fun `bpmn event intermediate catch`() {
+        val procId = "bpmn-events-intermediate-catch-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("event_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event boundary non interrupting`() {
+        val procId = "bpmn-events-boundary-non-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("task")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("boundaryEvent")
+        verify(process).hasFinished("endEventFromBoundary")
+        verify(process, never()).hasCanceled("task")
+        verify(process, never()).hasFinished("endEventBase")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event boundary non interrupting multiple times`() {
+        val procId = "bpmn-events-boundary-non-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val repeatCount = 3
+
+        `when`(process.waitsAtUserTask("task")).thenReturn {
+            repeat(repeatCount) {
+                bpmnEventHelper.sendCreateCommentEvent(
+                    CommentCreateEvent(
+                        record = docRef,
+                        commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                        text = "test comment"
+                    )
+                )
+            }
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process, times(repeatCount)).hasFinished("boundaryEvent")
+        verify(process, times(repeatCount)).hasFinished("endEventFromBoundary")
+        verify(process, never()).hasCanceled("task")
+        verify(process, never()).hasFinished("endEventBase")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event boundary interrupting`() {
+        val procId = "bpmn-events-boundary-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("task")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("boundaryEvent")
+        verify(process).hasFinished("endEventFromBoundary")
+        verify(process).hasCanceled("task")
+        verify(process, never()).hasFinished("endEventBase")
+    }
+
+    @Test
+    fun `bpmn event start non interrupting`() {
+        val procId = "bpmn-events-start-non-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event start non interrupting multiple times`() {
+        val procId = "bpmn-events-start-non-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val repeatCount = 3
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            repeat(repeatCount) {
+                bpmnEventHelper.sendCreateCommentEvent(
+                    CommentCreateEvent(
+                        record = docRef,
+                        commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                        text = "test comment"
+                    )
+                )
+            }
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process, times(repeatCount)).hasFinished("startEvent")
+        verify(process, times(repeatCount)).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event start interrupting`() {
+        val procId = "bpmn-events-start-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "test comment"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event start interrupting multiple times`() {
+        val procId = "bpmn-events-start-interrupting-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            repeat(3) {
+                bpmnEventHelper.sendCreateCommentEvent(
+                    CommentCreateEvent(
+                        record = docRef,
+                        commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                        text = "test comment"
+                    )
+                )
+            }
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process, times(1)).hasFinished("startEvent")
+        verify(process, times(1)).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+    }
+
+    @Test
+    fun `bpmn event intermediate throw`() {
+        val procId = "bpmn-events-intermediate-throw-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            // do nothing
+        }
+
+        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("eventThrow")
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+
+        scenario.deleteProcessInstance()
+    }
+
+    @Test
+    fun `bpmn event end throw`() {
+        val procId = "bpmn-events-end-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endThrow")
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+    }
+
+    @Test
+    fun `bpmn event end throw to start event - with filter by current document`() {
+        val procId = "bpmn-events-end-with-current-document-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endThrow")
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+    }
+
+    @Test
+    fun `bpmn event end throw to start event - with filter by document type`() {
+        val procId = "bpmn-events-end-with-filter-by-document-type-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endThrow")
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+    }
+
+    @Test
+    fun `bpmn event end throw to start event - with filter by document type not match`() {
+        val procId = "bpmn-events-end-with-filter-by-document-type-false-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endThrow")
+        verify(process, never()).hasFinished("startEvent")
+        verify(process, never()).hasFinished("endEventFromStart")
+    }
+
+    private fun Scenario.deleteProcessInstance() {
+        // camundaRuntimeService.deleteProcessInstance(instance(process).processInstanceId, "-")
+    }
 }
 
 class PotterRecord(
@@ -1553,8 +2317,20 @@ class PotterRecord(
     val email: String = "harry.potter@hogwarts.com",
 
     @AttName("name")
-    val name: String = "Harry Potter"
+    val name: String = "Harry Potter",
 
+    @AttName("_type")
+    val type: EntityRef = EntityRef.valueOf("emodel/type@potter")
+
+)
+
+class DocRecord(
+
+    @AttName("name")
+    val name: String = "Doc 1",
+
+    @AttName("_type")
+    val type: EntityRef = EntityRef.valueOf("emodel/type@document")
 )
 
 /**

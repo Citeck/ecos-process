@@ -51,6 +51,10 @@ enum class EcosEventType(
     );
 
     companion object {
+
+        const val RECORD_ATT = "record"
+        const val RECORD_TYPE_ATT = "recordType"
+
         fun from(value: String): EcosEventType =
             EcosEventType.values().find { event ->
                 event.eventRepresentations.any { it.eventName == value }

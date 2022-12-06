@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
@@ -15,6 +16,7 @@ import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class UpdateEventSubscriptionsListenerModelTest {
 
     @Autowired
