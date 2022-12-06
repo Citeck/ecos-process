@@ -15,6 +15,7 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import java.io.Serializable
 import java.util.*
+import kotlin.system.measureTimeMillis
 
 /**
  * @author Roman Makarskiy
@@ -32,58 +33,70 @@ class CamundaEventSubscriptionFinder(
     }
 
     fun findAllDeployedSubscriptions(): List<EventSubscription> {
-        val eventDefsOfDeploymentId = mutableMapOf<String, List<EventSubscription>>()
+        val result: List<EventSubscription>
+        val time = measureTimeMillis {
+            val eventDefsOfDeploymentId = mutableMapOf<String, List<EventSubscription>>()
 
-        procDefService.findAllProcessRevisionsWhereDeploymentIdIsNotNull().forEach { defRev ->
-            val subscriptions = defRev.getBpmnSignalEventSubscriptions()
+            procDefService.findAllProcessRevisionsWhereDeploymentIdIsNotNull().forEach { defRev ->
+                val subscriptions = defRev.getBpmnSignalEventSubscriptions()
 
-            eventDefsOfDeploymentId[defRev.deploymentId] = subscriptions
+                eventDefsOfDeploymentId[defRev.deploymentId] = subscriptions
 
-            cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId, subscriptions)
+                cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId, subscriptions)
+            }
+
+            result = eventDefsOfDeploymentId.values.flatten()
         }
 
-        return eventDefsOfDeploymentId.values.flatten()
+        log.debug { "Find All Deployed Subscriptions ${result.size} in $time ms" }
+
+        return result
     }
 
     fun getActualCamundaSubscriptions(eventData: IncomingEventData): List<CamundaEventSubscription> {
-        val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
-            .map { it.toComposedString() }
+        val result: List<CamundaEventSubscription>
+        val time = measureTimeMillis {
+            val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
+                .map { it.toComposedString() }
 
-        if (log.isDebugEnabled) {
-            log.debug { "Generate composed event names: $composedEventNames" }
+            if (log.isDebugEnabled) {
+                log.debug { "Generate composed event names: $composedEventNames" }
 
-            val allNames = camundaRuntimeService.createEventSubscriptionQuery().unlimitedList().map { it.eventName }
-            log.debug { "All actual camunda event names: $allNames" }
+                val allNames = camundaRuntimeService.createEventSubscriptionQuery().unlimitedList().map { it.eventName }
+                log.debug { "All actual camunda event names: $allNames" }
+            }
+
+            result = camundaRuntimeService.getEventSubscriptionsByEventNames(composedEventNames)
+                .map { sub ->
+
+                    val definition = if (sub.processInstanceId.isNullOrBlank()) {
+                        val defId = sub.configuration
+                        if (defId.isNullOrBlank()) {
+                            error("Cannot determine process definition id for event subscription: ${sub.id}")
+                        }
+                        bpmnProcService.getProcessDefinition(defId)
+                    } else {
+                        bpmnProcService.getProcessDefinitionByProcessInstanceId(sub.processInstanceId)
+                    }
+
+                    val deploymentId = definition?.deploymentId
+                    if (deploymentId.isNullOrBlank()) {
+                        error("Cannot determine deployment id for event subscription: ${sub.id}")
+                    }
+
+                    val events = cachedEventSubscriptionProvider.getEventSubscriptionsByDeploymentId(deploymentId)
+
+                    events.map {
+                        CamundaEventSubscription(
+                            id = sub.id,
+                            event = it
+                        )
+                    }
+                }
+                .flatten()
         }
 
-        val result = camundaRuntimeService.getEventSubscriptionsByEventNames(composedEventNames)
-            .map { sub ->
-
-                val definition = if (sub.processInstanceId.isNullOrBlank()) {
-                    val defId = sub.configuration
-                    if (defId.isNullOrBlank()) {
-                        error("Cannot determine process definition id for event subscription: ${sub.id}")
-                    }
-                    bpmnProcService.getProcessDefinition(defId)
-                } else {
-                    bpmnProcService.getProcessDefinitionByProcessInstanceId(sub.processInstanceId)
-                }
-
-                val deploymentId = definition?.deploymentId
-                if (deploymentId.isNullOrBlank()) {
-                    error("Cannot determine deployment id for event subscription: ${sub.id}")
-                }
-
-                val events = cachedEventSubscriptionProvider.getEventSubscriptionsByDeploymentId(deploymentId)
-
-                events.map {
-                    CamundaEventSubscription(
-                        id = sub.id,
-                        event = it
-                    )
-                }
-            }
-            .flatten()
+        log.debug { "Get actual camunda subscriptions ${result.size} in $time ms" }
 
         return result
     }
