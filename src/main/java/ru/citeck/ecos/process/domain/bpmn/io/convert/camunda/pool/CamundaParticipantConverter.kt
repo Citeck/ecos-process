@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnParticipantDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TParticipant
@@ -24,6 +25,7 @@ class CamundaParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TPartic
             processRef = QName("", element.processRef)
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
+            otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
         }
     }
 }

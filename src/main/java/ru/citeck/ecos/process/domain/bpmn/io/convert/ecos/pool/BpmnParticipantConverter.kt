@@ -3,12 +3,14 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnParticipantDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TParticipant
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
 class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipant> {
@@ -19,7 +21,8 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
         return BpmnParticipantDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            processRef = element.processRef.localPart
+            processRef = element.processRef.localPart,
+            ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE])
         )
     }
 
@@ -30,6 +33,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
             processRef = QName("", element.processRef)
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
+            otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
         }
     }
 }
