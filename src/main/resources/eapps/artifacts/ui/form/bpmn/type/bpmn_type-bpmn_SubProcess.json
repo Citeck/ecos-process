@@ -1,14 +1,14 @@
 {
   "id": "bpmn-type-bpmn:SubProcess",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Sub Process Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [

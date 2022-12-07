@@ -5,7 +5,7 @@
     "en": "BPMN base form Multi Instance"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
   "system": true,

@@ -5,7 +5,7 @@
     "en": "BPMN base form Async"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
   "system": true,

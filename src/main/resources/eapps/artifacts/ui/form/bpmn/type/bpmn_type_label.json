@@ -1,14 +1,14 @@
 {
   "id": "bpmn-type-label",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Label Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [

@@ -1,0 +1,280 @@
+{
+  "id": "bpmn-type-bpmn:SignalEvent",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Signal Event"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {
+    "ru": {
+      "event_comment_create": "Комментарий создан",
+      "event_comment_update": "Комментарий обновлен",
+      "event_comment_delete": "Комментарий удален",
+      "filter_by_record_any": "Любой документ",
+      "filter_by_record_document": "Текущий документ",
+      "filter_by_record_document_by_variable": "Документ из переменной процесса",
+      "event_record_status_changed": "Статус изменен"
+    },
+    "en": {
+      "event_comment_create": "Comment create",
+      "event_comment_update": "Comment update",
+      "event_comment_delete": "Comment delete",
+      "filter_by_record_any": "Any document",
+      "filter_by_record_document": "Current document",
+      "filter_by_record_document_by_variable": "Document from process variable",
+      "event_record_status_changed": "Status changed"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "signal-panel",
+        "title": {
+          "ru": "Сигнал",
+          "en": "Signal"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Ручная настройка",
+              "en": "Manual configuration"
+            },
+            "key": "eventManualMode",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "forceManual",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "let type = instance.options.editor.getElementType();\nlet isNonInt = instance.options.editor.elementIsNonInterrupting();\n\nvar forceManual = false;\n\nswitch (type) {\n  case \"bpmn:EndEvent\": {\n    forceManual = true;\n    break;\n  }\n  case \"bpmn:IntermediateThrowEvent\": {\n    forceManual = true;\n    break;\n  }\n  default: {\n    forceManual = false;\n  }\n}\n\n\nresult = forceManual;"
+                },
+                "actions": [
+                  {
+                    "name": "set to protected",
+                    "type": "property",
+                    "property": {
+                      "label": "Disabled",
+                      "value": "disabled",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  },
+                  {
+                    "name": "set to true",
+                    "type": "value",
+                    "value": "value = true;"
+                  }
+                ]
+              }
+            ],
+            "type": "checkbox",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Имя сигнала",
+              "en": "Signal name"
+            },
+            "key": "manualSignalName",
+            "validate": {
+              "required": true,
+              "pattern": "([a-zA-Z0-9-]+$)",
+              "maxLength": 50
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = !!data.eventManualMode;",
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Тип события",
+              "en": "Event type"
+            },
+            "key": "eventType",
+            "validate": {
+              "required": true
+            },
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": "event_comment_create",
+                  "value": "COMMENT_CREATE"
+                },
+                {
+                  "label": "event_comment_update",
+                  "value": "COMMENT_UPDATE"
+                },
+                {
+                  "label": "event_comment_delete",
+                  "value": "COMMENT_DELETE"
+                },
+                {
+                  "label": "event_record_status_changed",
+                  "value": "RECORD_STATUS_CHANGED"
+                }
+              ]
+            },
+            "defaultValue": "",
+            "optionalWhenDisabled": false,
+            "customConditional": "show = !!!data.eventManualMode;",
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Модель данных",
+              "en": "Data model"
+            },
+            "key": "eventModel",
+            "keyLabel": "",
+            "addAnother": "Add Another",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "let type = instance.options.editor.getElementType();\n\nvar showRequired = true;\n\nswitch (type) {\n  case \"bpmn:IntermediateThrowEvent\": {\n    showRequired = false;\n    break;\n  }\n  case \"bpmn:EndEvent\": {\n    showRequired = false;\n    break;\n  }\n  default: {\n    showRequired = true;\n  }\n}\n\nshow = showRequired;",
+            "type": "datamap",
+            "input": true,
+            "valueComponent": {
+              "label": {
+                "ru": "Value"
+              },
+              "key": "value",
+              "validate": {
+                "required": true,
+                "pattern": "([a-zA-Z0-9()?\\[\\]{}._\\$]+$)",
+                "custom": "",
+                "customPrivate": false,
+                "customMessage": "",
+                "json": "",
+                "minLength": "",
+                "maxLength": "",
+                "minWords": "",
+                "maxWords": ""
+              },
+              "defaultValue": "",
+              "refreshOn": [],
+              "optionalWhenDisabled": false,
+              "type": "textfield",
+              "input": true
+            }
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel-filter",
+            "title": {
+              "ru": "Фильтрация",
+              "en": "Filter"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Фильтр события по документу",
+                  "en": "Event filter by document"
+                },
+                "key": "eventFilterByRecordType",
+                "validate": {
+                  "required": true
+                },
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "let type = instance.options.editor.getElementType();\nlet parentType = instance.options.editor.getElementParentType();\n\nconst filterTypes = [];\n\nconst valAny = {\n  value: 'ANY',\n  label: 'filter_by_record_any'\n};\nconst valDoc = {\n  value: 'DOCUMENT',\n  label: 'filter_by_record_document'\n}\n\nconst valDocByVar = {\n  value: 'DOCUMENT_BY_VARIABLE',\n  label: 'filter_by_record_document_by_variable'\n}\n\nswitch (type) {\n    case 'bpmn:StartEvent': {\n        filterTypes.push(valAny);\n\n        if (parentType === 'bpmn:SubProcess') {\n            filterTypes.push(valDoc);\n        }\n        break;\n    }\n    default: {\n        filterTypes.push(valAny);\n        filterTypes.push(valDoc);\n        filterTypes.push(valDocByVar);\n    }\n}\n\nreturn filterTypes;\n"
+                },
+                "defaultValue": "DOCUMENT",
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Имя переменной",
+                  "en": "Variable name"
+                },
+                "key": "eventFilterByRecordVariable",
+                "validate": {
+                  "required": true
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.eventFilterByRecordType == 'DOCUMENT_BY_VARIABLE';",
+                "type": "textfield",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Фильтр события по типу документа",
+                  "en": "Event filter by document type"
+                },
+                "key": "eventFilterByEcosType",
+                "modalTitle": "",
+                "journalId": "ecos-types",
+                "queryData": "",
+                "refreshOn": [],
+                "customDefaultValue": "var typeRef = instance.options.editor.getEcosType()._id;\nif (!!typeRef) {\n  value = typeRef;\n}",
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.eventFilterByRecordType == 'ANY';",
+                "type": "selectJournal",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Фильтр события по предикатам",
+                  "en": "Filter event predicates"
+                },
+                "key": "eventFilterByPredicate",
+                "placeholder": {
+                  "ru": "{     \"t\": \"eq\",     \"att\": \"before\",     \"val\": \"approval\" }"
+                },
+                "editor": "ace",
+                "wysiwyg": "",
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "let type = instance.options.editor.getElementType();\n\nvar showRequired = true;\n\nswitch (type) {\n  case \"bpmn:IntermediateThrowEvent\": {\n    showRequired = false;\n    break;\n  }\n  case \"bpmn:EndEvent\": {\n    showRequired = false;\n    break;\n  }\n  default: {\n    showRequired = true;\n  }\n}\n\nshow = showRequired;",
+                "rows": 5,
+                "as": "",
+                "type": "textarea",
+                "input": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      }
+    ],
+    "formId": "bpmn-type-bpmn:SignalEvent"
+  },
+  "attributes": {}
+}
