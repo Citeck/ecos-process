@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn
 
+import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.HistoryService
@@ -7,7 +8,6 @@ import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
-import org.camunda.bpm.scenario.Scenario
 import org.camunda.bpm.scenario.Scenario.run
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -1346,18 +1346,17 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     // --- CamundaEventSubscriptionFinder TESTS ---
-
     @Test
     fun `get actual camunda subscriptions of 2 different process with start event`() {
         val procId = "test-subscriptions-start-signal-event"
         val procIdModified = "test-subscriptions-start-signal-event_2"
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
-        saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
-
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+        val subscriptions = getSubscriptionsAfterAction(
             IncomingEventData(eventName = "ecos.comment.create")
-        ).map { it.event }
+        ) {
+            saveAndDeployBpmn(SUBSCRIPTION, procId)
+            saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+        }
 
         val eventSubscription = EventSubscription(
             name = ComposedEventName(
@@ -1377,8 +1376,8 @@ class BpmnMonsterTestWithRunProcessTest {
             """.trimIndent()
         )
 
-        assertThat(foundSubscriptions).hasSize(2)
-        assertThat(foundSubscriptions).containsExactlyInAnyOrder(
+        assertThat(subscriptions).hasSize(2)
+        assertThat(subscriptions).containsExactlyInAnyOrder(
             eventSubscription,
             eventSubscription.copy(
                 model = mapOf(
@@ -1394,15 +1393,15 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-subscriptions-start-signal-event"
         val procIdVersion2 = "test-subscriptions-start-signal-event-version_2"
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
-        saveAndDeployBpmn(SUBSCRIPTION, procIdVersion2)
-
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+        val subscriptions = getSubscriptionsAfterAction(
             IncomingEventData(eventName = "ecos.comment.create")
-        ).map { it.event }
+        ) {
+            saveAndDeployBpmn(SUBSCRIPTION, procId)
+            saveAndDeployBpmn(SUBSCRIPTION, procIdVersion2)
+        }
 
-        assertThat(foundSubscriptions).hasSize(1)
-        assertThat(foundSubscriptions).containsExactlyInAnyOrder(
+        assertThat(subscriptions).hasSize(1)
+        assertThat(subscriptions).containsExactlyInAnyOrder(
             EventSubscription(
                 name = ComposedEventName(
                     event = EcosEventType.COMMENT_CREATE.name,
@@ -1430,11 +1429,12 @@ class BpmnMonsterTestWithRunProcessTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
-            IncomingEventData(eventName = "ecos.comment.create")
+        val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(
+                eventName = "ecos.comment.create",
+                record = EntityRef.valueOf(document)
+            )
         ).map { it.event }
-
-        assertThat(foundSubscriptions).isEmpty()
 
         `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
             val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
@@ -1444,8 +1444,10 @@ class BpmnMonsterTestWithRunProcessTest {
                 )
             ).map { it.event }
 
-            assertThat(subscriptionWhenTaskRun).hasSize(1)
-            assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
+            val diff = ListUtils.subtract(subscriptionWhenTaskRun, existingSubscriptions)
+
+            assertThat(diff).hasSize(1)
+            assertThat(diff).containsExactlyInAnyOrder(
                 EventSubscription(
                     name = ComposedEventName(
                         event = EcosEventType.COMMENT_CREATE.name,
@@ -1477,10 +1479,13 @@ class BpmnMonsterTestWithRunProcessTest {
         ).execute()
 
         val subscriptionWhenTaskComplete = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
-            IncomingEventData(eventName = "ecos.comment.create")
+            IncomingEventData(
+                eventName = "ecos.comment.create",
+                record = EntityRef.valueOf(document)
+            )
         ).map { it.event }
 
-        assertThat(subscriptionWhenTaskComplete).hasSize(0)
+        assertThat(subscriptionWhenTaskComplete).hasSize(existingSubscriptions.size)
 
         verify(process).hasFinished("endEvent")
     }
@@ -1492,11 +1497,12 @@ class BpmnMonsterTestWithRunProcessTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
-            IncomingEventData(eventName = "ecos.comment.create")
+        val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(
+                eventName = "ecos.comment.create",
+                record = EntityRef.valueOf(document)
+            )
         ).map { it.event }
-
-        assertThat(foundSubscriptions).isEmpty()
 
         val eventComment = EventSubscription(
             name = ComposedEventName(
@@ -1532,8 +1538,10 @@ class BpmnMonsterTestWithRunProcessTest {
                 )
             ).map { it.event }
 
-            assertThat(subscriptionWhenTaskRun).hasSize(2)
-            assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
+            val diff = ListUtils.subtract(subscriptionWhenTaskRun, existingSubscriptions)
+
+            assertThat(diff).hasSize(2)
+            assertThat(diff).containsExactlyInAnyOrder(
                 eventComment,
                 eventManual
             )
@@ -1547,8 +1555,10 @@ class BpmnMonsterTestWithRunProcessTest {
                 )
             ).map { it.event }
 
-            assertThat(subscriptionWhenTaskRun).hasSize(2)
-            assertThat(subscriptionWhenTaskRun).containsExactlyInAnyOrder(
+            val diff = ListUtils.subtract(subscriptionWhenTaskRun, existingSubscriptions)
+
+            assertThat(diff).hasSize(2)
+            assertThat(diff).containsExactlyInAnyOrder(
                 eventComment,
                 eventManual
             )
@@ -1598,11 +1608,9 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1619,11 +1627,9 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1655,11 +1661,9 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1695,11 +1699,9 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1745,7 +1747,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(
+        run(process).startByKey(
             procId,
             mapOf(
                 "documentRef" to harryRef.toString(),
@@ -1754,8 +1756,6 @@ class BpmnMonsterTestWithRunProcessTest {
         ).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1794,11 +1794,9 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1949,11 +1947,9 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -1991,15 +1987,12 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
-
-        scenario.deleteProcessInstance()
     }
 
-    // TODO: uncomment
-    /*@Test
+    @Test
     fun `bpmn event meta variables predicate`() {
         val procId = "bpmn-events-meta-variables-predicate-test"
         saveAndDeployBpmn(BPMN_EVENTS, procId)
@@ -2029,18 +2022,36 @@ class BpmnMonsterTestWithRunProcessTest {
                 CommentCreateEvent(
                     record = docRef,
                     commentRecord = EntityRef.valueOf("eproc/comment@1"),
-                    text = "not match comment"
+                    text = "test comment"
                 ),
                 "notMatchUser"
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process, never()).hasFinished("endEvent")
+    }
 
-        scenario.deleteProcessInstance()
-    }*/
+    @Test
+    fun `bpmn event user model variables predicate with expression`() {
+        val procId = "bpmn-events-user-model-variables-predicate-with-expression-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = docRecord.name
+                )
+            )
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
 
     @Test
     fun `bpmn event intermediate catch`() {
@@ -2077,14 +2088,12 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process).hasFinished("boundaryEvent")
         verify(process).hasFinished("endEventFromBoundary")
         verify(process, never()).hasCanceled("task")
         verify(process, never()).hasFinished("endEventBase")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -2106,14 +2115,12 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process, times(repeatCount)).hasFinished("boundaryEvent")
         verify(process, times(repeatCount)).hasFinished("endEventFromBoundary")
         verify(process, never()).hasCanceled("task")
         verify(process, never()).hasFinished("endEventBase")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -2154,13 +2161,11 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process).hasFinished("startEvent")
         verify(process).hasFinished("endEventFromStart")
         verify(process, never()).hasFinished("endEventBase")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -2182,13 +2187,11 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process, times(repeatCount)).hasFinished("startEvent")
         verify(process, times(repeatCount)).hasFinished("endEventFromStart")
         verify(process, never()).hasFinished("endEventBase")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -2206,13 +2209,11 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process).hasFinished("startEvent")
         verify(process).hasFinished("endEventFromStart")
         verify(process, never()).hasFinished("endEventBase")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -2248,14 +2249,12 @@ class BpmnMonsterTestWithRunProcessTest {
             // do nothing
         }
 
-        val scenario = run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
         verify(process).hasFinished("eventThrow")
         verify(process).hasFinished("startEvent")
         verify(process).hasFinished("endEventFromStart")
         verify(process, never()).hasFinished("endEventBase")
-
-        scenario.deleteProcessInstance()
     }
 
     @Test
@@ -2306,8 +2305,21 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("endEventFromStart")
     }
 
-    private fun Scenario.deleteProcessInstance() {
-        // camundaRuntimeService.deleteProcessInstance(instance(process).processInstanceId, "-")
+    fun getSubscriptionsAfterAction(
+        incomingEventData: IncomingEventData,
+        action: () -> Unit
+    ): List<EventSubscription> {
+        val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            incomingEventData
+        ).map { it.event }
+
+        action()
+
+        val updatedSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            incomingEventData
+        ).map { it.event }
+
+        return ListUtils.subtract(updatedSubscriptions, existingSubscriptions)
     }
 }
 

@@ -8,13 +8,10 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
-import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
-import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
@@ -96,13 +93,12 @@ class CamundaEventProcessor(
             return true
         }
 
-        val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, this))
         val resolvedFilter = recordsTemplateService.resolve(
             predicate,
-            RecordRef.create("meta", "")
+            this
         )
 
-        return predicateService.isMatch(element, resolvedFilter)
+        return predicateService.isMatch(this, resolvedFilter)
     }
 }
 

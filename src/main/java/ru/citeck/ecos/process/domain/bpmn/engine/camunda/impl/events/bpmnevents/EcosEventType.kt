@@ -48,6 +48,19 @@ enum class EcosEventType(
                 defaultModel = mapOf("text" to "textBefore", "commentRecord" to "commentRec?id")
             )
         )
+    ),
+    RECORD_STATUS_CHANGED(
+        listOf(
+            EventRepresentation(
+                eventName = "record-status-changed",
+                defaultModel = mapOf(
+                    "record" to "record?id",
+                    "recordType" to "recordType?id",
+                    "before" to "before",
+                    "after" to "after"
+                )
+            )
+        )
     );
 
     companion object {

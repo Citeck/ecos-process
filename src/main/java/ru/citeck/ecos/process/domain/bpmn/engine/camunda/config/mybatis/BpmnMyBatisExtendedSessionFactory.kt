@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis
 
+import org.apache.ibatis.transaction.managed.ManagedTransactionFactory
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.impl.cfg.StandaloneProcessEngineConfiguration
 import org.camunda.bpm.engine.impl.interceptor.CommandContextInterceptor
@@ -22,6 +23,8 @@ class BpmnMyBatisExtendedSessionFactory : StandaloneProcessEngineConfiguration()
 
     fun initFromProcessEngineConfiguration(processEngineConfiguration: ProcessEngineConfigurationImpl) {
         setDataSource(processEngineConfiguration.dataSource)
+        setTransactionFactory(ManagedTransactionFactory())
+
         initDataSource()
         initCommandContextFactory()
         initTransactionFactory()
