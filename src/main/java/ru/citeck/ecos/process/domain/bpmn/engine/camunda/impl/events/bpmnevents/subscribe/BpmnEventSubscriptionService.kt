@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
@@ -105,7 +106,7 @@ class BpmnEventSubscriptionService(
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
                 withAction { event ->
-                    log.debug { "Receive subscription event: $event" }
+                    log.debug { "Receive subscription event: \n${Json.mapper.toPrettyString(event)}" }
                     camundaEventProcessor.processEvent(event.toGeneralEvent())
                 }
             }
