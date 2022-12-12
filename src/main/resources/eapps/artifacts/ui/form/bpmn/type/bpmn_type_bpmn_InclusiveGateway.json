@@ -1,0 +1,25 @@
+{
+  "id": "bpmn-type-bpmn:InclusiveGateway",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Inclusive Gateway Form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      }
+    ]
+  },
+  "attributes": {}
+}
