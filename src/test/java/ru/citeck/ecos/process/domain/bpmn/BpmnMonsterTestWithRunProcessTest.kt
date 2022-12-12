@@ -923,6 +923,48 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("end_condition_event")
     }
 
+    @Test
+    fun `gateway event based first variant`() {
+        val procId = "test-event-based-gateway"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        `when`(process.waitsAtEventBasedGateway("event_based_gateway")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-gateway-signal-1",
+                eventData = mapOf(
+                    "record" to docRef.toString()
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("Event_first")
+        verify(process, never()).hasFinished("Event_second")
+        verify(process).hasFinished("end_event")
+    }
+
+    @Test
+    fun `gateway event based second variant`() {
+        val procId = "test-event-based-gateway"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        `when`(process.waitsAtEventBasedGateway("event_based_gateway")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "event-gateway-signal-2",
+                eventData = mapOf(
+                    "record" to docRef.toString()
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("Event_second")
+        verify(process, never()).hasFinished("Event_first")
+        verify(process).hasFinished("end_event")
+    }
+
     // --- BPMN SET STATUS TESTS ---
 
     @Test

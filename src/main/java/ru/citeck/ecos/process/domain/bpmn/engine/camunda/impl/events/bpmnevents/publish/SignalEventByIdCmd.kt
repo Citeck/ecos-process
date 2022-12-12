@@ -37,7 +37,7 @@ class SignalEventByIdCmd(
     private fun findSignalEventSubscriptions(commandContext: CommandContext): List<EventSubscriptionEntity> {
         val eventSubscriptionManager = commandContext.eventSubscriptionManager
         val subs = eventSubscriptionManager.findEventSubscriptionById(signalId)
-        return listOf(subs)
+        return listOfNotNull(subs)
     }
 
     private fun checkAuthorizationOfCatchSignals(
