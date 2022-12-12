@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaPlan
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaShapeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaCollaborationConverter
@@ -33,6 +34,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnPlaneConve
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnShapeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnCollaborationConverter
@@ -92,7 +94,8 @@ object BpmnIO {
             BpmnParticipantConverter::class,
             BpmnCollaborationConverter::class,
             BpmnLaneSetConverter::class,
-            BpmnLaneConverter::class
+            BpmnLaneConverter::class,
+            BpmnInclusiveGatewayConverter::class
         ),
         extensionTypeResolver
     )
@@ -126,7 +129,8 @@ object BpmnIO {
             CamundaParticipantConverter::class,
             CamundaCollaborationConverter::class,
             CamundaLaneSetConverter::class,
-            CamundaLaneConverter::class
+            CamundaLaneConverter::class,
+            CamundaInclusiveGatewayConverter::class,
         ),
         extensionTypeResolver
     )

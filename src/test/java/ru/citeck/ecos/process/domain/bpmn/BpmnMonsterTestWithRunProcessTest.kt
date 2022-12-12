@@ -889,6 +889,40 @@ class BpmnMonsterTestWithRunProcessTest {
         }
     }
 
+    @Test
+    fun `gateway inclusive gateway all flows`() {
+        val procId = "test-inclusive-gateway"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString(),
+                "foo" to "bar",
+            )
+        ).execute()
+
+        verify(process).hasFinished("end_all_event")
+        verify(process).hasFinished("end_condition_event")
+    }
+
+    @Test
+    fun `gateway inclusive only all event flow`() {
+        val procId = "test-inclusive-gateway"
+        saveAndDeployBpmn(GATEWAY, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString(),
+                "foo" to "not_bar",
+            )
+        ).execute()
+
+        verify(process).hasFinished("end_all_event")
+        verify(process, never()).hasFinished("end_condition_event")
+    }
+
     // --- BPMN SET STATUS TESTS ---
 
     @Test
