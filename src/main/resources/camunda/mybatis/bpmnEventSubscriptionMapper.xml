@@ -47,6 +47,17 @@
         </where>
     </select>
 
+    <select id="selectEventSubscriptionsByEventNamesLikeStart" parameterType="java.lang.String"
+            resultMap="eventSubscriptionResultMap">
+        select * from ${prefix}ACT_RU_EVENT_SUBSCR T
+        <where>
+            <foreach collection="eventSubscriptionEventNames" item="eventSubscriptionEventName"
+                     open="" separator=" OR " close="">
+                T.EVENT_NAME_ like #{eventSubscriptionEventName}
+            </foreach>
+        </where>
+    </select>
+
     <update id="truncateEventSubscriptions">
         truncate table ${prefix}ACT_RU_EVENT_SUBSCR
     </update>

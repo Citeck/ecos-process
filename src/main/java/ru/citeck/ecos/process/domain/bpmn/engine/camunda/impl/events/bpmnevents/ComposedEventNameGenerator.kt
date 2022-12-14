@@ -22,7 +22,7 @@ object ComposedEventNameGenerator {
 
         val result = mutableListOf<ComposedEventName>()
 
-        result.add(ComposedEventName(composedName, ComposedEventName.RECORD_ANY))
+        result.add(ComposedEventName(composedName))
 
         if (event.recordType != EntityRef.EMPTY) {
             result.add(ComposedEventName(composedName, ComposedEventName.RECORD_ANY, event.recordType.toString()))

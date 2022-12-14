@@ -7,9 +7,9 @@
         <bpmn:endEvent name="" id="Event_02y6ewj" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
             <bpmn:incoming >Flow_0tczfvx</bpmn:incoming>
         </bpmn:endEvent>
-        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="Event_0kj2k5c" name="" id="Flow_0ii2jqg" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:sequenceFlow sourceRef="Event_0kj2k5c" targetRef="Event_02y6ewj" name="" id="Flow_0tczfvx" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:intermediateThrowEvent name="" id="Event_0kj2k5c" ecos:manualSignalName="some-signal" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
+        <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="throw_event" name="" id="Flow_0ii2jqg" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="throw_event" targetRef="Event_02y6ewj" name="" id="Flow_0tczfvx" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:intermediateThrowEvent name="" id="throw_event" ecos:manualSignalName="some-signal" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true">
             <bpmn:incoming >Flow_0ii2jqg</bpmn:incoming>
             <bpmn:outgoing >Flow_0tczfvx</bpmn:outgoing>
             <bpmn:signalEventDefinition  signalRef="Signal_ZMVKqJN" id="SignalEventDefinition_0ozx40m"/>
@@ -32,7 +32,7 @@
             <bpmndi:BPMNShape bpmnElement="Event_02y6ewj" isExpanded="true" id="Event_02y6ewj_di">
                 <dc:Bounds x="352.0" y="81.0" width="36.0" height="36.0"/>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="Event_0kj2k5c" isExpanded="true" id="Event_020wt2b_di">
+            <bpmndi:BPMNShape bpmnElement="throw_event" isExpanded="true" id="Event_020wt2b_di">
                 <dc:Bounds x="242.0" y="81.0" width="36.0" height="36.0"/>
             </bpmndi:BPMNShape>
         </bpmndi:BPMNPlane>

@@ -52,6 +52,8 @@ class BpmnEventSubscriptionService(
     fun addSubscriptionsForDefRev(procDefRevId: UUID) {
         val subscriptions = camundaEventSubscriptionFinder.getSubscriptionsByProcDefRevId(procDefRevId).combine()
 
+        log.debug { "Add subscriptions for procDefRevId: $procDefRevId, subscriptions: \n$subscriptions" }
+
         for (subscription in subscriptions) {
             val (eventName, attributes) = subscription
 

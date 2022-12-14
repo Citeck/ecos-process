@@ -12,4 +12,5 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerE
 )
 abstract class BpmnAbstractEventDef {
     abstract val id: String
+    abstract var elementId: String
 }

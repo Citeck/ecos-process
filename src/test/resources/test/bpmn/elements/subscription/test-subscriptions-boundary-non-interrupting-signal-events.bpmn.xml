@@ -13,11 +13,11 @@
             <bpmn:incoming >Flow_165s9hy</bpmn:incoming>
         </bpmn:endEvent>
         <bpmn:sequenceFlow sourceRef="userTask" targetRef="Event_1h2x5d2" name="" id="Flow_165s9hy" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:boundaryEvent  cancelActivity="false" attachedToRef="userTask" name="" id="Event_14j280n" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="false" ecos:eventType="COMMENT_CREATE">
+        <bpmn:boundaryEvent  cancelActivity="false" attachedToRef="userTask" name="" id="event_boundary" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="false" ecos:eventType="COMMENT_CREATE">
             <bpmn:outgoing>Flow_0rmfnsb</bpmn:outgoing>
             <bpmn:signalEventDefinition signalRef="Signal_bFiXOqt" id="SignalEventDefinition_1rlg0uc"/>
         </bpmn:boundaryEvent>
-        <bpmn:sequenceFlow sourceRef="Event_14j280n" targetRef="Activity_0drp7bc" name="" id="Flow_0rmfnsb" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="event_boundary" targetRef="Activity_0drp7bc" name="" id="Flow_0rmfnsb" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
         <bpmn:scriptTask scriptFormat="javascript" name="" id="Activity_0drp7bc" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script=" //some script">
             <bpmn:incoming >Flow_0rmfnsb</bpmn:incoming>
             <bpmn:script> //some script</bpmn:script>
@@ -51,7 +51,7 @@
             <bpmndi:BPMNShape bpmnElement="Activity_0drp7bc" isExpanded="true" id="Activity_17v2z67_di">
                 <dc:Bounds x="390.0" y="200.0" width="100.0" height="80.0"/>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="Event_14j280n" isExpanded="true" id="Event_14ronvn_di">
+            <bpmndi:BPMNShape bpmnElement="event_boundary" isExpanded="true" id="Event_14ronvn_di">
                 <dc:Bounds x="302.0" y="142.0" width="36.0" height="36.0"/>
             </bpmndi:BPMNShape>
         </bpmndi:BPMNPlane>

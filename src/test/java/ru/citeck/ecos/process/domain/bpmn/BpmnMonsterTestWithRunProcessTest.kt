@@ -1435,9 +1435,9 @@ class BpmnMonsterTestWithRunProcessTest {
         }
 
         val eventSubscription = EventSubscription(
+            elementId = "startEvent",
             name = ComposedEventName(
-                event = EcosEventType.COMMENT_CREATE.name,
-                record = ComposedEventName.RECORD_ANY
+                event = EcosEventType.COMMENT_CREATE.name
             ),
             model = mapOf(
                 "keyFoo" to "valueFoo",
@@ -1479,9 +1479,9 @@ class BpmnMonsterTestWithRunProcessTest {
         assertThat(subscriptions).hasSize(1)
         assertThat(subscriptions).containsExactlyInAnyOrder(
             EventSubscription(
+                elementId = "startEvent",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = mapOf(
                     "keyFoo2" to "valueFoo2",
@@ -1525,6 +1525,7 @@ class BpmnMonsterTestWithRunProcessTest {
             assertThat(diff).hasSize(1)
             assertThat(diff).containsExactlyInAnyOrder(
                 EventSubscription(
+                    elementId = "event_create_comment",
                     name = ComposedEventName(
                         event = EcosEventType.COMMENT_CREATE.name,
                         record = "\${$VAR_BUSINESS_KEY}"
@@ -1580,30 +1581,97 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).map { it.event }
 
-        val eventComment = EventSubscription(
+        `when`(process.waitsAtUserTask("task_1")).thenReturn {
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+                IncomingEventData(
+                    eventName = "ecos.comment.create",
+                    record = EntityRef.valueOf(document)
+                )
+            ).map { it.event }
+
+            val diff = ListUtils.subtract(subscriptionWhenTaskRun, existingSubscriptions)
+
+            assertThat(diff).hasSize(1)
+            assertThat(diff).containsExactlyInAnyOrder(
+                EventSubscription(
+                    elementId = "event_create_comment",
+                    name = ComposedEventName(
+                        event = EcosEventType.COMMENT_CREATE.name,
+                        record = "\${$VAR_BUSINESS_KEY}"
+                    ),
+                    model = mapOf(
+                        "foo" to "bar",
+                        "key" to "value"
+                    ),
+                    predicate = """
+                    {
+                    "att": "event.statusBefore",
+                    "val": "approval",
+                    "t": "eq"
+                    }
+                    """.trimIndent()
+                )
+            )
+        }
+
+        `when`(process.waitsAtUserTask("task_2")).thenReturn {
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+                IncomingEventData(
+                    eventName = "manual-event",
+                    record = EntityRef.valueOf(document),
+                    recordType = EntityRef.valueOf("emodel/type@hr-person")
+                )
+            ).map { it.event }
+
+            val diff = ListUtils.subtract(subscriptionWhenTaskRun, existingSubscriptions)
+
+            assertThat(diff).hasSize(1)
+            assertThat(diff).containsExactlyInAnyOrder(
+                EventSubscription(
+                    elementId = "event_manual",
+                    name = ComposedEventName(
+                        event = "manual-event",
+                        record = ComposedEventName.RECORD_ANY,
+                        type = "emodel/type@hr-person"
+                    ),
+                    model = emptyMap()
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            document,
+            mapOf(
+                "documentRef" to document
+            )
+        ).execute()
+    }
+
+    @Test
+    fun `get actual camunda subscriptions of boundary same events parallel process`() {
+        val procId = "test-subscriptions-event-boundary-parallel-with-same-events"
+        val document = docRef.toString()
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(
+                eventName = "ecos.comment.create",
+                record = EntityRef.valueOf(document)
+            )
+        ).map { it.event }
+
+        val createCommentEvent = EventSubscription(
+            elementId = "event_create_comment",
             name = ComposedEventName(
                 event = EcosEventType.COMMENT_CREATE.name,
                 record = "\${$VAR_BUSINESS_KEY}"
             ),
-            model = mapOf(
-                "foo" to "bar",
-                "key" to "value"
-            ),
-            predicate = """
-                {
-                    "att": "event.statusBefore",
-                    "val": "approval",
-                    "t": "eq"
-                }
-            """.trimIndent()
-        )
-        val eventManual = EventSubscription(
-            name = ComposedEventName(
-                event = "manual-event",
-                record = ComposedEventName.RECORD_ANY,
-                type = "emodel/type@hr-person"
-            ),
             model = emptyMap()
+        )
+        val createCommentEventSecond = createCommentEvent.copy(
+            elementId = "event_create_comment_2"
         )
 
         `when`(process.waitsAtUserTask("task_1")).thenReturn {
@@ -1618,8 +1686,8 @@ class BpmnMonsterTestWithRunProcessTest {
 
             assertThat(diff).hasSize(2)
             assertThat(diff).containsExactlyInAnyOrder(
-                eventComment,
-                eventManual
+                createCommentEvent,
+                createCommentEventSecond
             )
         }
 
@@ -1635,8 +1703,80 @@ class BpmnMonsterTestWithRunProcessTest {
 
             assertThat(diff).hasSize(2)
             assertThat(diff).containsExactlyInAnyOrder(
-                eventComment,
-                eventManual
+                createCommentEvent,
+                createCommentEventSecond
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            document,
+            mapOf(
+                "documentRef" to document
+            )
+        ).execute()
+    }
+
+    @Test
+    fun `get actual camunda subscriptions of multiple start signals with diff predicate process`() {
+        val procId = "test-subscriptions-multiple-start-signals-with-diff-predicate"
+        val document = docRef.toString()
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+            IncomingEventData(
+                eventName = "ecos.comment.create",
+                record = EntityRef.valueOf(document)
+            )
+        ).map { it.event }
+
+        val eventCommentFirst = EventSubscription(
+            elementId = "event_1",
+            name = ComposedEventName(
+                event = EcosEventType.COMMENT_CREATE.name,
+                record = "\${$VAR_BUSINESS_KEY}"
+            ),
+            model = emptyMap(),
+            predicate = """
+                {
+                    "att": "text",
+                    "val": "comment_1",
+                    "t": "eq"
+                }
+            """.trimIndent()
+        )
+
+        val eventCommentSecond = EventSubscription(
+            elementId = "event_2",
+            name = ComposedEventName(
+                event = EcosEventType.COMMENT_CREATE.name,
+                record = "\${$VAR_BUSINESS_KEY}"
+            ),
+            model = emptyMap(),
+            predicate = """
+                {
+                    "att": "text",
+                    "val": "comment_2",
+                    "t": "eq"
+                }
+            """.trimIndent()
+        )
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            val subscriptionWhenTaskRun = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
+                IncomingEventData(
+                    eventName = "ecos.comment.create",
+                    record = EntityRef.valueOf(document)
+                )
+            ).map { it.event }
+
+            val diff = ListUtils.subtract(subscriptionWhenTaskRun, existingSubscriptions)
+
+            assertThat(diff).hasSize(2)
+            assertThat(diff).containsExactlyInAnyOrder(
+                eventCommentFirst,
+                eventCommentSecond
             )
         }
 
@@ -2314,6 +2454,101 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, times(1)).hasFinished("startEvent")
         verify(process, times(1)).hasFinished("endEventFromStart")
         verify(process, never()).hasFinished("endEventBase")
+    }
+
+    @Test
+    fun `bpmn event start same events with different predicates no one calls`() {
+        val procId = "bpmn-events-start-same-with-diff-predicates-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "another comment"
+                )
+            )
+            it.complete()
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("event_main_end")
+        verify(process, never()).hasFinished("event_end_1")
+        verify(process, never()).hasFinished("event_end_2")
+    }
+
+    @Test
+    fun `bpmn event start same events with different predicates first path`() {
+        val procId = "bpmn-events-start-same-with-diff-predicates-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "comment_1"
+                )
+            )
+            it.complete()
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("event_main_end")
+        verify(process).hasFinished("event_end_1")
+        verify(process, never()).hasFinished("event_end_2")
+        verify(process, never()).hasFinished("event_end_3")
+    }
+
+    @Test
+    fun `bpmn event start same events with different predicates second path`() {
+        val procId = "bpmn-events-start-same-with-diff-predicates-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "comment_2"
+                )
+            )
+            it.complete()
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("event_main_end")
+        verify(process).hasFinished("event_end_2")
+        verify(process, never()).hasFinished("event_end_1")
+        verify(process, never()).hasFinished("event_end_3")
+    }
+
+    @Test
+    fun `bpmn event start same events with different predicates third path`() {
+        val procId = "bpmn-events-start-same-with-diff-predicates-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            bpmnEventHelper.sendCreateCommentEvent(
+                CommentCreateEvent(
+                    record = docRef,
+                    commentRecord = EntityRef.valueOf("eproc/comment@1"),
+                    text = "comment_3"
+                )
+            )
+            it.complete()
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("event_main_end")
+        verify(process).hasFinished("event_end_3")
+        verify(process, never()).hasFinished("event_end_1")
+        verify(process, never()).hasFinished("event_end_2")
     }
 
     @Test

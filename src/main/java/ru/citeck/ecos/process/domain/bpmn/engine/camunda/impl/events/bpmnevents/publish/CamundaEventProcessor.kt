@@ -31,8 +31,6 @@ class CamundaEventProcessor(
         val incomingEventData = incomingEvent.toIncomingEventData()
         val foundSubscriptions = eventSubscriptionFinder.getActualCamundaSubscriptions(incomingEventData)
 
-        log.debug { "Found actual subscriptions: $foundSubscriptions" }
-
         if (foundSubscriptions.isEmpty()) {
             return
         }
@@ -52,9 +50,14 @@ class CamundaEventProcessor(
 
             val eventAttributes = evaluateAttributes(incomingEvent, finalEventModel)
             if (eventAttributes.isMatchPredicates(subscription.event.predicate)) {
+                log.debug {
+                    "Event match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
+                }
                 exploder.fireEvent(subscription.id, BpmnDataValue.create(eventAttributes))
             } else {
-                log.debug { "Event atts $eventAttributes doesn't match predicates ${subscription.event.predicate}" }
+                log.debug {
+                    "Event doesn't match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
+                }
             }
         }
     }

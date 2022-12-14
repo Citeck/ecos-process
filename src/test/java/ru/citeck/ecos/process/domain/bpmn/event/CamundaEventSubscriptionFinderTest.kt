@@ -61,9 +61,9 @@ class CamundaEventSubscriptionFinderTest {
         saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
 
         val eventSubscription = EventSubscription(
+            elementId = "startEvent",
             name = ComposedEventName(
-                event = EcosEventType.COMMENT_CREATE.name,
-                record = ComposedEventName.RECORD_ANY
+                event = EcosEventType.COMMENT_CREATE.name
             ),
             model = mapOf(
                 "keyFoo" to "valueFoo",
@@ -102,7 +102,8 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                elementId = "event_boundary",
+                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -118,7 +119,9 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                elementId = "boundary_event",
+                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY};ANY;pr_0"
+                    .toComposedEventName(),
                 model = emptyMap()
             )
         )
@@ -134,7 +137,8 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "some-signal;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                elementId = "event_end",
+                name = "some-signal;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap()
             )
         )
@@ -150,7 +154,8 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
-                name = "some-signal;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                elementId = "throw_event",
+                name = "some-signal;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap()
             )
         )
@@ -167,11 +172,13 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription).hasSize(2)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             EventSubscription(
-                name = "start-1;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                elementId = "event_start_1",
+                name = "start-1;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap(),
             ),
             EventSubscription(
-                name = "start-2;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+                elementId = "event_start_2",
+                name = "start-2;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -185,7 +192,8 @@ class CamundaEventSubscriptionFinderTest {
 
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
         val eventSubscription = EventSubscription(
-            name = "signal-1;\${$VAR_BUSINESS_KEY}".toComposedEventName(),
+            elementId = "event_signal_1",
+            name = "signal-1;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
             model = emptyMap(),
             predicate = null
         )
@@ -193,9 +201,18 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription).hasSize(4)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             eventSubscription,
-            eventSubscription.copy(name = "signal-2;ANY".toComposedEventName()),
-            eventSubscription.copy(name = "signal-3;\${$VAR_BUSINESS_KEY}".toComposedEventName()),
-            eventSubscription.copy(name = "signal-4;\${$VAR_BUSINESS_KEY}".toComposedEventName())
+            eventSubscription.copy(
+                elementId = "event_signal_2",
+                name = "signal-2;ANY;ANY;pr_0".toComposedEventName()
+            ),
+            eventSubscription.copy(
+                elementId = "event_signal_3",
+                name = "signal-3;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
+            ),
+            eventSubscription.copy(
+                elementId = "event_signal_4",
+                name = "signal-4;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
+            )
         )
     }
 

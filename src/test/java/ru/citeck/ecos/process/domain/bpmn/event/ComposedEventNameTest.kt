@@ -17,7 +17,7 @@ class ComposedEventNameTest {
     @Test
     fun `create composed event name from full string`() {
         val composedEventName = ComposedEventName.fromString(
-            "$EVENT_TYPE;${ComposedEventName.RECORD_ANY};$DOCUMENT_TYPE"
+            "$EVENT_TYPE;${ComposedEventName.RECORD_ANY};$DOCUMENT_TYPE;pr_0"
         )
 
         assertEquals(
@@ -31,7 +31,7 @@ class ComposedEventNameTest {
         val document = "\${someVariable}"
 
         val composedEventName = ComposedEventName.fromString(
-            "$EVENT_TYPE;$document;$DOCUMENT_TYPE"
+            "$EVENT_TYPE;$document;$DOCUMENT_TYPE;pr_0"
         )
 
         assertEquals(
@@ -42,7 +42,9 @@ class ComposedEventNameTest {
 
     @Test
     fun `create composed event name from event and document`() {
-        val composedEventName = ComposedEventName.fromString("$EVENT_TYPE;$DOCUMENT")
+        val composedEventName = ComposedEventName.fromString(
+            "$EVENT_TYPE;$DOCUMENT;${ComposedEventName.TYPE_ANY};pr_0"
+        )
 
         assertEquals(
             ComposedEventName(EVENT_TYPE, DOCUMENT),
@@ -53,7 +55,7 @@ class ComposedEventNameTest {
     @Test
     fun `create composed event name from event document and document type`() {
         val composedEventName = ComposedEventName.fromString(
-            "$EVENT_TYPE;$DOCUMENT;$DOCUMENT_TYPE"
+            "$EVENT_TYPE;$DOCUMENT;$DOCUMENT_TYPE;pr_0"
         )
 
         assertEquals(
@@ -66,7 +68,7 @@ class ComposedEventNameTest {
     fun `composed event name to composed string`() {
         val composedEventName = ComposedEventName(EVENT_TYPE, DOCUMENT, DOCUMENT_TYPE)
         assertEquals(
-            "$EVENT_TYPE;$DOCUMENT;$DOCUMENT_TYPE",
+            "$EVENT_TYPE;$DOCUMENT;$DOCUMENT_TYPE;",
             composedEventName.toComposedString()
         )
     }
@@ -75,25 +77,16 @@ class ComposedEventNameTest {
     fun `composed event name to composed string without document type`() {
         val composedEventName = ComposedEventName(EVENT_TYPE, DOCUMENT)
         assertEquals(
-            "$EVENT_TYPE;$DOCUMENT",
+            "$EVENT_TYPE;$DOCUMENT;${ComposedEventName.TYPE_ANY};",
             composedEventName.toComposedString()
         )
     }
 
     @Test
-    fun `composed event name with blank type to composed string`() {
-        val composedEventName = ComposedEventName(EVENT_TYPE, DOCUMENT, "")
+    fun `composed event name with any type and any document to composed string`() {
+        val composedEventName = ComposedEventName(EVENT_TYPE, ComposedEventName.RECORD_ANY, ComposedEventName.TYPE_ANY)
         assertEquals(
-            "$EVENT_TYPE;$DOCUMENT",
-            composedEventName.toComposedString()
-        )
-    }
-
-    @Test
-    fun `composed event name with blank type and any document to composed string`() {
-        val composedEventName = ComposedEventName(EVENT_TYPE, ComposedEventName.RECORD_ANY, "")
-        assertEquals(
-            "$EVENT_TYPE;${ComposedEventName.RECORD_ANY}",
+            "$EVENT_TYPE;${ComposedEventName.RECORD_ANY};${ComposedEventName.TYPE_ANY};",
             composedEventName.toComposedString()
         )
     }
@@ -129,6 +122,13 @@ class ComposedEventNameTest {
                 EVENT_TYPE,
                 ""
             )
+        }
+    }
+
+    @Test
+    fun `create composed event name from string with empty type must throw`() {
+        assertThrows<IllegalArgumentException> {
+            ComposedEventName(EVENT_TYPE, DOCUMENT, "")
         }
     }
 

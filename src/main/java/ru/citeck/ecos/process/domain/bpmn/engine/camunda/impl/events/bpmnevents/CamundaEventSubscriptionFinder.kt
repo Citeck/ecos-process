@@ -7,7 +7,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNames
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNamesLikeStart
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
@@ -66,8 +66,10 @@ class CamundaEventSubscriptionFinder(
                 log.debug { "All actual camunda event names: $allNames" }
             }
 
-            result = camundaRuntimeService.getEventSubscriptionsByEventNames(composedEventNames)
+            result = camundaRuntimeService.getEventSubscriptionsByEventNamesLikeStart(composedEventNames)
                 .map { sub ->
+
+                    log.debug { "Process subscription: \n$sub" }
 
                     val definition = if (sub.processInstanceId.isNullOrBlank()) {
                         val defId = sub.configuration
@@ -84,21 +86,36 @@ class CamundaEventSubscriptionFinder(
                         error("Cannot determine deployment id for event subscription: ${sub.id}")
                     }
 
-                    val events = cachedEventSubscriptionProvider.getEventSubscriptionsByDeploymentId(deploymentId)
+                    val eventSubscription = getExactEventSubscription(deploymentId, sub.activityId)
 
-                    events.map {
+                    eventSubscription?.let {
                         CamundaEventSubscription(
                             id = sub.id,
                             event = it
                         )
                     }
-                }
-                .flatten()
+                }.filterNotNull()
         }
 
-        log.debug { "Get actual camunda subscriptions ${result.size} in $time ms" }
+        log.debug { "Get actual camunda subscriptions ${result.size} in $time ms. Result: \n$result" }
 
         return result
+    }
+
+    private fun getExactEventSubscription(deploymentId: String, elementId: String): EventSubscription? {
+        val events = cachedEventSubscriptionProvider.getEventSubscriptionsByDeploymentId(deploymentId)
+
+        log.debug { "Events subscriptions by deployment id $deploymentId: \n$events" }
+
+        val found = events.filter {
+            elementId == it.elementId
+        }
+
+        if (found.size > 1) {
+            error("Found more than one event subscription for deploymentId $deploymentId elementId $elementId")
+        }
+
+        return found.firstOrNull()
     }
 
     fun getSubscriptionsByProcDefRevId(procDefRevId: UUID): List<EventSubscription> {
@@ -147,6 +164,7 @@ fun ProcDefRevDto.getBpmnSignalEventSubscriptions(): List<EventSubscription> {
     return try {
         BpmnIO.importEcosBpmn(defXml).signalsEventDefsMeta.map {
             EventSubscription(
+                elementId = it.elementId,
                 name = ComposedEventName.fromString(it.signalName),
                 model = it.eventModel,
                 predicate = it.eventFilterByPredicate?.let { Json.mapper.toString(it) }
@@ -160,6 +178,7 @@ fun ProcDefRevDto.getBpmnSignalEventSubscriptions(): List<EventSubscription> {
 }
 
 data class EventSubscription(
+    val elementId: String,
     val name: ComposedEventName,
     val model: Map<String, String>,
 

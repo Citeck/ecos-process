@@ -298,6 +298,8 @@ class ProcDefServiceImpl(
     }
 
     override fun saveProcessDefRevDeploymentId(procDefRevId: UUID, deploymentId: String) {
+        log.debug { "Save deployment id $deploymentId for process definition revision $procDefRevId" }
+
         val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
         val revEntity = procDefRevRepo.findById(revId).orElseThrow {
             error("Proc def rev with id $revId not found")

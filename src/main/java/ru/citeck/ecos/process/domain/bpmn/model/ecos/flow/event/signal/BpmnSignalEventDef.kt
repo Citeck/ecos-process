@@ -6,11 +6,14 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @JsonTypeName("signalEvent")
 data class BpmnSignalEventDef(
     override val id: String,
+
+    override var elementId: String = "",
 
     val eventManualMode: Boolean = false,
 
@@ -47,7 +50,7 @@ val BpmnSignalEventDef.signalName: String
         }
 
         val filterByRecord: String = when (eventFilterByRecordType) {
-            FilterEventByRecord.ANY -> FilterEventByRecord.ANY.name
+            FilterEventByRecord.ANY -> ComposedEventName.RECORD_ANY
             FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
             FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
                 if (eventFilterByRecordVariable.isNullOrBlank()) {
@@ -57,11 +60,17 @@ val BpmnSignalEventDef.signalName: String
             }
         }
 
+        val filterByEcosType: String = if (eventFilterByEcosType == EntityRef.EMPTY) {
+            ComposedEventName.TYPE_ANY
+        } else {
+            eventFilterByEcosType.toString()
+        }
+
         return ComposedEventName(
             event = finalEventName,
             record = filterByRecord,
-            type = eventFilterByEcosType.toString()
-        ).toComposedString()
+            type = filterByEcosType
+        ).toComposedStringWithPredicateChecksum(eventFilterByPredicate ?: VoidPredicate.INSTANCE)
     }
 
 enum class FilterEventByRecord {

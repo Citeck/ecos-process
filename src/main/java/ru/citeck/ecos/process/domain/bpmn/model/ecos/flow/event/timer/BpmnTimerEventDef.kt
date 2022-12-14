@@ -8,5 +8,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.time.TimeV
 data class BpmnTimerEventDef(
     override val id: String,
 
+    override var elementId: String = "",
+
     val value: TimeValue,
 ) : BpmnAbstractEventDef()

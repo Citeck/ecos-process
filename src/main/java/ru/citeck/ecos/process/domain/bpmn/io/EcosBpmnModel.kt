@@ -62,3 +62,5 @@ val BPMN_MULTI_INSTANCE_CONFIG = QName(NS_ECOS, "multiInstanceConfig")
 
 val BPMN_PROP_ECOS_TASK_TYPE = QName(NS_ECOS, "taskType")
 val BPMN_PROP_ECOS_STATUS = QName(NS_ECOS, "status")
+
+val BPMN_PROP_EVENT_DEF_PARENT_ID = QName(NS_ECOS, "status")

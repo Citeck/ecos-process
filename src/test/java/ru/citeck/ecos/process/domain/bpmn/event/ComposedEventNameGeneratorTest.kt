@@ -17,7 +17,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY),
+            ComposedEventName(ecosEventName),
             ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY, type.toString()),
 
             ComposedEventName(ecosEventName, document.toString()),
@@ -35,7 +35,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY),
+            ComposedEventName(ecosEventName),
             ComposedEventName(ecosEventName, document.toString())
         )
     }
@@ -50,7 +50,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY),
+            ComposedEventName(ecosEventName),
             ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY, type.toString())
         )
     }
@@ -91,7 +91,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY)
+            ComposedEventName(ecosEventName)
         )
     }
 
@@ -105,7 +105,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(EcosEventType.COMMENT_CREATE.name, ComposedEventName.RECORD_ANY)
+            ComposedEventName(EcosEventType.COMMENT_CREATE.name)
         )
     }
 
@@ -119,7 +119,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(EcosEventType.COMMENT_CREATE.name, ComposedEventName.RECORD_ANY)
+            ComposedEventName(EcosEventType.COMMENT_CREATE.name)
         )
     }
 
@@ -133,7 +133,7 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(EcosEventType.COMMENT_CREATE.name, ComposedEventName.RECORD_ANY)
+            ComposedEventName(EcosEventType.COMMENT_CREATE.name)
         )
     }
 }

@@ -52,6 +52,22 @@ class CamundaMyBatisExtension(
         return factory.commandExecutorTxRequired.execute(command)
     }
 
+    internal fun getEventSubscriptionsByEventNamesLikeStart(eventNames: List<String>): List<EventSubscriptionEntity> {
+        val eventNamesWithLikeStartPattern = eventNames.map { "$it%" }
+
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "eventSubscriptionEventNames" to eventNamesWithLikeStartPattern
+            )
+            it.dbSqlSession.selectList(
+                "selectEventSubscriptionsByEventNamesLikeStart",
+                params
+            ) as List<EventSubscriptionEntity>
+        }
+
+        return factory.commandExecutorTxRequired.execute(command)
+    }
+
     fun deleteAllEventSubscriptions() {
         val command = Command {
             it.dbSqlSession.sqlSession.update("truncateEventSubscriptions")
@@ -69,4 +85,8 @@ fun HistoryService.getHistoricTasksByIds(ids: List<String>): List<HistoricTaskIn
 
 fun RuntimeService.getEventSubscriptionsByEventNames(eventNames: List<String>): List<EventSubscriptionEntity> {
     return ext.getEventSubscriptionsByEventNames(eventNames)
+}
+
+fun RuntimeService.getEventSubscriptionsByEventNamesLikeStart(eventNames: List<String>): List<EventSubscriptionEntity> {
+    return ext.getEventSubscriptionsByEventNamesLikeStart(eventNames)
 }

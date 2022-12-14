@@ -9,7 +9,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.app.AppContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getNotBlankDocumentRef
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -41,7 +41,7 @@ class SendNotificationDelegate : JavaDelegate {
         camundaRoleService = AppContext.getBean(CamundaRoleService::class.java)
 
         // TODO: make document not mandatory? Send to, roles?
-        document = execution.getNotBlankDocumentRef()
+        document = execution.getDocumentRef()
     }
 
     override fun execute(execution: DelegateExecution) {

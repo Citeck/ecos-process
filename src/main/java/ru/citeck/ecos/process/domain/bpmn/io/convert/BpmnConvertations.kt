@@ -353,11 +353,15 @@ private fun convertTEventDefinitionToBpmnEventDef(
 
     provideOtherAttsToEventDef(eventDef, event)
 
-    return context.converters.import(
+    val convertedEvent = context.converters.import(
         eventDef,
         typeToTransform,
         context
     ).data
+
+    convertedEvent.elementId = event.id
+
+    return convertedEvent
 }
 
 fun TCatchEvent.fillBpmnEventDefPayloadFromBpmnEventDef(bpmnEventDef: BpmnAbstractEventDef, context: ExportContext) {

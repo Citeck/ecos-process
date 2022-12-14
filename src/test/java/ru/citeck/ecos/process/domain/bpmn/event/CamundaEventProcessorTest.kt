@@ -48,6 +48,7 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
                     event = EcosEventType.COMMENT_CREATE.name,
                     record = "some-ref"
@@ -92,9 +93,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = mapOf("comment" to "text")
             )
@@ -136,9 +137,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = emptyMap()
             )
@@ -183,9 +184,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = emptyMap()
             )
@@ -230,9 +231,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = mapOf("text" to "commentRecord?id")
             )
@@ -275,9 +276,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = mapOf("comment" to "text"),
                 predicate = Json.mapper.toString(Predicates.alwaysFalse())
@@ -315,9 +316,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = mapOf("comment" to "text"),
                 predicate = """
@@ -366,9 +367,9 @@ internal class CamundaEventProcessorTest {
         val subscription = CamundaEventSubscription(
             id = subscriptionId,
             event = EventSubscription(
+                elementId = "activity_1",
                 name = ComposedEventName(
-                    event = EcosEventType.COMMENT_CREATE.name,
-                    record = ComposedEventName.RECORD_ANY
+                    event = EcosEventType.COMMENT_CREATE.name
                 ),
                 model = mapOf("comment" to "text"),
                 predicate = """
