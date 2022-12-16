@@ -16,7 +16,7 @@ import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CON
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 
 /**
@@ -26,7 +26,7 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 class CacheableTaskConverter(
     private val camundaTaskService: TaskService,
     private val camundaHistoryService: HistoryService,
-    private val authorityService: EcosAuthorityService
+    private val authorityService: EcosAuthoritiesApi
 ) {
 
     @Cacheable(cacheNames = [PROC_TASKS_DTO_CONVERTER_CACHE_KEY], key = "#task.id")

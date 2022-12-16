@@ -6,7 +6,7 @@ import org.camunda.bpm.engine.delegate.TaskListener
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.GROUP_PREFIX
-import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 
 private const val COLLECTION_START_PREFIX = "["
 private const val COLLECTION_END_PREFIX = "]"
@@ -16,7 +16,7 @@ private const val COLLECTION_END_PREFIX = "]"
  */
 @Component
 class ManualRecipientsModeUserTaskAssignListener(
-    private val authorityService: EcosAuthorityService
+    private val authorityService: EcosAuthoritiesApi
 ) : TaskListener {
 
     companion object {
