@@ -72,28 +72,31 @@ class CamundaRoleService(
      * @return emails of users, including users from groups
      */
     fun getEmails(document: RecordRef, roles: List<String>): List<String> {
-        val recipientNames = roles.map {
-            roleService.getAssignees(document, it)
-        }.flatten().toSet()
-        val recipientsFullFilledRefs = convertRecipientsToFullFilledRefs(recipientNames)
+        return AuthContext.runAsSystem {
+            val recipientNames = roles.map {
+                roleService.getAssignees(document, it)
+            }.flatten().toSet()
+            val recipientsFullFilledRefs = convertRecipientsToFullFilledRefs(recipientNames)
 
-        val allUsers = mutableSetOf<EntityRef>()
-        val groups = mutableListOf<EntityRef>()
+            val allUsers = mutableSetOf<EntityRef>()
+            val groups = mutableListOf<EntityRef>()
 
-        recipientsFullFilledRefs.forEach {
-            if (it.isAuthorityGroupRef()) groups.add(it) else allUsers.add(it)
+            recipientsFullFilledRefs.forEach {
+                if (it.isAuthorityGroupRef()) groups.add(it) else allUsers.add(it)
+            }
+
+            val usersFromGroup =
+                recordsService.getAtts(groups, GroupInfo::class.java).map { it.containedUsers }.flatten()
+            allUsers.addAll(usersFromGroup)
+
+            val emails = recordsService.getAtts(allUsers, UserInfo::class.java)
+                .filter { it.email?.isNotBlank() ?: false }
+                .map { it.email!! }
+
+            log.debug { "Get emails for document: $document, roles: $roles. Result: $emails" }
+
+            emails
         }
-
-        val usersFromGroup = recordsService.getAtts(groups, GroupInfo::class.java).map { it.containedUsers }.flatten()
-        allUsers.addAll(usersFromGroup)
-
-        val emails = recordsService.getAtts(allUsers, UserInfo::class.java)
-            .filter { it.email?.isNotBlank() ?: false }
-            .map { it.email!! }
-
-        log.debug { "Get emails for document: $document, roles: $roles. Result: $emails" }
-
-        return emails
     }
 
     private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): List<EntityRef> {

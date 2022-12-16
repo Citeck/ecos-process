@@ -400,6 +400,10 @@ class BpmnDataValue private constructor(
         return data.asList(elementType)
     }
 
+    fun asDataValue(): DataValue {
+        return data.copy()
+    }
+
     /**
      * Convert internal value and return a new mutable map.
      * If internal value is not a map-like object then empty list will be returned.

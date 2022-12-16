@@ -67,7 +67,7 @@ class CamundaEventProcessor(
         model: Map<String, String>
     ): ObjectData {
         val atts = incomingEvent.attributes
-        val result = mutableMapOf<String, DataValue>()
+        val result = mutableMapOf<String, Any>()
 
         for ((attKey, attValueKey) in model) {
             if (atts.containsKey(attValueKey)) {
@@ -76,12 +76,11 @@ class CamundaEventProcessor(
         }
 
         result[EVENT_META_ATT] = incomingEvent.toEventMeta()
-        result[EcosEventType.RECORD_ATT] = DataValue.create(
-            getEntityRefByAttKey(incomingEvent.attributes, EcosEventType.RECORD_ATT)
-        )
-        result[EcosEventType.RECORD_TYPE_ATT] = DataValue.create(
+        result[EcosEventType.RECORD_ATT] = getEntityRefByAttKey(incomingEvent.attributes, EcosEventType.RECORD_ATT)
+
+        result[EcosEventType.RECORD_TYPE_ATT] =
             getEntityRefByAttKey(incomingEvent.attributes, EcosEventType.RECORD_TYPE_ATT)
-        )
+
 
         return ObjectData.create(result)
     }

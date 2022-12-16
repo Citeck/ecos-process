@@ -10,11 +10,21 @@ import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.app.AppContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+
+private const val VAR_CURRENT_RUN_AS_USER = "currentRunAsUser"
+private const val VAR_PROCESS = "process"
+
+private const val FORCE_STR_PREFIX = "!str_"
+
+private const val PERSON_SOURCE_ID = "person"
 
 class SendNotificationDelegate : JavaDelegate {
 
@@ -69,16 +79,55 @@ class SendNotificationDelegate : JavaDelegate {
             .cc(getRecipientsFromExpression(notificationCc))
             .bcc(getRecipientsFromExpression(notificationBcc))
             .lang(notificationLang?.expressionText)
-            .additionalMeta(
-                notificationAdditionalMeta?.let {
-                    Json.mapper.readMap(it.expressionText, String::class.java, String::class.java)
-                } ?: emptyMap()
-            )
+            .additionalMeta(getAdditionalMeta(execution))
             .build()
 
         AuthContext.runAsSystem {
             notificationService.send(notification)
         }
+    }
+
+    private fun getAdditionalMeta(execution: DelegateExecution): Map<String, Any> {
+        val metaFromUserInput = notificationAdditionalMeta?.let {
+            Json.mapper.readMap(it.expressionText, String::class.java, Any::class.java)
+        } ?: emptyMap()
+
+        val processVariables = execution.getPreparedProcessVariables().toMutableMap()
+
+        processVariables[VAR_CURRENT_RUN_AS_USER] = AuthContext.getCurrentRunAsUserRef()
+
+        val additionalMeta = metaFromUserInput.map { (key, value) ->
+            val valueToPut = when (value) {
+                is String -> {
+                    if (value.startsWith(FORCE_STR_PREFIX)) {
+                        value.removePrefix(FORCE_STR_PREFIX)
+                    } else {
+                        EntityRef.valueOf(value)
+                    }
+                }
+
+                else -> value
+            }
+            key to valueToPut
+        }.toMap().toMutableMap()
+
+        additionalMeta[VAR_PROCESS] = processVariables
+
+        return additionalMeta
+    }
+
+    private fun AuthContext.getCurrentRunAsUserRef(): EntityRef {
+        return EntityRef.create(AppName.EMODEL, PERSON_SOURCE_ID, getCurrentRunAsUser())
+    }
+
+    private fun DelegateExecution.getPreparedProcessVariables(): Map<String, Any> {
+        return variables.map { (key, value) ->
+            val valueToPut = when (value) {
+                is BpmnDataValue -> value.asDataValue()
+                else -> value
+            }
+            key to valueToPut
+        }.toMap()
     }
 
     private fun getRecipientsFromExpression(expressionData: Expression?): List<String> {
