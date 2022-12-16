@@ -10,7 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 const val GROUP_PREFIX = "GROUP_"
@@ -22,7 +22,7 @@ private const val WORKSPACE_PREFIX = "workspace://"
 class CamundaRoleService(
     private val roleService: RoleService,
     private val recordsService: RecordsService,
-    private val authorityService: EcosAuthorityService
+    private val authorityService: EcosAuthoritiesApi
 ) : CamundaProcessEngineService {
 
     companion object {

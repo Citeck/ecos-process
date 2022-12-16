@@ -26,5 +26,4 @@ class EventPredicatesChecksumCompatibilityTest {
         assertEquals(d2, d3)
         assertEquals(d1, d3)
     }
-
 }

@@ -4,13 +4,13 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
-import ru.citeck.ecos.webapp.api.authority.EcosAuthorityService
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.annotation.PostConstruct
 
 @Component
 class TaskActorsUtils(
-    val authorityService: EcosAuthorityService
+    val authorityService: EcosAuthoritiesApi
 ) {
     @PostConstruct
     private fun init() {

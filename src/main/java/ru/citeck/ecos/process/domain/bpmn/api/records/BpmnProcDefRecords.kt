@@ -44,7 +44,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.webapp.api.apps.EcosWebAppsApi
+import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
@@ -56,7 +56,7 @@ import java.util.*
 class BpmnProcDefRecords(
     private val procDefService: ProcDefService,
     private val camundaRepoService: RepositoryService,
-    private val webAppsApi: EcosWebAppsApi,
+    private val remoteWebAppsApi: EcosRemoteWebAppsApi,
     private val recordPermsService: RecordPermsService,
     private val roleService: RoleService,
     private val procDefEventEmitter: ProcDefEventEmitter,
@@ -139,7 +139,7 @@ class BpmnProcDefRecords(
         val isMoreRecordsRequired = recsQuery.page.maxItems == -1 ||
             result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)
 
-        if (isMoreRecordsRequired && webAppsApi.isAppAvailable(AppName.ALFRESCO)) {
+        if (isMoreRecordsRequired && remoteWebAppsApi.isAppAvailable(AppName.ALFRESCO)) {
 
             val alfDefinitions = loadAllDefinitionsFromAlfresco()
             result.addAll(alfDefinitions)
