@@ -8,6 +8,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.datasource.Camun
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.config.CamundaSystemContextConfiguration
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.config.CamundaResolveVariablesConfiguration
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.config.CamundaScriptEnvResolvesConfiguration
+import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
 
 /**
  * @author Roman Makarskiy
@@ -31,8 +32,10 @@ class EcosCamundaConfiguration {
     }
 
     @Bean
-    fun camundaResolveVariablesConfiguration(): CamundaProcessEngineConfiguration {
-        return CamundaResolveVariablesConfiguration()
+    fun camundaResolveVariablesConfiguration(
+        ecosWebAppProps: EcosWebAppProps
+    ): CamundaProcessEngineConfiguration {
+        return CamundaResolveVariablesConfiguration(ecosWebAppProps)
     }
 
     @Bean
