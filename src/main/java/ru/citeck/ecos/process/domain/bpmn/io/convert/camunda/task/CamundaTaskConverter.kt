@@ -90,7 +90,6 @@ class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
                 otherAttributes[CAMUNDA_CLASS] = it
             }
 
-            extensionElements = TExtensionElements()
             extensionElements.any.addAll(ecosTaskDefFields(element, context))
         }
     }

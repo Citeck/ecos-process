@@ -56,8 +56,7 @@
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "textfield",
-        "input": true,
-        "addAnother": "ecos.forms.btn.add-another"
+        "input": true
       },
       {
         "label": {
@@ -68,8 +67,7 @@
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "mlText",
-        "input": true,
-        "addAnother": "ecos.forms.btn.add-another"
+        "input": true
       },
       {
         "label": {
@@ -80,8 +78,7 @@
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "mlTextarea",
-        "input": true,
-        "addAnother": "ecos.forms.btn.add-another"
+        "input": true
       },
       {
         "label": {
@@ -107,8 +104,16 @@
         "optionalWhenDisabled": false,
         "type": "ecosSelect",
         "input": true
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
       }
-    ]
+    ],
+    "formId": "bpmn-type-bpmn:EcosTaskSetStatus"
   },
   "attributes": {}
 }
