@@ -5,11 +5,8 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send.SendNotificationDelegate
 import ru.citeck.ecos.process.domain.bpmn.io.*
-import ru.citeck.ecos.process.domain.bpmn.io.convert.CamundaFieldCreator
-import ru.citeck.ecos.process.domain.bpmn.io.convert.addIfNotBlank
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_CLASS
-import ru.citeck.ecos.process.domain.bpmn.io.convert.jaxb
-import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJson
+import ru.citeck.ecos.process.domain.bpmn.io.convert.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnSendTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
@@ -36,7 +33,16 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
 
             otherAttributes[CAMUNDA_CLASS] = SendNotificationDelegate::class.java.name
 
-            extensionElements = TExtensionElements()
+            otherAttributes[CAMUNDA_ASYNC_BEFORE] = element.asyncConfig.asyncBefore.toString()
+            otherAttributes[CAMUNDA_ASYNC_AFTER] = element.asyncConfig.asyncAfter.toString()
+            otherAttributes[CAMUNDA_EXCLUSIVE] = element.asyncConfig.exclusive.toString()
+
+            otherAttributes.putIfNotBlank(CAMUNDA_JOB_PRIORITY, element.jobConfig.jobPriority.toString())
+
+            extensionElements = TExtensionElements().apply {
+                any.addAll(getCamundaJobRetryTimeCycleFieldConfig(element.jobConfig.jobRetryTimeCycle, context))
+            }
+
             val notificationFields = getNotificationFields(element, context)
             extensionElements.any.addAll(notificationFields)
         }

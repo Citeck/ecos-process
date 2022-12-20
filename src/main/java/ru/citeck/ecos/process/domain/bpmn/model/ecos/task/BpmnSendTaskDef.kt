@@ -3,6 +3,8 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.records2.RecordRef
 import java.util.*
 
@@ -25,7 +27,10 @@ data class BpmnSendTaskDef(
 
     val lang: Locale? = null,
 
-    val additionalMeta: Map<String, Any> = emptyMap()
+    val additionalMeta: Map<String, Any> = emptyMap(),
+
+    val asyncConfig: AsyncConfig,
+    val jobConfig: JobConfig
 ) {
 
     init {

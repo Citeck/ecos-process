@@ -5,7 +5,7 @@
     "en": "BPMN User Send Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
   "system": true,
@@ -362,8 +362,16 @@
             "input": true
           }
         ]
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
       }
-    ]
+    ],
+    "formId": "bpmn-type-bpmn:SendTask"
   },
   "attributes": {}
 }

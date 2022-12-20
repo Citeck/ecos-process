@@ -9,6 +9,8 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnSendTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
@@ -39,7 +41,11 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             lang = LocaleUtils.toLocale(element.otherAttributes[BPMN_PROP_NOTIFICATION_LANG]),
             additionalMeta = element.otherAttributes[BPMN_PROP_NOTIFICATION_ADDITIONAL_META]?.let {
                 Json.mapper.readMap(it, String::class.java, String::class.java)
-            } ?: emptyMap()
+            } ?: emptyMap(),
+            asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
+                ?: AsyncConfig(),
+            jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
+                ?: JobConfig()
         )
     }
 
@@ -66,6 +72,9 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
                 BPMN_PROP_NOTIFICATION_ADDITIONAL_META,
                 Json.mapper.toString(element.additionalMeta)
             )
+
+            otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
+            otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
         }
     }
 }
