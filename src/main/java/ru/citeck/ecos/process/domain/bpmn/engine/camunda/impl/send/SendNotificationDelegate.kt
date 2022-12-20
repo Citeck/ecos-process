@@ -117,7 +117,11 @@ class SendNotificationDelegate : JavaDelegate {
     }
 
     private fun AuthContext.getCurrentRunAsUserRef(): EntityRef {
-        return EntityRef.create(AppName.EMODEL, PERSON_SOURCE_ID, getCurrentRunAsUser())
+        val user = getCurrentRunAsUser()
+        if (user.isBlank()) {
+            return EntityRef.EMPTY
+        }
+        return EntityRef.create(AppName.EMODEL, PERSON_SOURCE_ID, user)
     }
 
     private fun DelegateExecution.getPreparedProcessVariables(): Map<String, Any> {

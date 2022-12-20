@@ -1110,6 +1110,14 @@ class BpmnMonsterTestWithRunProcessTest {
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "documentRef" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
             .build()
 
         verify(notificationService).send(
@@ -1141,6 +1149,14 @@ class BpmnMonsterTestWithRunProcessTest {
             .lang("ru")
             .title("Hello Ivan")
             .body("<p>Hello Ivan, your document is approved</p>")
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "documentRef" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
             .build()
 
         verify(notificationService).send(
@@ -1173,6 +1189,14 @@ class BpmnMonsterTestWithRunProcessTest {
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "documentRef" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
             .build()
 
         verify(notificationService).send(
@@ -1204,8 +1228,12 @@ class BpmnMonsterTestWithRunProcessTest {
             .lang("en")
             .additionalMeta(
                 mapOf(
-                    "foo" to "bar",
-                    "harry" to "potter"
+                    "foo" to EntityRef.valueOf("bar"),
+                    "harry" to EntityRef.valueOf("potter"),
+                    "process" to mapOf(
+                        "documentRef" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
                 )
             )
             .templateRef(RecordRef.valueOf("notifications/template@test-template"))
