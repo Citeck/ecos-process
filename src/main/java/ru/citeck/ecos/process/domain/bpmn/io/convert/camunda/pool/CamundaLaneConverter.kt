@@ -6,6 +6,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TLane
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TLaneSet
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -25,6 +26,14 @@ class CamundaLaneConverter : EcosOmgConverter<BpmnLaneDef, TLane> {
                 val realObject = context.bpmnElementsById[it]
                     ?: error("Flow ref not found, id: ${element.id}")
                 flowNodeRef.add(context.converters.convertToJaxbFlowNodeRef(realObject))
+            }
+
+            element.childLaneSet?.let {
+                childLaneSet = context.converters.export(
+                    it,
+                    TLaneSet::class.java,
+                    context
+                )
             }
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)

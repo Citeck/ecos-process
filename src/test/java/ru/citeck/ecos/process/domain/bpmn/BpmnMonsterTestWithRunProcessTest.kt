@@ -1450,6 +1450,19 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `pool with child lanes set`() {
+        val procId = "test-child-lanes"
+        saveAndDeployBpmn(POOL, procId)
+
+        run(process).startByKey(
+            procId,
+            variables_docRef
+        ).execute()
+
+        verify(process).hasFinished("end_event")
+    }
+
     // --- CamundaEventSubscriptionFinder TESTS ---
     @Test
     fun `get actual camunda subscriptions of 2 different process with start event`() {

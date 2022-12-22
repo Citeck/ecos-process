@@ -5,5 +5,6 @@ import ru.citeck.ecos.commons.data.MLText
 data class BpmnLaneDef(
     val id: String,
     val name: MLText,
-    val flowRefs: List<String>
+    val flowRefs: List<String>,
+    val childLaneSet: BpmnLaneSetDef? = null
 )

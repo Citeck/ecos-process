@@ -5,8 +5,10 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneSetDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TLane
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TLaneSet
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -22,6 +24,13 @@ class BpmnLaneConverter : EcosOmgConverter<BpmnLaneDef, TLane> {
                 val tBase = flowElement.value as? TBaseElement
                     ?: error("Flow ref is not TBaseElement. Late id: ${element.id}")
                 tBase.id
+            },
+            childLaneSet = element.childLaneSet?.let {
+                context.converters.import(
+                    it,
+                    BpmnLaneSetDef::class.java,
+                    context
+                ).data
             }
         )
     }
@@ -35,6 +44,14 @@ class BpmnLaneConverter : EcosOmgConverter<BpmnLaneDef, TLane> {
                 val realObject = context.bpmnElementsById[it]
                     ?: error("Flow ref not found, id: ${element.id}")
                 flowNodeRef.add(context.converters.convertToJaxbFlowNodeRef(realObject))
+            }
+
+            element.childLaneSet?.let {
+                childLaneSet = context.converters.export(
+                    it,
+                    TLaneSet::class.java,
+                    context
+                )
             }
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
