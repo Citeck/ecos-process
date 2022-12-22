@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.proctask.dto
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.io.Serializable
@@ -13,6 +14,8 @@ data class ProcTaskDto(
     val name: MLText = MLText.EMPTY,
 
     val priority: Int = 0,
+
+    val possibleOutcomes: List<TaskOutcome> = emptyList(),
 
     val formRef: RecordRef = RecordRef.EMPTY,
 

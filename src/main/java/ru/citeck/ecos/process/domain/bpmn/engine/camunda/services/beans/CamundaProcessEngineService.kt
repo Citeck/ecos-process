@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans
 
 /**
  * Implement this interface to add service to camunda engine

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordConstants
@@ -50,6 +51,8 @@ class ProcTaskRecord(
     val assignee: EntityRef = RecordRef.EMPTY,
     val candidateUsers: List<EntityRef> = emptyList(),
     val candidateGroups: List<EntityRef> = emptyList(),
+
+    val possibleOutcomes: List<TaskOutcome> = emptyList(),
 
     val documentAtts: RecordAtts = RecordAtts(),
 

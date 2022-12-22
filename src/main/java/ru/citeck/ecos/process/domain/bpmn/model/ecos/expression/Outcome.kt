@@ -16,15 +16,15 @@ class Outcome(
     val data: String,
     val name: MLText = MLText()
 ) {
-    var id: String = ""
+    var taskDefinitionKey: String = ""
     var value: String = ""
 
     val outcomeId = fun(): String {
-        return id + "_" + OUTCOME_VAR
+        return taskDefinitionKey + "_" + OUTCOME_VAR
     }
 
     val nameId = fun(): String {
-        return id + "_" + OUTCOME_NAME_VAR
+        return taskDefinitionKey + "_" + OUTCOME_NAME_VAR
     }
 
     companion object {
@@ -40,7 +40,7 @@ class Outcome(
         val EMPTY = Outcome("")
     }
 
-    constructor(id: String, value: String, name: MLText) : this("$id$SEPARATOR$value", name)
+    constructor(taskDefinitionKey: String, value: String, name: MLText) : this("$taskDefinitionKey$SEPARATOR$value", name)
 
     init {
         if (data.isNotBlank()) {
@@ -48,10 +48,10 @@ class Outcome(
 
             if (split.size != 2) throw IllegalStateException("Outcome format is invalid")
 
-            id = split[0]
+            taskDefinitionKey = split[0]
             value = split[1]
 
-            if (id.isBlank()) throw IllegalStateException("Outcome id cannot be blank")
+            if (taskDefinitionKey.isBlank()) throw IllegalStateException("Outcome taskDefinitionKey cannot be blank")
             if (value.isBlank()) throw IllegalStateException("Outcome value cannot be blank")
         }
     }
@@ -60,14 +60,14 @@ class Outcome(
         if (this === other) return true
         if (other !is Outcome) return false
 
-        if (id != other.id) return false
+        if (taskDefinitionKey != other.taskDefinitionKey) return false
         if (value != other.value) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = id.hashCode()
+        var result = taskDefinitionKey.hashCode()
         result = 31 * result + value.hashCode()
         return result
     }
@@ -76,7 +76,7 @@ class Outcome(
         if (this == EMPTY) {
             return ""
         }
-        return id + SEPARATOR + value
+        return taskDefinitionKey + SEPARATOR + value
     }
 }
 

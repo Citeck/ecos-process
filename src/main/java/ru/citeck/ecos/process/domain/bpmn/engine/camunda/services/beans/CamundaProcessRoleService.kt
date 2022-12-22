@@ -1,6 +1,5 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans
 
-import lombok.extern.slf4j.Slf4j
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
@@ -17,7 +16,6 @@ const val GROUP_PREFIX = "GROUP_"
 
 private const val WORKSPACE_PREFIX = "workspace://"
 
-@Slf4j
 @Component("roles")
 class CamundaRoleService(
     private val roleService: RoleService,

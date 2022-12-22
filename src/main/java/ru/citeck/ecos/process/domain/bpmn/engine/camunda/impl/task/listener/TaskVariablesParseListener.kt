@@ -9,11 +9,13 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.addTaskListener
 
 @Component
-class TaskTitleParseListener(
-    private val addTaskTitleToVariablesListener: AddTaskTitleToVariablesListener
+class TaskVariablesParseListener(
+    private val addTaskTitleToVariablesListener: AddTaskTitleToVariablesListener,
+    private val addTaskPossibleOutcomesToVariablesListener: AddTaskPossibleOutcomesToVariablesListener
 ) : AbstractBpmnParseListener() {
 
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
         activity.addTaskListener(TaskListener.EVENTNAME_CREATE, addTaskTitleToVariablesListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, addTaskPossibleOutcomesToVariablesListener)
     }
 }

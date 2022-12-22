@@ -4,11 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
-import org.camunda.bpm.engine.variable.Variables;
 import org.camunda.bpm.spring.boot.starter.configuration.CamundaProcessEngineConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaProcessEngineService;
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaProcessEngineService;
 
 import java.util.Collections;
 import java.util.HashMap;

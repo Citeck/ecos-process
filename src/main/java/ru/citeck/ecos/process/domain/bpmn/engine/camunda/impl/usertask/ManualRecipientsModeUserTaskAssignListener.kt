@@ -5,7 +5,7 @@ import org.camunda.bpm.engine.delegate.DelegateTask
 import org.camunda.bpm.engine.delegate.TaskListener
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.GROUP_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.GROUP_PREFIX
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 
 private const val COLLECTION_START_PREFIX = "["

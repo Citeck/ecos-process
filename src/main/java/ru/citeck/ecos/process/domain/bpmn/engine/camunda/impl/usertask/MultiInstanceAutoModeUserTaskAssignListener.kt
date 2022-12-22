@@ -4,7 +4,7 @@ import org.camunda.bpm.engine.delegate.DelegateTask
 import org.camunda.bpm.engine.delegate.TaskListener
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_ASSIGNEE_ELEMENT
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.GROUP_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.GROUP_PREFIX
 
 /**
  * @author Roman Makarskiy

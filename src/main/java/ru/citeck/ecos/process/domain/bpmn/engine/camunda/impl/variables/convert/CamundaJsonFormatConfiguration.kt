@@ -4,6 +4,7 @@ import org.camunda.spin.impl.json.jackson.format.JacksonJsonDataFormat
 import org.camunda.spin.spi.DataFormatConfigurator
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import spinjar.com.fasterxml.jackson.core.JsonGenerator
 import spinjar.com.fasterxml.jackson.core.JsonParser
 import spinjar.com.fasterxml.jackson.databind.DeserializationContext
@@ -12,7 +13,7 @@ import spinjar.com.fasterxml.jackson.databind.JsonSerializer
 import spinjar.com.fasterxml.jackson.databind.SerializerProvider
 import spinjar.com.fasterxml.jackson.databind.module.SimpleModule
 
-class CamundaDataValueFormatConfiguration : DataFormatConfigurator<JacksonJsonDataFormat> {
+class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDataFormat> {
 
     override fun getDataFormatClass(): Class<JacksonJsonDataFormat> {
         return JacksonJsonDataFormat::class.java
@@ -27,6 +28,9 @@ class CamundaDataValueFormatConfiguration : DataFormatConfigurator<JacksonJsonDa
 
         module.addSerializer(MLText::class.java, MLTextJsonSerializer())
         module.addDeserializer(MLText::class.java, MLTextJsonDeserializer())
+
+        module.addSerializer(TaskOutcome::class.java, TaskOutcomeJsonSerializer())
+        module.addDeserializer(TaskOutcome::class.java, TaskOutcomeJsonDeserializer())
 
         mapper.registerModule(module)
     }
@@ -57,5 +61,19 @@ class MLTextJsonDeserializer : JsonDeserializer<MLText>() {
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): MLText {
         return Json.mapper.readNotNull(p.binaryValue, MLText::class.java)
+    }
+}
+
+class TaskOutcomeJsonSerializer : JsonSerializer<TaskOutcome>() {
+
+    override fun serialize(value: TaskOutcome, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeBinary(Json.mapper.toBytesNotNull(value))
+    }
+}
+
+class TaskOutcomeJsonDeserializer : JsonDeserializer<TaskOutcome>() {
+
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): TaskOutcome {
+        return Json.mapper.readNotNull(p.binaryValue, TaskOutcome::class.java)
     }
 }

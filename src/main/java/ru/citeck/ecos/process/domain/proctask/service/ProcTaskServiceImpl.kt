@@ -6,6 +6,7 @@ import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import kotlin.system.measureTimeMillis
@@ -95,11 +96,18 @@ class ProcTaskServiceImpl(
         return result
     }
 
-    override fun completeTask(taskId: String, variables: Map<String, Any?>) {
+    override fun completeTask(taskId: String, outcome: Outcome, variables: Map<String, Any?>) {
         val currentUser = AuthContext.getCurrentUser()
+
         camundaTaskService.setVariableLocal(taskId, TASK_COMPLETED_BY, currentUser)
 
-        camundaTaskFormService.submitTaskForm(taskId, variables)
+        val completionVariables = variables.toMutableMap()
+        completionVariables[outcome.outcomeId()] = outcome.value
+        completionVariables[outcome.nameId()] = outcome.name.toString()
+
+        log.debug { "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables" }
+
+        camundaTaskFormService.submitTaskForm(taskId, completionVariables)
     }
 
     override fun getVariables(taskId: String): Map<String, Any?> {

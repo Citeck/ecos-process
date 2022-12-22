@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.service
 
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 
 const val TASK_COMPLETED_BY = "completedBy"
@@ -18,7 +19,7 @@ interface ProcTaskService {
 
     fun getTasksByIds(taskIds: List<String>): List<ProcTaskDto?>
 
-    fun completeTask(taskId: String, variables: Map<String, Any?>)
+    fun completeTask(taskId: String, outcome: Outcome, variables: Map<String, Any?>)
 
     fun getVariables(taskId: String): Map<String, Any?>
 }

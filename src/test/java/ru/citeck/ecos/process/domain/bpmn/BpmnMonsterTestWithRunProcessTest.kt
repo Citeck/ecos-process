@@ -34,8 +34,8 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
@@ -44,6 +44,7 @@ import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
+import ru.citeck.ecos.process.domain.saveAndDeployBpmnFromResource
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
@@ -2226,7 +2227,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 CommentCreateEvent(
                     record = docRef,
                     commentRecord = EntityRef.valueOf("eproc/comment@1"),
-                    text = "not match comment"
+                    text = "not match"
                 )
             )
         }
@@ -2642,6 +2643,34 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endThrow")
         verify(process, never()).hasFinished("startEvent")
         verify(process, never()).hasFinished("endEventFromStart")
+    }
+
+    // --- BPMN SERVICES TESTS ---
+
+    @Test
+    fun `bpmn complete all active tasks with default outcome`() {
+        val procId = "test-complete-all-tasks"
+        saveAndDeployBpmnFromResource("test/bpmn/services/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("task_1")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "complete-tasks-default",
+                eventData = mapOf(
+                    "record" to docRef.toString()
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("task_1")
+        verify(process).hasFinished("task_2")
+        verify(process).hasFinished("task_3")
+
+        verify(process).hasFinished("end_all")
+
+        verify(process, never()).hasFinished("end_default_1")
+        verify(process, never()).hasFinished("end_default_3")
     }
 
     fun getSubscriptionsAfterAction(

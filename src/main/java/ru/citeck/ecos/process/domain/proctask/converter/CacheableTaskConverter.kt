@@ -12,6 +12,8 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_NAME_ML
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_POSSIBLE_OUTCOMES
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
@@ -52,13 +54,11 @@ class CacheableTaskConverter(
 
             return ProcTaskDto(
                 id = id,
-                name = let {
-                    val nameMl = Json.mapper.convert(localVariables[VAR_NAME_ML], MLText::class.java) ?: MLText(name)
-                    return@let if (nameMl == MLText.EMPTY) {
-                        MLText(name)
-                    } else {
-                        nameMl
-                    }
+                name = localVariables[VAR_NAME_ML] as? MLText ?: MLText.EMPTY,
+                possibleOutcomes = let {
+                    @Suppress("UNCHECKED_CAST")
+                    val outcomes = localVariables[VAR_POSSIBLE_OUTCOMES] as? List<TaskOutcome>
+                    return@let outcomes ?: emptyList()
                 },
                 priority = priority,
                 formRef = RecordRef.valueOf(formKey),

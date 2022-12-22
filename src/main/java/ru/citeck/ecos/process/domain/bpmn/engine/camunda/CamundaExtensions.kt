@@ -20,10 +20,12 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.TaskRol
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ASSIGNEES
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_POSTFIX
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
@@ -125,6 +127,16 @@ class CamundaExtensions(
         )
     }
 
+    internal fun getTaskPossibleOutcomes(key: Pair<String, String>): List<TaskOutcome> {
+        val taskDefinition = taskDeployedCamundaDefCache.get(key).task ?: return emptyList()
+        val outcomesValue = taskDefinition.otherAttributes[BPMN_PROP_OUTCOMES]
+        if (outcomesValue.isNullOrBlank()) {
+            return emptyList()
+        }
+
+        return Json.mapper.readList(outcomesValue, TaskOutcome::class.java)
+    }
+
     internal fun getTaskRoles(document: RecordRef, key: Pair<String, String>): List<TaskRole> {
         if (document == RecordRef.EMPTY) {
             return emptyList()
@@ -214,6 +226,10 @@ fun DelegateTask.getOutcome(): Outcome {
     ) ?: MLText()
 
     return Outcome(taskDefinitionKey, outcomeValue, outcomeName)
+}
+
+fun DelegateTask.getPossibleOutcomes(): List<TaskOutcome> {
+    return ext.getTaskPossibleOutcomes(processDefinitionId to taskDefinitionKey)
 }
 
 fun DelegateTask.getTaskRoles(): List<TaskRole> {

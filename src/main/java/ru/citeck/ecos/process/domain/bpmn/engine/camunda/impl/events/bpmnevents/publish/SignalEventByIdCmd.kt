@@ -6,7 +6,7 @@ import org.camunda.bpm.engine.impl.interceptor.CommandContext
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EVENT_ATT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_EVENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 
 class SignalEventByIdCmd(
@@ -14,7 +14,7 @@ class SignalEventByIdCmd(
     eventData: BpmnDataValue
 ) : Command<Unit> {
 
-    private val eventVariable = mapOf(EVENT_ATT to eventData)
+    private val eventVariable = mapOf(VAR_EVENT to eventData)
 
     override fun execute(commandContext: CommandContext) {
         sendSignal(commandContext)

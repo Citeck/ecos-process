@@ -81,7 +81,6 @@ class CamundaEventProcessor(
         result[EcosEventType.RECORD_TYPE_ATT] =
             getEntityRefByAttKey(incomingEvent.attributes, EcosEventType.RECORD_TYPE_ATT)
 
-
         return ObjectData.create(result)
     }
 

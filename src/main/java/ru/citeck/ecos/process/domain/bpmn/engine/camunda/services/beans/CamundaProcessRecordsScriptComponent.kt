@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services
+package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans
 
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.records3.record.atts.computed.script.AttValueScriptCtx
@@ -8,7 +8,7 @@ import ru.citeck.ecos.records3.record.atts.computed.script.RecordsScriptService
  * @author Roman Makarskiy
  */
 @Component("Records")
-class CamundaRecordsScriptComponent(
+class CamundaProcessRecordsScriptComponent(
     private val recordsScriptService: RecordsScriptService
 ) : CamundaProcessEngineService {
 

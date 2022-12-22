@@ -167,15 +167,47 @@ class ProcTaskRecords(
         )
 
         val mutateInfo = TaskMutateVariables(task, record)
-        if (task.documentRef != RecordRef.EMPTY && mutateInfo.documentAtts.getAttributes().isNotEmpty()) {
-            recordsService.mutate(mutateInfo.documentAtts)
-        }
+        val outcome = getTaskOutcome(task, record)
 
-        log.debug { "Submit task ${record.id} form with variables: ${mutateInfo.taskVariables}" }
+        mutateDocumentVariables(task, mutateInfo.documentAtts)
 
-        procTaskService.completeTask(record.id, mutateInfo.taskVariables)
+        log.debug { "Submit task ${record.id} form with outcome: $outcome and variables: ${mutateInfo.taskVariables}" }
+
+        procTaskService.completeTask(record.id, outcome, mutateInfo.taskVariables)
 
         return record.id
+    }
+
+    private fun getTaskOutcome(task: ProcTaskDto, record: LocalRecordAtts): Outcome {
+        if (task.definitionKey.isNullOrBlank()) {
+            throw IllegalStateException("Task DefinitionKey is mandatory for task completion")
+        }
+
+        var outcome = ""
+        var formInfo = FormInfo()
+
+        record.forEach { k, v ->
+            if (k.startsWith(OUTCOME_PREFIX) && v.asBoolean()) {
+                outcome = k.substringAfter(OUTCOME_PREFIX)
+            }
+
+            if (k == FORM_INFO_ATT) {
+                formInfo = v.getAs(FormInfo::class.java) ?: FormInfo()
+            }
+        }
+
+        if (outcome.isBlank()) {
+            throw IllegalStateException("Task outcome is mandatory for task completion")
+        }
+
+        return Outcome(task.definitionKey, outcome, formInfo.submitName)
+    }
+
+    private fun mutateDocumentVariables(task: ProcTaskDto, documentAtts: RecordAtts) {
+        if (task.documentRef != RecordRef.EMPTY && documentAtts.getAttributes().isNotEmpty()) {
+            log.debug { "Submit task ${task.id}, mutate document <${task.documentRef}> with variables: $documentAtts" }
+            recordsService.mutate(documentAtts)
+        }
     }
 
     private fun createTaskRecordFromAlf(ref: RecordRef): ProcTaskRecord {
@@ -241,10 +273,6 @@ class ProcTaskRecords(
 
             documentAtts.setId(task.documentRef)
 
-            val outcome = getTaskOutcome(task, record)
-            taskVariables[outcome.outcomeId()] = outcome.value
-            taskVariables[outcome.nameId()] = outcome.name.toString()
-
             record.forEach { k, v ->
                 when {
                     k.startsWith(DOCUMENT_FIELD_PREFIX) -> {
@@ -271,28 +299,6 @@ class ProcTaskRecords(
             if (!currentUserIsTaskActor(task)) {
                 throw IllegalStateException("Task mutate denied. Current user is not a task actor")
             }
-        }
-
-        private fun getTaskOutcome(task: ProcTaskDto, record: LocalRecordAtts): Outcome {
-            var outcome = ""
-            var formInfo = FormInfo()
-
-            record.forEach { k, v ->
-                if (k.startsWith(OUTCOME_PREFIX) && v.asBoolean()) {
-                    outcome = k.substringAfter(OUTCOME_PREFIX)
-                }
-
-                if (k == FORM_INFO_ATT) {
-                    formInfo = v.getAs(FormInfo::class.java) ?: FormInfo()
-                }
-            }
-
-            if (outcome.isBlank()) throw IllegalStateException("Task outcome is mandatory for task completion")
-            if (task.definitionKey.isNullOrBlank()) {
-                throw IllegalStateException("Task DefinitionKey is mandatory for task completion")
-            }
-
-            return Outcome(task.definitionKey, outcome, formInfo.submitName)
         }
 
         private fun processDocumentVariable(k: String, v: DataValue): Pair<String, Any?> {
