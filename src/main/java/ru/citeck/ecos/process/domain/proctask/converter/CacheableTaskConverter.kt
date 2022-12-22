@@ -1,10 +1,13 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
+import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity
 import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
@@ -30,6 +33,15 @@ class CacheableTaskConverter(
     private val camundaHistoryService: HistoryService,
     private val authorityService: EcosAuthoritiesApi
 ) {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
+    @CacheEvict(cacheNames = [PROC_TASKS_DTO_CONVERTER_CACHE_KEY], key = "#taskId")
+    fun removeFromActualTaskCache(taskId: String) {
+        log.debug { "CacheableTaskConverter remove from cache taskId=$taskId" }
+    }
 
     @Cacheable(cacheNames = [PROC_TASKS_DTO_CONVERTER_CACHE_KEY], key = "#task.id")
     fun convertTask(task: Task): ProcTaskDto {
@@ -59,6 +71,11 @@ class CacheableTaskConverter(
                     @Suppress("UNCHECKED_CAST")
                     val outcomes = localVariables[VAR_POSSIBLE_OUTCOMES] as? List<TaskOutcome>
                     return@let outcomes ?: emptyList()
+                },
+                isDeleted = if (task is TaskEntity) {
+                    task.isDeleted
+                } else {
+                    false
                 },
                 priority = priority,
                 formRef = RecordRef.valueOf(formKey),

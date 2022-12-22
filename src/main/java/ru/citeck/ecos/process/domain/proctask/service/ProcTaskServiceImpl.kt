@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
+import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import kotlin.system.measureTimeMillis
@@ -14,7 +15,8 @@ import kotlin.system.measureTimeMillis
 @Service
 class ProcTaskServiceImpl(
     private val camundaTaskService: TaskService,
-    private val camundaTaskFormService: FormService
+    private val camundaTaskFormService: FormService,
+    private val cacheableTaskConverter: CacheableTaskConverter
 ) : ProcTaskService {
 
     companion object {
@@ -107,6 +109,7 @@ class ProcTaskServiceImpl(
 
         log.debug { "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables" }
 
+        cacheableTaskConverter.removeFromActualTaskCache(taskId)
         camundaTaskFormService.submitTaskForm(taskId, completionVariables)
     }
 

@@ -15,6 +15,8 @@ data class ProcTaskDto(
 
     val priority: Int = 0,
 
+    val isDeleted: Boolean = false,
+
     val possibleOutcomes: List<TaskOutcome> = emptyList(),
 
     val formRef: RecordRef = RecordRef.EMPTY,

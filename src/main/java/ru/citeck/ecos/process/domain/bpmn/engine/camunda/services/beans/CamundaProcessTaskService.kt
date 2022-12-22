@@ -38,22 +38,24 @@ class CamundaProcessTaskService(
     fun completeActiveTasks(execution: DelegateExecution) {
         val processInstanceId = execution.processInstanceId
 
-        procTaskService.getTasksByProcess(processInstanceId).forEach { task ->
-            if (task.definitionKey.isNullOrBlank()) {
-                error(
-                    "Failed to complete task ${task.id} in ${execution.processInstanceId}, " +
-                        "because Task DefinitionKey is blank"
+        procTaskService.getTasksByProcess(processInstanceId)
+            .filter { !it.isDeleted }
+            .forEach { task ->
+                if (task.definitionKey.isNullOrBlank()) {
+                    error(
+                        "Failed to complete task ${task.id} in ${execution.processInstanceId}, " +
+                            "because Task DefinitionKey is blank"
+                    )
+                }
+                val defaultOutcomeNameFromTask = task.possibleOutcomes.find { it.id == defaultDoneOutcome.id }?.name
+
+                val outcome = Outcome(
+                    taskDefinitionKey = task.definitionKey,
+                    value = defaultDoneOutcome.id,
+                    name = defaultOutcomeNameFromTask ?: defaultDoneOutcome.name
                 )
+
+                procTaskService.completeTask(task.id, outcome, emptyMap())
             }
-            val defaultOutcomeNameFromTask = task.possibleOutcomes.find { it.id == defaultDoneOutcome.id }?.name
-
-            val outcome = Outcome(
-                taskDefinitionKey = task.definitionKey,
-                value = defaultDoneOutcome.id,
-                name = defaultOutcomeNameFromTask ?: defaultDoneOutcome.name
-            )
-
-            procTaskService.completeTask(task.id, outcome, emptyMap())
-        }
     }
 }
