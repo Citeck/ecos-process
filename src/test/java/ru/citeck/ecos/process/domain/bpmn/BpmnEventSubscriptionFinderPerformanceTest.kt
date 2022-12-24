@@ -1,19 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn
 
-import mu.KotlinLogging
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.util.ResourceUtils
-import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
-import ru.citeck.ecos.process.domain.saveAndDeployBpmnFromString
-import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-import java.nio.charset.StandardCharsets
-
+// TODO: uncomment
+/*
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,4 +39,4 @@ class BpmnEventSubscriptionFinderPerformanceTest {
     fun `find all deployed subscriptions should go without a memory leak `() {
         camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
     }
-}
+}*/
