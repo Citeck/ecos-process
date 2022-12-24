@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.camunda.bpm.engine.RuntimeService
 import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
@@ -11,7 +12,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscr
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.procdef.convert.toDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import java.io.Serializable
 import java.util.*
@@ -25,6 +29,7 @@ class CamundaEventSubscriptionFinder(
     private val bpmnProcService: BpmnProcService,
     private val camundaRuntimeService: RuntimeService,
     private val procDefService: ProcDefService,
+    private val procDefRevRepo: ProcDefRevRepository,
     private val cachedEventSubscriptionProvider: CachedEventSubscriptionProvider
 ) {
 
@@ -34,15 +39,26 @@ class CamundaEventSubscriptionFinder(
 
     fun findAllDeployedSubscriptions(): List<EventSubscription> {
         val result: List<EventSubscription>
+
         val time = measureTimeMillis {
             val eventDefsOfDeploymentId = mutableMapOf<String, List<EventSubscription>>()
 
-            procDefService.findAllProcessRevisionsWhereDeploymentIdIsNotNull().forEach { defRev ->
-                val subscriptions = defRev.getBpmnSignalEventSubscriptions()
+            val fillEventSubscriptions = fun(defRevs: List<ProcDefRevEntity>) {
+                defRevs.map { it.toDto() }.forEach { defRev ->
+                    val subscriptions = defRev.getBpmnSignalEventSubscriptions()
+                    eventDefsOfDeploymentId[defRev.deploymentId] = subscriptions
 
-                eventDefsOfDeploymentId[defRev.deploymentId] = subscriptions
+                    cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId, subscriptions)
+                }
+            }
 
-                cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId, subscriptions)
+            var slice = procDefRevRepo.queryAllByDeploymentIdIsNotNull(PageRequest.of(0, 20))
+
+            fillEventSubscriptions(slice.content)
+
+            while (slice.hasNext()) {
+                slice = procDefRevRepo.queryAllByDeploymentIdIsNotNull(slice.nextPageable())
+                fillEventSubscriptions(slice.content)
             }
 
             result = eventDefsOfDeploymentId.values.flatten()

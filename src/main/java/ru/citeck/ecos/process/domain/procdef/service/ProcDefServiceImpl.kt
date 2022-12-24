@@ -8,16 +8,16 @@ import org.apache.commons.lang3.StringUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
-import ru.citeck.ecos.commons.data.MLText
+import org.springframework.transaction.annotation.Transactional
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
+import ru.citeck.ecos.process.domain.procdef.convert.toDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
@@ -33,7 +33,6 @@ import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -146,7 +145,7 @@ class ProcDefServiceImpl(
 
         sendProcDefEvent.invoke()
 
-        return procDefToDto(currentProcDef)
+        return currentProcDef.toDto()
     }
 
     private fun createEvent(
@@ -182,13 +181,13 @@ class ProcDefServiceImpl(
 
     override fun findAll(predicate: Predicate, max: Int, skip: Int): List<ProcDefDto> {
         return findAllProcDefEntities(predicate, max, skip)
-            .map { entity: ProcDefEntity -> procDefToDto(entity) }
+            .map { entity: ProcDefEntity -> entity.toDto() }
     }
 
     override fun findAllWithData(predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto> {
         return findAllProcDefEntities(predicate ?: VoidPredicate.INSTANCE, max, skip).map { entity: ProcDefEntity ->
-            val procDefDto = procDefToDto(entity)
-            val procDefRevDto = procDefRevToDto(entity.lastRev!!)
+            val procDefDto = entity.toDto()
+            val procDefRevDto = entity.lastRev!!.toDto()
             ProcDefWithDataDto(procDefDto, procDefRevDto)
         }
     }
@@ -282,7 +281,7 @@ class ProcDefServiceImpl(
                 procDefEntity.modified = Instant.now()
                 procDefEntity.sectionRef = dto.sectionRef.toString()
 
-                result = procDefToDto(procDefRepo.save(procDefEntity))
+                result = procDefRepo.save(procDefEntity).toDto()
             }
         }
 
@@ -294,7 +293,7 @@ class ProcDefServiceImpl(
     override fun getProcessDefRev(procType: String, procDefRevId: UUID): ProcDefRevDto? {
         val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
         val revEntity = procDefRevRepo.findById(revId).orElse(null) ?: return null
-        return procDefRevToDto(revEntity)
+        return revEntity.toDto()
     }
 
     override fun saveProcessDefRevDeploymentId(procDefRevId: UUID, deploymentId: String) {
@@ -312,9 +311,10 @@ class ProcDefServiceImpl(
 
     override fun getProcessDefRevs(procDefRevIds: List<UUID>): List<ProcDefRevDto> {
         val ids = procDefRevIds.map { EntityUuid(tenantService.getCurrent(), it) }
-        return procDefRevRepo.findAllById(ids).map { procDefRevToDto(it) }
+        return procDefRevRepo.findAllById(ids).map { it.toDto() }
     }
 
+    @Transactional(readOnly = true)
     override fun getProcessDefRevs(ref: ProcDefRef): List<ProcDefRevDto> {
         val tenant = tenantService.getCurrent()
         val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, ref.type, ref.id)
@@ -323,7 +323,7 @@ class ProcDefServiceImpl(
         val result: List<ProcDefRevDto>
         val time = measureTimeMillis {
             result = procDefRevRepo.findAllByProcessDef(procDef)
-                .map { procDefRevToDto(it) }
+                .map { it.toDto() }
                 .sortedByDescending { it.created }
         }
 
@@ -333,14 +333,14 @@ class ProcDefServiceImpl(
     }
 
     override fun getProcessDefRevByDeploymentId(deploymentId: String): ProcDefRevDto? {
-        return procDefRevRepo.findByDeploymentId(deploymentId)?.let { procDefRevToDto(it) }
+        return procDefRevRepo.findByDeploymentId(deploymentId)?.toDto()
     }
 
     override fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto? {
         val currentTenant = tenantService.getCurrent()
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, id.type, id.id)
         return procDefEntity?.let { def: ProcDefEntity ->
-            ProcDefWithDataDto(procDefToDto(def), procDefRevToDto(def.lastRev!!))
+            ProcDefWithDataDto(def.toDto(), def.lastRev!!.toDto())
         }
     }
 
@@ -355,6 +355,7 @@ class ProcDefServiceImpl(
         } + "-" + getCount() + "-" + STARTUP_TIME_STR
     }
 
+    @Transactional(readOnly = true)
     override fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto? {
 
         val currentTenant = tenantService.getCurrent()
@@ -399,11 +400,7 @@ class ProcDefServiceImpl(
             }
         }
 
-        return processDef?.let { procDefRevToDto(it.lastRev!!) }
-    }
-
-    override fun findAllProcessRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto> {
-        return procDefRevRepo.queryAllByDeploymentIdIsNotNull().map { procDefRevToDto(it) }
+        return processDef?.let { it.lastRev!!.toDto() }
     }
 
     override fun delete(ref: ProcDefRef) {
@@ -425,44 +422,6 @@ class ProcDefServiceImpl(
 
         procDefRevRepo.deleteAll(revisions)
         procDefRepo.delete(procDef)
-    }
-
-    private fun procDefToDto(entity: ProcDefEntity): ProcDefDto {
-        val procDefDto = ProcDefDto()
-        procDefDto.id = entity.extId
-        procDefDto.procType = entity.procType
-        procDefDto.name = mapper.read(entity.name, MLText::class.java)
-        procDefDto.revisionId = entity.lastRev!!.id!!.id
-        procDefDto.version = entity.lastRev!!.version
-        procDefDto.alfType = entity.alfType
-        procDefDto.ecosTypeRef = RecordRef.valueOf(entity.ecosTypeRef)
-        procDefDto.formRef = RecordRef.valueOf(entity.formRef)
-        procDefDto.enabled = entity.enabled ?: false
-        procDefDto.autoStartEnabled = entity.autoStartEnabled ?: false
-        procDefDto.format = entity.lastRev?.format ?: ""
-        procDefDto.sectionRef = EntityRef.valueOf(entity.sectionRef).ifEmpty {
-            EntityRef.create(EprocApp.NAME, procDefDto.procType + "-section", "DEFAULT")
-        }
-        val entityCreated = entity.created ?: Instant.EPOCH
-        val entityModified = entity.modified ?: Instant.EPOCH
-        val lastRevCreated = entity.lastRev?.created ?: Instant.EPOCH
-        procDefDto.created = entityCreated
-        procDefDto.modified = lastRevCreated.coerceAtLeast(entityModified).coerceAtLeast(entityCreated)
-        return procDefDto
-    }
-
-    private fun procDefRevToDto(entity: ProcDefRevEntity): ProcDefRevDto {
-        val procDefRevDto = ProcDefRevDto()
-        procDefRevDto.id = entity.id!!.id
-        procDefRevDto.created = entity.created
-        procDefRevDto.createdBy = entity.createdBy
-        procDefRevDto.deploymentId = entity.deploymentId
-        procDefRevDto.procDefId = entity.processDef!!.extId
-        procDefRevDto.data = entity.data
-        procDefRevDto.image = entity.image
-        procDefRevDto.format = entity.format
-        procDefRevDto.version = entity.version
-        return procDefRevDto
     }
 
     override fun listenChanges(type: String, action: (ProcDefDto) -> Unit) {

@@ -37,8 +37,6 @@ interface ProcDefService {
 
     fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto?
 
-    fun findAllProcessRevisionsWhereDeploymentIdIsNotNull(): List<ProcDefRevDto>
-
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?
 
     fun delete(ref: ProcDefRef)

@@ -58,10 +58,17 @@ fun getBpmnProcessDefDto(resource: String, id: String): NewProcessDefDto {
 }
 
 fun saveAndDeployBpmnFromResource(resource: String, id: String) {
+    saveAndDeployBpmnFromString(
+        ResourceUtils.getFile("classpath:$resource")
+            .readText(StandardCharsets.UTF_8),
+        id
+    )
+}
+
+fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
     val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcDefRecords.SOURCE_ID, "")).apply {
         this["processDefId"] = id
-        this["definition"] = ResourceUtils.getFile("classpath:$resource")
-            .readText(StandardCharsets.UTF_8)
+        this["definition"] = bpmnData
         this["action"] = BpmnProcDefActions.DEPLOY.toString()
     }
 

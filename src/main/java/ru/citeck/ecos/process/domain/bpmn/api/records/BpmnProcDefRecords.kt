@@ -325,11 +325,13 @@ class BpmnProcDefRecords(
 
             newEcosBpmnDef = BpmnIO.importEcosBpmn(newDefinition)
 
-            // TODO: remove logging
-            val s2 = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef)
-            log.info { "exportEcosBpmnToString:\n$s2" }
-            val camundaStr = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef)
-            log.info { "\nexportCamundaBpmnToString$camundaStr" }
+            if (log.isDebugEnabled) {
+                val ecosBpmnStr = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef)
+                log.debug { "exportEcosBpmnToString:\n$ecosBpmnStr" }
+
+                val camundaStr = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef)
+                log.debug { "exportCamundaBpmnToString:\n$camundaStr" }
+            }
 
             newDefData = BpmnIO.exportEcosBpmnToString(newEcosBpmnDef).toByteArray()
 

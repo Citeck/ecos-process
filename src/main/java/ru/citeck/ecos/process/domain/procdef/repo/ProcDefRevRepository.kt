@@ -1,5 +1,7 @@
 package ru.citeck.ecos.process.domain.procdef.repo
 
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
@@ -11,5 +13,5 @@ interface ProcDefRevRepository : MongoRepository<ProcDefRevEntity, EntityUuid> {
 
     fun findByDeploymentId(deploymentId: String): ProcDefRevEntity?
 
-    fun queryAllByDeploymentIdIsNotNull(): List<ProcDefRevEntity>
+    fun queryAllByDeploymentIdIsNotNull(pageable: Pageable): Slice<ProcDefRevEntity>
 }
