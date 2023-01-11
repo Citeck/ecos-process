@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event
 
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignalEventDefinition
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext

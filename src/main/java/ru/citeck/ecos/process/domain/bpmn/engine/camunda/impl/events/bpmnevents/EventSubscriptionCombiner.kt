@@ -1,6 +1,10 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 
 object EventSubscriptionCombiner {
 
@@ -22,7 +26,7 @@ object EventSubscriptionCombiner {
 
     /**
      * Combine subscriptions with same event name.
-     * Model will be merged by values.
+     * Model will be merged by model values and predicate atts.
      * Default models added from [EcosEventType] and [DEFAULT_ATTS].
      */
     fun combine(subscriptions: List<EventSubscription>): List<CombinedEventSubscription> {
@@ -31,9 +35,15 @@ object EventSubscriptionCombiner {
 
         for (subscription in subscriptions) {
             val eventName = subscription.name.event
-            val values = subscription.model.values
+            val modelAttributes = subscription.model.values
 
-            mapping.computeIfAbsent(eventName) { mutableSetOf() }.addAll(values)
+            val predicate: Predicate = Json.mapper.read(subscription.predicate, Predicate::class.java)
+                ?: VoidPredicate.INSTANCE
+            val attsFromPredicate = PredicateUtils.getAllPredicateAttributes(predicate)
+
+            val allAtts = modelAttributes + attsFromPredicate
+
+            mapping.computeIfAbsent(eventName) { mutableSetOf() }.addAll(allAtts)
         }
 
         return mapping.map { (eventName, atts) ->

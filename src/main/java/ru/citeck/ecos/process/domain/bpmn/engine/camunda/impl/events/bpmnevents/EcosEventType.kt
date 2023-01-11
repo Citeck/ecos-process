@@ -1,5 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
+import ru.citeck.ecos.events2.type.RecordChangedEvent
+
 enum class EcosEventType(
     val eventRepresentations: List<EventRepresentation>
 ) {
@@ -54,11 +56,36 @@ enum class EcosEventType(
             EventRepresentation(
                 eventName = "record-status-changed",
                 defaultModel = mapOf(
-                    "record" to "record?id",
-                    "recordType" to "recordType?id",
                     "before" to "before",
                     "after" to "after"
                 )
+            )
+        )
+    ),
+    RECORD_CHANGED(
+        listOf(
+            EventRepresentation(
+                eventName = RecordChangedEvent.TYPE,
+                defaultModel = mapOf(
+                    "before" to "before?json",
+                    "after" to "after?json"
+                )
+            )
+        )
+    ),
+    RECORD_CREATED(
+        listOf(
+            EventRepresentation(
+                eventName = "record-created",
+                defaultModel = emptyMap()
+            )
+        )
+    ),
+    RECORD_DELETED(
+        listOf(
+            EventRepresentation(
+                eventName = "record-deleted",
+                defaultModel = emptyMap()
             )
         )
     );

@@ -19,7 +19,7 @@ data class BpmnSignalEventDef(
 
     val eventType: EcosEventType? = null,
 
-    val eventFilterByRecordType: FilterEventByRecord? = null,
+    val eventFilterByRecordType: FilterEventByRecord,
     val eventFilterByEcosType: EntityRef = EntityRef.EMPTY,
     val eventFilterByRecordVariable: String? = null,
     val eventFilterByPredicate: Predicate? = null,
@@ -27,51 +27,68 @@ data class BpmnSignalEventDef(
     val eventModel: Map<String, String> = emptyMap(),
 
     val manualSignalName: String? = null
-) : BpmnAbstractEventDef()
+) : BpmnAbstractEventDef() {
 
-val BpmnSignalEventDef.signalName: String
-    get() = let {
-
-        val finalEventName = if (it.eventManualMode) {
-            if (manualSignalName.isNullOrBlank()) {
-                error("Signal name in mandatory for manual mode of Bpmn Signal. Id: ${it.id}")
-            }
-            manualSignalName
-        } else {
-            eventType?.name ?: error("Event type is mandatory for Bpmn Signal. Id: ${it.id}")
-        }
-
-        checkNotNull(eventFilterByRecordType) {
-            "Event filter by record type is mandatory for Bpmn Signal. Id: ${it.id}"
-        }
+    init {
 
         if (eventFilterByEcosType.isNotEmpty() && eventFilterByRecordType != FilterEventByRecord.ANY) {
-            error("Event filter by Ecos Type supported only for ANY document. Id: ${it.id}")
+            error("Event filter by Ecos Type supported only for ANY document. Id: $id")
         }
 
-        val filterByRecord: String = when (eventFilterByRecordType) {
-            FilterEventByRecord.ANY -> ComposedEventName.RECORD_ANY
-            FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
-            FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
-                if (eventFilterByRecordVariable.isNullOrBlank()) {
-                    error("Document variable is mandatory for filtering event by document. Id: ${it.id}")
+        when (eventType) {
+            EcosEventType.RECORD_CREATED -> {
+                if (eventFilterByEcosType == EntityRef.EMPTY
+                    && (eventFilterByPredicate == null || eventFilterByPredicate == VoidPredicate.INSTANCE)
+                ) {
+                    error("Event filter by Ecos Type or Predicate required for RECORD_CREATED event. Id: $id")
                 }
-                "\${$eventFilterByRecordVariable}"
+            }
+
+            else -> {
+                // do nothing
             }
         }
 
-        val filterByEcosType: String = if (eventFilterByEcosType == EntityRef.EMPTY) {
-            ComposedEventName.TYPE_ANY
-        } else {
-            eventFilterByEcosType.toString()
-        }
-
-        return ComposedEventName(
-            event = finalEventName,
-            record = filterByRecord,
-            type = filterByEcosType
-        ).toComposedStringWithPredicateChecksum(eventFilterByPredicate ?: VoidPredicate.INSTANCE)
     }
+
+    val signalName: String
+        get() = let {
+
+            val finalEventName = if (it.eventManualMode) {
+                if (manualSignalName.isNullOrBlank()) {
+                    error("Signal name in mandatory for manual mode of Bpmn Signal. Id: ${it.id}")
+                }
+                manualSignalName
+            } else {
+                eventType?.name ?: error("Event type is mandatory for Bpmn Signal. Id: ${it.id}")
+            }
+
+
+            val filterByRecord: String = when (eventFilterByRecordType) {
+                FilterEventByRecord.ANY -> ComposedEventName.RECORD_ANY
+                FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
+                FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
+                    if (eventFilterByRecordVariable.isNullOrBlank()) {
+                        error("Document variable is mandatory for filtering event by document. Id: ${it.id}")
+                    }
+                    "\${$eventFilterByRecordVariable}"
+                }
+            }
+
+            val filterByEcosType: String = if (eventFilterByEcosType == EntityRef.EMPTY) {
+                ComposedEventName.TYPE_ANY
+            } else {
+                eventFilterByEcosType.toString()
+            }
+
+            return ComposedEventName(
+                event = finalEventName,
+                record = filterByRecord,
+                type = filterByEcosType
+            ).toComposedStringWithPredicateChecksum(eventFilterByPredicate ?: VoidPredicate.INSTANCE)
+        }
+}
+
 
 enum class FilterEventByRecord {
     ANY, DOCUMENT, DOCUMENT_BY_VARIABLE

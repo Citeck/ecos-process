@@ -17,7 +17,10 @@
       "filter_by_record_any": "Любой документ",
       "filter_by_record_document": "Текущий документ",
       "filter_by_record_document_by_variable": "Документ из переменной процесса",
-      "event_record_status_changed": "Статус изменен"
+      "event_record_status_changed": "Статус изменен",
+      "event_record_changed": "Record изменен",
+      "event_record_created": "Record создан",
+      "event_record_deleted": "Record удален"
     },
     "en": {
       "event_comment_create": "Comment create",
@@ -26,7 +29,10 @@
       "filter_by_record_any": "Any document",
       "filter_by_record_document": "Current document",
       "filter_by_record_document_by_variable": "Document from process variable",
-      "event_record_status_changed": "Status changed"
+      "event_record_status_changed": "Status changed",
+      "event_record_changed": "Record changed",
+      "event_record_created": "Record created",
+      "event_record_deleted": "Record deleted"
     }
   },
   "definition": {
@@ -131,9 +137,24 @@
                   "value": "COMMENT_DELETE"
                 },
                 {
+                  "label": "event_record_created",
+                  "value": "RECORD_CREATED"
+                },
+                {
+                  "label": "event_record_changed",
+                  "value": "RECORD_CHANGED"
+                },
+                {
+                  "label": "event_record_deleted",
+                  "value": "RECORD_DELETED"
+                },
+                {
                   "label": "event_record_status_changed",
                   "value": "RECORD_STATUS_CHANGED"
                 }
+              ],
+              "headers": [
+                {}
               ]
             },
             "defaultValue": "",
@@ -239,6 +260,27 @@
                 "customDefaultValue": "var typeRef = instance.options.editor.getEcosType()._id;\nif (!!typeRef) {\n  value = typeRef;\n}",
                 "optionalWhenDisabled": false,
                 "customConditional": "show = data.eventFilterByRecordType == 'ANY';",
+                "logic": [
+                  {
+                    "name": "Обязательность",
+                    "trigger": {
+                      "type": "javascript",
+                      "javascript": "var type = _.get(data, \"eventType\");\nvar predicate = _.get(data, \"eventFilterByPredicate\");\n\nresult = type == 'RECORD_CREATED' && predicate.length === 0;"
+                    },
+                    "actions": [
+                      {
+                        "name": "mandatory true",
+                        "type": "property",
+                        "property": {
+                          "label": "Required",
+                          "value": "validate.required",
+                          "type": "boolean"
+                        },
+                        "state": "true"
+                      }
+                    ]
+                  }
+                ],
                 "type": "selectJournal",
                 "input": true
               },
@@ -257,6 +299,27 @@
                 "refreshOn": [],
                 "optionalWhenDisabled": false,
                 "customConditional": "let type = instance.options.editor.getElementType();\n\nvar showRequired = true;\n\nswitch (type) {\n  case \"bpmn:IntermediateThrowEvent\": {\n    showRequired = false;\n    break;\n  }\n  case \"bpmn:EndEvent\": {\n    showRequired = false;\n    break;\n  }\n  default: {\n    showRequired = true;\n  }\n}\n\nshow = showRequired;",
+                "logic": [
+                  {
+                    "name": "mandatory",
+                    "trigger": {
+                      "type": "javascript",
+                      "javascript": "var type = _.get(data, \"eventType\");\nvar eventFilterByEcosType = _.get(data, \"eventFilterByEcosType\");\n\nresult = type == 'RECORD_CREATED' && eventFilterByEcosType.length === 0;"
+                    },
+                    "actions": [
+                      {
+                        "name": "mandatory = true",
+                        "type": "property",
+                        "property": {
+                          "label": "Required",
+                          "value": "validate.required",
+                          "type": "boolean"
+                        },
+                        "state": "true"
+                      }
+                    ]
+                  }
+                ],
                 "rows": 5,
                 "as": "",
                 "type": "textarea",

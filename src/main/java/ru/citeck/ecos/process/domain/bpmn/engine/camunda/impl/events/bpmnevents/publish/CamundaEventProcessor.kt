@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -46,6 +47,14 @@ class CamundaEventProcessor(
         for (subscription in foundSubscriptions) {
             val finalEventModel = mutableMapOf<String, String>()
             finalEventModel.putAll(defaultModelForIncomingEvent)
+
+            val attsFromPredicate = let {
+                val predicate = Json.mapper.read(subscription.event.predicate, Predicate::class.java)
+                    ?: VoidPredicate.INSTANCE
+                return@let PredicateUtils.getAllPredicateAttributes(predicate).associateBy { it }
+            }
+
+            finalEventModel.putAll(attsFromPredicate)
             finalEventModel.putAll(subscription.event.model)
 
             val eventAttributes = evaluateAttributes(incomingEvent, finalEventModel)

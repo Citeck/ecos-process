@@ -2,10 +2,12 @@ package ru.citeck.ecos.process.domain.bpmn.event
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CombinedEventSubscription
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EventSubscription
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EventSubscriptionCombiner
+import ru.citeck.ecos.records2.predicate.model.Predicates
 
 class EventSubscriptionCombinerTest {
 
@@ -42,6 +44,12 @@ class EventSubscriptionCombinerTest {
                 model = mapOf(
                     "key1" to "value1",
                     "key2" to "value2",
+                ),
+                predicate = Json.mapper.toString(
+                    Predicates.or(
+                        Predicates.eq("attFromPred", "value4"),
+                        Predicates.eq("attFromPredExpression", "{{value5}}")
+                    )
                 )
             ),
             EventSubscription(
@@ -74,7 +82,10 @@ class EventSubscriptionCombinerTest {
                 eventName = "event2",
                 attributes = mutableSetOf(
                     "value1",
-                    "value2"
+                    "value2",
+                    "attFromPred",
+                    "attFromPredExpression",
+                    "value5"
                 ).addDefaultEventAtts().toSet()
             ),
             CombinedEventSubscription(

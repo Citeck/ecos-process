@@ -5,7 +5,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.FilterEventByRecord
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignalEventDefinition
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
@@ -37,11 +36,8 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
             manualSignalName = element.otherAttributes[BPMN_PROP_MANUAL_SIGNAL_NAME],
             eventType = eventType,
             eventFilterByRecordType = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE]?.let {
-                if (it.isBlank()) {
-                    error("Event filter by record is mandatory for Bpmn Signal: ${element.id}")
-                }
                 FilterEventByRecord.valueOf(it)
-            },
+            } ?: error("Event filter by record is mandatory for Bpmn Signal: ${element.id}"),
             eventFilterByEcosType = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE]?.let {
                 if (it.isBlank()) {
                     return@let EntityRef.EMPTY

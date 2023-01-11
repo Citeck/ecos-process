@@ -10,7 +10,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNamesLikeStart
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.signalName
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import ru.citeck.ecos.process.domain.procdef.convert.toDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
@@ -183,7 +182,7 @@ fun ProcDefRevDto.getBpmnSignalEventSubscriptions(): List<EventSubscription> {
                 elementId = it.elementId,
                 name = ComposedEventName.fromString(it.signalName),
                 model = it.eventModel,
-                predicate = it.eventFilterByPredicate?.let { Json.mapper.toString(it) }
+                predicate = it.eventFilterByPredicate?.let { pr -> Json.mapper.toString(pr) }
             )
         }
     } catch (e: Exception) {
