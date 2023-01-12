@@ -9,6 +9,7 @@ import ecos.com.fasterxml.jackson210.databind.SerializerProvider
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
 import ecos.com.fasterxml.jackson210.databind.annotation.JsonSerialize
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
 
 @JsonSerialize(using = OutcomeSerializer::class)
 @JsonDeserialize(using = OutcomeDeserializer::class)
@@ -46,13 +47,13 @@ class Outcome(
         if (data.isNotBlank()) {
             val split = data.split(SEPARATOR)
 
-            if (split.size != 2) throw IllegalStateException("Outcome format is invalid")
+            if (split.size != 2) throw EcosBpmnDefinitionException("Outcome format is invalid")
 
             taskDefinitionKey = split[0]
             value = split[1]
 
-            if (taskDefinitionKey.isBlank()) throw IllegalStateException("Outcome taskDefinitionKey cannot be blank")
-            if (value.isBlank()) throw IllegalStateException("Outcome value cannot be blank")
+            if (taskDefinitionKey.isBlank()) throw EcosBpmnDefinitionException("Outcome taskDefinitionKey cannot be blank")
+            if (value.isBlank()) throw EcosBpmnDefinitionException("Outcome value cannot be blank")
         }
     }
 

@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
@@ -32,15 +33,18 @@ data class BpmnSignalEventDef(
     init {
 
         if (eventFilterByEcosType.isNotEmpty() && eventFilterByRecordType != FilterEventByRecord.ANY) {
-            error("Event filter by Ecos Type supported only for ANY document. Id: $id")
+            throw EcosBpmnElementDefinitionException(id, "Event filter by Ecos Type supported only for ANY document.")
         }
 
         when (eventType) {
             EcosEventType.RECORD_CREATED -> {
-                if (eventFilterByEcosType == EntityRef.EMPTY
-                    && (eventFilterByPredicate == null || eventFilterByPredicate == VoidPredicate.INSTANCE)
+                if (eventFilterByEcosType == EntityRef.EMPTY &&
+                    (eventFilterByPredicate == null || eventFilterByPredicate == VoidPredicate.INSTANCE)
                 ) {
-                    error("Event filter by Ecos Type or Predicate required for RECORD_CREATED event. Id: $id")
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Event filter by Ecos Type or Predicate required for RECORD_CREATED event"
+                    )
                 }
             }
 
@@ -48,7 +52,6 @@ data class BpmnSignalEventDef(
                 // do nothing
             }
         }
-
     }
 
     val signalName: String
@@ -56,20 +59,28 @@ data class BpmnSignalEventDef(
 
             val finalEventName = if (it.eventManualMode) {
                 if (manualSignalName.isNullOrBlank()) {
-                    error("Signal name in mandatory for manual mode of Bpmn Signal. Id: ${it.id}")
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Signal name in mandatory for manual mode of Bpmn Signal."
+                    )
                 }
                 manualSignalName
             } else {
-                eventType?.name ?: error("Event type is mandatory for Bpmn Signal. Id: ${it.id}")
+                eventType?.name ?: throw EcosBpmnElementDefinitionException(
+                    id,
+                    "Event type is mandatory for Bpmn Signal."
+                )
             }
-
 
             val filterByRecord: String = when (eventFilterByRecordType) {
                 FilterEventByRecord.ANY -> ComposedEventName.RECORD_ANY
                 FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
                 FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
                     if (eventFilterByRecordVariable.isNullOrBlank()) {
-                        error("Document variable is mandatory for filtering event by document. Id: ${it.id}")
+                        throw EcosBpmnElementDefinitionException(
+                            id,
+                            "Document variable is mandatory for filtering event by document."
+                        )
                     }
                     "\${$eventFilterByRecordVariable}"
                 }
@@ -88,7 +99,6 @@ data class BpmnSignalEventDef(
             ).toComposedStringWithPredicateChecksum(eventFilterByPredicate ?: VoidPredicate.INSTANCE)
         }
 }
-
 
 enum class FilterEventByRecord {
     ANY, DOCUMENT, DOCUMENT_BY_VARIABLE

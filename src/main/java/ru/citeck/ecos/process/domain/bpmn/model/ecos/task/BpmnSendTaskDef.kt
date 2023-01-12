@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.task
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.notifications.lib.NotificationType
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.records2.RecordRef
@@ -35,17 +35,15 @@ data class BpmnSendTaskDef(
 
     init {
         if (body.isBlank() && RecordRef.isEmpty(template)) {
-            throw EcosBpmnDefinitionException("Template is mandatory parameter with empty body")
+            throw EcosBpmnElementDefinitionException(id, "Template is mandatory parameter with empty body")
         }
 
         if (to.isEmpty() && cc.isEmpty() && bcc.isEmpty()) {
-            throw EcosBpmnDefinitionException("All recipients is empty")
+            throw EcosBpmnElementDefinitionException(id, "All recipients is empty")
         }
 
         if (type != NotificationType.EMAIL_NOTIFICATION) {
-            throw EcosBpmnDefinitionException(
-                "In the current version, only the email type is supported"
-            )
+            throw EcosBpmnElementDefinitionException(id, "In the current version, only the email type is supported")
         }
     }
 }
