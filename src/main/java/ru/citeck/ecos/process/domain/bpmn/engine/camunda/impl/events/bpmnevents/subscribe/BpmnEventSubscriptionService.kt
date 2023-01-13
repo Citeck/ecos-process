@@ -28,25 +28,27 @@ class BpmnEventSubscriptionService(
 
     @PostConstruct
     fun initListeners() {
-        val combinedSubscriptions = camundaEventSubscriptionFinder.findAllDeployedSubscriptions().combine()
+        Thread {
+            val combinedSubscriptions = camundaEventSubscriptionFinder.findAllDeployedSubscriptions().combine()
 
-        for (subscription in combinedSubscriptions) {
-            if (listeners.containsKey(subscription.eventName)) {
-                throw IllegalStateException("Event ${subscription.eventName} already registered")
-            }
-
-            addListener(subscription)
-        }
-
-        log.info {
-            buildString {
-                appendLine("\n================Register BPMN Ecos Event Subscriptions======================")
-                for ((eventName, listener) in listeners) {
-                    appendLine("Event: $eventName, atts: ${listener.first.attributes}")
+            for (subscription in combinedSubscriptions) {
+                if (listeners.containsKey(subscription.eventName)) {
+                    throw IllegalStateException("Event ${subscription.eventName} already registered")
                 }
-                appendLine("============================================================================")
+
+                addListener(subscription)
             }
-        }
+
+            log.info {
+                buildString {
+                    appendLine("\n================Register BPMN Ecos Event Subscriptions======================")
+                    for ((eventName, listener) in listeners) {
+                        appendLine("Event: $eventName, atts: ${listener.first.attributes}")
+                    }
+                    appendLine("============================================================================")
+                }
+            }
+        }.start()
     }
 
     fun addSubscriptionsForDefRev(procDefRevId: UUID) {
