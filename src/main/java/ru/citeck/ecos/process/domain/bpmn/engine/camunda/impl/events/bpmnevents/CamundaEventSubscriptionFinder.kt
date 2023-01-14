@@ -74,15 +74,15 @@ class CamundaEventSubscriptionFinder(
             val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
                 .map { it.toComposedString() }
 
-            if (log.isDebugEnabled) {
-                log.debug { "Generate composed event names: $composedEventNames" }
+            if (log.isTraceEnabled) {
+                log.trace { "Generate composed event names: $composedEventNames" }
 
                 val allNames = camundaRuntimeService.createEventSubscriptionQuery().unlimitedList().map { it.eventName }
-                log.debug { "All actual camunda event names: $allNames" }
+                log.trace { "All actual camunda event names: $allNames" }
             }
 
-            result = camundaRuntimeService.getEventSubscriptionsByEventNamesLikeStart(composedEventNames)
-                .map { sub ->
+            result =
+                camundaRuntimeService.getEventSubscriptionsByEventNamesLikeStart(composedEventNames).mapNotNull { sub ->
 
                     log.debug { "Process subscription: \n$sub" }
 
@@ -109,7 +109,7 @@ class CamundaEventSubscriptionFinder(
                             event = it
                         )
                     }
-                }.filterNotNull()
+                }
         }
 
         log.debug { "Get actual camunda subscriptions ${result.size} in $time ms. Result: \n$result" }
