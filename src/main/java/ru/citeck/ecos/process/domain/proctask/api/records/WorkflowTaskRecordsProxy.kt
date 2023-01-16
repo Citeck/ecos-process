@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
@@ -13,6 +15,7 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 @Component
 class WorkflowTaskRecordsProxy(
     private val procTaskService: ProcTaskService,
+    private val procTaskRecords: ProcTaskRecords,
     private val webAppsApi: EcosRemoteWebAppsApi
 ) : RecordsDaoProxy(
     id = "wftask",
@@ -39,6 +42,37 @@ class WorkflowTaskRecordsProxy(
         result.setTotalCount(documentTasksFromAlf.getTotalCount() + documentTasksFromEProc.getTotalCount())
 
         return result
+    }
+
+    override fun getRecordsAtts(recordIds: List<String>): List<*>? {
+        if (recordIds.isEmpty()) {
+            return emptyList<RecordAtts>()
+        }
+
+        val firstRecord = recordIds.first()
+
+        // support only one source in one request
+        return if (firstRecord.containsAlfDelimiter()) {
+            super.getRecordsAtts(recordIds)
+        } else {
+            procTaskRecords.getRecordsAtts(recordIds)
+        }
+    }
+
+    override fun mutate(records: List<LocalRecordAtts>): List<String> {
+        if (records.isEmpty()) {
+            return emptyList()
+        }
+
+        val toMutate = records.map {
+            if (it.id.containsAlfDelimiter()) {
+                RecordAtts(RecordRef.create(AppName.ALFRESCO, "wftask", it.id), it.attributes)
+            } else {
+                RecordAtts(RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it.id), it.attributes)
+            }
+        }
+
+        return recordsService.mutate(toMutate).map { it.id }
     }
 
     private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery): RecsQueryRes<*> {
@@ -105,7 +139,11 @@ private fun documentIsProcess(document: RecordRef): Boolean {
 }
 
 private fun isAlfProcess(ref: RecordRef): Boolean {
-    return ref.id.contains("$")
+    return ref.id.containsAlfDelimiter()
+}
+
+private fun String.containsAlfDelimiter(): Boolean {
+    return this.contains("$")
 }
 
 private fun isEcosProcProcess(ref: RecordRef): Boolean {
