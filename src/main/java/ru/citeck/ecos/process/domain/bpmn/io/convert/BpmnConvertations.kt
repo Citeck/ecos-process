@@ -6,6 +6,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaExpression
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
@@ -85,6 +86,17 @@ object CamundaFieldCreator {
             this.stringValue = stringValue
         }
     }
+
+    fun expression(name: String, expression: String): CamundaField {
+        val expressionValue = CamundaExpression().apply {
+            this.value = expression
+        }
+
+        return CamundaField().apply {
+            this.name = name
+            this.expressionValue = expressionValue
+        }
+    }
 }
 
 fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {
@@ -125,6 +137,7 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
 
         is CamundaField -> {
             if (value.stringValue?.value?.isNotBlank() == true) add(value)
+            if (value.expressionValue?.value?.isNotBlank() == true) add(value)
         }
 
         is CamundaFailedJobRetryTimeCycle -> {
@@ -135,14 +148,20 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
     }
 }
 
-fun recipientsFromJson(type: RecipientType, jsonData: String): List<Recipient> {
-    if (jsonData.isBlank()) {
+fun recipientsFromJson(recipientData: Map<RecipientType, String?>): List<Recipient> {
+    if (recipientData.isEmpty()) {
         return emptyList()
     }
 
-    return Json.mapper.readList(jsonData, String::class.java).map {
-        Recipient(type, it)
+    val result = mutableListOf<Recipient>()
+
+    for ((type, data) in recipientData) {
+        Json.mapper.readList(data, String::class.java)
+            .filter { it.isNotBlank() }
+            .forEach { result.add(Recipient(type, it)) }
     }
+
+    return result
 }
 
 fun recipientsFromJson(jsonData: String): List<Recipient> {

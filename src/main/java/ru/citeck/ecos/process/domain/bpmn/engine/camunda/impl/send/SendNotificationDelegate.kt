@@ -9,11 +9,12 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.app.AppContext
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -44,13 +45,13 @@ class SendNotificationDelegate : JavaDelegate {
 
     private lateinit var notificationService: NotificationService
     private lateinit var camundaRoleService: CamundaRoleService
+    private lateinit var mailUtils: MailUtils
     private lateinit var document: RecordRef
 
     private fun init(execution: DelegateExecution) {
         notificationService = AppContext.getBean(NotificationService::class.java)
         camundaRoleService = AppContext.getBean(CamundaRoleService::class.java)
-
-        // TODO: make document not mandatory? Send to, roles?
+        mailUtils = AppContext.getBean(MailUtils::class.java)
         document = execution.getDocumentRef()
     }
 
@@ -75,9 +76,9 @@ class SendNotificationDelegate : JavaDelegate {
             .title(notificationTitle?.expressionText ?: "")
             .body(notificationBody?.expressionText ?: "")
             .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
-            .recipients(getRecipientsFromExpression(notificationTo))
-            .cc(getRecipientsFromExpression(notificationCc))
-            .bcc(getRecipientsFromExpression(notificationBcc))
+            .recipients(getRecipientsEmailsFromExpression(notificationTo, execution))
+            .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
+            .bcc(getRecipientsEmailsFromExpression(notificationBcc, execution))
             .lang(notificationLang?.expressionText)
             .additionalMeta(getAdditionalMeta(execution))
             .build()
@@ -134,14 +135,38 @@ class SendNotificationDelegate : JavaDelegate {
         }.toMap()
     }
 
-    private fun getRecipientsFromExpression(expressionData: Expression?): List<String> {
-        if (expressionData == null) return emptyList()
+    private fun getRecipientsEmailsFromExpression(
+        expressionData: Expression?,
+        execution: DelegateExecution
+    ): List<String> {
+        if (expressionData == null) {
+            return emptyList()
+        }
 
-        val recipients = recipientsFromJson(expressionData.expressionText)
+        val roles = mutableListOf<String>()
+        val fromExpression = mutableListOf<String>()
 
-        val isNotRole = { rc: Recipient -> rc.type != RecipientType.ROLE }
-        if (recipients.any(isNotRole)) error("Supported only ${RecipientType.ROLE} recipients")
+        val recipients = recipientsFromJson(expressionData.getValue(execution).toString())
+        for (recipient in recipients) {
+            when (recipient.type) {
+                RecipientType.ROLE -> {
+                    roles.add(recipient.value)
+                }
 
-        return AuthContext.runAsSystem { camundaRoleService.getEmails(document, recipients.map { it.value }) }
+                RecipientType.EXPRESSION -> {
+                    fromExpression.addAll(recipient.value.split(CAMUNDA_COLLECTION_SEPARATOR))
+                }
+            }
+        }
+
+        val emailsFromRoles = AuthContext.runAsSystem {
+            camundaRoleService.getEmails(document, recipients.map { it.value })
+        }
+
+        val emailsFromExpression = AuthContext.run {
+            mailUtils.getEmails(fromExpression)
+        }
+
+        return emailsFromRoles + emailsFromExpression
     }
 }

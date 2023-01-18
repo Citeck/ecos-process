@@ -24,8 +24,11 @@ val BPMN_PROP_NOTIFICATION_RECORD = QName(NS_ECOS, "notificationRecord")
 val BPMN_PROP_NOTIFICATION_TITLE = QName(NS_ECOS, "notificationTitle")
 val BPMN_PROP_NOTIFICATION_BODY = QName(NS_ECOS, "notificationBody")
 val BPMN_PROP_NOTIFICATION_TO = QName(NS_ECOS, "notificationTo")
+val BPMN_PROP_NOTIFICATION_TO_EXPRESSION = QName(NS_ECOS, "notificationToExpression")
 val BPMN_PROP_NOTIFICATION_CC = QName(NS_ECOS, "notificationCc")
+val BPMN_PROP_NOTIFICATION_CC_EXPRESSION = QName(NS_ECOS, "notificationCcExpression")
 val BPMN_PROP_NOTIFICATION_BCC = QName(NS_ECOS, "notificationBcc")
+val BPMN_PROP_NOTIFICATION_BCC_EXPRESSION = QName(NS_ECOS, "notificationBccExpression")
 val BPMN_PROP_NOTIFICATION_LANG = QName(NS_ECOS, "notificationLang")
 val BPMN_PROP_NOTIFICATION_ADDITIONAL_META = QName(NS_ECOS, "notificationAdditionalMeta")
 
@@ -62,5 +65,3 @@ val BPMN_MULTI_INSTANCE_CONFIG = QName(NS_ECOS, "multiInstanceConfig")
 
 val BPMN_PROP_ECOS_TASK_TYPE = QName(NS_ECOS, "taskType")
 val BPMN_PROP_ECOS_STATUS = QName(NS_ECOS, "status")
-
-val BPMN_PROP_EVENT_DEF_PARENT_ID = QName(NS_ECOS, "status")

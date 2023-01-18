@@ -11,6 +11,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.regex.Pattern
 
 const val GROUP_PREFIX = "GROUP_"
 
@@ -19,8 +20,7 @@ private const val WORKSPACE_PREFIX = "workspace://"
 @Component("roles")
 class CamundaRoleService(
     private val roleService: RoleService,
-    private val recordsService: RecordsService,
-    private val authorityService: EcosAuthoritiesApi
+    private val mailUtils: MailUtils
 ) : CamundaProcessEngineService {
 
     companion object {
@@ -73,38 +73,102 @@ class CamundaRoleService(
         return AuthContext.runAsSystem {
             val recipientNames = roles.map {
                 roleService.getAssignees(document, it)
-            }.flatten().toSet()
-            val recipientsFullFilledRefs = convertRecipientsToFullFilledRefs(recipientNames)
+            }.flatten()
+
+            val result = mailUtils.getEmails(recipientNames).toList()
+
+            log.debug { "Get emails for document: $document, roles: $roles. Result: $result" }
+
+            result
+        }
+    }
+}
+
+@Component
+class MailUtils(
+    private val authorityService: EcosAuthoritiesApi,
+    private val recordsService: RecordsService,
+) {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
+    private val emailPattern = Pattern.compile("^.+@.+\\..+$")
+
+    /**
+     * [data] list, where element can be:
+     * - group name or ref
+     * - username or ref
+     * - nodeRef
+     * - email
+     *
+     * @return unique emails received from [data]
+     */
+    fun getEmails(data: List<String>): Set<String> {
+        return AuthContext.runAsSystem {
+            val recipients = mutableListOf<String>()
+            val incomeEmails = mutableListOf<String>()
+
+            data.forEach {
+                if (emailPattern.matcher(it).matches()) {
+                    incomeEmails.add(it)
+                } else {
+                    recipients.add(it)
+                }
+            }
+
+            val fullFilledRefs = convertRecipientsToFullFilledRefs(recipients.toSet())
 
             val allUsers = mutableSetOf<EntityRef>()
             val groups = mutableListOf<EntityRef>()
 
-            recipientsFullFilledRefs.forEach {
-                if (it.isAuthorityGroupRef()) groups.add(it) else allUsers.add(it)
+            fullFilledRefs.forEach {
+                if (it.isAuthorityGroupRef()) {
+                    groups.add(it)
+                } else {
+                    allUsers.add(it)
+                }
             }
 
-            val usersFromGroup =
-                recordsService.getAtts(groups, GroupInfo::class.java).map { it.containedUsers }.flatten()
+            val usersFromGroup = recordsService.getAtts(groups, GroupInfo::class.java)
+                .map { it.containedUsers }
+                .flatten()
             allUsers.addAll(usersFromGroup)
 
             val emails = recordsService.getAtts(allUsers, UserInfo::class.java)
                 .filter { it.email?.isNotBlank() ?: false }
                 .map { it.email!! }
 
-            log.debug { "Get emails for document: $document, roles: $roles. Result: $emails" }
-
-            emails
+            (incomeEmails + emails).toSet()
         }
     }
 
-    private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): List<EntityRef> {
-        recipients.map {
-            if (it.startsWith(WORKSPACE_PREFIX)) {
-                log.warn { "Convert nodeRef '$it' to authority refs. Maybe performance issue." }
+    private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): Set<EntityRef> {
+        val authorityRefs = mutableSetOf<EntityRef>()
+
+        val authoritiesToResolveRefs = mutableListOf<String>()
+
+        recipients.forEach { recipient ->
+            if (isNodeRefOrAuthorityName(recipient)) {
+                authoritiesToResolveRefs.add(recipient)
+            } else {
+                authorityRefs.add(EntityRef.valueOf(recipient))
             }
         }
 
-        return authorityService.getAuthorityRefs(recipients.toList())
+        val resolvedRefs = authorityService.getAuthorityRefs(recipients.toList())
+
+        return authorityRefs + resolvedRefs
+    }
+
+    private fun isNodeRefOrAuthorityName(recipient: String): Boolean {
+        if (recipient.startsWith(WORKSPACE_PREFIX)) {
+            log.warn { "Convert nodeRef '$recipient' to authority refs. Maybe performance issue." }
+            return true
+        }
+
+        return EntityRef.valueOf(recipient).getSourceId().isBlank()
     }
 }
 

@@ -3,14 +3,17 @@ package ru.citeck.ecos.process.domain.bpmn.model.camunda;
 import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "field", namespace = "http://camunda.org/schema/1.0/bpmn", propOrder = {"name", "stringValue"})
+@XmlType(name = "field", namespace = "http://camunda.org/schema/1.0/bpmn", propOrder = {"name", "stringValue", "expressionValue"})
 public class CamundaField {
 
     @XmlAttribute(name = "name", required = true)
     private String name;
 
-    @XmlElement(name = "string", namespace = "http://camunda.org/schema/1.0/bpmn", required = true)
+    @XmlElement(name = "string", namespace = "http://camunda.org/schema/1.0/bpmn")
     private CamundaString stringValue;
+
+    @XmlElement(name = "expression", namespace = "http://camunda.org/schema/1.0/bpmn")
+    private CamundaExpression expressionValue;
 
     public String getName() {
         return name;
@@ -28,4 +31,11 @@ public class CamundaField {
         this.stringValue = stringValue;
     }
 
+    public CamundaExpression getExpressionValue() {
+        return expressionValue;
+    }
+
+    public void setExpressionValue(CamundaExpression expressionValue) {
+        this.expressionValue = expressionValue;
+    }
 }

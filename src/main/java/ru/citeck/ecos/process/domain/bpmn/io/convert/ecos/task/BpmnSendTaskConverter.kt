@@ -35,9 +35,24 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             record = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_RECORD]),
             title = element.otherAttributes[BPMN_PROP_NOTIFICATION_TITLE] ?: "",
             body = element.otherAttributes[BPMN_PROP_NOTIFICATION_BODY] ?: "",
-            to = recipientsFromJson(RecipientType.ROLE, element.otherAttributes[BPMN_PROP_NOTIFICATION_TO] ?: ""),
-            cc = recipientsFromJson(RecipientType.ROLE, element.otherAttributes[BPMN_PROP_NOTIFICATION_CC] ?: ""),
-            bcc = recipientsFromJson(RecipientType.ROLE, element.otherAttributes[BPMN_PROP_NOTIFICATION_BCC] ?: ""),
+            to = recipientsFromJson(
+                mapOf(
+                    RecipientType.ROLE to element.otherAttributes[BPMN_PROP_NOTIFICATION_TO],
+                    RecipientType.EXPRESSION to element.otherAttributes[BPMN_PROP_NOTIFICATION_TO_EXPRESSION]
+                )
+            ),
+            cc = recipientsFromJson(
+                mapOf(
+                    RecipientType.ROLE to element.otherAttributes[BPMN_PROP_NOTIFICATION_CC],
+                    RecipientType.EXPRESSION to element.otherAttributes[BPMN_PROP_NOTIFICATION_CC_EXPRESSION]
+                )
+            ),
+            bcc = recipientsFromJson(
+                mapOf(
+                    RecipientType.ROLE to element.otherAttributes[BPMN_PROP_NOTIFICATION_BCC],
+                    RecipientType.EXPRESSION to element.otherAttributes[BPMN_PROP_NOTIFICATION_BCC_EXPRESSION]
+                )
+            ),
             lang = LocaleUtils.toLocale(element.otherAttributes[BPMN_PROP_NOTIFICATION_LANG]),
             additionalMeta = element.otherAttributes[BPMN_PROP_NOTIFICATION_ADDITIONAL_META]?.let {
                 Json.mapper.readMap(it, String::class.java, String::class.java)
@@ -64,9 +79,30 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_RECORD, element.record.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TITLE, element.title)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_BODY, element.body)
-            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TO, recipientsToJsonWithoutType(element.to))
-            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_CC, recipientsToJsonWithoutType(element.cc))
-            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_BCC, recipientsToJsonWithoutType(element.bcc))
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_NOTIFICATION_TO,
+                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.ROLE })
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_NOTIFICATION_TO_EXPRESSION,
+                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.EXPRESSION })
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_NOTIFICATION_CC,
+                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.ROLE })
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_NOTIFICATION_CC_EXPRESSION,
+                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.EXPRESSION })
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_NOTIFICATION_BCC,
+                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.ROLE })
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_NOTIFICATION_BCC_EXPRESSION,
+                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.EXPRESSION })
+            )
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_LANG, element.lang.toString())
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_ADDITIONAL_META,

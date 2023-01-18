@@ -2,7 +2,7 @@
   "id": "bpmn-type-bpmn:SendTask",
   "formKey": "",
   "title": {
-    "en": "BPMN User Send Form"
+    "en": "BPMN Send Task Form"
   },
   "description": {},
   "customModule": "",
@@ -181,10 +181,6 @@
               "ru": "Panel"
             },
             "key": "panel-recipients",
-            "tooltip": {
-              "ru": "Получатели выбираются из ролей типа ecos",
-              "en": "Recipients are selected from roles of ecos type"
-            },
             "title": {
               "ru": "Получатели",
               "en": "Recipients"
@@ -196,63 +192,159 @@
             "components": [
               {
                 "label": {
-                  "ru": "Кому",
-                  "en": "To"
+                  "ru": "recipients-tabs"
                 },
-                "key": "notificationTo",
-                "multiple": true,
-                "reorder": false,
-                "dataSrc": "custom",
-                "data": {
-                  "custom": "values = _.get(data, 'roles.rolesData');"
-                },
-                "defaultValue": [],
-                "refreshOn": [
-                  "roles"
+                "key": "recipients-tabs",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Роли",
+                      "en": "Role"
+                    },
+                    "key": "recipients-role-tabs",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Кому",
+                          "en": "To"
+                        },
+                        "key": "notificationTo",
+                        "tooltip": {
+                          "ru": "Получатели выбираются из ролей типа ecos",
+                          "en": "Recipients are selected from roles of ecos type"
+                        },
+                        "multiple": true,
+                        "reorder": false,
+                        "dataSrc": "custom",
+                        "data": {
+                          "custom": "values = _.get(data, 'roles.rolesData');",
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": [],
+                        "refreshOn": [
+                          "roles"
+                        ],
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      },
+                      {
+                        "label": {
+                          "ru": "Копия",
+                          "en": "Cc"
+                        },
+                        "key": "notificationCc",
+                        "multiple": true,
+                        "reorder": false,
+                        "dataSrc": "custom",
+                        "data": {
+                          "custom": "values = _.get(data, 'roles.rolesData');"
+                        },
+                        "defaultValue": [],
+                        "refreshOn": [
+                          "roles"
+                        ],
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      },
+                      {
+                        "label": {
+                          "ru": "Скрытая копия",
+                          "en": "Bcc"
+                        },
+                        "key": "notificationBcc",
+                        "multiple": true,
+                        "reorder": false,
+                        "dataSrc": "custom",
+                        "data": {
+                          "custom": "values = _.get(data, 'roles.rolesData');"
+                        },
+                        "defaultValue": [],
+                        "refreshOn": [
+                          "roles"
+                        ],
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": {
+                      "ru": "Выражение",
+                      "en": "Expression"
+                    },
+                    "key": "recipients-exoression-tabs",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Кому",
+                          "en": "To"
+                        },
+                        "key": "notificationToExpression",
+                        "tooltip": {
+                          "ru": "Имя, recordRef  или емейл получателя. \n\nПоддерживаются expression для получения данных из переменных или сервисов. Expression может вернуть множественное значение - строки разделенные запятой: ivan@mail.com,user2,user3\n\nНапример:\nivan.petrov\nGROUP_company_accountant\nemodel/authority-group@company_accountant\nemodel/person@ivan\n${someVariable}\n${someService.getEmails()},petya.voks",
+                          "en": "Name, recordRef or email of the recipient.\n\nExpressions are supported to get data from variables or services. Expression can return multiple value - comma separated strings: ivan@mail.com,user2,user3\n\nFor example:\nivan.petrov\nGROUP_company_accountant\nemodel/authority-group@company_accountant\nemodel/person@ivan\n${someVariable}\n${someService.getEmails()},petya.voks"
+                        },
+                        "multiple": true,
+                        "reorder": false,
+                        "defaultValue": [
+                          ""
+                        ],
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "tab": 1,
+                        "inputMasks": [
+                          {}
+                        ]
+                      },
+                      {
+                        "label": {
+                          "ru": "Копия",
+                          "en": "Сс"
+                        },
+                        "key": "notificationCcExpression",
+                        "multiple": true,
+                        "defaultValue": [
+                          ""
+                        ],
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "reorder": false,
+                        "inputMasks": [
+                          {}
+                        ],
+                        "tab": 1
+                      },
+                      {
+                        "label": {
+                          "ru": "Скрытая копия"
+                        },
+                        "key": "notificationBccExpression",
+                        "multiple": true,
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "reorder": false,
+                        "inputMasks": [
+                          {}
+                        ],
+                        "tab": 1
+                      }
+                    ]
+                  }
                 ],
-                "optionalWhenDisabled": false,
-                "type": "ecosSelect",
-                "input": true
-              },
-              {
-                "label": {
-                  "ru": "Копия",
-                  "en": "Cc"
-                },
-                "key": "notificationCc",
-                "multiple": true,
-                "reorder": false,
-                "dataSrc": "custom",
-                "data": {
-                  "custom": "values = _.get(data, 'roles.rolesData');"
-                },
-                "defaultValue": [],
-                "refreshOn": [
-                  "roles"
-                ],
-                "optionalWhenDisabled": false,
-                "type": "ecosSelect",
-                "input": true
-              },
-              {
-                "label": {
-                  "ru": "Скрытая копия",
-                  "en": "Bcc"
-                },
-                "key": "notificationBcc",
-                "multiple": true,
-                "reorder": false,
-                "dataSrc": "custom",
-                "data": {
-                  "custom": "values = _.get(data, 'roles.rolesData');"
-                },
-                "defaultValue": [],
-                "refreshOn": [
-                  "roles"
-                ],
-                "optionalWhenDisabled": false,
-                "type": "ecosSelect",
-                "input": true
+                "type": "tabs",
+                "input": false
               }
             ]
           }
@@ -373,5 +465,6 @@
     ],
     "formId": "bpmn-type-bpmn:SendTask"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }

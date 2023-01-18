@@ -42,8 +42,9 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 String::class.java
             ),
             assignees = recipientsFromJson(
-                RecipientType.ROLE,
-                element.otherAttributes[BPMN_PROP_ASSIGNEES] ?: ""
+                mapOf(
+                    RecipientType.ROLE to element.otherAttributes[BPMN_PROP_ASSIGNEES]
+                )
             ),
             formRef = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
             priority = TaskPriority.valueOf(element.otherAttributes[BPMN_PROP_PRIORITY]!!),
