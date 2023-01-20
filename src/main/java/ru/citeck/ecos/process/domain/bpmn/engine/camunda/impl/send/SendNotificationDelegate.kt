@@ -135,6 +135,7 @@ class SendNotificationDelegate : JavaDelegate {
         }.toMap()
     }
 
+    // Get emails, because at this moment we support only email notifications from BPMN
     private fun getRecipientsEmailsFromExpression(
         expressionData: Expression?,
         execution: DelegateExecution
@@ -160,7 +161,7 @@ class SendNotificationDelegate : JavaDelegate {
         }
 
         val emailsFromRoles = AuthContext.runAsSystem {
-            camundaRoleService.getEmails(document, recipients.map { it.value })
+            camundaRoleService.getEmails(document, roles)
         }
 
         val emailsFromExpression = AuthContext.run {

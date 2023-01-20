@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn
 
+import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
@@ -118,11 +119,20 @@ class BpmnMonsterTestWithRunProcessTest {
 
     companion object {
         private val harryRecord = PotterRecord()
-        private val harryRef = RecordRef.valueOf("hogwarts/people@harry")
+        private val harryRef = EntityRef.valueOf("hogwarts/people@harry")
+
+        private val ivanRecord = UserIvanRecord()
+        private val ivanRef = EntityRef.valueOf("emodel/person@ivan")
+
+        private val petyaRecord = UserPetyaRecord()
+        private val petyaRef = EntityRef.valueOf("emodel/person@petya")
+
+        private val usersGroupRecord = UsersGroupRecord()
+        private val usersGroupRef = EntityRef.valueOf("emodel/authority-group@users")
 
         private val docRecord = DocRecord()
-        private val docRef = RecordRef.valueOf("store/doc@1")
-        private val docExplicitRef = RecordRef.valueOf("doc@explicit")
+        private val docRef = EntityRef.valueOf("store/doc@1")
+        private val docExplicitRef = EntityRef.valueOf("doc@explicit")
 
         private val variables_docRef = mapOf(
             "documentRef" to docRef.toString()
@@ -145,8 +155,8 @@ class BpmnMonsterTestWithRunProcessTest {
         recordsService.register(
             RecordsDaoBuilder.create("hogwarts/people")
                 .addRecord(
-                    harryRef.id,
-                    PotterRecord()
+                    harryRef.getLocalId(),
+                    harryRecord
                 )
                 .build()
         )
@@ -154,8 +164,30 @@ class BpmnMonsterTestWithRunProcessTest {
         recordsService.register(
             RecordsDaoBuilder.create("store/doc")
                 .addRecord(
-                    docRef.id,
-                    DocRecord()
+                    docRef.getLocalId(),
+                    docRecord
+                )
+                .build()
+        )
+
+        recordsService.register(
+            RecordsDaoBuilder.create("emodel/person")
+                .addRecord(
+                    ivanRef.getLocalId(),
+                    ivanRecord
+                )
+                .addRecord(
+                    petyaRef.getLocalId(),
+                    petyaRecord
+                )
+                .build()
+        )
+
+        recordsService.register(
+            RecordsDaoBuilder.create("emodel/authority-group")
+                .addRecord(
+                    usersGroupRef.getLocalId(),
+                    usersGroupRecord
                 )
                 .build()
         )
@@ -1171,7 +1203,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    fun `send task recipients check`() {
+    fun `send task role recipients check`() {
         val procId = "test-send-task-recipients-check"
         saveAndDeployBpmn(SEND_TASK, procId)
 
@@ -1194,6 +1226,203 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     "process" to mapOf(
                         "documentRef" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task role recipients roles with expression check`() {
+        val procId = "test-send-task-recipients-roles-with-expressions-check"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString()
+            )
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(mockAuthorAccountantEmails + "exp-recipient@mail.ru")
+            .cc(mockInitiatorEmails + "exp-cc@mail.ru")
+            .bcc(mockApproverEmails + "exp-bcc@mail.ru")
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "documentRef" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task without document check`() {
+        val procId = "test-send-task-without-document-check"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            emptyMap()
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(EntityRef.EMPTY)
+            .recipients(listOf("someMail@mail.ru"))
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task expression recipients check`() {
+        val procId = "test-send-task-recipients-expression"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            emptyMap()
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(EntityRef.EMPTY)
+            .recipients(listOf("mailfromvariable@mail.ru", "1@mail.ru", "2@mail.ru", "petya@mail.ru"))
+            .cc(listOf("ccivan@mail.ru"))
+            .bcc(listOf("bcc@mail.ru"))
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .title("123")
+            .body("<p>456</p>")
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "currentRunAsUser" to EntityRef.EMPTY,
+                        "fromVariable" to "mailfromvariable@mail.ru",
+                        "fromVariable2" to "1@mail.ru,2@mail.ru"
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task expression user and group recipients check`() {
+        val procId = "test-send-task-recipients-expression-user-group"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            emptyMap()
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(EntityRef.EMPTY)
+            .recipients(listOf("mailfromvariable@mail.ru", "ivan@mail.ru", "petya@mail.ru", "some@mail.ru"))
+            .cc(listOf("ivan@mail.ru", "petya@mail.ru", "some@mail.ru"))
+            .bcc(listOf("ivan@mail.ru", "petya@mail.ru", "some@mail.ru"))
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .title("123")
+            .body("<p>456</p>")
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "fromVariableGroup" to "GROUP_users",
+                        "fromVariableUser" to "ivan",
+                        "fromVariable" to "mailfromvariable@mail.ru",
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task one line expression user and group recipients check`() {
+        val procId = "test-send-task-recipients-one-expression-user-group"
+        saveAndDeployBpmn(SEND_TASK, procId)
+
+        run(process).startByKey(
+            procId,
+            emptyMap()
+        ).execute()
+
+        val notification = Notification.Builder()
+            .record(EntityRef.EMPTY)
+            .recipients(listOf("mailfromvariable@mail.ru", "ivan@mail.ru", "petya@mail.ru", "some@mail.ru"))
+            .cc(listOf("mailfromvariable@mail.ru", "ivan@mail.ru", "petya@mail.ru", "some@mail.ru"))
+            .bcc(listOf("ivan@mail.ru", "petya@mail.ru"))
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .title("123")
+            .body("<p>456</p>")
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "fromVariableGroup" to "GROUP_users",
+                        "fromVariableUser" to "ivan",
+                        "fromVariable" to "mailfromvariable@mail.ru",
                         "currentRunAsUser" to EntityRef.EMPTY
                     )
                 )
@@ -2702,32 +2931,53 @@ class BpmnMonsterTestWithRunProcessTest {
 
         return ListUtils.subtract(updatedSubscriptions, existingSubscriptions)
     }
+
+
+
+    class PotterRecord(
+
+        @AttName("email")
+        val email: String = "harry.potter@hogwarts.com",
+
+        @AttName("name")
+        val name: String = "Harry Potter",
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@potter")
+
+    )
+
+    class UserIvanRecord(
+        @AttName("email")
+        val email: String = "ivan@mail.ru"
+    )
+
+    class UserPetyaRecord(
+        @AttName("email")
+        val email: String = "petya@mail.ru"
+    )
+
+    class UsersGroupRecord(
+        @AttName("containedUsers")
+        val containedUsers: List<EntityRef> = listOf(
+            ivanRef,
+            petyaRef
+        )
+    )
+
+    class DocRecord(
+
+        @AttName("name")
+        val name: String = "Doc 1",
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
 }
 
-class PotterRecord(
-
-    @AttName("email")
-    val email: String = "harry.potter@hogwarts.com",
-
-    @AttName("name")
-    val name: String = "Harry Potter",
-
-    @AttName("_type")
-    val type: EntityRef = EntityRef.valueOf("emodel/type@potter")
-
-)
-
-class DocRecord(
-
-    @AttName("name")
-    val name: String = "Doc 1",
-
-    @AttName("_type")
-    val type: EntityRef = EntityRef.valueOf("emodel/type@document")
-)
 
 /**
- * Wrap equals without id
+ * Wrap equals without id, recipints ignore order
  */
 private data class NotificationEqualsWrapper(
     val dto: Notification
@@ -2743,10 +2993,10 @@ private data class NotificationEqualsWrapper(
         if (dto.body != other.dto.body) return false
         if (dto.templateRef != other.dto.templateRef) return false
         if (dto.type != other.dto.type) return false
-        if (dto.recipients != other.dto.recipients) return false
+        if (!CollectionUtils.isEqualCollection(dto.recipients, other.dto.recipients)) return false
         if (dto.from != other.dto.from) return false
-        if (dto.cc != other.dto.cc) return false
-        if (dto.bcc != other.dto.bcc) return false
+        if (!CollectionUtils.isEqualCollection(dto.cc, other.dto.cc)) return false
+        if (!CollectionUtils.isEqualCollection(dto.bcc, other.dto.bcc)) return false
         if (dto.lang != other.dto.lang) return false
         if (dto.additionalMeta != other.dto.additionalMeta) return false
 

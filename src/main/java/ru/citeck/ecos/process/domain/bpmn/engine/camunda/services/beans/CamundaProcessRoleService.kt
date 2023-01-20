@@ -6,7 +6,6 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
@@ -54,7 +53,7 @@ class CamundaRoleService(
             if (spRoles.isEmpty()) emptyList<String>()
 
             spRoles.asSequence().map {
-                roleService.getAssignees(RecordRef.valueOf(document), it.trim())
+                roleService.getAssignees(EntityRef.valueOf(document), it.trim())
             }.flatten()
                 .toSet()
                 .filter { predicate.invoke(it) }
@@ -69,7 +68,7 @@ class CamundaRoleService(
     /**
      * @return emails of users, including users from groups
      */
-    fun getEmails(document: RecordRef, roles: List<String>): List<String> {
+    fun getEmails(document: EntityRef, roles: List<String>): List<String> {
         return AuthContext.runAsSystem {
             val recipientNames = roles.map {
                 roleService.getAssignees(document, it)
@@ -174,7 +173,7 @@ class MailUtils(
 
 private data class GroupInfo(
     @AttName("containedUsers")
-    val containedUsers: List<RecordRef> = emptyList()
+    val containedUsers: List<EntityRef> = emptyList()
 )
 
 private data class UserInfo(

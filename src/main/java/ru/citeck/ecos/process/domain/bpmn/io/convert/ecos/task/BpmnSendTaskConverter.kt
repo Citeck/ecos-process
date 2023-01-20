@@ -79,6 +79,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_RECORD, element.record.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TITLE, element.title)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_BODY, element.body)
+
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_TO,
                 recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.ROLE })
@@ -87,22 +88,25 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
                 BPMN_PROP_NOTIFICATION_TO_EXPRESSION,
                 recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.EXPRESSION })
             )
+
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_CC,
-                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.ROLE })
+                recipientsToJsonWithoutType(element.cc.filter { it.type == RecipientType.ROLE })
             )
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_CC_EXPRESSION,
-                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.EXPRESSION })
+                recipientsToJsonWithoutType(element.cc.filter { it.type == RecipientType.EXPRESSION })
             )
+
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_BCC,
-                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.ROLE })
+                recipientsToJsonWithoutType(element.bcc.filter { it.type == RecipientType.ROLE })
             )
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_BCC_EXPRESSION,
-                recipientsToJsonWithoutType(element.to.filter { it.type == RecipientType.EXPRESSION })
+                recipientsToJsonWithoutType(element.bcc.filter { it.type == RecipientType.EXPRESSION })
             )
+
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_LANG, element.lang.toString())
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_ADDITIONAL_META,
