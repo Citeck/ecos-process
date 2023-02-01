@@ -109,6 +109,7 @@ class BpmnEventSubscriptionService(
                 withDataClass(ObjectData::class.java)
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
+                withTransactional(true)
                 withAction { event ->
                     log.debug { "Receive subscription event: \n${Json.mapper.toPrettyString(event)}" }
                     camundaEventProcessor.processEvent(event.toGeneralEvent())

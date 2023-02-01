@@ -30,7 +30,10 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
 
         configuration.setTransactionManager(transactionManager);
 
-        JdbcDataSource dataSource = dataSourceManager.getDataSource("camunda", JdbcDataSource.class);
+        JdbcDataSource dataSource = dataSourceManager.getDataSource("camunda", JdbcDataSource.class, true);
+        if (dataSource.isManaged()) {
+            configuration.setTransactionsExternallyManaged(true);
+        }
         configuration.setDataSource(dataSource.getJavaDataSource());
 
         configuration.setDatabaseType(database.getType());

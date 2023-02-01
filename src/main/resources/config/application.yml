@@ -67,10 +67,12 @@ ecos:
   webapp:
     dataSources:
       camunda:
-        url: jdbc:postgresql://localhost:5430/camunda
+        url: jdbc:postgresql://localhost:14523/ecos_camunda
         username: camunda
-        password:
+        password: camundapassword
+        xa: true
       eproc:
-        url: jdbc:postgresql://localhost:5428/eproc
-        username: eproc
-        password:
+        url: jdbc:postgresql://localhost:14523/ecos_process
+        username: process
+        password: processpassword
+        xa: true

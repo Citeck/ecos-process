@@ -24,7 +24,7 @@ class BpmnSectionConfig(
 
     @Bean
     fun bpmnSectionRepoDao(dataSourceManager: EcosDataSourceManager): RecordsDao {
-        val dataSource = dataSourceManager.getDataSource("eproc", JdbcDataSource::class.java).getJavaDataSource()
+        val dataSource = dataSourceManager.getDataSource("eproc", JdbcDataSource::class.java, true)
 
         val typeRef = TypeUtils.getTypeRef("bpmn-section")
         val recordsDao = dbDomainFactory.create(

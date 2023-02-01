@@ -51,7 +51,11 @@ class BpmnActivitiesRepoDaoConfig(
             }
         }
 
-        val dataSource = dataSourceManager.getDataSource("eproc", JdbcDataSource::class.java).getJavaDataSource()
+        val dataSource = dataSourceManager.getDataSource(
+            "eproc",
+            JdbcDataSource::class.java,
+            true
+        )
 
         val typeRef = TypeUtils.getTypeRef("bpmn-process-element")
         val recordsDao = dbDomainFactory.create(
