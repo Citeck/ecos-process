@@ -73,17 +73,20 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
 
             fields.addIfNotBlank(
                 CamundaFieldCreator.expression(
-                    BPMN_PROP_NOTIFICATION_TO.localPart, recipientsToJson(to)
+                    BPMN_PROP_NOTIFICATION_TO.localPart,
+                    recipientsToJson(to)
                 )
             )
             fields.addIfNotBlank(
                 CamundaFieldCreator.expression(
-                    BPMN_PROP_NOTIFICATION_CC.localPart, recipientsToJson(cc)
+                    BPMN_PROP_NOTIFICATION_CC.localPart,
+                    recipientsToJson(cc)
                 )
             )
             fields.addIfNotBlank(
                 CamundaFieldCreator.expression(
-                    BPMN_PROP_NOTIFICATION_BCC.localPart, recipientsToJson(bcc)
+                    BPMN_PROP_NOTIFICATION_BCC.localPart,
+                    recipientsToJson(bcc)
                 )
             )
 

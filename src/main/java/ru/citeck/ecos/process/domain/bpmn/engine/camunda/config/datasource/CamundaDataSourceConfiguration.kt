@@ -16,7 +16,7 @@ class CamundaDataSourceConfiguration {
 
     @Bean
     fun camundaTransactionManager(dsManager: EcosDataSourceManager): PlatformTransactionManager {
-        val dataSource =  dsManager.getDataSource(
+        val dataSource = dsManager.getDataSource(
             "camunda",
             JdbcDataSource::class.java,
             true

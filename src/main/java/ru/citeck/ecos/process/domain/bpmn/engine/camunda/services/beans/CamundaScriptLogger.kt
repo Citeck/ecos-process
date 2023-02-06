@@ -51,5 +51,4 @@ class ScriptLogger(
             "\n|Message:" +
             "\n$message"
     }
-
 }

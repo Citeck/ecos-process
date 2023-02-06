@@ -2932,8 +2932,6 @@ class BpmnMonsterTestWithRunProcessTest {
         return ListUtils.subtract(updatedSubscriptions, existingSubscriptions)
     }
 
-
-
     class PotterRecord(
 
         @AttName("email")
@@ -2974,7 +2972,6 @@ class BpmnMonsterTestWithRunProcessTest {
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")
     )
 }
-
 
 /**
  * Wrap equals without id, recipints ignore order
