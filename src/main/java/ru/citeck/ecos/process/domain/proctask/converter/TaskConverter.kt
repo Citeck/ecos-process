@@ -51,6 +51,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         ended = ended,
         durationInMillis = durationInMillis,
         dueDate = dueDate,
+        followUpDate = followUpDate,
         title = name,
         assignee = assignee,
         candidateUsers = candidateUsers,

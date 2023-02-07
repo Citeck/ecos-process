@@ -47,6 +47,8 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 )
             ),
             formRef = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
+            dueDate = element.otherAttributes[BPMN_PROP_DUE_DATE],
+            followUpDate = element.otherAttributes[BPMN_PROP_FOLLOW_UP_DATE],
             priority = TaskPriority.valueOf(element.otherAttributes[BPMN_PROP_PRIORITY]!!),
             multiInstanceConfig = element.toMultiInstanceConfig()
         )
@@ -67,6 +69,8 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))
             otherAttributes.putIfNotBlank(BPMN_PROP_FORM_REF, element.formRef.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_PRIORITY, element.priority.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_DUE_DATE, element.dueDate)
+            otherAttributes.putIfNotBlank(BPMN_PROP_FOLLOW_UP_DATE, element.followUpDate)
 
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS_MODE, element.manualRecipientsMode.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS, Json.mapper.toString(element.manualRecipients))

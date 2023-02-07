@@ -5,7 +5,7 @@
     "en": "BPMN User Task Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
   "system": true,
@@ -63,7 +63,6 @@
         "optionalWhenDisabled": false,
         "type": "panel",
         "input": false,
-        "addAnother": "ecos.forms.btn.add-another",
         "components": [
           {
             "label": {
@@ -74,8 +73,7 @@
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "checkbox",
-            "input": true,
-            "addAnother": "ecos.forms.btn.add-another"
+            "input": true
           },
           {
             "label": {
@@ -124,15 +122,13 @@
             "optionalWhenDisabled": false,
             "customConditional": "show = !!data.manualRecipientsMode;",
             "type": "textfield",
-            "input": true,
-            "addAnother": "ecos.forms.btn.add-another"
+            "input": true
           }
         ]
       },
       {
         "input": true,
         "key": "horizontalLine2",
-        "addAnother": "ecos.forms.btn.add-another",
         "type": "horizontalLine"
       },
       {
@@ -151,6 +147,45 @@
         "type": "selectJournal",
         "input": true,
         "queryData": ""
+      },
+      {
+        "label": {
+          "ru": "Follow up date",
+          "en": "Follow up date"
+        },
+        "key": "followUpDate",
+        "tooltip": {
+          "en": "Date in ISO format or expression:\n\n- 2020-06-20T10:30:00\n-${someDate}\n\nThe expression should always resolve to a java.util.Date, java.util.String (ISO 8601), or null.",
+          "ru": "Дата в формате ISO или выражение:\n\n- 2020-06-20T10:30:00\n- ${someDate}\n\nВыражение всегда должно  возвращать java.util.Date, java.util.String (ISO 8601) или null."
+        },
+        "hidden": true,
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true,
+        "inputMasks": [
+          {}
+        ]
+      },
+      {
+        "label": {
+          "ru": "Срок выполнения",
+          "en": "Due date"
+        },
+        "key": "dueDate",
+        "tooltip": {
+          "ru": "Дата в формате ISO или выражение:\n\n- 2020-06-20T10:30:00\n- ${someDate}\n\nВыражение всегда должно  возвращать java.util.Date, java.util.String (ISO 8601) или null.",
+          "en": "Date in ISO format or expression:\n\n- 2020-06-20T10:30:00\n-${someDate}\n\nThe expression should always resolve to a java.util.Date, java.util.String (ISO 8601), or null."
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true,
+        "inputMasks": [
+          {}
+        ]
       },
       {
         "label": {
@@ -263,19 +298,18 @@
         "customConditional": "show = !!data.manualRecipientsMode;",
         "type": "panel",
         "input": false,
-        "addAnother": "ecos.forms.btn.add-another",
         "components": [
           {
             "formRef": "uiserv/form@bpmn-base-form-multi-instance",
             "input": true,
             "key": "includeForm3",
             "label": "Форма: BPMN base form Multi Instance",
-            "addAnother": "ecos.forms.btn.add-another",
             "type": "includeForm"
           }
         ]
       }
-    ]
+    ],
+    "formId": "bpmn-type-bpmn:UserTask"
   },
   "attributes": {}
 }

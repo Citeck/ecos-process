@@ -47,6 +47,7 @@ class ProcTaskRecord(
     val ended: Instant? = null,
     val durationInMillis: Long? = null,
     val dueDate: Instant? = null,
+    val followUpDate: Instant? = null,
 
     val assignee: EntityRef = RecordRef.EMPTY,
     val candidateUsers: List<EntityRef> = emptyList(),

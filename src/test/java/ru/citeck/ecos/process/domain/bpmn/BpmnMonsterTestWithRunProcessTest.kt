@@ -52,6 +52,10 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.*
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -148,8 +152,6 @@ class BpmnMonsterTestWithRunProcessTest {
         private val mockAuthorAccountantEmails = listOf("author@mail.com", "accountant@mail.com")
     }
 
-    // ---BPMN USER TASK TESTS ---
-
     @BeforeEach
     fun setUp() {
         recordsService.register(
@@ -212,6 +214,8 @@ class BpmnMonsterTestWithRunProcessTest {
         deleteAllProcDefinitions()
         camundaMyBatisExtension.deleteAllEventSubscriptions()
     }
+
+    // ---BPMN USER TASK TESTS ---
 
     @Test
     fun `complete simple task`() {
@@ -678,6 +682,66 @@ class BpmnMonsterTestWithRunProcessTest {
                 "documentRef" to doc
             )
         ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task due date explicit text`() {
+        val procId = "test-user-task-due-date-explicit"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+
+        val expectedFollowUpDate = Instant.parse("2023-02-07T15:00:00.0Z")
+        val expectedDueDate = Instant.parse("2023-02-07T21:30:00.0Z")
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(
+                ZonedDateTime.ofInstant(it.followUpDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedFollowUpDate
+            )
+
+            assertThat(
+                ZonedDateTime.ofInstant(it.dueDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedDueDate
+            )
+
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task due date from variables`() {
+        val procId = "test-user-task-due-date-from-variables"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+
+        val expectedFollowUpDate = Instant.parse("2023-02-07T15:00:00.0Z")
+        val expectedDueDate = Instant.parse("2023-02-07T21:30:00.0Z")
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(
+                ZonedDateTime.ofInstant(it.followUpDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedFollowUpDate
+            )
+
+            assertThat(
+                ZonedDateTime.ofInstant(it.dueDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedDueDate
+            )
+
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
 
         verify(process).hasFinished("endEvent")
     }

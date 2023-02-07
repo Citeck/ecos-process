@@ -36,6 +36,8 @@ val BPMN_PROP_ASSIGNEES = QName(NS_ECOS, "assignees")
 val BPMN_PROP_FORM_REF = QName(NS_ECOS, "formRef")
 val BPMN_PROP_OUTCOMES = QName(NS_ECOS, "outcomes")
 val BPMN_PROP_PRIORITY = QName(NS_ECOS, "priority")
+val BPMN_PROP_DUE_DATE = QName(NS_ECOS, "dueDate")
+val BPMN_PROP_FOLLOW_UP_DATE = QName(NS_ECOS, "followUpDate")
 
 val BPMN_PROP_MANUAL_SIGNAL_NAME = QName(NS_ECOS, "manualSignalName")
 val BPMN_PROP_EVENT_MANUAL_MODE = QName(NS_ECOS, "eventManualMode")

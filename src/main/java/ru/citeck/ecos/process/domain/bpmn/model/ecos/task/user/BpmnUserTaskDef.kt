@@ -22,6 +22,9 @@ data class BpmnUserTaskDef(
     val formRef: RecordRef,
     val priority: TaskPriority,
 
+    val dueDate: String? = null,
+    val followUpDate: String? = null,
+
     val multiInstanceConfig: MultiInstanceConfig? = null,
 
     private var multiInstanceAutoMode_: Boolean = false

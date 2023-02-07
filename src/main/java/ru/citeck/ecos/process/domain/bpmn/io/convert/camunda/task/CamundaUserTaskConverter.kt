@@ -82,6 +82,9 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes[CAMUNDA_PRIORITY] = element.priority.toCamundaCode().toString()
             otherAttributes[CAMUNDA_FORM_KEY] = element.formRef.toString()
 
+            otherAttributes.putIfNotBlank(CAMUNDA_DUE_DATE, element.dueDate)
+            otherAttributes.putIfNotBlank(CAMUNDA_FOLLOW_UP_DATE, element.followUpDate)
+
             otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE] = element.manualRecipientsMode.toString()
             otherAttributes[BPMN_PROP_MULTI_INSTANCE_AUTO_MODE] = element.multiInstanceAutoMode.toString()
             otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))

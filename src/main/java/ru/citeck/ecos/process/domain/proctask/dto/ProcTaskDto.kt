@@ -33,6 +33,8 @@ data class ProcTaskDto(
 
     val dueDate: Instant? = null,
 
+    val followUpDate: Instant? = null,
+
     val assignee: EntityRef = RecordRef.EMPTY,
 
     val candidateUsers: List<EntityRef> = emptyList(),

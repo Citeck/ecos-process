@@ -90,6 +90,7 @@ class CacheableTaskConverter(
                     RecordRef.EMPTY
                 },
                 dueDate = dueDate?.toInstant(),
+                followUpDate = followUpDate?.toInstant(),
                 created = createTime.toInstant(),
                 assignee = authorityService.getAuthorityRef(assignee),
                 candidateUsers = authorityService.getAuthorityRefs(candidateUsers.toList()),
