@@ -1,14 +1,14 @@
 {
   "id": "bpmn-type-bpmn:Definitions",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Definitions Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [
@@ -46,14 +46,22 @@
         "queryData": ""
       },
       {
-        "label": "ECOS Type",
-        "journalId": "ecos-types",
+        "label": {
+          "ru": "ECOS Type"
+        },
         "key": "ecosType",
+        "hideEditRowButton": true,
+        "modalTitle": "",
+        "customActionRefs": [
+          "uiserv/action@edit-ecos-type"
+        ],
+        "journalId": "ecos-types",
+        "sortAscending": "asc",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
         "type": "selectJournal",
         "input": true,
-        "customPredicateJs": null,
-        "presetFilterPredicatesJs": null,
-        "sortAscending": "asc"
+        "queryData": ""
       },
       {
         "label": {
@@ -81,7 +89,9 @@
         "type": "checkbox",
         "input": true
       }
-    ]
+    ],
+    "formId": "bpmn-type-bpmn:Definitions"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }
