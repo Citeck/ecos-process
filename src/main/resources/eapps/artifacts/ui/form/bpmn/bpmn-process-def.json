@@ -1,14 +1,14 @@
 {
   "id": "bpmn-process-def",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Process definition form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [
@@ -31,13 +31,19 @@
                   "ru": "Data Type",
                   "en": "Тип данных"
                 },
-                "journalId": "ecos-types",
                 "key": "ecosType",
+                "hideEditRowButton": true,
+                "modalTitle": "",
+                "customActionRefs": [
+                  "uiserv/action@edit-ecos-type"
+                ],
+                "journalId": "ecos-types",
+                "queryData": "",
+                "sortAscending": "asc",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
                 "type": "selectJournal",
-                "input": true,
-                "customPredicateJs": null,
-                "presetFilterPredicatesJs": null,
-                "sortAscending": "asc"
+                "input": true
               },
               {
                 "label": {
@@ -94,8 +100,7 @@
                 ],
                 "optionalWhenDisabled": false,
                 "type": "ecosSelect",
-                "input": true,
-                "addAnother": "ecos.forms.btn.add-another"
+                "input": true
               },
               {
                 "label": {
@@ -201,10 +206,11 @@
         },
         "key": "sectionsList",
         "type": "asyncData",
-        "input": true,
-        "addAnother": "ecos.forms.btn.add-another"
+        "input": true
       }
-    ]
+    ],
+    "formId": "bpmn-process-def"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }
