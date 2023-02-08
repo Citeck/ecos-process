@@ -4,9 +4,14 @@ import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
+import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.interceptor.Command
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.events.CustomEventSubscriptionManager
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis.BpmnMyBatisExtendedSessionFactory
 import javax.annotation.PostConstruct
 
@@ -19,12 +24,16 @@ class CamundaMyBatisExtension(
 
     private lateinit var factory: BpmnMyBatisExtendedSessionFactory
 
+    @Autowired
+    @Qualifier("camundaTransactionManager")
+    private lateinit var transactionManager: PlatformTransactionManager
+
     @PostConstruct
     private fun init() {
         ext = this
 
         factory = BpmnMyBatisExtendedSessionFactory()
-        factory.initFromProcessEngineConfiguration(processEngineConfiguration)
+        factory.initFromProcessEngineConfiguration(processEngineConfiguration, transactionManager)
     }
 
     internal fun getHistoricTasksByIds(ids: List<String>): List<HistoricTaskInstance> {
@@ -65,7 +74,28 @@ class CamundaMyBatisExtension(
             ) as List<EventSubscriptionEntity>
         }
 
-        return factory.commandExecutorTxRequired.execute(command)
+        val subscriptions = ArrayList(factory.commandExecutorTxRequired.execute(command))
+
+        val commandContext = Context.getCommandContext()
+        if (commandContext != null) {
+            // Search subscriptions in command context.
+            // selectList from DB doesn't return subscriptions which was created in current transaction
+            val manager = commandContext.eventSubscriptionManager as? CustomEventSubscriptionManager
+            val createdSubscriptions = manager?.getCreatedSubscriptions() ?: emptyList()
+            for (subscription in createdSubscriptions) {
+                val eventName = subscription.eventName ?: ""
+                if (eventNames.any { name -> eventName.startsWith(name) }) {
+                    subscriptions.add(subscription)
+                }
+            }
+        }
+
+        // remove duplicates
+        val subscriptionsIds = mutableSetOf<String>()
+        return subscriptions.filter {
+            val id = it.id ?: ""
+            id.isNotBlank() && subscriptionsIds.add(id)
+        }
     }
 
     fun deleteAllEventSubscriptions() {

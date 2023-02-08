@@ -86,17 +86,7 @@ class CamundaEventSubscriptionFinder(
 
                     log.debug { "Process subscription: \n$sub" }
 
-                    val definition = if (sub.processInstanceId.isNullOrBlank()) {
-                        val defId = sub.configuration
-                        if (defId.isNullOrBlank()) {
-                            error("Cannot determine process definition id for event subscription: ${sub.id}")
-                        }
-                        bpmnProcService.getProcessDefinition(defId)
-                    } else {
-                        bpmnProcService.getProcessDefinitionByProcessInstanceId(sub.processInstanceId)
-                    }
-
-                    val deploymentId = definition?.deploymentId
+                    val deploymentId = sub.processDefinition?.deploymentId
                     if (deploymentId.isNullOrBlank()) {
                         error("Cannot determine deployment id for event subscription: ${sub.id}")
                     }

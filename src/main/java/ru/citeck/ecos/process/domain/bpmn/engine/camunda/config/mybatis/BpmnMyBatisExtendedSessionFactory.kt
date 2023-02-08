@@ -1,11 +1,13 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis
 
-import org.apache.ibatis.transaction.managed.ManagedTransactionFactory
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.impl.cfg.StandaloneProcessEngineConfiguration
 import org.camunda.bpm.engine.impl.interceptor.CommandContextInterceptor
 import org.camunda.bpm.engine.impl.interceptor.CommandInterceptor
 import org.camunda.bpm.engine.impl.interceptor.LogInterceptor
+import org.camunda.bpm.engine.spring.SpringTransactionInterceptor
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.util.ResourceUtils
 import java.io.InputStream
 
@@ -21,9 +23,23 @@ class BpmnMyBatisExtendedSessionFactory : StandaloneProcessEngineConfiguration()
         )
     }
 
-    fun initFromProcessEngineConfiguration(processEngineConfiguration: ProcessEngineConfigurationImpl) {
+    private lateinit var txnInterceptor: CommandInterceptor
+
+    fun initFromProcessEngineConfiguration(
+        processEngineConfiguration: ProcessEngineConfigurationImpl,
+        transactionManager: PlatformTransactionManager
+    ) {
+
         setDataSource(processEngineConfiguration.dataSource)
-        setTransactionFactory(ManagedTransactionFactory())
+        setTransactionContextFactory(processEngineConfiguration.transactionContextFactory)
+        setTransactionFactory(processEngineConfiguration.transactionFactory)
+        isTransactionsExternallyManaged = true
+
+        this.txnInterceptor = SpringTransactionInterceptor(
+            transactionManager,
+            TransactionTemplate.PROPAGATION_REQUIRED,
+            this
+        )
 
         initDataSource()
         initCommandContextFactory()
@@ -46,6 +62,7 @@ class BpmnMyBatisExtendedSessionFactory : StandaloneProcessEngineConfiguration()
     override fun getDefaultCommandInterceptorsTxRequired(): Collection<CommandInterceptor> {
         val defaultCommandInterceptorsTxRequired: MutableList<CommandInterceptor> = ArrayList()
         defaultCommandInterceptorsTxRequired.add(LogInterceptor())
+        defaultCommandInterceptorsTxRequired.add(txnInterceptor)
         defaultCommandInterceptorsTxRequired.add(CommandContextInterceptor(commandContextFactory, this, true))
         return defaultCommandInterceptorsTxRequired
     }
