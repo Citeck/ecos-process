@@ -2,6 +2,8 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
 import mu.KotlinLogging
 import org.camunda.bpm.engine.RuntimeService
+import org.camunda.bpm.engine.impl.context.Context
+import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
@@ -86,8 +88,8 @@ class CamundaEventSubscriptionFinder(
 
                     log.debug { "Process subscription: \n$sub" }
 
-                    val deploymentId = sub.processDefinition?.deploymentId
-                    if (deploymentId.isNullOrBlank()) {
+                    val deploymentId = getProcDefDeploymentIdForSubscription(sub)
+                    if (deploymentId.isBlank()) {
                         error("Cannot determine deployment id for event subscription: ${sub.id}")
                     }
 
@@ -105,6 +107,23 @@ class CamundaEventSubscriptionFinder(
         log.debug { "Get actual camunda subscriptions ${result.size} in $time ms. Result: \n$result" }
 
         return result
+    }
+
+    private fun getProcDefDeploymentIdForSubscription(subscription: EventSubscriptionEntity): String {
+        return if (Context.getCommandContext() != null) {
+            subscription.processDefinition?.deploymentId ?: ""
+        } else {
+            val definition = if (subscription.processInstanceId.isNullOrBlank()) {
+                val defId = subscription.configuration
+                if (defId.isNullOrBlank()) {
+                    error("Cannot determine process definition id for event subscription: ${subscription.id}")
+                }
+                bpmnProcService.getProcessDefinition(defId)
+            } else {
+                bpmnProcService.getProcessDefinitionByProcessInstanceId(subscription.processInstanceId)
+            }
+            definition?.deploymentId ?: ""
+        }
     }
 
     private fun getExactEventSubscription(deploymentId: String, elementId: String): EventSubscription? {
