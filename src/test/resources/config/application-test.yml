@@ -14,3 +14,7 @@ ecos-process:
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
+
+context:
+  initializer:
+    classes: ru.citeck.ecos.process.config.MongoInitializer
