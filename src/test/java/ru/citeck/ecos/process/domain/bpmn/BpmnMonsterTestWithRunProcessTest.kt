@@ -27,11 +27,11 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
-import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
@@ -693,7 +693,6 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-user-task-due-date-explicit"
         saveAndDeployBpmn(USER_TASK, procId)
 
-
         val expectedFollowUpDate = Instant.parse("2023-02-07T15:00:00.0Z")
         val expectedDueDate = Instant.parse("2023-02-07T21:30:00.0Z")
 
@@ -722,7 +721,6 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `task due date from variables`() {
         val procId = "test-user-task-due-date-from-variables"
         saveAndDeployBpmn(USER_TASK, procId)
-
 
         val expectedFollowUpDate = Instant.parse("2023-02-07T15:00:00.0Z")
         val expectedDueDate = Instant.parse("2023-02-07T21:30:00.0Z")

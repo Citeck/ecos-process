@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionLevel
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionsDef
 import ru.citeck.ecos.model.lib.permissions.repo.PermissionsRepo
@@ -151,8 +152,10 @@ class BpmnProcDefRecordsTest {
 
     @Test
     fun queryWithoutPermissions() {
-        val result = bpmnProcDefRecords.queryRecords(queryAllProcDefs)
-            as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
+        val result = AuthContext.runAs(EmptyAuth) {
+            bpmnProcDefRecords.queryRecords(queryAllProcDefs)
+                as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
+        }
         assertEquals(250, result.getRecords().size)
         assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE, result.getTotalCount())
     }
@@ -193,8 +196,10 @@ class BpmnProcDefRecordsTest {
 
     @Test
     fun deleteWithoutPermissions() {
-        val result = bpmnProcDefRecords.delete("def-3")
-        assertEquals(DelStatus.PROTECTED, result)
+        AuthContext.runAs(EmptyAuth) {
+            val result = bpmnProcDefRecords.delete("def-3")
+            assertEquals(DelStatus.PROTECTED, result)
+        }
     }
 
     @Test
@@ -216,11 +221,14 @@ class BpmnProcDefRecordsTest {
 
     @Test
     fun mutateWithoutPermissions() {
-        val recToMutate = bpmnProcDefRecords.getRecToMutate("def-250")
-        recToMutate.enabled = false
+        AuthContext.runAs(EmptyAuth) {
 
-        assertThrows<RuntimeException>("Permissions denied. RecordRef: eproc/bpmn-def@def-250") {
-            bpmnProcDefRecords.saveMutatedRec(recToMutate)
+            val recToMutate = bpmnProcDefRecords.getRecToMutate("def-250")
+            recToMutate.enabled = false
+
+            assertThrows<RuntimeException>("Permissions denied. RecordRef: eproc/bpmn-def@def-250") {
+                bpmnProcDefRecords.saveMutatedRec(recToMutate)
+            }
         }
     }
 
