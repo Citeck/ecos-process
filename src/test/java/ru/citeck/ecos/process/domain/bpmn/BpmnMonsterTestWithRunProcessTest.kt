@@ -30,6 +30,8 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
@@ -1194,12 +1196,14 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-with-template"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            mapOf(
-                "documentRef" to docRef.toString()
-            )
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    "documentRef" to docRef.toString()
+                )
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(docRef)
@@ -1232,12 +1236,14 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-with-explicit-text"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            mapOf(
-                "documentRef" to docRef.toString()
-            )
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    "documentRef" to docRef.toString()
+                )
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(docRef)
@@ -1271,12 +1277,14 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-recipients-check"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            mapOf(
-                "documentRef" to docRef.toString()
-            )
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    "documentRef" to docRef.toString()
+                )
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(docRef)
@@ -1311,12 +1319,14 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-recipients-roles-with-expressions-check"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            mapOf(
-                "documentRef" to docRef.toString()
-            )
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    "documentRef" to docRef.toString()
+                )
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(docRef)
@@ -1351,10 +1361,12 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-without-document-check"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            emptyMap()
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                emptyMap()
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(EntityRef.EMPTY)
@@ -1386,10 +1398,12 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-recipients-expression"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            emptyMap()
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                emptyMap()
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(EntityRef.EMPTY)
@@ -1426,10 +1440,12 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-recipients-expression-user-group"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            emptyMap()
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                emptyMap()
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(EntityRef.EMPTY)
@@ -1467,10 +1483,12 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-recipients-one-expression-user-group"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            emptyMap()
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                emptyMap()
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(EntityRef.EMPTY)
@@ -1508,12 +1526,14 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-send-task-configuration-check"
         saveAndDeployBpmn(SEND_TASK, procId)
 
-        run(process).startByKey(
-            procId,
-            mapOf(
-                "documentRef" to docRef.toString()
-            )
-        ).execute()
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    "documentRef" to docRef.toString()
+                )
+            ).execute()
+        }
 
         val notification = Notification.Builder()
             .record(docExplicitRef)
