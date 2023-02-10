@@ -1,4 +1,4 @@
-// TOOD: uncomment
+// TODO: check performance test on jenkins after migrate Zookeeper to test containers, if ok - uncomment this test
 
 package ru.citeck.ecos.process.domain.procdef
 
