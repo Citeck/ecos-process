@@ -1,12 +1,38 @@
+// TOOD: uncomment
+
 package ru.citeck.ecos.process.domain.procdef
 
+/*
+import mu.KotlinLogging
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.util.ResourceUtils
+import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefVersionRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.VersionQuery
+import ru.citeck.ecos.process.domain.getBpmnProcessDefDto
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef.Companion.create
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
+import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.nio.charset.StandardCharsets
+import java.util.function.Consumer
 
 private const val REVISION_COUNT = 299
 private const val REVISION_TOTAL_COUNT = REVISION_COUNT + 1
 
-// TOOD: uncomment
-/*
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
@@ -25,6 +51,9 @@ class ProcessDefPerformanceTest {
     @Autowired
     private lateinit var tenantService: ProcTenantService
 
+    @Autowired
+    private lateinit var recordsService: RecordsService
+
     private val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, "test-id")
     private val procDefDataStr = ResourceUtils.getFile("classpath:test/bpmn/large-test-process.bpmn.xml")
         .readText(StandardCharsets.UTF_8)
@@ -35,6 +64,18 @@ class ProcessDefPerformanceTest {
 
     @BeforeAll
     fun setUp() {
+        val definitions = procDefService.findAll(VoidPredicate.INSTANCE, Int.MAX_VALUE, 0)
+
+        definitions.forEach(
+            Consumer { d: ProcDefDto ->
+                procDefService.delete(
+                    create(
+                        d.procType,
+                        d.id
+                    )
+                )
+            }
+        )
 
         procDefService.uploadProcDef(
             getBpmnProcessDefDto(
@@ -60,13 +101,37 @@ class ProcessDefPerformanceTest {
         val tenant = tenantService.getCurrent()
 
         val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, procDefRef.type, procDefRef.id)!!
-        val foundRevisions = procDefRevRepo.findAllByProcessDef(procDef)
+        val foundRevisions = procDefRevRepo.findAllByProcessDefWithoutData(procDef)
+        val foundRevisionsDto = procDefService.getProcessDefRevs(procDefRef)
 
         assertEquals(REVISION_TOTAL_COUNT, foundRevisions.size)
+        assertEquals(REVISION_TOTAL_COUNT, foundRevisionsDto.size)
     }
 
     @Test
     @Order(2)
+    fun `Getting many revisions from version records without data att should go without a memory leak`() {
+        val allRecords = recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnProcDefVersionRecords.ID)
+                withQuery(
+                    VersionQuery(
+                        EntityRef.create(BpmnProcDefVersionRecords.ID, procDefRef.id),
+                    )
+                )
+                withMaxItems(Int.MAX_VALUE)
+            },
+            mapOf(
+                "format" to "format",
+                "modified" to "modified"
+            )
+        ).getRecords()
+
+        assertEquals(REVISION_TOTAL_COUNT, allRecords.size)
+    }
+
+    @Test
+    @Order(3)
     fun `Delete many revisions should go without a memory leak`() {
         val tenant = tenantService.getCurrent()
 
@@ -74,7 +139,7 @@ class ProcessDefPerformanceTest {
 
         procDefService.delete(procDefRef)
 
-        val foundRevisionsAfterDelete = procDefRevRepo.findAllByProcessDef(procDef)
+        val foundRevisionsAfterDelete = procDefRevRepo.findAllByProcessDefWithoutData(procDef)
 
         assertEquals(0, foundRevisionsAfterDelete.size)
     }

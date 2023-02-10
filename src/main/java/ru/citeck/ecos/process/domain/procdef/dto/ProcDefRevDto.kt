@@ -1,112 +1,60 @@
-package ru.citeck.ecos.process.domain.procdef.dto;
+package ru.citeck.ecos.process.domain.procdef.dto
 
-import lombok.Data;
-import lombok.ToString;
-import org.jetbrains.annotations.Nullable;
+import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.common.repo.EntityUuid
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
+import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
+import java.time.Instant
+import java.util.*
+import javax.annotation.PostConstruct
 
-import javax.validation.constraints.NotNull;
-import java.time.Instant;
-import java.util.UUID;
+@Component
+internal class DataProvider(
+    private val procDefRevRepo: ProcDefRevRepository,
+    private val tenantService: ProcTenantService
+) {
 
-@Data
-@ToString(exclude = "data")
-public class ProcDefRevDto {
-
-    @NotNull
-    private UUID id;
-
-    @NotNull
-    private String format;
-
-    @NotNull
-    private byte[] data;
-
-    @Nullable
-    private byte[] image;
-
-    @NotNull
-    private String procDefId;
-
-    @NotNull
-    private Instant created;
-
-    private String createdBy;
-
-    private String deploymentId;
-
-    public String getDeploymentId() {
-        return deploymentId;
+    fun getData(dto: ProcDefRevDto): ByteArray {
+        val revId = EntityUuid(tenantService.getCurrent(), dto.id)
+        val revEntity = procDefRevRepo.findById(revId).orElseThrow {
+            IllegalStateException("ProcDefRevEntity not found by id: $revId")
+        }
+        return revEntity.data!!
     }
 
-    public void setDeploymentId(String deploymentId) {
-        this.deploymentId = deploymentId;
+    @PostConstruct
+    private fun init() {
+        dataProvider = this
     }
+}
 
-    public String getCreatedBy() {
-        return createdBy;
-    }
+private lateinit var dataProvider: DataProvider
 
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
+data class ProcDefRevDto(
+    var id: UUID,
 
-    @NotNull
-    private int version;
+    var format: String,
 
-    public UUID getId() {
-        return id;
-    }
+    var image: ByteArray? = null,
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    var procDefId: String,
 
-    public String getFormat() {
-        return format;
-    }
+    var created: Instant,
+    var createdBy: String? = null,
+    var deploymentId: String? = null,
 
-    public void setFormat(String format) {
-        this.format = format;
-    }
+    var version: Int = 0,
 
-    public byte[] getData() {
-        return data;
-    }
+    internal val initialData: ByteArray? = null
+) {
 
-    public void setData(byte[] data) {
-        this.data = data;
-    }
+    /**
+     *  Lazy load data to avoid memory leaks
+     */
+    val data: ByteArray by lazy { initialData ?: dataProvider.getData(this) }
 
-    public String getProcDefId() {
-        return procDefId;
-    }
-
-    public void setProcDefId(String procDefId) {
-        this.procDefId = procDefId;
-    }
-
-    public Instant getCreated() {
-        return created;
-    }
-
-    public void setCreated(Instant created) {
-        this.created = created;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
-    }
-
-    @Nullable
-    public byte[] getImage() {
-        return image;
-    }
-
-    public void setImage(@Nullable byte[] image) {
-        this.image = image;
+    override fun toString(): String {
+        return "ProcDefRevDto(id=$id, format=$format, image=${image?.contentToString()}, procDefId=$procDefId, " +
+            "created=$created, createdBy=$createdBy, deploymentId=$deploymentId, version=$version)"
     }
 }

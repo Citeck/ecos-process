@@ -49,7 +49,7 @@ class BpmnProcDefVersionRecords(
 
         versionRef.set(procDefRev.getRef())
 
-        return bpmnProcDefRecords.getRecToMutate(procDefRev.procDefId.toString())
+        return bpmnProcDefRecords.getRecToMutate(procDefRev.procDefId)
     }
 
     override fun saveMutatedRec(record: BpmnProcDefRecords.BpmnMutateRecord): String {
@@ -97,13 +97,13 @@ class BpmnProcDefVersionRecords(
             } else {
                 RecordRef.create(AppName.EMODEL, "person", createdBy)
             },
-            data = data,
             format = format,
             tags = if (deploymentId.isNullOrBlank()) {
                 emptyList()
             } else {
                 listOf(DEPLOYED_TAG)
-            }
+            },
+            dto = this
         )
     }
 
@@ -117,11 +117,12 @@ class BpmnProcDefVersionRecords(
         val comment: String = "",
         val name: MLText,
         val modifier: EntityRef,
-        val data: ByteArray,
         val format: String = "",
         val procDefId: String,
         val tags: List<String> = emptyList(),
         val editLink: String = EDIT_BPMN_PROC_LINK.format(RecordRef.create(AppName.EPROC, ID, id)),
+
+        private val dto: ProcDefRevDto
     ) {
 
         @get:AttName(".disp")
@@ -141,6 +142,13 @@ class BpmnProcDefVersionRecords(
         @get:AttName("definition")
         val definition: String
             get() = String(data, Charsets.UTF_8)
+
+        /**
+         *  Lazy load data to avoid memory leaks. See [ProcDefRevDto.data]
+         */
+        @get:AttName("data")
+        val data: ByteArray
+            get() = dto.data
     }
 }
 
@@ -148,6 +156,6 @@ private fun ProcDefRevDto.getRef(): EntityRef {
     return RecordRef.create(AppName.EPROC, BpmnProcDefVersionRecords.ID, id.toString())
 }
 
-private data class VersionQuery(
+data class VersionQuery(
     val record: EntityRef
 )

@@ -46,10 +46,18 @@ class CamundaEventSubscriptionFinder(
 
             val fillEventSubscriptions = fun(defRevs: List<ProcDefRevEntity>) {
                 defRevs.map { it.toDto() }.forEach { defRev ->
-                    val subscriptions = defRev.getBpmnSignalEventSubscriptions()
-                    eventDefsOfDeploymentId[defRev.deploymentId] = subscriptions
+                    if (defRev.deploymentId.isNullOrBlank()) {
+                        log.warn {
+                            "Deployment id is null or blank for proc def rev: $defRev. " +
+                                "Its wrong, because we find only deployed proc defs"
+                        }
+                        return@forEach
+                    }
 
-                    cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId, subscriptions)
+                    val subscriptions = defRev.getBpmnSignalEventSubscriptions()
+                    eventDefsOfDeploymentId[defRev.deploymentId!!] = subscriptions
+
+                    cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId!!, subscriptions)
                 }
             }
 

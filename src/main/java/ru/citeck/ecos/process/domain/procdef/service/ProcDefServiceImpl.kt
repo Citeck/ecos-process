@@ -322,7 +322,7 @@ class ProcDefServiceImpl(
 
         val result: List<ProcDefRevDto>
         val time = measureTimeMillis {
-            result = procDefRevRepo.findAllByProcessDef(procDef)
+            result = procDefRevRepo.findAllByProcessDefWithoutData(procDef)
                 .map { it.toDto() }
                 .sortedByDescending { it.created }
         }
@@ -408,7 +408,7 @@ class ProcDefServiceImpl(
         val tenant = tenantService.getCurrent()
 
         val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, ref.type, ref.id) ?: return
-        val revisions = procDefRevRepo.findAllByProcessDef(procDef)
+        val revisions = procDefRevRepo.findAllByProcessDefWithoutData(procDef)
 
         val procRev = procStateRepo.findFirstByProcDefRevIn(revisions)
 

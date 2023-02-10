@@ -109,19 +109,23 @@ public class ProcessDefServiceTest {
         assertEquals("test-id", findProcDefResp.getProcDefId());
         assertNotNull(findProcDefResp.getProcDefRevId());
 
-        FindProcDefResp findProcDefResp2 = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE, null, Collections.singletonList(alfType)))
+        FindProcDefResp findProcDefResp2 = commandsService.executeSync(
+                new FindProcDef(CmmnConstantsKt.CMMN_TYPE, null, Collections.singletonList(alfType)))
             .getResultAs(FindProcDefResp.class);
         assertEquals(findProcDefResp, findProcDefResp2);
 
-        FindProcDefResp findProcDefResp3 = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE, type1Ref, null))
+        FindProcDefResp findProcDefResp3 = commandsService.executeSync(
+                new FindProcDef(CmmnConstantsKt.CMMN_TYPE, type1Ref, null))
             .getResultAs(FindProcDefResp.class);
         assertEquals(findProcDefResp, findProcDefResp3);
 
-        FindProcDefResp findProcDefResp4 = commandsService.executeSync(new FindProcDef(CmmnConstantsKt.CMMN_TYPE, type2Ref, null))
+        FindProcDefResp findProcDefResp4 = commandsService.executeSync(
+                new FindProcDef(CmmnConstantsKt.CMMN_TYPE, type2Ref, null))
             .getResultAs(FindProcDefResp.class);
         assertEquals(findProcDefResp, findProcDefResp4);
 
-        GetProcDefRevResp getProcDefRev = commandsService.executeSync(new GetProcDefRev(CmmnConstantsKt.CMMN_TYPE, findProcDefResp.getProcDefRevId()))
+        GetProcDefRevResp getProcDefRev = commandsService.executeSync(
+                new GetProcDefRev(CmmnConstantsKt.CMMN_TYPE, findProcDefResp.getProcDefRevId()))
             .getResultAs(GetProcDefRevResp.class);
 
         assertNotNull(getProcDefRev);
@@ -130,7 +134,8 @@ public class ProcessDefServiceTest {
         assertEquals(newProcessDefDto.getId(), getProcDefRev.getProcDefId());
 
         RecordRef docRef = RecordRef.valueOf("uiserv/test@local");
-        CreateProcResp newProcResp = commandsService.executeSync(new CreateProc(findProcDefResp.getProcDefRevId(), docRef))
+        CreateProcResp newProcResp = commandsService.executeSync(
+                new CreateProc(findProcDefResp.getProcDefRevId(), docRef))
             .getResultAs(CreateProcResp.class);
 
         assertNotNull(newProcResp);
@@ -140,14 +145,16 @@ public class ProcessDefServiceTest {
 
         byte[] stateData = "process state data".getBytes(StandardCharsets.UTF_8);
 
-        UpdateProcStateResp newStateResp = commandsService.executeSync(new UpdateProcState(newProcResp.getProcStateId(), stateData))
+        UpdateProcStateResp newStateResp = commandsService.executeSync(
+                new UpdateProcState(newProcResp.getProcStateId(), stateData))
             .getResultAs(UpdateProcStateResp.class);
 
         assertNotNull(newStateResp);
         assertFalse(StringUtils.isBlank(newStateResp.getProcStateId()));
         assertEquals(1, newStateResp.getVersion());
 
-        GetProcStateResp getProcStateResp = commandsService.executeSync(new GetProcState(CmmnConstantsKt.CMMN_TYPE, newStateResp.getProcStateId()))
+        GetProcStateResp getProcStateResp = commandsService.executeSync(
+                new GetProcState(CmmnConstantsKt.CMMN_TYPE, newStateResp.getProcStateId()))
             .getResultAs(GetProcStateResp.class);
 
         assertNotNull(getProcStateResp);

@@ -13,17 +13,17 @@ import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.time.Instant
 
 fun ProcDefRevEntity.toDto(): ProcDefRevDto {
-    val procDefRevDto = ProcDefRevDto()
-    procDefRevDto.id = id!!.id
-    procDefRevDto.created = created
-    procDefRevDto.createdBy = createdBy
-    procDefRevDto.deploymentId = deploymentId
-    procDefRevDto.procDefId = processDef!!.extId
-    procDefRevDto.data = data
-    procDefRevDto.image = image
-    procDefRevDto.format = format
-    procDefRevDto.version = version
-    return procDefRevDto
+    return ProcDefRevDto(
+        id = id!!.id,
+        format = format!!,
+        image = image,
+        procDefId = processDef!!.extId!!,
+        created = created,
+        createdBy = createdBy,
+        deploymentId = deploymentId,
+        version = version,
+        initialData = data
+    )
 }
 
 fun ProcDefEntity.toDto(): ProcDefDto {
