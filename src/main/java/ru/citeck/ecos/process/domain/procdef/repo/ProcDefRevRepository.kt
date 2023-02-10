@@ -14,8 +14,8 @@ interface ProcDefRevRepository : MongoRepository<ProcDefRevEntity, EntityUuid> {
      *  Return def rev entity without data, because it is too big memory usage.
      *  If you need get revisions with data, implement method with [Pageable]
      */
-    @Query(value = "{}", fields = "{ 'data' : null }")
-    fun findAllByProcessDefWithoutData(procDef: ProcDefEntity): List<ProcDefRevEntity>
+    @Query(fields = "{ 'data' : null }")
+    fun findAllByProcessDef(processDef: ProcDefEntity): List<ProcDefRevEntity>
 
     fun findByDeploymentId(deploymentId: String): ProcDefRevEntity?
 

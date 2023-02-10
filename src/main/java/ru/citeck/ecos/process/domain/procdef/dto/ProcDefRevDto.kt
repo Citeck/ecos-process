@@ -9,7 +9,7 @@ import java.util.*
 import javax.annotation.PostConstruct
 
 @Component
-internal class DataProvider(
+internal class ProcDefRevDataProvider(
     private val procDefRevRepo: ProcDefRevRepository,
     private val tenantService: ProcTenantService
 ) {
@@ -28,7 +28,7 @@ internal class DataProvider(
     }
 }
 
-private lateinit var dataProvider: DataProvider
+private lateinit var dataProvider: ProcDefRevDataProvider
 
 data class ProcDefRevDto(
     var id: UUID,
@@ -45,7 +45,7 @@ data class ProcDefRevDto(
 
     var version: Int = 0,
 
-    internal val initialData: ByteArray? = null
+    val initialData: ByteArray? = null
 ) {
 
     /**
