@@ -24,7 +24,7 @@ import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
 
 // TODO: check performance test on jenkins after migrate Zookeeper to test containers, if ok set REVISION_COUNT = 300
-private const val REVISION_COUNT = 10
+private const val REVISION_COUNT = 300
 private const val ANOTHER_REVISION_COUNT = 10
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
