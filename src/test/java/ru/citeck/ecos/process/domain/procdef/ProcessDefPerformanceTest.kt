@@ -60,19 +60,6 @@ class ProcessDefPerformanceTest {
 
     @BeforeAll
     fun setUp() {
-        /*val definitions = procDefService.findAll(VoidPredicate.INSTANCE, Int.MAX_VALUE, 0)
-
-        definitions.forEach(
-            Consumer { d: ProcDefDto ->
-                procDefService.delete(
-                    create(
-                        d.procType,
-                        d.id
-                    )
-                )
-            }
-        )*/
-
         procDefService.uploadProcDef(
             getBpmnProcessDefDto(
                 "test/bpmn/large-test-process.bpmn.xml",
