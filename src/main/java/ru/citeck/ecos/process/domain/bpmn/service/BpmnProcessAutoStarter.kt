@@ -26,6 +26,7 @@ class BpmnProcessAutoStarter(
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
+            withTransactional(true)
             withAction { startProcessIfRequired(it) }
         }
     }
