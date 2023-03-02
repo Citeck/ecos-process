@@ -12,6 +12,11 @@ sections:
         ru: Модели бизнес-процессов
       type: BPM
 
+    - name:
+        en: Decision Models
+        ru: Модели принятия решений
+      type: DMN
+
     - type: JOURNAL
       config:
         journalId: cmmn-process-def

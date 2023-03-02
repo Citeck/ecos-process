@@ -1,19 +1,16 @@
-package ru.citeck.ecos.process.domain.bpmnsection.config
+package ru.citeck.ecos.process.domain.dmnsection.config
 
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 
-@Component
-class BpmnSectionsProxyDao : RecordsDaoProxy(
-    id = SOURCE_ID,
-    targetId = TARGET_SOURCE_ID
-) {
+const val DMN_SECTIONS_RECORDS_ID = "dmn-section"
 
-    companion object {
-        const val SOURCE_ID = "bpmn-section"
-        const val TARGET_SOURCE_ID = BPMN_SECTION_REPO_SOURCE_ID
-    }
+@Component
+class DmnSectionsProxyDao : RecordsDaoProxy(
+    id = DMN_SECTIONS_RECORDS_ID,
+    targetId = DMN_SECTION_REPO_SOURCE_ID
+) {
 
     override fun delete(recordIds: List<String>): List<DelStatus> {
         if (recordIds.contains("DEFAULT")) {
