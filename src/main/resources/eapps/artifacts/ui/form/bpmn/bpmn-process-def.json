@@ -24,7 +24,19 @@
                 "defaultValue": "",
                 "key": "processDefId",
                 "type": "textfield",
-                "input": true
+                "input": true,
+                "validate": {
+                  "required": true,
+                  "pattern": "([a-zA-Z0-9-]+$)",
+                  "custom": "",
+                  "customPrivate": false,
+                  "customMessage": "",
+                  "json": "",
+                  "minLength": "",
+                  "maxLength": "",
+                  "minWords": "",
+                  "maxWords": ""
+                }
               },
               {
                 "label": {

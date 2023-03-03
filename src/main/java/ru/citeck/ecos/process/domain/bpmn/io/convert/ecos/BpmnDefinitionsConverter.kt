@@ -49,7 +49,6 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             collaboration = collaboration,
             signals = context.generateSignalsFromDefs(),
             signalsEventDefsMeta = context.bpmnSignalEventDefs,
-            /*messages = emptyList(),*/
             exporter = element.exporter,
             exporterVersion = element.exporterVersion,
             targetNamespace = element.targetNamespace

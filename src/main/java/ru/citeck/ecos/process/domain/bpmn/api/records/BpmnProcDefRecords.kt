@@ -429,7 +429,7 @@ class BpmnProcDefRecords(
             val deployResult = camundaRepoService.createDeployment()
                 .addInputStream(record.processDefId + ".bpmn", camundaFormat.byteInputStream())
                 .name(record.name.getClosest())
-                .source("Ecos Modeler")
+                .source("Ecos BPMN Modeler")
                 .deployWithResult()
 
             procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
@@ -484,7 +484,7 @@ class BpmnProcDefRecords(
 
         fun getPreview(): Any {
             if (!alfAtts.hasThumbnail) {
-                return EprocPreviewValue(null, "")
+                return EprocBpmnPreviewValue(null, "")
             }
             return AlfPreviewValue(alfAtts)
         }
@@ -602,12 +602,12 @@ class BpmnProcDefRecords(
             return procDef.sectionRef
         }
 
-        fun getPreview(): EprocPreviewValue {
-            return EprocPreviewValue(procDef.id, procDef.modified.toEpochMilli())
+        fun getPreview(): EprocBpmnPreviewValue {
+            return EprocBpmnPreviewValue(procDef.id, procDef.modified.toEpochMilli())
         }
     }
 
-    class EprocPreviewValue(val id: String?, private val cacheBust: Any?) {
+    class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
             val ref = EntityRef.create(EprocApp.NAME, SOURCE_ID, id).toString()

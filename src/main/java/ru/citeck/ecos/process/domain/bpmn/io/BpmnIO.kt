@@ -103,7 +103,7 @@ object BpmnIO {
         extensionTypeResolver
     )
 
-    private val ecosCamundaConverters = EcosOmgConverters(
+    private val ecosCamundaBpmnConverters = EcosOmgConverters(
         listOf(
             CamundaDefinitionsConverter::class,
             CamundaShapeConverter::class,
@@ -156,7 +156,7 @@ object BpmnIO {
     }
 
     fun exportCamundaBpmn(definitions: BpmnDefinitionDef): TDefinitions {
-        return ecosCamundaConverters.export(definitions)
+        return ecosCamundaBpmnConverters.export(definitions)
     }
 
     fun exportCamundaBpmnToString(definitions: BpmnDefinitionDef): String {
@@ -164,7 +164,6 @@ object BpmnIO {
     }
 
     // todo: replace return value by BpmnProcessDef
-    @JvmStatic
     fun generateDefaultDef(processDefId: String, name: MLText, ecosType: EntityRef): TDefinitions {
 
         val defaultDef = """

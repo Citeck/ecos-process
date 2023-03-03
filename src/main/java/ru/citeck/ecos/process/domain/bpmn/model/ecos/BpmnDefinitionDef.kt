@@ -26,11 +26,10 @@ data class BpmnDefinitionDef(
 
     val signals: List<BpmnSignalDef>,
     val signalsEventDefsMeta: List<BpmnSignalEventDef>,
-    /*val messages: List<BpmnMessageDef>,*/
 
     val diagrams: List<BpmnDiagramDef>,
 
     val exporter: String,
     val exporterVersion: String,
-    val targetNamespace: String,
+    val targetNamespace: String
 )

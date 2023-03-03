@@ -1,0 +1,12 @@
+modelVersion: "1.0"
+
+source-id: "eproc/dmn-def"
+
+name:
+  ru: DMN
+  en: DMN
+
+controller:
+  type: bin
+
+

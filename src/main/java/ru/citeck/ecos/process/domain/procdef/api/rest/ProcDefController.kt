@@ -60,6 +60,7 @@ class ProcDefController(
         val procType = when (ref.getSourceId()) {
             "bpmn-def" -> "bpmn"
             "cmmn-def" -> "cmmn"
+            "dmn-def" -> "dmn"
             else -> error("Unknown ref: $ref")
         }
         val procDefRef = ProcDefRef.create(procType, ref.getLocalId())

@@ -7,12 +7,11 @@ import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
 @Component
 class BpmnSectionsProxyDao : RecordsDaoProxy(
     id = SOURCE_ID,
-    targetId = TARGET_SOURCE_ID
+    targetId = BPMN_SECTION_REPO_SOURCE_ID
 ) {
 
     companion object {
-        const val SOURCE_ID = "bpmn-section"
-        const val TARGET_SOURCE_ID = BPMN_SECTION_REPO_SOURCE_ID
+        private const val SOURCE_ID = "bpmn-section"
     }
 
     override fun delete(recordIds: List<String>): List<DelStatus> {

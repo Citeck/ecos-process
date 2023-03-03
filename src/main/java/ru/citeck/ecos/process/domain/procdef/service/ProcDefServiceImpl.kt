@@ -15,6 +15,8 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
+import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_SOURCE_ID
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
 import ru.citeck.ecos.process.domain.procdef.convert.toDto
@@ -157,6 +159,7 @@ class ProcDefServiceImpl(
         return ProcDefEvent(
             procDefRef = when (procType) {
                 BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BpmnProcDefRecords.SOURCE_ID, id)
+                DMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, id)
                 CmmnProcDefRecords.CMMN_PROC_TYPE -> {
                     RecordRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
                 }

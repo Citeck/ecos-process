@@ -1,0 +1,11 @@
+
+id: download-base64-data-dmn-xml
+
+name:
+  ru: Скачать
+  en: Download
+
+type: download
+config:
+  downloadType: base64
+  extension: dmn.xml

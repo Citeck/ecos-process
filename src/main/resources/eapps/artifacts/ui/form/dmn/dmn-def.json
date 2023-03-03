@@ -1,0 +1,169 @@
+{
+  "id": "dmn-def",
+  "formKey": "",
+  "title": {
+    "en": "DMN definition form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "columns": [
+          {
+            "components": [
+              {
+                "label": {
+                  "ru": "Идентификатор",
+                  "en": "Identifier"
+                },
+                "defaultValue": "",
+                "key": "defId",
+                "type": "textfield",
+                "input": true,
+                "validate": {
+                  "required": true,
+                  "pattern": "([a-zA-Z0-9-]+$)",
+                  "custom": "",
+                  "customPrivate": false,
+                  "customMessage": "",
+                  "json": "",
+                  "minLength": "",
+                  "maxLength": "",
+                  "minWords": "",
+                  "maxWords": ""
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "index": 0,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          },
+          {
+            "index": 1,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [
+              {
+                "label": {
+                  "ru": "Имя",
+                  "en": "Name"
+                },
+                "key": "name",
+                "type": "mlText",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Раздел",
+                  "en": "Section"
+                },
+                "key": "sectionRef",
+                "dataSrc": "custom",
+                "data": {
+                  "custom": "values = _.get(data, 'sectionsList.records', []);"
+                },
+                "defaultValue": "",
+                "refreshOn": [
+                  "sectionsList"
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              }
+            ],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          }
+        ],
+        "key": "columns3",
+        "type": "columns",
+        "input": false
+      },
+      {
+        "columns": [
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "index": 0,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          },
+          {
+            "index": 1,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [
+              {
+                "label": "Save",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "key": "submit",
+                "type": "button",
+                "input": true
+              }
+            ],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            }
+          }
+        ],
+        "key": "columns2",
+        "type": "columns",
+        "input": false
+      },
+      {
+        "label": "Sections",
+        "source": {
+          "type": "recordsQuery",
+          "recordsQuery": {
+            "query": "value = {\n  sourceId: 'eproc/dmn-section',\n  language: 'predicate',\n  query: {}\n}",
+            "attributes": {
+              "label": "?disp",
+              "value": "?id"
+            },
+            "isSingle": false
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "sectionsList",
+        "type": "asyncData",
+        "input": true
+      }
+    ],
+    "formId": "dmn-def"
+  },
+  "attributes": {},
+  "notExists": false
+}
