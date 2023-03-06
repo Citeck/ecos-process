@@ -338,7 +338,13 @@ class DmnDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-        TODO("Not yet implemented")
+       val ref = recordId.toDmnRef()
+        return if (ref.hasWritePerms()) {
+            procDefService.delete(ProcDefRef.create(DMN_PROC_TYPE, ref.getLocalId()))
+            DelStatus.OK
+        } else {
+            DelStatus.PROTECTED
+        }
     }
 
     inner class DmnDefRecord(
