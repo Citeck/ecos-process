@@ -64,6 +64,9 @@ object DmnIO {
             <?xml version="1.0" encoding="UTF-8"?>
             <definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
                          xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+                         xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0"
+                         xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                         xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
                          xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_1w3m4b1" name="DRD"
                          namespace="http://camunda.org/schema/1.0/dmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0"
                          exporter="Camunda Modeler" exporterVersion="5.8.0" modeler:executionPlatform="Camunda Platform"

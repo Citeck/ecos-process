@@ -1,0 +1,34 @@
+{
+  "id": "bpmn-type-bpmn:BusinessRuleTask",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Business Rule Task"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "scrollableContent": true,
+        "key": "panel2",
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "formRef": "uiserv/form@bpmn-base-form-elements",
+            "input": true,
+            "key": "includeForm",
+            "label": "Форма: Bpmn base form elements",
+            "type": "includeForm"
+          }
+        ]
+      }
+    ]
+  },
+  "attributes": {},
+  "notExists": false
+}
