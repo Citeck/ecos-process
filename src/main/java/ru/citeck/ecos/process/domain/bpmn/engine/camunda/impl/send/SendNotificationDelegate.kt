@@ -34,6 +34,8 @@ class SendNotificationDelegate : JavaDelegate {
     var notificationTitle: Expression? = null
     var notificationBody: Expression? = null
 
+    var notificationFrom: Expression? = null
+
     var notificationTo: Expression? = null
     var notificationCc: Expression? = null
     var notificationBcc: Expression? = null
@@ -67,6 +69,15 @@ class SendNotificationDelegate : JavaDelegate {
             }
         }
 
+        val notificationFrom = let {
+            val evaluatedFrom = notificationFrom?.getValue(execution)?.toString()
+            if (evaluatedFrom.isNullOrBlank()) {
+                null
+            } else {
+                evaluatedFrom
+            }
+        }
+
         val notification = Notification.Builder()
             .record(record)
             .notificationType(
@@ -77,6 +88,7 @@ class SendNotificationDelegate : JavaDelegate {
             .body(notificationBody?.expressionText ?: "")
             .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
             .recipients(getRecipientsEmailsFromExpression(notificationTo, execution))
+            .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
             .bcc(getRecipientsEmailsFromExpression(notificationBcc, execution))
             .lang(notificationLang?.expressionText)

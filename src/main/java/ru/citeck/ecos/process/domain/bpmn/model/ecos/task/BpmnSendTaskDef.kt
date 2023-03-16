@@ -18,6 +18,8 @@ data class BpmnSendTaskDef(
     val template: RecordRef = RecordRef.EMPTY,
     val type: NotificationType,
 
+    val from: String = "",
+
     val to: List<Recipient> = emptyList(),
     val cc: List<Recipient> = emptyList(),
     val bcc: List<Recipient> = emptyList(),

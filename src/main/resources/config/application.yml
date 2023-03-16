@@ -58,11 +58,6 @@ ecos-process:
             size: 5000
           evictionPolicy: LRU
 
-notifications:
-  default:
-    locale: en
-    from: ecos.notifications@citeck.ru
-
 ecos:
   webapp:
     dataSources:

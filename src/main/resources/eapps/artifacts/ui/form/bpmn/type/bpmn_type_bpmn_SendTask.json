@@ -366,6 +366,28 @@
         "components": [
           {
             "label": {
+              "ru": "Исходящий адрес",
+              "en": "Outgoing Address"
+            },
+            "key": "notificationFrom",
+            "tooltip": {
+              "ru": "Исходящий адрес уведомления. Может быть указан напрямую или через expression.\nЕсли пусто, то будет использовано значение по умолчанию.\n\nНапример:\nsomeAddress@mail.com\n\"Some Name\" <someAddress@mail.com>\n${someExpressionToGetAddress}\n\nПолучение адреса из Ecos Конфигурации:\n${Config.getNotNull(\"app/you-app$you-config-key\").asText()}",
+              "en": "The outgoing address of the notification. Can be specified directly or via expression.\nIf empty, the default value will be used.\n\nFor example:\nsomeAddress@mail.com\n\"Some Name\" <someAddress@mail.com>\n${someExpressionToGetAddress}\n\nGet address from Ecos Config:\n${Config.getNotNull(\"app/you-app$you-config-key\").asText()}"
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
               "ru": "Record уведомления",
               "en": "Record notifications"
             },
