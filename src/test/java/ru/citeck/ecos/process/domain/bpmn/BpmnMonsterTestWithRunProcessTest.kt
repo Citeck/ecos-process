@@ -2577,7 +2577,7 @@ class BpmnMonsterTestWithRunProcessTest {
         }
 
         run(process).startByKey(procId, variables_docRef).execute()
-
+// fix
         verify(process).hasFinished("endEvent")
     }
 
@@ -2618,7 +2618,7 @@ class BpmnMonsterTestWithRunProcessTest {
         }
 
         run(process).startByKey(procId, variables_docRef).execute()
-
+// fix
         verify(process).hasFinished("endEvent")
     }
 

@@ -11,7 +11,8 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
-import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
+import ru.citeck.ecos.records2.predicate.element.Element
+import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -112,11 +113,11 @@ class CamundaEventProcessor(
 
         val recAtts = RecordAtts()
         recAtts.setAtts(this)
-        val attsElement = RecordAttsElement("", recAtts)
+        val attsElement = RecordAttsEventElement(recAtts)
 
         val resolvedFilter = recordsTemplateService.resolve(
             predicate,
-            attsElement
+            this
         )
 
         return predicateService.isMatch(attsElement, resolvedFilter)
@@ -145,4 +146,21 @@ fun GeneralEvent.toEventMeta(): DataValue {
             EVENT_META_USER_ATT to this.user
         )
     )
+}
+
+private class RecordAttsEventElement(val atts: RecordAtts) : Element {
+
+    override fun getAttributes(attributes: List<String>): ElementAttributes {
+        return RecordAttsEventElementAtts(atts)
+    }
+}
+
+private class RecordAttsEventElementAtts(private val atts: RecordAtts) : ElementAttributes {
+
+    override fun getAttribute(name: String): Any {
+        if (name.startsWith("_meta.")) {
+            return atts.get("_meta").get(name.substringAfter("_meta."))
+        }
+        return atts.getAtt(name)
+    }
 }
