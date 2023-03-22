@@ -39,7 +39,10 @@ object EventSubscriptionCombiner {
 
             val predicate: Predicate = Json.mapper.read(subscription.predicate, Predicate::class.java)
                 ?: VoidPredicate.INSTANCE
-            val attsFromPredicate = PredicateUtils.getAllPredicateAttributes(predicate)
+            val attsFromPredicate = PredicateUtils.getAllPredicateAttributes(predicate).filter {
+                // Skip not valid atts
+                !it.startsWith("{{")
+            }
 
             val allAtts = modelAttributes + attsFromPredicate
 

@@ -11,8 +11,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
@@ -80,6 +82,11 @@ class CamundaEventProcessor(
 
         for ((attKey, attValueKey) in model) {
             if (atts.containsKey(attValueKey)) {
+                // Skip event meta attributes. They are added on final result as object
+                if (attKey.startsWith(EVENT_META_ATT)) {
+                    continue
+                }
+
                 result[attKey] = atts[attValueKey]!!
             }
         }
@@ -103,12 +110,16 @@ class CamundaEventProcessor(
             return true
         }
 
+        val recAtts = RecordAtts()
+        recAtts.setAtts(this)
+        val attsElement = RecordAttsElement("", recAtts)
+
         val resolvedFilter = recordsTemplateService.resolve(
             predicate,
-            this
+            attsElement
         )
 
-        return predicateService.isMatch(this, resolvedFilter)
+        return predicateService.isMatch(attsElement, resolvedFilter)
     }
 }
 
