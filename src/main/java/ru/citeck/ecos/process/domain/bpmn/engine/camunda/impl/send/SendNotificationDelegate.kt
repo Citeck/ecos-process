@@ -9,7 +9,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.app.AppContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
@@ -167,7 +167,7 @@ class SendNotificationDelegate : JavaDelegate {
                 }
 
                 RecipientType.EXPRESSION -> {
-                    fromExpression.addAll(recipient.value.split(CAMUNDA_COLLECTION_SEPARATOR))
+                    fromExpression.addAll(recipient.value.split(BPMN_CAMUNDA_COLLECTION_SEPARATOR))
                 }
             }
         }

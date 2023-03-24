@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.role.service.RoleService
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -49,7 +49,7 @@ class CamundaRoleService(
 
     private fun getRecipients(document: String, roles: String, predicate: (String) -> Boolean): List<String> {
         val recipients = AuthContext.runAsSystem {
-            val spRoles = roles.split(CAMUNDA_COLLECTION_SEPARATOR)
+            val spRoles = roles.split(BPMN_CAMUNDA_COLLECTION_SEPARATOR)
             if (spRoles.isEmpty()) emptyList<String>()
 
             spRoles.asSequence().map {

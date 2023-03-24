@@ -33,7 +33,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
@@ -1881,7 +1881,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     elementId = "event_create_comment",
                     name = ComposedEventName(
                         event = EcosEventType.COMMENT_CREATE.name,
-                        record = "\${$VAR_BUSINESS_KEY}"
+                        record = "\${$BPMN_BUSINESS_KEY}"
                     ),
                     model = mapOf(
                         "foo" to "bar",
@@ -1950,7 +1950,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     elementId = "event_create_comment",
                     name = ComposedEventName(
                         event = EcosEventType.COMMENT_CREATE.name,
-                        record = "\${$VAR_BUSINESS_KEY}"
+                        record = "\${$BPMN_BUSINESS_KEY}"
                     ),
                     model = mapOf(
                         "foo" to "bar",
@@ -2019,7 +2019,7 @@ class BpmnMonsterTestWithRunProcessTest {
             elementId = "event_create_comment",
             name = ComposedEventName(
                 event = EcosEventType.COMMENT_CREATE.name,
-                record = "\${$VAR_BUSINESS_KEY}"
+                record = "\${$BPMN_BUSINESS_KEY}"
             ),
             model = emptyMap()
         )
@@ -2088,7 +2088,7 @@ class BpmnMonsterTestWithRunProcessTest {
             elementId = "event_1",
             name = ComposedEventName(
                 event = EcosEventType.COMMENT_CREATE.name,
-                record = "\${$VAR_BUSINESS_KEY}"
+                record = "\${$BPMN_BUSINESS_KEY}"
             ),
             model = emptyMap(),
             predicate = """
@@ -2104,7 +2104,7 @@ class BpmnMonsterTestWithRunProcessTest {
             elementId = "event_2",
             name = ComposedEventName(
                 event = EcosEventType.COMMENT_CREATE.name,
-                record = "\${$VAR_BUSINESS_KEY}"
+                record = "\${$BPMN_BUSINESS_KEY}"
             ),
             model = emptyMap(),
             predicate = """

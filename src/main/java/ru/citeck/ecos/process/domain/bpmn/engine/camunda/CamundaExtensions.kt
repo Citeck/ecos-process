@@ -174,7 +174,7 @@ class CamundaExtensions(
 private lateinit var ext: CamundaExtensions
 
 fun DelegateExecution.getDocumentRef(): RecordRef {
-    val documentVar = getVariable(VAR_DOCUMENT_REF) as String?
+    val documentVar = getVariable(BPMN_DOCUMENT_REF) as String?
     return RecordRef.valueOf(documentVar)
 }
 
@@ -185,7 +185,7 @@ fun DelegateExecution.getNotBlankDocumentRef(): RecordRef {
 }
 
 fun DelegateTask.getDocumentRef(): RecordRef {
-    val documentVar = getVariable(VAR_DOCUMENT_REF) as String?
+    val documentVar = getVariable(BPMN_DOCUMENT_REF) as String?
     return RecordRef.valueOf(documentVar)
 }
 

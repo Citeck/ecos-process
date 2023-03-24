@@ -3,8 +3,6 @@ package ru.citeck.ecos.process.domain.proctask.service
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 
-const val TASK_COMPLETED_BY = "completedBy"
-
 interface ProcTaskService {
 
     fun getTasksByProcess(processId: String): List<ProcTaskDto>

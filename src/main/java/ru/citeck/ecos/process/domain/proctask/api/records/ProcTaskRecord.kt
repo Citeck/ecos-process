@@ -51,6 +51,9 @@ class ProcTaskRecord(
     val definitionKey: String? = null,
 
     val assignee: EntityRef = RecordRef.EMPTY,
+
+    val senderTemp: EntityRef = RecordRef.EMPTY,
+
     val candidateUsers: List<EntityRef> = emptyList(),
     val candidateGroups: List<EntityRef> = emptyList(),
 
@@ -65,7 +68,6 @@ class ProcTaskRecord(
     val historic: Boolean = false
 ) {
 
-    // TODO: add default form. simple-form is default?
     @get:AttName("_formRef")
     val formKey: RecordRef
         get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
@@ -77,6 +79,13 @@ class ProcTaskRecord(
     @AttName("started")
     fun getStarted(): Instant? {
         return created
+    }
+
+    //TODO: refactor task widget to using new api (request sender entityRef). Remove with method below.
+    // Rename senderTemp to sender
+    @AttName("sender")
+    fun getSender(): AuthorityDto {
+        return prv.recordsService.getAtts(senderTemp, AuthorityDto::class.java)
     }
 
     @AttName("actors")
