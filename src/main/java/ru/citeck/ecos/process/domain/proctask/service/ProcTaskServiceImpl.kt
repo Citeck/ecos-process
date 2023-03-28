@@ -5,7 +5,9 @@ import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_LAST_TASK_COMPLETOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_COMPLETED_BY
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
@@ -43,7 +45,7 @@ class ProcTaskServiceImpl(
 
     override fun getTasksByDocument(document: String): List<ProcTaskDto> {
         return camundaTaskService.createTaskQuery()
-            .processVariableValueEquals(VAR_DOCUMENT_REF, document)
+            .processVariableValueEquals(BPMN_DOCUMENT_REF, document)
             .initializeFormKeys()
             .list()
             .map { it.toProcTask() }
@@ -101,11 +103,12 @@ class ProcTaskServiceImpl(
     override fun completeTask(taskId: String, outcome: Outcome, variables: Map<String, Any?>) {
         val currentUser = AuthContext.getCurrentUser()
 
-        camundaTaskService.setVariableLocal(taskId, TASK_COMPLETED_BY, currentUser)
+        camundaTaskService.setVariableLocal(taskId, BPMN_TASK_COMPLETED_BY, currentUser)
 
         val completionVariables = variables.toMutableMap()
         completionVariables[outcome.outcomeId()] = outcome.value
         completionVariables[outcome.nameId()] = outcome.name.toString()
+        completionVariables[BPMN_LAST_TASK_COMPLETOR] = currentUser
 
         log.debug { "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables" }
 

@@ -35,6 +35,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             record = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_RECORD]),
             title = element.otherAttributes[BPMN_PROP_NOTIFICATION_TITLE] ?: "",
             body = element.otherAttributes[BPMN_PROP_NOTIFICATION_BODY] ?: "",
+            from = element.otherAttributes[BPMN_PROP_NOTIFICATION_FROM] ?: "",
             to = recipientsFromJson(
                 mapOf(
                     RecipientType.ROLE to element.otherAttributes[BPMN_PROP_NOTIFICATION_TO],
@@ -79,6 +80,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_RECORD, element.record.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TITLE, element.title)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_BODY, element.body)
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_FROM, element.from)
 
             otherAttributes.putIfNotBlank(
                 BPMN_PROP_NOTIFICATION_TO,

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
@@ -103,7 +103,7 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 elementId = "event_boundary",
-                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
+                name = "${EcosEventType.COMMENT_CREATE.name};\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -120,7 +120,7 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 elementId = "boundary_event",
-                name = "${EcosEventType.COMMENT_CREATE.name};\${$VAR_BUSINESS_KEY};ANY;pr_0"
+                name = "${EcosEventType.COMMENT_CREATE.name};\${$BPMN_BUSINESS_KEY};ANY;pr_0"
                     .toComposedEventName(),
                 model = emptyMap()
             )
@@ -138,7 +138,7 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 elementId = "event_end",
-                name = "some-signal;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
+                name = "some-signal;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap()
             )
         )
@@ -155,7 +155,7 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription[0]).isEqualTo(
             EventSubscription(
                 elementId = "throw_event",
-                name = "some-signal;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
+                name = "some-signal;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap()
             )
         )
@@ -173,12 +173,12 @@ class CamundaEventSubscriptionFinderTest {
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             EventSubscription(
                 elementId = "event_start_1",
-                name = "start-1;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
+                name = "start-1;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap(),
             ),
             EventSubscription(
                 elementId = "event_start_2",
-                name = "start-2;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
+                name = "start-2;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
                 model = emptyMap(),
             )
         )
@@ -193,7 +193,7 @@ class CamundaEventSubscriptionFinderTest {
         val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
         val eventSubscription = EventSubscription(
             elementId = "event_signal_1",
-            name = "signal-1;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
+            name = "signal-1;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
             model = emptyMap(),
             predicate = null
         )
@@ -207,11 +207,11 @@ class CamundaEventSubscriptionFinderTest {
             ),
             eventSubscription.copy(
                 elementId = "event_signal_3",
-                name = "signal-3;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
+                name = "signal-3;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
             ),
             eventSubscription.copy(
                 elementId = "event_signal_4",
-                name = "signal-4;\${$VAR_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
+                name = "signal-4;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
             )
         )
     }

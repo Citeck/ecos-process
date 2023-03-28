@@ -11,8 +11,11 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.element.Element
+import ru.citeck.ecos.records2.predicate.element.elematts.ElementAttributes
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
@@ -80,6 +83,11 @@ class CamundaEventProcessor(
 
         for ((attKey, attValueKey) in model) {
             if (atts.containsKey(attValueKey)) {
+                // Skip event meta attributes. They are added on final result as object
+                if (attKey.startsWith(EVENT_META_ATT)) {
+                    continue
+                }
+
                 result[attKey] = atts[attValueKey]!!
             }
         }
@@ -103,12 +111,16 @@ class CamundaEventProcessor(
             return true
         }
 
+        val recAtts = RecordAtts()
+        recAtts.setAtts(this)
+        val attsElement = RecordAttsEventElement(recAtts)
+
         val resolvedFilter = recordsTemplateService.resolve(
             predicate,
             this
         )
 
-        return predicateService.isMatch(this, resolvedFilter)
+        return predicateService.isMatch(attsElement, resolvedFilter)
     }
 }
 
@@ -134,4 +146,21 @@ fun GeneralEvent.toEventMeta(): DataValue {
             EVENT_META_USER_ATT to this.user
         )
     )
+}
+
+private class RecordAttsEventElement(val atts: RecordAtts) : Element {
+
+    override fun getAttributes(attributes: List<String>): ElementAttributes {
+        return RecordAttsEventElementAtts(atts)
+    }
+}
+
+private class RecordAttsEventElementAtts(private val atts: RecordAtts) : ElementAttributes {
+
+    override fun getAttribute(name: String): Any {
+        if (name.startsWith("_meta.")) {
+            return atts.get("_meta").get(name.substringAfter("_meta."))
+        }
+        return atts.getAtt(name)
+    }
 }

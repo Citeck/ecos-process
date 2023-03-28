@@ -41,6 +41,13 @@ columns:
     searchable: false
     sortable: false
 
+  - id: _ECM__type
+    name:
+      en: Document type
+      ru: Тип документа
+    searchable: false
+    sortable: false
+
   - id: ended
     name:
       en: Completion date

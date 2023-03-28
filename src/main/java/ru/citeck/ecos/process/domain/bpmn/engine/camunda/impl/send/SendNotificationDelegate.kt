@@ -9,7 +9,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.app.AppContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
@@ -33,6 +33,8 @@ class SendNotificationDelegate : JavaDelegate {
     var notificationRecord: Expression? = null
     var notificationTitle: Expression? = null
     var notificationBody: Expression? = null
+
+    var notificationFrom: Expression? = null
 
     var notificationTo: Expression? = null
     var notificationCc: Expression? = null
@@ -67,6 +69,15 @@ class SendNotificationDelegate : JavaDelegate {
             }
         }
 
+        val notificationFrom = let {
+            val evaluatedFrom = notificationFrom?.getValue(execution)?.toString()
+            if (evaluatedFrom.isNullOrBlank()) {
+                null
+            } else {
+                evaluatedFrom
+            }
+        }
+
         val notification = Notification.Builder()
             .record(record)
             .notificationType(
@@ -77,6 +88,7 @@ class SendNotificationDelegate : JavaDelegate {
             .body(notificationBody?.expressionText ?: "")
             .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
             .recipients(getRecipientsEmailsFromExpression(notificationTo, execution))
+            .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
             .bcc(getRecipientsEmailsFromExpression(notificationBcc, execution))
             .lang(notificationLang?.expressionText)
@@ -155,7 +167,7 @@ class SendNotificationDelegate : JavaDelegate {
                 }
 
                 RecipientType.EXPRESSION -> {
-                    fromExpression.addAll(recipient.value.split(CAMUNDA_COLLECTION_SEPARATOR))
+                    fromExpression.addAll(recipient.value.split(BPMN_CAMUNDA_COLLECTION_SEPARATOR))
                 }
             }
         }

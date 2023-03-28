@@ -3,8 +3,8 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -62,8 +62,8 @@ class BpmnProcRecords(
             // filter system props
             if (!key.startsWith(SYS_VAR_PREFIX)) {
                 when (key) {
-                    VAR_DOCUMENT -> {
-                        processVariables[VAR_DOCUMENT_REF] = value.asJavaObj()
+                    BPMN_DOCUMENT -> {
+                        processVariables[BPMN_DOCUMENT_REF] = value.asJavaObj()
                         businessKey = value.asJavaObj().toString()
                     }
                     else -> processVariables[key] = value.asJavaObj()

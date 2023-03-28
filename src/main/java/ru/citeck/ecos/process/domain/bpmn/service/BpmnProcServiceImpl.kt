@@ -5,7 +5,9 @@ import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.stereotype.Service
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 
@@ -22,7 +24,10 @@ class BpmnProcServiceImpl(
 
         if (!definition.enabled) throw IllegalStateException("Starting a disabled process is not possible")
 
-        return camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, variables)
+        val processVariables = variables.toMutableMap()
+        processVariables[BPMN_WORKFLOW_INITIATOR] = AuthContext.getCurrentUser()
+
+        return camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, processVariables)
     }
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal
 
 import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_BUSINESS_KEY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
@@ -74,7 +74,7 @@ data class BpmnSignalEventDef(
 
             val filterByRecord: String = when (eventFilterByRecordType) {
                 FilterEventByRecord.ANY -> ComposedEventName.RECORD_ANY
-                FilterEventByRecord.DOCUMENT -> "\${$VAR_BUSINESS_KEY}"
+                FilterEventByRecord.DOCUMENT -> "\${$BPMN_BUSINESS_KEY}"
                 FilterEventByRecord.DOCUMENT_BY_VARIABLE -> {
                     if (eventFilterByRecordVariable.isNullOrBlank()) {
                         throw EcosBpmnElementDefinitionException(

@@ -5,9 +5,9 @@ import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.history.HistoricTaskInstanceQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_COMPLETED_BY
 import ru.citeck.ecos.process.domain.proctask.converter.toRecord
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
-import ru.citeck.ecos.process.domain.proctask.service.TASK_COMPLETED_BY
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
@@ -48,7 +48,7 @@ class ProcHistoricTaskRecords(
         val historicTasksCount: Long
         val historicTasksCountTime = measureTimeMillis {
             historicTasksCount = camundaHistoryService.createHistoricTaskInstanceQuery()
-                .taskVariableValueEquals(TASK_COMPLETED_BY, currentUser)
+                .taskVariableValueEquals(BPMN_TASK_COMPLETED_BY, currentUser)
                 .filterByCreated(recsQuery)
                 .count()
         }
@@ -56,7 +56,7 @@ class ProcHistoricTaskRecords(
         val historicTasks: List<RecordRef>
         val historicTasksTime = measureTimeMillis {
             historicTasks = camundaHistoryService.createHistoricTaskInstanceQuery()
-                .taskVariableValueEquals(TASK_COMPLETED_BY, currentUser)
+                .taskVariableValueEquals(BPMN_TASK_COMPLETED_BY, currentUser)
                 .filterByCreated(recsQuery)
                 .sortByQuery(recsQuery)
                 .finished()

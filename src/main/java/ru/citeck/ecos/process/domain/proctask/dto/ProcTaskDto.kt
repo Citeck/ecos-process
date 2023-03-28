@@ -37,6 +37,8 @@ data class ProcTaskDto(
 
     val assignee: EntityRef = RecordRef.EMPTY,
 
+    val sender: EntityRef = RecordRef.EMPTY,
+
     val candidateUsers: List<EntityRef> = emptyList(),
 
     val candidateGroups: List<EntityRef> = emptyList(),

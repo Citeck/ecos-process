@@ -3,9 +3,9 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_COLLECTION_SEPARATOR
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_ASSIGNEE_ELEMENT
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ASSIGNEE_ELEMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
@@ -25,15 +25,15 @@ import javax.xml.namespace.QName
 class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
     val usersExpression = fun(roles: List<String>): String {
-        return "\${roles.getUserNames($VAR_DOCUMENT_REF, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getUserNames($BPMN_DOCUMENT_REF, '${roles.joinToString(BPMN_CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     val groupsExpression = fun(roles: List<String>): String {
-        return "\${roles.getGroupNames($VAR_DOCUMENT_REF, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getGroupNames($BPMN_DOCUMENT_REF, '${roles.joinToString(BPMN_CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     val authorityNamesExpression = fun(roles: List<String>): String {
-        return "\${roles.getAuthorityNames($VAR_DOCUMENT_REF, '${roles.joinToString(CAMUNDA_COLLECTION_SEPARATOR)}')}"
+        return "\${roles.getAuthorityNames($BPMN_DOCUMENT_REF, '${roles.joinToString(BPMN_CAMUNDA_COLLECTION_SEPARATOR)}')}"
     }
 
     override fun import(element: TUserTask, context: ImportContext): BpmnUserTaskDef {
@@ -55,12 +55,12 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 // A comma is added if there is only one recipient, so that the camunda perceive the recipient as string
                 // see ManualRecipientsModeUserTaskAssignListener
                 otherAttributes[CAMUNDA_ASSIGNEE] = let {
-                    var recipientsStr = element.manualRecipients.joinToString(CAMUNDA_COLLECTION_SEPARATOR)
+                    var recipientsStr = element.manualRecipients.joinToString(BPMN_CAMUNDA_COLLECTION_SEPARATOR)
                     val isSingleRecipient = element.manualRecipients.size == 1 &&
-                        !recipientsStr.contains(CAMUNDA_COLLECTION_SEPARATOR)
+                        !recipientsStr.contains(BPMN_CAMUNDA_COLLECTION_SEPARATOR)
 
                     if (isSingleRecipient) {
-                        recipientsStr += CAMUNDA_COLLECTION_SEPARATOR
+                        recipientsStr += BPMN_CAMUNDA_COLLECTION_SEPARATOR
                     }
                     return@let recipientsStr
                 }
@@ -103,7 +103,7 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                     element.assignees.map { it.value }
                 )
             )
-            otherAttributes.putIfNotBlank(CAMUNDA_ELEMENT_VARIABLE, VAR_ASSIGNEE_ELEMENT)
+            otherAttributes.putIfNotBlank(CAMUNDA_ELEMENT_VARIABLE, BPMN_ASSIGNEE_ELEMENT)
         }
     }
 }

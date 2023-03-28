@@ -10,12 +10,14 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.addTaskListener
 
 @Component
 class TaskVariablesParseListener(
-    private val addTaskTitleToVariablesListener: AddTaskTitleToVariablesListener,
-    private val addTaskPossibleOutcomesToVariablesListener: AddTaskPossibleOutcomesToVariablesListener
+    private val setTaskTitleTaskListener: SetTaskTitleTaskListener,
+    private val setTaskPossibleOutcomesTaskListener: SetTaskPossibleOutcomesTaskListener,
+    private val setTaskSenderTaskListener: SetTaskSenderTaskListener
 ) : AbstractBpmnParseListener() {
 
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, addTaskTitleToVariablesListener)
-        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, addTaskPossibleOutcomesToVariablesListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, setTaskTitleTaskListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, setTaskPossibleOutcomesTaskListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, setTaskSenderTaskListener)
     }
 }

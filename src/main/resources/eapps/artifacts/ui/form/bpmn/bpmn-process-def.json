@@ -40,8 +40,8 @@
               },
               {
                 "label": {
-                  "ru": "Data Type",
-                  "en": "Тип данных"
+                  "ru": "Тип данных",
+                  "en": "Data type"
                 },
                 "key": "ecosType",
                 "hideEditRowButton": true,

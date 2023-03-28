@@ -13,9 +13,10 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_DOCUMENT_REF
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_NAME_ML
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.VAR_POSSIBLE_OUTCOMES
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_NAME_ML
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_POSSIBLE_OUTCOMES
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_SENDER
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASKS_DTO_CONVERTER_CACHE_KEY
@@ -64,12 +65,14 @@ class CacheableTaskConverter(
                 }
             }
 
+            val sender = localVariables[BPMN_TASK_SENDER] as? String
+
             return ProcTaskDto(
                 id = id,
-                name = localVariables[VAR_NAME_ML] as? MLText ?: MLText.EMPTY,
+                name = localVariables[BPMN_NAME_ML] as? MLText ?: MLText.EMPTY,
                 possibleOutcomes = let {
                     @Suppress("UNCHECKED_CAST")
-                    val outcomes = localVariables[VAR_POSSIBLE_OUTCOMES] as? List<TaskOutcome>
+                    val outcomes = localVariables[BPMN_POSSIBLE_OUTCOMES] as? List<TaskOutcome>
                     return@let outcomes ?: emptyList()
                 },
                 isDeleted = if (task is TaskEntity) {
@@ -84,8 +87,8 @@ class CacheableTaskConverter(
                 } else {
                     RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
                 },
-                documentRef = if (variables[VAR_DOCUMENT_REF] != null) {
-                    RecordRef.valueOf(variables[VAR_DOCUMENT_REF].toString())
+                documentRef = if (variables[BPMN_DOCUMENT_REF] != null) {
+                    RecordRef.valueOf(variables[BPMN_DOCUMENT_REF].toString())
                 } else {
                     RecordRef.EMPTY
                 },
@@ -93,6 +96,7 @@ class CacheableTaskConverter(
                 followUpDate = followUpDate?.toInstant(),
                 created = createTime.toInstant(),
                 assignee = authorityService.getAuthorityRef(assignee),
+                sender = authorityService.getAuthorityRef(sender),
                 candidateUsers = authorityService.getAuthorityRefs(candidateUsers.toList()),
                 candidateGroups = authorityService.getAuthorityRefs(candidateGroups.toList()),
                 definitionKey = taskDefinitionKey,
@@ -110,20 +114,20 @@ class CacheableTaskConverter(
 
             camundaHistoryService.createHistoricVariableInstanceQuery()
                 .taskIdIn(id)
-                .variableNameIn(VAR_NAME_ML)
+                .variableNameIn(BPMN_NAME_ML)
                 .list()
                 .forEach {
-                    if (it.name == VAR_NAME_ML) {
+                    if (it.name == BPMN_NAME_ML) {
                         nameMl = Json.mapper.convert(it.value, MLText::class.java) ?: MLText(name)
                     }
                 }
 
             camundaHistoryService.createHistoricVariableInstanceQuery()
                 .processInstanceId(processInstanceId)
-                .variableNameIn(VAR_DOCUMENT_REF)
+                .variableNameIn(BPMN_DOCUMENT_REF)
                 .list()
                 .forEach {
-                    if (it.name == VAR_DOCUMENT_REF) {
+                    if (it.name == BPMN_DOCUMENT_REF) {
                         documentRef = RecordRef.valueOf(it.value.toString())
                     }
                 }

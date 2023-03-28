@@ -54,9 +54,11 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         followUpDate = followUpDate,
         title = name,
         assignee = assignee,
+        senderTemp = sender,
         candidateUsers = candidateUsers,
         candidateGroups = candidateGroups,
         possibleOutcomes = possibleOutcomes,
+        definitionKey = definitionKey,
         documentAtts = let {
             if (documentRef == RecordRef.EMPTY || RecordRef.valueOf(id).isAlfTaskRef()) {
                 return@let RecordAtts()
