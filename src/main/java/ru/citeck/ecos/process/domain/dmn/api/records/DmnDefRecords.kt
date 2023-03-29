@@ -48,6 +48,7 @@ import java.time.Instant
 import java.util.*
 
 const val DMN_DEF_SOURCE_ID = "dmn-def"
+const val DMN_RECOURSE_NAME_POSTFIX = ".dmn"
 
 @Component
 class DmnDefRecords(
@@ -250,7 +251,7 @@ class DmnDefRecords(
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
             val deployResult = camundaRepoService.createDeployment()
-                .addInputStream(record.defId + ".dmn", camundaFormat.byteInputStream())
+                .addInputStream(record.defId + DMN_RECOURSE_NAME_POSTFIX, camundaFormat.byteInputStream())
                 .name(record.name.getClosest())
                 .source("Ecos DMN Modeler")
                 .deployWithResult()

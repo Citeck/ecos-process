@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.common.generateElementId
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
@@ -151,9 +152,3 @@ private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
         }
 }
 
-private fun generateElementId(prefix: String): String {
-    val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
-    return "${prefix}_" + (1..7)
-        .map { allowedChars.random() }
-        .joinToString("")
-}

@@ -1,0 +1,35 @@
+{
+  "id": "dmn-base-form-elements",
+  "formKey": "",
+  "system": true,
+  "title": {
+    "en": "Dmn base form elements"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "ID элемента",
+          "en": "Element ID"
+        },
+        "key": "id",
+        "validate": {
+          "required": true,
+          "minLength": 1
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "validateOn": "blur",
+        "type": "textfield",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {}
+}

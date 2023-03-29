@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.common.generateElementId
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaAssociationConverter
@@ -22,10 +23,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaPartici
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.signal.CamundaSignalConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaScriptTaskConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaSendTaskConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaTaskConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.CamundaUserTaskConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnAssociationConverter
@@ -46,10 +44,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnParticipantCo
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.signal.BpmnSignalConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnScriptTaskConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnSendTaskConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnTaskConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.BpmnUserTaskConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
@@ -98,7 +93,8 @@ object BpmnIO {
             BpmnLaneSetConverter::class,
             BpmnLaneConverter::class,
             BpmnInclusiveGatewayConverter::class,
-            BpmnEventBasedGatewayConverter::class
+            BpmnEventBasedGatewayConverter::class,
+            BpmnBusinessRuleTaskConverter::class
         ),
         extensionTypeResolver
     )
@@ -134,7 +130,8 @@ object BpmnIO {
             CamundaLaneSetConverter::class,
             CamundaLaneConverter::class,
             CamundaInclusiveGatewayConverter::class,
-            CamundaEventBasedGatewayConverter::class
+            CamundaEventBasedGatewayConverter::class,
+            CamundaBusinessRuleTaskConverter::class
         ),
         extensionTypeResolver
     )
@@ -166,6 +163,8 @@ object BpmnIO {
     // todo: replace return value by BpmnProcessDef
     fun generateDefaultDef(processDefId: String, name: MLText, ecosType: EntityRef): TDefinitions {
 
+        val defId = generateElementId("Definitions")
+
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>
             <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -174,7 +173,7 @@ object BpmnIO {
                     xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
                     xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
                     xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
-                    id="Definitions_0hq0c8n"
+                    id="$defId"
                     targetNamespace="http://bpmn.io/schema/bpmn"
                     exporter="bpmn-js (https://demo.bpmn.io)"
                     exporterVersion="8.2.0">

@@ -60,6 +60,9 @@ class DmnDecisionRecords(
     private fun DecisionDefinition.toDecisionRecord() = DecisionRecord(
         id = id,
         key = key,
+        definition = EntityRef.create(
+            AppName.EPROC, DMN_DEF_SOURCE_ID, resourceName.substringBefore(DMN_RECOURSE_NAME_POSTFIX)
+        ),
         version = version,
         name = name
     )
@@ -68,6 +71,7 @@ class DmnDecisionRecords(
     private inner class DecisionRecord(
         val id: String,
         val key: String,
+        val definition: EntityRef = EntityRef.EMPTY,
         val version: Int,
         val name: String
     )

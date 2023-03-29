@@ -2,6 +2,8 @@ package ru.citeck.ecos.process.domain.dmn.io
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.common.generateElementId
 import ru.citeck.ecos.process.domain.dmn.io.convert.camunda.CamundaDmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.dmn.io.convert.ecos.DmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.dmn.io.xml.DmnXmlUtils
@@ -60,6 +62,13 @@ object DmnIO {
 
     fun generateDefaultDef(defId: String, name: MLText): TDefinitions {
 
+        val defName = let {
+            MLText.getClosestValue(name, I18nContext.getLocale()).ifBlank {
+                "RDR"
+            }
+        }
+        val decisionId = generateElementId("Decision")
+
         val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>
             <definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
@@ -67,11 +76,11 @@ object DmnIO {
                          xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0"
                          xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
                          xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
-                         xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_1w3m4b1" name="DRD"
+                         xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="$defId" name="$defName"
                          namespace="http://camunda.org/schema/1.0/dmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0"
                          exporter="Camunda Modeler" exporterVersion="5.8.0" modeler:executionPlatform="Camunda Platform"
                          modeler:executionPlatformVersion="7.17.0">
-                <decision id="$defId" name="Decision 1">
+                <decision id="$decisionId" name="Decision 1">
                     <decisionTable id="DecisionTable_0nkijsr">
                         <input id="Input_1">
                             <inputExpression id="InputExpression_1" typeRef="string">
@@ -83,7 +92,7 @@ object DmnIO {
                 </decision>
                 <dmndi:DMNDI>
                     <dmndi:DMNDiagram>
-                        <dmndi:DMNShape dmnElementRef="$defId">
+                        <dmndi:DMNShape dmnElementRef="$decisionId">
                             <dc:Bounds height="80" width="180" x="160" y="100"/>
                         </dmndi:DMNShape>
                     </dmndi:DMNDiagram>

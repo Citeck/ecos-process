@@ -1,8 +1,8 @@
 {
-  "id": "bpmn-type-bpmn:Lane",
+  "id": "dmn-type-dmn:Decision",
   "formKey": "",
   "title": {
-    "en": "BPMN Lane Form"
+    "en": "DMN Decision Form"
   },
   "description": {},
   "customModule": null,
@@ -13,14 +13,14 @@
   "definition": {
     "components": [
       {
-        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "formRef": "uiserv/form@dmn-base-form-elements",
         "input": true,
         "key": "includeForm2",
-        "label": "Форма: Bpmn base form elements",
+        "label": "Форма: Dmn base form elements",
         "type": "includeForm"
       }
     ],
-    "formId": "bpmn-type-bpmn:Lane"
+    "formId": "dmn-type-dmn:Decision"
   },
   "attributes": {}
 }

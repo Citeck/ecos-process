@@ -12,3 +12,13 @@ columns:
       ru: Имя
     searchable: false
     sortable: false
+
+  - id: definition
+    name:
+      en: Definition
+      ru: Описание
+    type: ASSOC
+    formatter:
+      type: assoc
+    searchable: false
+    sortable: false

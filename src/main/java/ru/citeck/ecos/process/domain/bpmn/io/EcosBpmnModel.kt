@@ -68,3 +68,9 @@ val BPMN_MULTI_INSTANCE_CONFIG = QName(NS_ECOS_BPMN, "multiInstanceConfig")
 
 val BPMN_PROP_ECOS_TASK_TYPE = QName(NS_ECOS_BPMN, "taskType")
 val BPMN_PROP_ECOS_STATUS = QName(NS_ECOS_BPMN, "status")
+
+val BPMN_PROP_DMN_DECISION_REF = QName(NS_ECOS_BPMN, "decisionRef")
+val BPMN_PROP_DMN_DECISION_BINDING = QName(NS_ECOS_BPMN, "decisionBinding")
+val BPMN_PROP_DMN_DECISION_VERSION = QName(NS_ECOS_BPMN, "decisionVersion")
+val BPMN_PROP_DMN_DECISION_VERSION_TAG = QName(NS_ECOS_BPMN, "decisionVersionTag")
+val BPMN_PROP_DMN_MAP_DECISION_RESULT = QName(NS_ECOS_BPMN, "mapDecisionResult")
