@@ -658,6 +658,10 @@ class BpmnProcDefRecords(
                 }
             }
         }
+
+        override fun toString(): String {
+            return "BpmnMutateRecord(id='$id', processDefId='$processDefId', name=$name)"
+        }
     }
 
     class ProcDefAlfQuery(

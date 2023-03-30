@@ -140,7 +140,7 @@ class DmnDefRecords(
 
     override fun getRecToMutate(recordId: String): DmnMutateRecord {
         return if (recordId.isBlank()) {
-            DmnMutateRecord.EMPTY
+            DmnMutateRecord("", "", MLText(), "", "", EntityRef.EMPTY, null)
         } else {
             val procDef = procDefService.getProcessDefById(ProcDefRef.create(DMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
@@ -342,7 +342,7 @@ class DmnDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-       val ref = recordId.toDmnRef()
+        val ref = recordId.toDmnRef()
         return if (ref.hasWritePerms()) {
             procDefService.delete(ProcDefRef.create(DMN_PROC_TYPE, ref.getLocalId()))
             DelStatus.OK
@@ -423,7 +423,7 @@ class DmnDefRecords(
     class EprocDmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(EprocApp.NAME, DMN_DEF_SOURCE_ID, id).toString()
+            val ref = EntityRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }
@@ -439,10 +439,6 @@ class DmnDefRecords(
         var imageBytes: ByteArray?,
         var createdFromVersion: EntityRef = EntityRef.EMPTY
     ) {
-
-        companion object {
-            val EMPTY = DmnMutateRecord("", "", MLText(), "", "", EntityRef.EMPTY, null)
-        }
 
         fun setImage(imageUrl: String) {
             imageBytes = DataUriUtil.parseData(imageUrl).data
@@ -472,5 +468,10 @@ class DmnDefRecords(
                 }
             }
         }
+
+        override fun toString(): String {
+            return "DmnMutateRecord(id='$id', defId='$defId', name=$name)"
+        }
+
     }
 }

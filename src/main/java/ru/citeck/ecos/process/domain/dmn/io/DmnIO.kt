@@ -76,6 +76,7 @@ object DmnIO {
                          xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0"
                          xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
                          xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
+                         xmlns:camunda="http://camunda.org/schema/1.0/dmn"
                          xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="$defId" name="$defName"
                          namespace="http://camunda.org/schema/1.0/dmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0"
                          exporter="Camunda Modeler" exporterVersion="5.8.0" modeler:executionPlatform="Camunda Platform"

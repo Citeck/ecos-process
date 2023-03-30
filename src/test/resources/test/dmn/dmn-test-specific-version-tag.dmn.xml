@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definitions xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/dmn"
+             xmlns:ecos="http://www.citeck.ru/ecos/dmn/1.0" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0"
+             xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" namespace="http://camunda.org/schema/1.0/dmn"
+             exporter="Camunda Modeler" exporterVersion="5.8.0" name="dmn-test-specific-version-tag"
+             id="dmn-test-specific-version-tag" ecos:defId="dmn-test-specific-version-tag"
+             modeler:executionPlatform="Camunda Platform"
+             ecos:name_ml="{&quot;ru&quot;:&quot;dmn-test-specific-version-tag&quot;}"
+             modeler:executionPlatformVersion="7.17.0">
+    <decision name="DMN Specific Version" id="Decision_version_tag"
+              ecos:name_ml="{&quot;ru&quot;:&quot;DMN Specific Version\n&quot;}" camunda:versionTag="vt_version_tag_1">
+        <decisionTable id="DecisionTable_0nkijsr">
+            <input id="Input_1" camunda:inputVariable="any_input">
+                <inputExpression typeRef="string" id="InputExpression_1">
+                    <text></text>
+                </inputExpression>
+            </input>
+            <output name="result" typeRef="string" id="Output_1"/>
+            <rule id="DecisionRule_1hz1tf3">
+                <inputEntry id="UnaryTests_041ijdl">
+                    <text></text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_0k9gx3c">
+                    <text>"version tag 1"</text>
+                </outputEntry>
+            </rule>
+        </decisionTable>
+    </decision>
+    <dmndi:DMNDI>
+        <dmndi:DMNDiagram>
+            <dmndi:DMNShape dmnElementRef="Decision_version_tag">
+                <dc:Bounds x="160.0" y="100.0" width="180.0" height="80.0"/>
+            </dmndi:DMNShape>
+        </dmndi:DMNDiagram>
+    </dmndi:DMNDI>
+</definitions>

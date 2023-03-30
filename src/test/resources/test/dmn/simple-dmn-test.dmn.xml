@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definitions xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/dmn"
+             xmlns:ecos="http://www.citeck.ru/ecos/dmn/1.0" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0"
+             xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" namespace="http://camunda.org/schema/1.0/dmn"
+             exporter="Camunda Modeler" exporterVersion="5.8.0" name="simple-dmn-test" id="simple-dmn-test"
+             ecos:sectionRef="eproc/dmn-section@DEFAULT" ecos:defId="simple-dmn-test"
+             modeler:executionPlatform="Camunda Platform" ecos:name_ml="{&quot;ru&quot;:&quot;simple-dmn-test&quot;}"
+             modeler:executionPlatformVersion="7.17.0">
+    <decision name="Simple DMN" id="Decision_simple-dmn">
+        <decisionTable id="DecisionTable_0nkijsr">
+            <input id="Input_1" camunda:inputVariable="color">
+                <inputExpression typeRef="string" id="InputExpression_1">
+                    <text></text>
+                </inputExpression>
+            </input>
+            <output name="result" typeRef="string" id="Output_1"/>
+            <rule id="DecisionRule_1awtwmk">
+                <inputEntry id="UnaryTests_02cryo0">
+                    <text>"green"</text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_1pi9gh5">
+                    <text>"go"</text>
+                </outputEntry>
+            </rule>
+            <rule id="DecisionRule_094je5w">
+                <inputEntry id="UnaryTests_1ebyiuz">
+                    <text>"yellow"</text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_0e4cw5d">
+                    <text>"prepare"</text>
+                </outputEntry>
+            </rule>
+            <rule id="DecisionRule_1qlvc12">
+                <inputEntry id="UnaryTests_072ybyj">
+                    <text>"red"</text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_1x3bgxf">
+                    <text>"stop"</text>
+                </outputEntry>
+            </rule>
+        </decisionTable>
+    </decision>
+    <dmndi:DMNDI>
+        <dmndi:DMNDiagram>
+            <dmndi:DMNShape dmnElementRef="Decision_simple-dmn">
+                <dc:Bounds x="160.0" y="100.0" width="180.0" height="80.0"/>
+            </dmndi:DMNShape>
+        </dmndi:DMNDiagram>
+    </dmndi:DMNDI>
+</definitions>

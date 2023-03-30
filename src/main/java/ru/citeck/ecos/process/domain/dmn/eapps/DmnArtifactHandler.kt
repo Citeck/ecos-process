@@ -13,6 +13,7 @@ import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefRecords
 import ru.citeck.ecos.process.domain.dmn.io.DmnIO
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.function.Consumer
 
@@ -71,6 +72,6 @@ class DmnArtifactHandler(
             imageBytes = null
         )
 
-        recordsService.mutate("eproc/$DMN_DEF_SOURCE_ID@", dmnMutateRecord)
+        recordsService.mutate("${AppName.EPROC}/$DMN_DEF_SOURCE_ID@", dmnMutateRecord)
     }
 }
