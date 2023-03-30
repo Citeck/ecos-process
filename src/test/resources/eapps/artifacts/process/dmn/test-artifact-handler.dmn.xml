@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<definitions xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:ecos="http://www.citeck.ru/ecos/dmn/1.0" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.8.0" name="Тест deploy" id="dmn-test-artifact-handler" ecos:defId="dmn-test-artifact-handler" modeler:executionPlatform="Camunda Platform" ecos:name_ml="{&quot;en&quot;:&quot;Test deploy&quot;,&quot;ru&quot;:&quot;Тест deploy&quot;}" modeler:executionPlatformVersion="7.17.0">
-    <decision name="Decision test deploy" id="decision-test-deploy" ecos:name_ml="{&quot;ru&quot;:&quot;Decision test deploy\n&quot;}">
+<definitions xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:ecos="http://www.citeck.ru/ecos/dmn/1.0"
+             xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.8.0"
+             name="Тест deploy" id="dmn-test-artifact-handler" ecos:defId="dmn-test-artifact-handler"
+             modeler:executionPlatform="Camunda Platform"
+             ecos:name_ml="{&quot;en&quot;:&quot;Test deploy&quot;,&quot;ru&quot;:&quot;Тест deploy&quot;}"
+             modeler:executionPlatformVersion="7.17.0">
+    <decision name="Decision test deploy" id="decision-test-deploy"
+              ecos:name_ml="{&quot;ru&quot;:&quot;Decision test deploy\n&quot;}">
         <decisionTable id="DecisionTable_0nkijsr">
             <input id="Input_1">
                 <inputExpression typeRef="string" id="InputExpression_1">
