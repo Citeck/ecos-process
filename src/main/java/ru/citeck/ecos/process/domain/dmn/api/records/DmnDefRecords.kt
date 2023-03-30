@@ -182,6 +182,9 @@ class DmnDefRecords(
 
             newDefData = DmnIO.exportEcosDmnToString(newEcosDmnDef).toByteArray()
 
+            record.name = newEcosDmnDef.name
+            record.defId = newEcosDmnDef.id
+
             if (record.id.isBlank()) {
                 record.id = record.defId
             }
