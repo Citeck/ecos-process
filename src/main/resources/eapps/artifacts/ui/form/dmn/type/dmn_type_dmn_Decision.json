@@ -5,7 +5,7 @@
     "en": "DMN Decision Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
   "system": true,
@@ -18,9 +18,28 @@
         "key": "includeForm2",
         "label": "Форма: Dmn base form elements",
         "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Тег версии",
+          "en": "Version tag"
+        },
+        "key": "versionTag",
+        "inputMasks": [
+          {
+            "label": "",
+            "mask": ""
+          }
+        ],
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true
       }
     ],
     "formId": "dmn-type-dmn:Decision"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }
