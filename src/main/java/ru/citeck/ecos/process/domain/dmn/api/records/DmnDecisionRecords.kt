@@ -46,7 +46,6 @@ class DmnDecisionRecords(
         return result
     }
 
-
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
         return camundaRepositoryService
             .createDecisionDefinitionQuery()
@@ -61,12 +60,13 @@ class DmnDecisionRecords(
         id = id,
         key = key,
         definition = EntityRef.create(
-            AppName.EPROC, DMN_DEF_SOURCE_ID, resourceName.substringBefore(DMN_RECOURSE_NAME_POSTFIX)
+            AppName.EPROC,
+            DMN_DEF_SOURCE_ID,
+            resourceName.substringBefore(DMN_RECOURSE_NAME_POSTFIX)
         ),
         version = version,
         name = name
     )
-
 
     private inner class DecisionRecord(
         val id: String,

@@ -151,4 +151,3 @@ private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
             )
         }
 }
-

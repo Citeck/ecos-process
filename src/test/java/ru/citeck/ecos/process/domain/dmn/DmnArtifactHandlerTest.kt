@@ -58,7 +58,8 @@ class DmnArtifactHandlerTest {
                     LocaleUtils.toLocale("ru") to "Тест deploy",
                     LocaleUtils.toLocale("en") to "Test deploy"
                 )
-            ), deployed.name
+            ),
+            deployed.name
         )
 
         assertEquals(DMN_FORMAT, deployed.format)

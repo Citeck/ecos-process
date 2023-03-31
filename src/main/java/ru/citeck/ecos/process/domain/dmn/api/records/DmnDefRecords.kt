@@ -13,7 +13,6 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
-import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
@@ -428,7 +427,6 @@ class DmnDefRecords(
         }
     }
 
-
     class DmnMutateRecord(
         var id: String,
         var defId: String,
@@ -472,6 +470,5 @@ class DmnDefRecords(
         override fun toString(): String {
             return "DmnMutateRecord(id='$id', defId='$defId', name=$name)"
         }
-
     }
 }

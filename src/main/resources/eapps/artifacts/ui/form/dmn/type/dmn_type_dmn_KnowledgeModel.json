@@ -1,8 +1,8 @@
 {
-  "id": "dmn-type-dmn:Definitions",
+  "id": "dmn-type-dmn:KnowledgeModel",
   "formKey": "",
   "title": {
-    "en": "DMN Definitions Form"
+    "en": "DMN Knowledge Model Form"
   },
   "description": {},
   "customModule": null,
@@ -20,7 +20,7 @@
         "type": "includeForm"
       }
     ],
-    "formId": "dmn-type-dmn:Definitions"
+    "formId": "dmn-type-dmn:KnowledgeModel"
   },
   "attributes": {}
 }

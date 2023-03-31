@@ -1,8 +1,8 @@
 {
-  "id": "dmn-type-dmn:Definitions",
+  "id": "dmn-type-dmn:KnowledgeRequirement",
   "formKey": "",
   "title": {
-    "en": "DMN Definitions Form"
+    "en": "DMN Knowledge Requirement Form"
   },
   "description": {},
   "customModule": null,
@@ -20,7 +20,7 @@
         "type": "includeForm"
       }
     ],
-    "formId": "dmn-type-dmn:Definitions"
+    "formId": "dmn-type-dmn:KnowledgeRequirement"
   },
   "attributes": {}
 }

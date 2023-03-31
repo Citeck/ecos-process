@@ -39,7 +39,6 @@ data class BpmnBusinessRuleTaskDef(
             }
         }
     }
-
 }
 
 enum class DecisionRefBinding(val value: String) {

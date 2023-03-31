@@ -81,7 +81,7 @@ class ProcTaskRecord(
         return created
     }
 
-    //TODO: refactor task widget to using new api (request sender entityRef). Remove with method below.
+    // TODO: refactor task widget to using new api (request sender entityRef). Remove with method below.
     // Rename senderTemp to sender
     @AttName("sender")
     fun getSender(): AuthorityDto {

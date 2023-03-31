@@ -6,7 +6,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 
-class CamundaDmnDefinitionsConverter: EcosOmgConverter<DmnDefinitionDef, TDefinitions> {
+class CamundaDmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions> {
     override fun import(element: TDefinitions, context: ImportContext): DmnDefinitionDef {
         error("Not supported")
     }

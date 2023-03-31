@@ -3081,7 +3081,30 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `dmn test with multiple decisions and input with feel`() {
+        val procId = "dmn-test-multiple-input-expression"
+        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
 
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "season" to "Spring",
+                "guestCount" to 10,
+                "guestsWithChildren" to true
+            )
+        ).execute()
+
+        scenario.instance(process)
+
+        assertThat(scenario.instance(process)).variables().containsEntry(
+            "beveragesResult",
+            listOf("Guiness", "Apple Juice")
+        )
+
+        verify(process).hasFinished("endEvent")
+    }
 
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,

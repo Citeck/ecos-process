@@ -1,8 +1,8 @@
 {
-  "id": "dmn-type-dmn:Definitions",
+  "id": "dmn-type-dmn:InputData",
   "formKey": "",
   "title": {
-    "en": "DMN Definitions Form"
+    "en": "DMN Input Data Form"
   },
   "description": {},
   "customModule": null,
@@ -20,7 +20,7 @@
         "type": "includeForm"
       }
     ],
-    "formId": "dmn-type-dmn:Definitions"
+    "formId": "dmn-type-dmn:InputData"
   },
   "attributes": {}
 }
