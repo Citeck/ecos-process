@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.dmn.io.convert.ecos
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.propMandatoryError
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_DEF_ID
@@ -30,6 +31,9 @@ class DmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions>
     }
 
     override fun export(element: DmnDefinitionDef, context: ExportContext): TDefinitions {
-        return element.dmnDef
+        return element.dmnDef.apply {
+            id = element.id
+            name = MLText.getClosestValue(element.name, I18nContext.getLocale())
+        }
     }
 }

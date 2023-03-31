@@ -13,11 +13,25 @@
   "definition": {
     "components": [
       {
-        "formRef": "uiserv/form@dmn-base-form-protected-id-elements",
+        "formRef": "uiserv/form@dmn-base-form-elements",
         "input": true,
         "key": "includeForm2",
-        "label": "Dmn base form with protected id",
+        "label": "Dmn base form element",
         "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "validate": {
+          "required": true
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
       }
     ],
     "formId": "dmn-type-dmn:Definitions"

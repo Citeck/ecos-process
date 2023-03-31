@@ -32,7 +32,9 @@
         },
         "key": "id",
         "validate": {
-          "required": true
+          "required": true,
+          "pattern": "^[a-zA-Z0-9-_*]+$",
+          "minLength": 3
         },
         "defaultValue": "",
         "refreshOn": [],

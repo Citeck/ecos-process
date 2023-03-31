@@ -20,7 +20,8 @@
         "key": "id",
         "validate": {
           "required": true,
-          "minLength": 1
+          "pattern": "^[a-zA-Z0-9-_*]+$",
+          "minLength": 3
         },
         "defaultValue": "",
         "disabled": true,
