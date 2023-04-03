@@ -8,7 +8,7 @@ import ru.citeck.ecos.data.sql.domain.DbDomainFactory
 import ru.citeck.ecos.data.sql.dto.DbTableRef
 import ru.citeck.ecos.data.sql.records.DbRecordsDaoConfig
 import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
@@ -25,7 +25,7 @@ class BpmnSectionConfig(
     fun bpmnSectionRepoDao(dataSourceManager: EcosDataSourceManager): RecordsDao {
         val dataSource = dataSourceManager.getDataSource(AppName.EPROC, JdbcDataSource::class.java, true)
 
-        val typeRef = TypeUtils.getTypeRef("bpmn-section")
+        val typeRef = ModelUtils.getTypeRef("bpmn-section")
         val recordsDao = dbDomainFactory.create(
             DbDomainConfig.create()
                 .withRecordsDao(

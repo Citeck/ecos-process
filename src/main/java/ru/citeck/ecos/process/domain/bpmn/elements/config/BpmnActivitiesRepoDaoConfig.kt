@@ -12,7 +12,7 @@ import ru.citeck.ecos.data.sql.records.perms.DbPermsComponent
 import ru.citeck.ecos.data.sql.records.perms.DbRecordPerms
 import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
 import ru.citeck.ecos.events2.EventsService
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsMixin
 import ru.citeck.ecos.records3.record.dao.RecordsDao
@@ -46,7 +46,7 @@ class BpmnActivitiesRepoDaoConfig(
             }
         }
         val permsComponent = object : DbPermsComponent {
-            override fun getRecordPerms(recordRef: EntityRef): DbRecordPerms {
+            override fun getEntityPerms(entityRef: EntityRef): DbRecordPerms {
                 return accessPerms
             }
         }
@@ -57,7 +57,7 @@ class BpmnActivitiesRepoDaoConfig(
             true
         )
 
-        val typeRef = TypeUtils.getTypeRef("bpmn-process-element")
+        val typeRef = ModelUtils.getTypeRef("bpmn-process-element")
         val recordsDao = dbDomainFactory.create(
             DbDomainConfig.create()
                 .withRecordsDao(
