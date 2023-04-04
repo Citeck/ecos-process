@@ -4,6 +4,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
@@ -39,6 +40,10 @@ import kotlin.test.assertEquals
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+// Dirties context required because we broke modelServiceFactoryConfig
+// by replacing typesRepo and permsRepo with local implementations
+// todo: remove DirtiesContext when this problem will be solved
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class BpmnProcDefRecordsTest {
 
     @Autowired
