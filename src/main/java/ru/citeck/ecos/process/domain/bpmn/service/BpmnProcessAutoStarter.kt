@@ -25,12 +25,15 @@ class BpmnProcessAutoStarter(
     }
 
     init {
+        // React on record created without draft
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { startProcessIfRequired(it) }
+            withFilter(Predicates.eq("record._isDraft?bool", false))
         }
+        // React on record draft state changed to false
         eventsService.addListener<EventData> {
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
@@ -41,11 +44,6 @@ class BpmnProcessAutoStarter(
     }
 
     private fun startProcessIfRequired(eventData: EventData) {
-        if (eventData.isDraft) {
-            log.debug { "Skip auto start process for draft: $eventData" }
-            return
-        }
-
         val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, eventData.typeRef, emptyList()) ?: return
         val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procRev.procDefId)) ?: return
         if (!procDef.autoStartEnabled) {
@@ -69,9 +67,6 @@ class BpmnProcessAutoStarter(
         var eventRef: RecordRef = RecordRef.EMPTY,
 
         @AttName("record._type?id")
-        var typeRef: RecordRef = RecordRef.EMPTY,
-
-        @AttName("record._isDraft?bool")
-        var isDraft: Boolean
+        var typeRef: RecordRef = RecordRef.EMPTY
     )
 }
