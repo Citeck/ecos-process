@@ -1,0 +1,35 @@
+{
+  "id": "proc_task_default_form",
+  "formKey": "",
+  "title": {
+    "en": "Process Task Default Form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": false,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "scrollableContent": true,
+        "key": "panel2",
+        "type": "panel",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "Task Outcome"
+        },
+        "key": "taskOutcome",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "taskOutcome",
+        "input": true
+      }
+    ]
+  },
+  "attributes": {},
+  "notExists": false
+}

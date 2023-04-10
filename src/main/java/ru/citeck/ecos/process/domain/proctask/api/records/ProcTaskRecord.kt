@@ -13,6 +13,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import javax.annotation.PostConstruct
@@ -39,7 +40,7 @@ private lateinit var prv: ProcTaskRecordServiceProvider
 class ProcTaskRecord(
     val id: String,
     val priority: Int = 0,
-    val formRef: RecordRef? = null,
+    val formRef: RecordRef = RecordRef.EMPTY,
     val processInstanceId: RecordRef? = null,
     val documentRef: RecordRef? = null,
     val title: MLText? = null,
@@ -70,7 +71,11 @@ class ProcTaskRecord(
 
     @get:AttName("_formRef")
     val formKey: RecordRef
-        get() = formRef ?: RecordRef.create("uiserv", "form", "simple-form")
+        get() = if (formRef.isNotEmpty()) {
+            formRef
+        } else {
+            RecordRef.create(AppName.UISERV, "form", "proc_task_default_form")
+        }
 
     @get:AttName(RecordConstants.ATT_CREATED)
     val recordCreated: Instant?
