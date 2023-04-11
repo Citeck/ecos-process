@@ -14,7 +14,6 @@ import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsMixin
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 
 @Configuration
@@ -43,7 +42,7 @@ class BpmnActivitiesRepoDaoConfig(
             }
         }
         val permsComponent = object : DbPermsComponent {
-            override fun getEntityPerms(entityRef: EntityRef): DbRecordPerms {
+            override fun getRecordPerms(record: Any): DbRecordPerms {
                 return accessPerms
             }
         }
