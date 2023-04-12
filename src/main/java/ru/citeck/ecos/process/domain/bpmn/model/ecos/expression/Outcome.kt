@@ -81,13 +81,13 @@ class Outcome(
     }
 }
 
-object OutcomeSerializer : JsonSerializer<Outcome>() {
+class OutcomeSerializer : JsonSerializer<Outcome>() {
     override fun serialize(value: Outcome, gen: JsonGenerator, serializers: SerializerProvider?) {
         gen.writeString(value.toString())
     }
 }
 
-object OutcomeDeserializer : JsonDeserializer<Outcome>() {
+class OutcomeDeserializer : JsonDeserializer<Outcome>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Outcome {
         return Outcome(p.text)
     }

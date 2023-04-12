@@ -1,0 +1,86 @@
+{
+  "id": "bpmn-user-task-outcome-config-form",
+  "formKey": "",
+  "title": {
+    "en": "BPMN User Task Outcome Config Form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": true,
+  "i18n": {
+    "ru": {
+      "outcome_button_theme_default": "По умолчанию",
+      "outcome_button_theme_primary": "Основная",
+      "outcome_button_theme_info": "Информация",
+      "outcome_button_theme_success": "Успешно",
+      "outcome_button_theme_warning": "Предупреждение",
+      "outcome_button_theme_danger": "Опасно"
+    },
+    "en": {
+      "outcome_button_theme_default": "Default",
+      "outcome_button_theme_primary": "Primary",
+      "outcome_button_theme_info": "Info",
+      "outcome_button_theme_success": "Success",
+      "outcome_button_theme_warning": "Warning",
+      "outcome_button_theme_danger": "Danger"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Тема кнопки",
+          "en": "Button Theme"
+        },
+        "key": "theme",
+        "validate": {
+          "required": true
+        },
+        "dataSrc": "values",
+        "data": {
+          "values": [
+            {
+              "label": "outcome_button_theme_default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "outcome_button_theme_primary",
+              "value": "PRIMARY"
+            },
+            {
+              "label": "outcome_button_theme_info",
+              "value": "INFO"
+            },
+            {
+              "label": "outcome_button_theme_success",
+              "value": "SUCCESS"
+            },
+            {
+              "label": "outcome_button_theme_danger",
+              "value": "DANGER"
+            },
+            {
+              "label": "outcome_button_theme_warning",
+              "value": "WARNING"
+            }
+          ],
+          "headers": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ]
+        },
+        "defaultValue": "PRIMARY",
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      }
+    ],
+    "formId": "bpmn-user-task-outcome-config-form"
+  },
+  "attributes": {},
+  "notExists": false
+}
