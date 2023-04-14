@@ -34,7 +34,14 @@ class BpmnBusinessRuleTaskConverter : EcosOmgConverter<BpmnBusinessRuleTaskDef, 
                 element.otherAttributes[BPMN_PROP_DMN_DECISION_BINDING]
                     ?: error("Decision Binding is required")
             ),
-            version = element.otherAttributes[BPMN_PROP_DMN_DECISION_VERSION]?.toInt(),
+            version = let {
+                val decisionVersionStr = element.otherAttributes[BPMN_PROP_DMN_DECISION_VERSION]
+                if (decisionVersionStr.isNullOrBlank()) {
+                    null
+                } else {
+                    decisionVersionStr.toInt()
+                }
+            },
             versionTag = element.otherAttributes[BPMN_PROP_DMN_DECISION_VERSION_TAG],
             resultVariable = element.otherAttributes[BPMN_PROP_RESULT_VARIABLE],
             mapDecisionResult = element.otherAttributes[BPMN_PROP_DMN_MAP_DECISION_RESULT]?.let {
