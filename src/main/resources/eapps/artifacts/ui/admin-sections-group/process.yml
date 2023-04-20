@@ -10,14 +10,26 @@ sections:
     - name:
         en: Business Process Models
         ru: Модели бизнес-процессов
+      shortName:
+        ru: BPMN
+        en: BPMN
       type: BPM
 
     - name:
         en: Decision Models
         ru: Модели принятия решений
+      shortName:
+        ru: DMN
+        en: DMN
       type: DMN
 
-    - type: JOURNAL
+    - name:
+        ru: Модель кейсов
+        en: Case Management Model
+      shortName:
+        ru: CMMN
+        en: CMMN
+      type: JOURNAL
       config:
         journalId: cmmn-process-def
 
