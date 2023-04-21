@@ -1,0 +1,22 @@
+---
+id: dmn-def
+
+system: true
+
+name:
+  en: DMN
+  ru: DMN
+
+actions:
+  - uiserv/action@open-dmn-editor
+  - uiserv/action@download-base64-data-dmn-xml
+  - uiserv/action@edit
+  - uiserv/action@delete
+
+columns:
+
+  - id: defId
+    name: { ru: Идентификатор, en: Id }
+
+  - id: name
+    name: { ru: Имя, en: Name }

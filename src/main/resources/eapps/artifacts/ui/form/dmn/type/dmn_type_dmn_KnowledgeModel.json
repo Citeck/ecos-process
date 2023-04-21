@@ -1,0 +1,26 @@
+{
+  "id": "dmn-type-dmn:KnowledgeModel",
+  "formKey": "",
+  "title": {
+    "en": "DMN Knowledge Model Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@dmn-base-form-protected-id-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Dmn base form with protected id",
+        "type": "includeForm"
+      }
+    ],
+    "formId": "dmn-type-dmn:KnowledgeModel"
+  },
+  "attributes": {}
+}

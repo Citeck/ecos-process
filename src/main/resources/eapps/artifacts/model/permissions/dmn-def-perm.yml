@@ -1,0 +1,11 @@
+id: "7e43212b-b639-45e2-a5c9-7061931e7cf1"
+typeRef: "emodel/type@dmn-def"
+
+permissions:
+
+  matrix:
+    admin:
+      ANY: WRITE
+    EVERYONE:
+      ANY: READ
+  rules: []

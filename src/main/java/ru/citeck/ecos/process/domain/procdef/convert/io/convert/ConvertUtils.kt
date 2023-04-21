@@ -23,6 +23,9 @@ object ConvertUtils {
                 it.name.contains(".bpmn.") -> {
                     "bpmn:"
                 }
+                it.name.contains(".dmn.") -> {
+                    "dmn:"
+                }
                 else -> {
                     error("Unknown type: $it")
                 }

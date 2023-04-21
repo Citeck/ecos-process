@@ -1,0 +1,40 @@
+{
+  "id": "dmn-type-dmn:Definitions",
+  "formKey": "",
+  "title": {
+    "en": "DMN Definitions Form"
+  },
+  "description": {},
+  "customModule": null,
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@dmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Dmn base form element",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "validate": {
+          "required": true
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
+      }
+    ],
+    "formId": "dmn-type-dmn:Definitions"
+  },
+  "attributes": {}
+}

@@ -36,11 +36,9 @@ class ProcHistoricTaskRecords(
         private val log = KotlinLogging.logger {}
     }
 
-    override fun getId(): String {
-        return ID
-    }
+    override fun getId() = ID
 
-    override fun queryRecords(recsQuery: RecordsQuery): Any? {
+    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<RecordRef> {
         // TODO: check actor filter $CURRENT and filter task query
 
         val currentUser = AuthContext.getCurrentUser()

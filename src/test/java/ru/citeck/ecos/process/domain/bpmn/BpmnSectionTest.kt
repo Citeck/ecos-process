@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 class BpmnSectionTest {
 
     companion object {
-        private const val DATA_SOURCE_ID = "eproc/bpmn-section-repo"
+        private const val REPO_DATA_SOURCE_ID = "eproc/bpmn-section-repo"
         private const val PROXY_DATA_SOURCE_ID = "eproc/bpmn-section"
     }
 
@@ -48,14 +48,14 @@ class BpmnSectionTest {
             "parentRef" to "eproc/bpmn-section@testSection1"
         )
 
-        val recordRef = recordsService.create(DATA_SOURCE_ID, testSection)
+        val recordRef = recordsService.create(REPO_DATA_SOURCE_ID, testSection)
         assertEquals(recordRef.toString(), "eproc/bpmn-section-repo@testSection1")
 
         val atts = recordsService.getAtts(recordRef, listOf("name"))
         assertEquals(atts.getId().id, "testSection1")
         assertEquals(atts.getAtts()["name"].asText(), "testSectionName1")
 
-        val recordRef2 = recordsService.create(DATA_SOURCE_ID, testSubSection)
+        val recordRef2 = recordsService.create(REPO_DATA_SOURCE_ID, testSubSection)
         assertEquals(recordRef2.toString(), "eproc/bpmn-section-repo@testSubSection1")
 
         assertEquals(recordsService.delete(recordRef), DelStatus.OK)
@@ -87,13 +87,13 @@ class BpmnSectionTest {
         bpmnSectionArtifactHandler.deployArtifact(artifactData2)
 
         val name = recordsService.getAtt(
-            RecordRef.valueOf("$DATA_SOURCE_ID@testSection2"),
+            RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2"),
             "name"
         ).asText()
         assertEquals(name, "testSectionName2")
 
         val parentOfRec2 = recordsService.getAtt(
-            RecordRef.valueOf("$DATA_SOURCE_ID@testSection2-1"),
+            RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2-1"),
             "parentRef?id"
         ).asText()
         assertEquals(parentOfRec2, "eproc/bpmn-section@testSection2")
@@ -147,7 +147,7 @@ class BpmnSectionTest {
 
     fun queryAll(): RecsQueryRes<RecordRef> {
         val query = RecordsQuery.create {
-            withSourceId(DATA_SOURCE_ID)
+            withSourceId(REPO_DATA_SOURCE_ID)
             withQuery(
                 Predicates.and(
                     Predicates.eq("_type", "emodel/type@bpmn-section")

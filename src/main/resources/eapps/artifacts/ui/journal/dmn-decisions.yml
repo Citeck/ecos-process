@@ -1,0 +1,24 @@
+id: dmn-decision
+name: { ru: Решения, en: Decisions }
+
+sourceId: eproc/dmn-decision
+system: true
+
+columns:
+
+  - id: name
+    name:
+      en: Name
+      ru: Имя
+    searchable: false
+    sortable: false
+
+  - id: definition
+    name:
+      en: Definition
+      ru: Описание
+    type: ASSOC
+    formatter:
+      type: assoc
+    searchable: false
+    sortable: false

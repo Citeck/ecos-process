@@ -1,0 +1,230 @@
+{
+  "id": "bpmn-type-bpmn:BusinessRuleTask",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Business Rule Task"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": true,
+  "i18n": {
+    "ru": {
+      "decision_binding_deployment": "Опубликованное с процессом",
+      "decision_binding_latest": "Актуальное",
+      "decision_binding_version": "Версия",
+      "decision_binding_versionTag": "Тег версии",
+      "map_decision_result_collect_entries": "Собрать все объекты (List&lt;Object&gt;)",
+      "map_decision_result_result_list": "Список результатов (List&lt;Map&lt;String, Object&gt;&gt;)",
+      "map_decision_result_single_entry": "Один объект (TypedValue)",
+      "map_decision_result_single_result": "Один результат (Map&lt;String, Object&gt;)"
+    },
+    "en": {
+      "decision_binding_deployment": "Deployment",
+      "decision_binding_latest": "Latest",
+      "decision_binding_version": "Version",
+      "decision_binding_versionTag": "Version tag",
+      "map_decision_result_collect_entries": "Collect entries (List&lt;Object&gt;)",
+      "map_decision_result_result_list": "Result list (List&lt;Map&lt;String, Object&gt;&gt;)",
+      "map_decision_result_single_entry": "Single entry (TypedValue)",
+      "map_decision_result_single_result": "Single result (Map&lt;String, Object&gt;)"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "scrollableContent": true,
+        "key": "panel2",
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "formRef": "uiserv/form@bpmn-base-form-elements",
+            "input": true,
+            "key": "includeForm",
+            "label": "Форма: Bpmn base form elements",
+            "type": "includeForm"
+          },
+          {
+            "label": {
+              "ru": "Решение",
+              "en": "Decision"
+            },
+            "key": "decisionRef",
+            "validate": {
+              "required": true
+            },
+            "modalTitle": "",
+            "journalId": "dmn-decision",
+            "queryData": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "selectJournal",
+            "input": true
+          },
+          {
+            "label": {
+              "en": "Binding",
+              "ru": "Связь"
+            },
+            "key": "decisionBinding",
+            "tooltip": {
+              "ru": "Опубликованное с процессом - рассчитывается версия решения, которая была опубликована вместе с версией процесса.\nАктуальное - всегда последняя версия решения.\nВерсия - позволяет указать конкретную версию решения.\nТег версии - позволяет указать конкретную версию решения по тегу.",
+              "en": "Deployment - which evaluates the decision version which was deployed with the process version.\nLatest - which will always evaluate the latest decision version.\nVersion - which allows you to specify a specific version.\nVersion tag - which allows you to specify a specific version tag."
+            },
+            "validate": {
+              "required": true
+            },
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": "decision_binding_deployment",
+                  "value": "DEPLOYMENT"
+                },
+                {
+                  "label": "decision_binding_latest",
+                  "value": "LATEST"
+                },
+                {
+                  "label": "decision_binding_version",
+                  "value": "VERSION"
+                },
+                {
+                  "label": "decision_binding_versionTag",
+                  "value": "VERSION_TAG"
+                }
+              ],
+              "headers": [
+                {
+                  "key": "",
+                  "value": ""
+                }
+              ]
+            },
+            "defaultValue": "LATEST",
+            "optionalWhenDisabled": false,
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Версия",
+              "en": "Version"
+            },
+            "key": "decisionVersion",
+            "validate": {
+              "required": true,
+              "integer": true,
+              "min": 1
+            },
+            "isBigNumber": false,
+            "delimiterValue": " ",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.decisionBinding === 'VERSION'",
+            "defaultValue": "",
+            "type": "number",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Тег версии",
+              "en": "Version tag"
+            },
+            "key": "decisionVersionTag",
+            "validate": {
+              "required": true
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.decisionBinding === 'VERSION_TAG'",
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Переменная результата",
+              "en": "Result variable"
+            },
+            "key": "resultVariable",
+            "validate": {
+              "pattern": "([a-zA-Z0-9-]+$)"
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "en": "Map decision result",
+              "ru": "Сопоставление результата решения"
+            },
+            "key": "mapDecisionResult",
+            "validate": {
+              "required": true
+            },
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": "map_decision_result_collect_entries",
+                  "value": "COLLECT_ENTRIES"
+                },
+                {
+                  "label": "map_decision_result_result_list",
+                  "value": "RESULT_LIST"
+                },
+                {
+                  "label": "map_decision_result_single_entry",
+                  "value": "SINGLE_ENTRY"
+                },
+                {
+                  "label": "map_decision_result_single_result",
+                  "value": "SINGLE_RESULT"
+                }
+              ],
+              "headers": [
+                {
+                  "key": "",
+                  "value": ""
+                }
+              ]
+            },
+            "optionalWhenDisabled": false,
+            "customConditional": "show = (data.resultVariable || '').trim().length > 0;",
+            "type": "ecosSelect",
+            "input": true,
+            "defaultValue": ""
+          },
+          {
+            "formRef": "uiserv/form@bpmn-base-form-async",
+            "input": true,
+            "key": "includeForm2",
+            "label": "Форма: BPMN base form Async",
+            "type": "includeForm"
+          }
+        ]
+      }
+    ],
+    "formId": "bpmn-type-bpmn:BusinessRuleTask"
+  },
+  "attributes": {},
+  "notExists": false
+}

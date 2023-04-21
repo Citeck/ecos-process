@@ -50,10 +50,6 @@ data class BpmnUserTaskDef(
             }
         }
 
-        if (RecordRef.isEmpty(formRef)) {
-            throw EcosBpmnElementDefinitionException(id, "Task form ref cannot be empty.")
-        }
-
         if (outcomes.isEmpty()) {
             throw EcosBpmnElementDefinitionException(id, "Task outcomes cannot be empty.")
         }

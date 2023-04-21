@@ -1,0 +1,7 @@
+---
+id: open-dmn-editor
+type: open-url
+config:
+  url: /v2/dmn-editor?recordRef=${recordRef}
+  withinEcosTab: true
+  openNewTab: true

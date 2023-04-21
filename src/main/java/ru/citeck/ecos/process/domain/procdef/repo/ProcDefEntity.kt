@@ -11,7 +11,10 @@ import java.time.Instant
 @Document(collection = "process_def")
 @CompoundIndexes(
     CompoundIndex(name = "proc_def_tnt_proc_type_ext_id_idx", def = "{'id.tnt': 1, 'procType' : 1, 'extId': 1}"),
-    CompoundIndex(name = "proc_def_tnt_proc_type_ecos_type_idx", def = "{'id.tnt': 1, 'procType' : 1, 'ecosTypeRef': 1}"),
+    CompoundIndex(
+        name = "proc_def_tnt_proc_type_ecos_type_idx",
+        def = "{'id.tnt': 1, 'procType' : 1, 'ecosTypeRef': 1}"
+    ),
     CompoundIndex(name = "proc_def_tnt_proc_type_alf_type_idx", def = "{'id.tnt': 1, 'procType' : 1, 'alfType': 1}")
 )
 class ProcDefEntity {
@@ -19,9 +22,6 @@ class ProcDefEntity {
     @Id
     var id: EntityUuid? = null
 
-    /**
-     * Engine type (cmmn)
-     */
     var procType: String? = null
     var name: String? = null
     var extId: String? = null

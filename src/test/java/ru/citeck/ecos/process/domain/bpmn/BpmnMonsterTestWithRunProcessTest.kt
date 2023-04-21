@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
@@ -33,6 +36,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
@@ -43,17 +47,15 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
-import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
-import ru.citeck.ecos.process.domain.saveAndDeployBpmn
-import ru.citeck.ecos.process.domain.saveAndDeployBpmnFromResource
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -2995,6 +2997,113 @@ class BpmnMonsterTestWithRunProcessTest {
 
         verify(process, never()).hasFinished("end_default_1")
         verify(process, never()).hasFinished("end_default_3")
+    }
+
+    // ---DMN TESTS ---
+
+    @ParameterizedTest
+    @ValueSource(strings = ["green", "yellow", "red"])
+    fun `simple dmn decision test`(color: String) {
+        val procId = "simple-dmn-test"
+        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "color" to color
+            )
+        ).execute()
+
+        val colorActionMapping = mapOf(
+            "green" to "go",
+            "yellow" to "prepare",
+            "red" to "stop"
+        )
+        assertThat(scenario.instance(process)).variables().containsEntry("action", colorActionMapping[color])
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `dmn with specific decision version`() {
+        val procId = "dmn-test-specific-version"
+        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+
+        val dmnVersion1 = ResourceUtils.getFile("classpath:test/dmn/$procId.dmn.xml")
+            .readText(StandardCharsets.UTF_8)
+        saveAndDeployDmnFromString(dmnVersion1, procId)
+
+        val dmnVersion2 = dmnVersion1.replace("version 1", "version 2")
+        saveAndDeployDmnFromString(dmnVersion2, procId)
+
+        val dmnVersion3 = dmnVersion1.replace("version 1", "version 3")
+        saveAndDeployDmnFromString(dmnVersion3, procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "any_input" to "any_value"
+            )
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("result_var", "version 2")
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `dmn with specific decision version tag`() {
+        val procId = "dmn-test-specific-version-tag"
+        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+
+        val dmnVersionTag1 = ResourceUtils.getFile("classpath:test/dmn/$procId.dmn.xml")
+            .readText(StandardCharsets.UTF_8)
+        saveAndDeployDmnFromString(dmnVersionTag1, procId)
+
+        val dmnVersionTag2 = dmnVersionTag1.replace("vt_version_tag_1", "vt_version_tag_2")
+            .replace("version tag 1", "version tag 2")
+        saveAndDeployDmnFromString(dmnVersionTag2, procId)
+
+        val dmnVersionTag3 = dmnVersionTag1.replace("vt_version_tag_1", "vt_version_tag_3")
+            .replace("version tag 1", "version tag 3")
+        saveAndDeployDmnFromString(dmnVersionTag3, procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "any_input" to "any_value"
+            )
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("result_var", "version tag 2")
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `dmn test with multiple decisions and input with feel`() {
+        val procId = "dmn-test-multiple-input-expression"
+        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "season" to "Spring",
+                "guestCount" to 10,
+                "guestsWithChildren" to true
+            )
+        ).execute()
+
+        scenario.instance(process)
+
+        assertThat(scenario.instance(process)).variables().containsEntry(
+            "beveragesResult",
+            listOf("Guiness", "Apple Juice")
+        )
+
+        verify(process).hasFinished("endEvent")
     }
 
     fun getSubscriptionsAfterAction(

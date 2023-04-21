@@ -20,7 +20,7 @@
         "type": "includeForm"
       }
     ],
-    "formId": "bpmn-type-bpmn:Participant"
+    "formId": "bpmn-type-bpmn:Lane"
   },
   "attributes": {}
 }

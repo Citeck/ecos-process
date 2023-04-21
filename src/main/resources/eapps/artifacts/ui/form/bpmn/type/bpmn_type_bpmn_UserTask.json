@@ -137,16 +137,13 @@
           "en": "Task form"
         },
         "key": "formRef",
-        "validate": {
-          "required": true
-        },
         "modalTitle": "",
         "journalId": "ecos-forms",
+        "queryData": "",
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "selectJournal",
-        "input": true,
-        "queryData": ""
+        "input": true
       },
       {
         "label": {
@@ -268,6 +265,8 @@
             },
             "key": "id",
             "defaultValue": "",
+            "pattern": "^[a-zA-Z0-9-_*]+$",
+            "minLength": 3,
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "textfield",
@@ -285,6 +284,27 @@
             "type": "mlText",
             "input": true,
             "row": "0-1"
+          },
+          {
+            "label": "",
+            "key": "submit-outcome-config",
+            "action": "custom",
+            "state": "",
+            "showValidations": false,
+            "custom": "let currentRow = row;\n\nlet formInstance = instance.root;\nformInstance.showErrors([]);\n\nlet incomeOutcomes = formInstance.submission.data.outcomes\n\nconst applyOutcomeData = (newOutcomes) => {\n\n    let updatedData = [];\n\n    incomeOutcomes.forEach(outcome => {\n        if (outcome.id === newOutcomes.id) {\n            let updated = {\n                ...outcome,\n                config: {\n                    theme: newOutcomes.theme\n                }\n            }\n            updatedData.push(updated)\n        } else {\n            updatedData.push(outcome)\n        }\n    })\n\n    submission = {\n        ...submission,\n        data: {\n            ...submission.data,\n            outcomes: updatedData\n        }\n    }\n    formInstance.submission = submission;\n}\n\nCiteck.EcosFormUtils.getFormById('uiserv/form@bpmn-user-task-outcome-config-form', {\n    definition: 'definition?json',\n    i18n: 'i18n?json'\n}).then(function(formConfig) {\n\n    const formData = {\n        id: currentRow['id']\n    };\n\n    let config = currentRow['config'] || {};\n    let theme = config['theme'];\n    if (theme === undefined || theme.length === 0) {\n        theme = 'PRIMARY';\n    }\n\n    formData['theme'] = theme;\n\n    Citeck.Dialogs.showFormDialog({\n        title: Citeck.helpers.getMLValue({\n            'en': 'Outcome Configuration',\n            'ru': 'Настройка результата задачи'\n        }),\n        showDefaultButtons: true,\n        formDefinition: formConfig.definition,\n        formData: formData,\n        formI18n: formConfig.i18n,\n        onSubmit: submission => {\n            let data = submission.data || {};\n            applyOutcomeData(data)\n        }\n    })\n});",
+            "headers": [
+              {
+                "header": "",
+                "value": ""
+              }
+            ],
+            "hideLabel": true,
+            "leftIcon": "icon-settings",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "button",
+            "input": true,
+            "row": "0-2"
           }
         ]
       },
@@ -311,5 +331,6 @@
     ],
     "formId": "bpmn-type-bpmn:UserTask"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }
