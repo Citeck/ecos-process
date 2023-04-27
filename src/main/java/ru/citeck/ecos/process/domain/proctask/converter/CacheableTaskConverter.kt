@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity
+import org.camunda.bpm.engine.task.IdentityLink
 import org.camunda.bpm.engine.task.IdentityLinkType
 import org.camunda.bpm.engine.task.Task
 import org.springframework.cache.annotation.CacheEvict
@@ -51,19 +52,7 @@ class CacheableTaskConverter(
             val variables = camundaTaskService.getVariables(id)
             val localVariables = camundaTaskService.getVariablesLocal(id)
 
-            val candidateUsers = mutableSetOf<String>()
-            val candidateGroups = mutableSetOf<String>()
-
-            links.forEach {
-                if (it.type == IdentityLinkType.CANDIDATE) {
-                    it.userId?.let { userId ->
-                        candidateUsers.add(userId)
-                    }
-                    it.groupId?.let { groupId ->
-                        candidateGroups.add(groupId)
-                    }
-                }
-            }
+            val (candidateUsers, candidateGroups) = links.splitToUserGroupCandidates()
 
             val sender = localVariables[BPMN_TASK_SENDER] as? String
 
@@ -97,6 +86,7 @@ class CacheableTaskConverter(
                 created = createTime.toInstant(),
                 assignee = authorityService.getAuthorityRef(assignee),
                 sender = authorityService.getAuthorityRef(sender),
+                owner = authorityService.getAuthorityRef(owner),
                 candidateUsers = authorityService.getAuthorityRefs(candidateUsers.toList()),
                 candidateGroups = authorityService.getAuthorityRefs(candidateGroups.toList()),
                 definitionKey = taskDefinitionKey,
@@ -150,4 +140,27 @@ class CacheableTaskConverter(
             )
         }
     }
+}
+
+
+fun Collection<IdentityLink>.splitToUserGroupCandidates(): Pair<Set<String>, Set<String>> {
+    if (this.isEmpty()) {
+        return Pair(emptySet(), emptySet())
+    }
+
+    val candidateUsers = mutableSetOf<String>()
+    val candidateGroups = mutableSetOf<String>()
+
+    this.forEach {
+        if (it.type == IdentityLinkType.CANDIDATE) {
+            it.userId?.let { userId ->
+                candidateUsers.add(userId)
+            }
+            it.groupId?.let { groupId ->
+                candidateGroups.add(groupId)
+            }
+        }
+    }
+
+    return Pair(candidateUsers, candidateGroups)
 }

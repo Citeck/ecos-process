@@ -119,4 +119,19 @@ class ProcTaskServiceImpl(
     override fun getVariables(taskId: String): Map<String, Any?> {
         return camundaTaskService.getVariables(taskId)
     }
+
+    override fun claimTask(taskId: String, userId: String) {
+        camundaTaskService.claim(taskId, userId)
+        cacheableTaskConverter.removeFromActualTaskCache(taskId)
+    }
+
+    override fun unclaimTask(taskId: String) {
+        camundaTaskService.setAssignee(taskId, null)
+        cacheableTaskConverter.removeFromActualTaskCache(taskId)
+    }
+
+    override fun setAssignee(taskId: String, userId: String) {
+        camundaTaskService.setAssignee(taskId, userId)
+        cacheableTaskConverter.removeFromActualTaskCache(taskId)
+    }
 }

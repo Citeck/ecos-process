@@ -12,6 +12,8 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 
+const val CURRENT_USER_FLAG = "\$CURRENT"
+
 @Component
 class WorkflowTaskRecordsProxy(
     private val procTaskService: ProcTaskService,
@@ -21,10 +23,6 @@ class WorkflowTaskRecordsProxy(
     id = "wftask",
     targetId = "alfresco/wftask"
 ) {
-
-    companion object {
-        private const val CURRENT_USER_FLAG = "\$CURRENT"
-    }
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*> {
         val query = recsQuery.getQuery(TaskQuery::class.java)

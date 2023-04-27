@@ -3,22 +3,27 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskOwnership
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import javax.annotation.PostConstruct
 
 internal val log = KotlinLogging.logger {}
+
+private const val TASK_PERMISSION_REASSIGN = "Reassign"
 
 /**
  * @author Roman Makarskiy
@@ -51,6 +56,7 @@ class ProcTaskRecord(
     val followUpDate: Instant? = null,
     val definitionKey: String? = null,
 
+    val owner: EntityRef = RecordRef.EMPTY,
     val assignee: EntityRef = RecordRef.EMPTY,
 
     val senderTemp: EntityRef = RecordRef.EMPTY,
@@ -66,8 +72,34 @@ class ProcTaskRecord(
 
     val engineAtts: List<String> = emptyList(),
 
-    val historic: Boolean = false
+    val historic: Boolean = false,
+
+    val reassignable: Boolean = false,
+    val claimable: Boolean = false,
+    val unclaimable: Boolean = false,
+    val assignable: Boolean = false,
 ) {
+
+    val permissions = object : AttValue {
+
+        override fun has(name: String): Boolean {
+
+            if (TASK_PERMISSION_REASSIGN.equals(name, ignoreCase = true)) {
+                if (AuthContext.isRunAsAdmin() || AuthContext.isRunAsSystem()) {
+                    return true
+                }
+
+                if (AuthContext.getCurrentUser() == assignee.getLocalId()) {
+                    return true
+                }
+
+                return AuthContext.getCurrentAuthorities().contains(ProcTaskOwnership.GROUP_TASKS_REASSIGN_ALLOWED)
+            }
+
+            log.warn { "Request unknown permission <$name> for task $id" }
+            return false
+        }
+    }
 
     @get:AttName("_formRef")
     val formKey: RecordRef
@@ -84,6 +116,11 @@ class ProcTaskRecord(
     @AttName("started")
     fun getStarted(): Instant? {
         return created
+    }
+
+    @AttName("releasable")
+    fun getReleasable(): Boolean {
+        return unclaimable
     }
 
     // TODO: refactor task widget to using new api (request sender entityRef). Remove with method below.
@@ -121,8 +158,11 @@ class ProcTaskRecord(
     }
 
     fun getAtt(name: String): Any? {
-        val mapping =
-            if (isAlfTask(id)) ProcTaskRecords.EPROC_TO_ALF_TASK_ATTS else ProcTaskRecords.ALF_TO_ERPOC_TASK_ATTS
+        val mapping = if (isAlfTask(id)) {
+            ProcTaskRecords.EPROC_TO_ALF_TASK_ATTS
+        } else {
+            ProcTaskRecords.ALF_TO_ERPOC_TASK_ATTS
+        }
 
         if (isAlfTask(id)) {
             if (mapping.containsKey(name)) {

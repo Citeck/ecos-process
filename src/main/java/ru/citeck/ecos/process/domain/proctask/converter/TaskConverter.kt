@@ -54,6 +54,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         followUpDate = followUpDate,
         title = name,
         assignee = assignee,
+        owner = owner,
         senderTemp = sender,
         candidateUsers = candidateUsers,
         candidateGroups = candidateGroups,
@@ -72,7 +73,11 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
             cnv.recordsService.getAtts(documentRef, requiredAtts)
         },
         historic = historic,
-        engineAtts = engineAtts
+        engineAtts = engineAtts,
+        reassignable = assignee.isNotEmpty(),
+        claimable = assignee.isEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
+        unclaimable = assignee.isNotEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
+        assignable = assignee.isEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
     )
 }
 

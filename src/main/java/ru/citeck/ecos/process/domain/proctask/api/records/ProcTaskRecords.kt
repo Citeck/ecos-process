@@ -15,8 +15,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companio
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords.Companion.ALF_TASK_PREFIX
 import ru.citeck.ecos.process.domain.proctask.converter.toRecord
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
-import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
-import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
+import ru.citeck.ecos.process.domain.proctask.service.*
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -37,14 +36,26 @@ import java.time.Instant
 import java.util.*
 import kotlin.system.measureTimeMillis
 
+const val CHANGE_OWNER_RECORD_ACTION_CLAIM = "claim"
+const val CHANGE_OWNER_RECORD_ACTION_RELEASE = "release"
+
+const val CHANGE_OWNER_ATT = "changeOwner"
+const val CHANGE_OWNER_ACTION_ATT = "action"
+const val CHANGE_OWNER_USER_ATT = "owner"
+
+
+
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
-    private val camundaTaskService: TaskService
+    private val camundaTaskService: TaskService,
+    private val procTaskOwnership: ProcTaskOwnership
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        private const val FORM_INFO_ATT = "_formInfo"
 
         const val ID = "proc-task"
         const val ALF_TASK_PREFIX = "workspace"
@@ -59,8 +70,6 @@ class ProcTaskRecords(
         )
 
         val EPROC_TO_ALF_TASK_ATTS = ALF_TO_ERPOC_TASK_ATTS.entries.associateBy({ it.value }) { it.key }
-
-        private const val FORM_INFO_ATT = "_formInfo"
     }
 
     override fun getId(): String {
@@ -166,6 +175,12 @@ class ProcTaskRecords(
             "Task with id " + "${record.id} not found"
         )
 
+        if (record.isChangeOwnerAction()) {
+            val ownershipChangeData = record.toTaskOwnershipChangeData(record.id)
+            procTaskOwnership.performAction(ownershipChangeData)
+            return record.id
+        }
+
         val mutateInfo = TaskMutateVariables(task, record)
         val outcome = getTaskOutcome(task, record)
 
@@ -176,6 +191,46 @@ class ProcTaskRecords(
         procTaskService.completeTask(record.id, outcome, mutateInfo.taskVariables)
 
         return record.id
+    }
+
+    private fun LocalRecordAtts.isChangeOwnerAction(): Boolean {
+        return getAtt(CHANGE_OWNER_ATT).isNotEmpty()
+    }
+
+    private fun LocalRecordAtts.toTaskOwnershipChangeData(taskId: String): TaskOwnershipChangeData {
+        val changeOwner = getAtt(CHANGE_OWNER_ATT)
+        val actionData = changeOwner.get(CHANGE_OWNER_ACTION_ATT).asText()
+        val userData = changeOwner.get(CHANGE_OWNER_USER_ATT).asText()
+
+        if (actionData.isBlank()) {
+            error("Action type is mandatory for change owner action")
+        }
+
+        val action = let {
+            if (actionData == CHANGE_OWNER_RECORD_ACTION_CLAIM) {
+                if (userData.isBlank()) {
+                    error("User is mandatory for `claim` owner action")
+                }
+
+                if (userData == CURRENT_USER_FLAG) {
+                    return@let TaskOwnershipAction.CLAIM
+                } else {
+                    return@let TaskOwnershipAction.CHANGE
+                }
+            }
+            if (actionData == CHANGE_OWNER_RECORD_ACTION_RELEASE) {
+                return@let TaskOwnershipAction.UNCLAIM
+            }
+
+            error("Unknown action type: $actionData")
+        }
+        val user = if (userData == CURRENT_USER_FLAG) {
+            AuthContext.getCurrentUser()
+        } else {
+            userData
+        }
+
+        return TaskOwnershipChangeData(action, taskId, user)
     }
 
     private fun getTaskOutcome(task: ProcTaskDto, record: LocalRecordAtts): Outcome {

@@ -20,4 +20,10 @@ interface ProcTaskService {
     fun completeTask(taskId: String, outcome: Outcome, variables: Map<String, Any?>)
 
     fun getVariables(taskId: String): Map<String, Any?>
+
+    fun claimTask(taskId: String, userId: String)
+
+    fun unclaimTask(taskId: String)
+
+    fun setAssignee(taskId: String, userId: String)
 }

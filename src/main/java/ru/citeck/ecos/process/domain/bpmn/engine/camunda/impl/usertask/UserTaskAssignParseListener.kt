@@ -17,7 +17,8 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.toCamundaKey
 @Component
 class UserTaskAssignParseListener(
     private val multiInstanceAutoModeUserTaskAssignListener: MultiInstanceAutoModeUserTaskAssignListener,
-    private val manualRecipientsModeUserTaskAssignListener: ManualRecipientsModeUserTaskAssignListener
+    private val manualRecipientsModeUserTaskAssignListener: ManualRecipientsModeUserTaskAssignListener,
+    private val recipientsFromRolesUserTaskAssignListener: RecipientsFromRolesUserTaskAssignListener
 ) : AbstractBpmnParseListener() {
 
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
@@ -32,10 +33,14 @@ class UserTaskAssignParseListener(
 
         if (multiInstanceAutoMode) {
             activity.addTaskListener(TaskListener.EVENTNAME_CREATE, multiInstanceAutoModeUserTaskAssignListener)
+            return
         }
 
         if (manualRecipientsMode) {
             activity.addTaskListener(TaskListener.EVENTNAME_CREATE, manualRecipientsModeUserTaskAssignListener)
+            return
         }
+
+        activity.addTaskListener(TaskListener.EVENTNAME_CREATE, recipientsFromRolesUserTaskAssignListener)
     }
 }
