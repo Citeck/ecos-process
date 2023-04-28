@@ -31,7 +31,7 @@ class BpmnProcessAutoStarter(
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { startProcessIfRequired(it) }
-            withFilter(Predicates.eq("record._isDraft?bool", false))
+            withFilter(Predicates.eq("record._isDraft?bool!", false))
         }
         // React on record draft state changed to false
         eventsService.addListener<EventData> {
@@ -44,9 +44,12 @@ class BpmnProcessAutoStarter(
     }
 
     private fun startProcessIfRequired(eventData: EventData) {
+        log.debug { "Received event for start process: $eventData" }
+
         val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, eventData.typeRef, emptyList()) ?: return
         val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procRev.procDefId)) ?: return
         if (!procDef.autoStartEnabled) {
+            log.debug { "Auto start process disabled for ${procDef.id}" }
             return
         }
 
