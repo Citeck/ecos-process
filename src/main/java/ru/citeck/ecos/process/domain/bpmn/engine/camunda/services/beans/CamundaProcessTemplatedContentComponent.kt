@@ -30,7 +30,7 @@ class CamundaProcessTemplatedContentComponent(
         recordsService.mutate(templatedContentAtts)
     }
 
-    private fun String.toNormalizeTemplateRef() : EntityRef {
+    private fun String.toNormalizeTemplateRef(): EntityRef {
         var templateRef = EntityRef.valueOf(this)
 
         if (templateRef.getAppName().isBlank()) {
@@ -43,5 +43,4 @@ class CamundaProcessTemplatedContentComponent(
 
         return templateRef
     }
-
 }

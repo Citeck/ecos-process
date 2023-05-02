@@ -30,7 +30,7 @@ class ProcTaskOwnership(
             return
         }
 
-        if (currentUserIsTaskActor(task)) {
+        if (task.currentUserIsTaskActor()) {
             return
         }
 

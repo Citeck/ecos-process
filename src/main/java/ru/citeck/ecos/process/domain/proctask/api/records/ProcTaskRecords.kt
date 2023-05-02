@@ -351,7 +351,7 @@ class ProcTaskRecords(
         }
 
         private fun checkPermissionToCompleteTask() {
-            if (!currentUserIsTaskActor(task)) {
+            if (!task.currentUserIsTaskActor()) {
                 throw IllegalStateException("Task mutate denied. Current user is not a task actor")
             }
         }

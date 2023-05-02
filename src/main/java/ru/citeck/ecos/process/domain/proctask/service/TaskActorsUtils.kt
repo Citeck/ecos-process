@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.proctask.service
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecord
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -22,22 +23,31 @@ private lateinit var utils: TaskActorsUtils
 
 private val log = KotlinLogging.logger {}
 
-fun currentUserIsTaskActor(task: ProcTaskDto): Boolean {
+fun ProcTaskDto.currentUserIsTaskActor(): Boolean {
+    return isTaskActor(id, assignee, candidateUsers, candidateGroups)
+}
+
+fun ProcTaskRecord.currentUserIsTaskActor(): Boolean {
+    return isTaskActor(id, assignee, candidateUsers, candidateGroups)
+}
+
+private fun isTaskActor(
+    taskId: String,
+    assignee: EntityRef,
+    candidateUsers: List<EntityRef>,
+    candidateGroups: List<EntityRef>
+): Boolean {
     val currentUser = AuthContext.getCurrentUser()
     val currentAuthorities = AuthContext.getCurrentAuthorities()
 
     val currentUserRef = utils.authorityService.getAuthorityRef(currentUser)
     val currentAuthoritiesRefs = utils.authorityService.getAuthorityRefs(currentAuthorities)
 
-    return isTaskActor(task, currentUserRef, currentAuthoritiesRefs)
-}
+    log.trace { "Is task actor: \ntaskId=$taskId \nuser=$currentUserRef \nuserAuthorities=$currentAuthoritiesRefs" }
 
-private fun isTaskActor(task: ProcTaskDto, user: EntityRef, userAuthorities: List<EntityRef>): Boolean {
-    log.trace { "Is task actor: \ntaskId=${task.id} \nuser=$user \nuserAuthorities=$userAuthorities \n$task" }
-
-    if (task.assignee == user) return true
-    if (task.candidateUsers.contains(user)) return true
-    if (task.candidateGroups.any { it in userAuthorities }) return true
+    if (assignee == currentUserRef) return true
+    if (candidateUsers.contains(currentUserRef)) return true
+    if (candidateGroups.any { it in currentAuthoritiesRefs }) return true
 
     return false
 }

@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskOwnership
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
+import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
@@ -83,20 +84,19 @@ class ProcTaskRecord(
     val permissions = object : AttValue {
 
         override fun has(name: String): Boolean {
+            if (AuthContext.isRunAsAdmin() || AuthContext.isRunAsSystem()) {
+                return true
+            }
+
+            if (this@ProcTaskRecord.currentUserIsTaskActor()) {
+                return true
+            }
 
             if (TASK_PERMISSION_REASSIGN.equals(name, ignoreCase = true)) {
-                if (AuthContext.isRunAsAdmin() || AuthContext.isRunAsSystem()) {
-                    return true
-                }
-
-                if (AuthContext.getCurrentUser() == assignee.getLocalId()) {
-                    return true
-                }
-
                 return AuthContext.getCurrentAuthorities().contains(ProcTaskOwnership.GROUP_TASKS_REASSIGN_ALLOWED)
             }
 
-            log.warn { "Request unknown permission <$name> for task $id" }
+            log.warn { "Request unknown permission <$name> for task ${this@ProcTaskRecord.id}" }
             return false
         }
     }

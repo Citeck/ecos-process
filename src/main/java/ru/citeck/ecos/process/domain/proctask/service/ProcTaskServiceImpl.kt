@@ -39,7 +39,7 @@ class ProcTaskServiceImpl(
         }
 
         return getTasksByProcess(processId).filter {
-            currentUserIsTaskActor(it)
+            it.currentUserIsTaskActor()
         }
     }
 
@@ -57,7 +57,7 @@ class ProcTaskServiceImpl(
         }
 
         return getTasksByDocument(document).filter {
-            currentUserIsTaskActor(it)
+            it.currentUserIsTaskActor()
         }
     }
 
