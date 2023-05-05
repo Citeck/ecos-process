@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
@@ -11,8 +12,6 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.regex.Pattern
-
-const val GROUP_PREFIX = "GROUP_"
 
 private const val WORKSPACE_PREFIX = "workspace://"
 
@@ -28,8 +27,8 @@ class CamundaRoleService(
         const val KEY = "roles"
     }
 
-    private val isGroup = { name: String -> name.startsWith(GROUP_PREFIX) }
-    private val isUser = { name: String -> !name.startsWith(GROUP_PREFIX) }
+    private val isGroup = { name: String -> name.startsWith(AuthGroup.PREFIX) }
+    private val isUser = { name: String -> !name.startsWith(AuthGroup.PREFIX) }
 
     override fun getKey(): String {
         return KEY

@@ -14,10 +14,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_NAME_ML
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_POSSIBLE_OUTCOMES
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_SENDER
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASKS_DTO_CONVERTER_CACHE_KEY
@@ -88,7 +85,17 @@ class CacheableTaskConverter(
                 sender = authorityService.getAuthorityRef(sender),
                 owner = authorityService.getAuthorityRef(owner),
                 candidateUsers = authorityService.getAuthorityRefs(candidateUsers.toList()),
+                candidateUsersOriginal = let {
+                    @Suppress("UNCHECKED_CAST")
+                    val users = localVariables[BPMN_TASK_CANDIDATES_USER_ORIGINAL] as? List<String>
+                    return@let users ?: emptyList()
+                },
                 candidateGroups = authorityService.getAuthorityRefs(candidateGroups.toList()),
+                candidateGroupsOriginal = let {
+                    @Suppress("UNCHECKED_CAST")
+                    val group = localVariables[BPMN_TASK_CANDIDATES_GROUP_ORIGINAL] as? List<String>
+                    return@let group ?: emptyList()
+                },
                 definitionKey = taskDefinitionKey,
                 historic = false,
                 engineAtts = variables.keys.toList()
@@ -141,7 +148,6 @@ class CacheableTaskConverter(
         }
     }
 }
-
 
 fun Collection<IdentityLink>.splitToUserGroupCandidates(): Pair<Set<String>, Set<String>> {
     if (this.isEmpty()) {

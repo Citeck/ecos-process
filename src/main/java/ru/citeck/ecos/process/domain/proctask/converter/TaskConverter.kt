@@ -76,7 +76,8 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         engineAtts = engineAtts,
         reassignable = assignee.isNotEmpty(),
         claimable = assignee.isEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
-        unclaimable = assignee.isNotEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
+        unclaimable = assignee.isNotEmpty() &&
+            (candidateUsersOriginal.isNotEmpty() || candidateGroupsOriginal.isNotEmpty()),
         assignable = assignee.isEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
     )
 }

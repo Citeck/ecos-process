@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.delegate.TaskListener
 import org.camunda.bpm.engine.impl.bpmn.parser.AbstractBpmnParseListener
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl
@@ -21,6 +22,10 @@ class UserTaskAssignParseListener(
     private val recipientsFromRolesUserTaskAssignListener: RecipientsFromRolesUserTaskAssignListener
 ) : AbstractBpmnParseListener() {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
         val multiInstanceAutoMode = userTaskElement.attribute(BPMN_PROP_MULTI_INSTANCE_AUTO_MODE.toCamundaKey())
             .toBoolean()
@@ -33,14 +38,17 @@ class UserTaskAssignParseListener(
 
         if (multiInstanceAutoMode) {
             activity.addTaskListener(TaskListener.EVENTNAME_CREATE, multiInstanceAutoModeUserTaskAssignListener)
+            log.debug { "Add multiInstanceAutoModeUserTaskAssignListener to ${activity.id}" }
             return
         }
 
         if (manualRecipientsMode) {
             activity.addTaskListener(TaskListener.EVENTNAME_CREATE, manualRecipientsModeUserTaskAssignListener)
+            log.debug { "Add manualRecipientsModeUserTaskAssignListener to ${activity.id}" }
             return
         }
 
         activity.addTaskListener(TaskListener.EVENTNAME_CREATE, recipientsFromRolesUserTaskAssignListener)
+        log.debug { "Add recipientsFromRolesUserTaskAssignListener to ${activity.id}" }
     }
 }

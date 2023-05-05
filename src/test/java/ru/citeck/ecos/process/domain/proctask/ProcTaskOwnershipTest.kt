@@ -31,10 +31,8 @@ class ProcTaskOwnershipTest {
     fun `claim task via records`() {
         val testHarryUser = "harry_claim"
 
-
         val task = taskService.newTask()
         taskService.saveTask(task)
-
         taskService.addCandidateGroup(task.id, "GROUP_test")
 
         AuthContext.runAsFull(testHarryUser, listOf("GROUP_test")) {
@@ -57,11 +55,9 @@ class ProcTaskOwnershipTest {
         assertThat(taskAssignee).isEqualTo(testHarryUser)
     }
 
-
     @Test
     fun `claim task as not task actor should fail`() {
         val testHarryUser = "harry_claim"
-
 
         val task = taskService.newTask()
         taskService.saveTask(task)
@@ -80,18 +76,15 @@ class ProcTaskOwnershipTest {
             )
             recordAtt.setAtt(CHANGE_OWNER_ATT, ownershipAction)
 
-
             assertThrows<IllegalStateException> {
                 recordsService.mutate(recordAtt)
             }
-
         }
     }
 
     @Test
     fun `claim task as not task actor should allow for admins`() {
         val testHarryUser = "harry_claim"
-
 
         val task = taskService.newTask()
         taskService.saveTask(task)
@@ -110,7 +103,6 @@ class ProcTaskOwnershipTest {
             )
             recordAtt.setAtt(CHANGE_OWNER_ATT, ownershipAction)
 
-
             recordsService.mutate(recordAtt)
         }
 
@@ -122,7 +114,6 @@ class ProcTaskOwnershipTest {
     @Test
     fun `claim task as not task actor should allow for system`() {
         val testHarryUser = "harry_claim"
-
 
         val task = taskService.newTask()
         taskService.saveTask(task)
@@ -140,7 +131,6 @@ class ProcTaskOwnershipTest {
                 """.trimIndent()
             )
             recordAtt.setAtt(CHANGE_OWNER_ATT, ownershipAction)
-
 
             recordsService.mutate(recordAtt)
         }
@@ -205,4 +195,5 @@ class ProcTaskOwnershipTest {
         assertThat(taskAssignee).isEqualTo("ron")
     }
 
+    // TODO: tests
 }

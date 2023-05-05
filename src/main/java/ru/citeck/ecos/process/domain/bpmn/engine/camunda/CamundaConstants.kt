@@ -11,6 +11,8 @@ const val BPMN_WORKFLOW_INITIATOR = "workflowInitiator"
 const val BPMN_TASK_COMPLETED_BY = "completedBy"
 const val BPMN_LAST_TASK_COMPLETOR = "lastTaskCompletor"
 const val BPMN_TASK_SENDER = "sender"
+const val BPMN_TASK_CANDIDATES_USER_ORIGINAL = "candidatesUserOriginal"
+const val BPMN_TASK_CANDIDATES_GROUP_ORIGINAL = "candidatesGroupOriginal"
 
 const val BPMN_CAMUNDA_COLLECTION_SEPARATOR = ","
 

@@ -5,11 +5,10 @@ import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_LAST_TASK_COMPLETOR
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_COMPLETED_BY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
+import ru.citeck.ecos.process.domain.proctask.converter.splitToUserGroupCandidates
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import kotlin.system.measureTimeMillis
@@ -122,16 +121,82 @@ class ProcTaskServiceImpl(
 
     override fun claimTask(taskId: String, userId: String) {
         camundaTaskService.claim(taskId, userId)
+        moveCandidatesToOriginalAtts(taskId)
+
         cacheableTaskConverter.removeFromActualTaskCache(taskId)
     }
 
     override fun unclaimTask(taskId: String) {
         camundaTaskService.setAssignee(taskId, null)
+        returnCandidatesFromOriginalAtts(taskId)
+
         cacheableTaskConverter.removeFromActualTaskCache(taskId)
     }
 
     override fun setAssignee(taskId: String, userId: String) {
         camundaTaskService.setAssignee(taskId, userId)
+        moveCandidatesToOriginalAtts(taskId)
+
         cacheableTaskConverter.removeFromActualTaskCache(taskId)
+    }
+
+    private fun moveCandidatesToOriginalAtts(taskId: String) {
+        camundaTaskService.getIdentityLinksForTask(taskId)?.run {
+            val (candidateUsers, candidateGroups) = splitToUserGroupCandidates()
+
+            if (candidateUsers.isNotEmpty()) {
+                camundaTaskService.setVariableLocal(
+                    taskId,
+                    BPMN_TASK_CANDIDATES_USER_ORIGINAL,
+                    candidateUsers.toList()
+                )
+            }
+
+            if (candidateGroups.isNotEmpty()) {
+                camundaTaskService.setVariableLocal(
+                    taskId,
+                    BPMN_TASK_CANDIDATES_GROUP_ORIGINAL,
+                    candidateGroups.toList()
+                )
+            }
+
+            log.debug {
+                "Move candidates to original attributes: taskId=$taskId, " +
+                    "users=$candidateUsers, groups=$candidateGroups"
+            }
+
+            candidateUsers.forEach { camundaTaskService.deleteCandidateUser(taskId, it) }
+            candidateGroups.forEach { camundaTaskService.deleteCandidateGroup(taskId, it) }
+        }
+    }
+
+    private fun returnCandidatesFromOriginalAtts(taskId: String) {
+        @Suppress("UNCHECKED_CAST")
+        val originalCandidateUsers = camundaTaskService.getVariableLocal(
+            taskId,
+            BPMN_TASK_CANDIDATES_USER_ORIGINAL
+        ) as? List<String>? ?: emptyList()
+
+        originalCandidateUsers.forEach {
+            camundaTaskService.addCandidateUser(taskId, it)
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        val originalCandidateGroups = camundaTaskService.getVariableLocal(
+            taskId,
+            BPMN_TASK_CANDIDATES_GROUP_ORIGINAL
+        ) as? List<String>? ?: emptyList()
+
+        originalCandidateGroups.forEach {
+            camundaTaskService.addCandidateGroup(taskId, it)
+        }
+
+        log.debug {
+            "Return candidates from original attributes: taskId=$taskId, " +
+                "users=$originalCandidateUsers, groups=$originalCandidateGroups"
+        }
+
+        camundaTaskService.removeVariableLocal(taskId, BPMN_TASK_CANDIDATES_USER_ORIGINAL)
+        camundaTaskService.removeVariableLocal(taskId, BPMN_TASK_CANDIDATES_GROUP_ORIGINAL)
     }
 }

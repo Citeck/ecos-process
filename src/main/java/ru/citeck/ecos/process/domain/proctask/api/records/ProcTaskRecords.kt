@@ -31,6 +31,7 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import java.time.Instant
 import java.util.*
@@ -43,13 +44,12 @@ const val CHANGE_OWNER_ATT = "changeOwner"
 const val CHANGE_OWNER_ACTION_ATT = "action"
 const val CHANGE_OWNER_USER_ATT = "owner"
 
-
-
 @Component
 class ProcTaskRecords(
     private val procTaskService: ProcTaskService,
     private val camundaTaskService: TaskService,
-    private val procTaskOwnership: ProcTaskOwnership
+    private val procTaskOwnership: ProcTaskOwnership,
+    private val ecosAuthoritiesApi: EcosAuthoritiesApi,
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
 
     companion object {
@@ -227,7 +227,7 @@ class ProcTaskRecords(
         val user = if (userData == CURRENT_USER_FLAG) {
             AuthContext.getCurrentUser()
         } else {
-            userData
+            ecosAuthoritiesApi.getAuthorityName(userData)
         }
 
         return TaskOwnershipChangeData(action, taskId, user)

@@ -42,8 +42,10 @@ data class ProcTaskDto(
     val owner: EntityRef = RecordRef.EMPTY,
 
     val candidateUsers: List<EntityRef> = emptyList(),
+    val candidateUsersOriginal: List<String> = emptyList(),
 
     val candidateGroups: List<EntityRef> = emptyList(),
+    val candidateGroupsOriginal: List<String> = emptyList(),
 
     val definitionKey: String? = null,
 

@@ -74,8 +74,12 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                         element.multiInstanceConfig.toAutoModeLoopCharacteristics(element)
                     )
                 } else {
-                    otherAttributes[CAMUNDA_CANDIDATE_USERS] = usersExpression(element.assignees.map { it.value })
-                    otherAttributes[CAMUNDA_CANDIDATE_GROUPS] = groupsExpression(element.assignees.map { it.value })
+                    // Use assignee as storage for Ecos Roles recipients.
+                    // see RecipientsFromRolesUserTaskAssignListener
+                    otherAttributes[CAMUNDA_ASSIGNEE] = let {
+                        usersExpression(element.assignees.map { it.value }) + "," +
+                            groupsExpression(element.assignees.map { it.value })
+                    }
                 }
             }
 
