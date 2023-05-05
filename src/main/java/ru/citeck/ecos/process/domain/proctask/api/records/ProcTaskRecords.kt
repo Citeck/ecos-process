@@ -2,12 +2,9 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
-import org.camunda.bpm.engine.TaskService
-import org.camunda.bpm.engine.task.TaskQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
@@ -21,6 +18,7 @@ import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -34,13 +32,11 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import java.time.Instant
-import java.util.*
 import kotlin.system.measureTimeMillis
 
 @Component
 class ProcTaskRecords(
-    private val procTaskService: ProcTaskService,
-    private val camundaTaskService: TaskService
+    private val procTaskService: ProcTaskService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
 
     companion object {
@@ -70,58 +66,34 @@ class ProcTaskRecords(
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
         // TODO: check actor filter $CURRENT and filter task query
 
-        val fullAuth = AuthContext.getCurrentFullAuth()
-
-        val currentUser = fullAuth.getUser()
-        val currentAuthorities = let {
-            mutableSetOf(currentUser).apply {
-                addAll(fullAuth.getAuthorities())
-            }.toList()
+        val predicate = if (recsQuery.language == PredicateService.LANGUAGE_PREDICATE) {
+            recsQuery.getQuery(Predicate::class.java)
+        } else if (recsQuery.language.isEmpty()) {
+            Predicates.alwaysTrue()
+        } else {
+            error("Unsupported language: ${recsQuery.language}")
         }
 
-        val camundaCount: Long
-        val camundaCountTime = measureTimeMillis {
-            camundaCount = camundaTaskService.createTaskQuery()
-                .or()
-                .taskAssigneeIn(currentUser)
-                .taskCandidateUser(currentUser)
-                .taskCandidateGroupIn(currentAuthorities)
-                .endOr()
-                .filterByCreated(recsQuery)
-                .count()
-        }
+        val sortBy = recsQuery.getSortByCreated()
+            ?: SortBy(RecordConstants.ATT_CREATED, false)
 
-        val tasksFromCamunda: List<RecordRef>
-        val tasksFromCamundaTime = measureTimeMillis {
-            tasksFromCamunda = camundaTaskService.createTaskQuery()
-                .or()
-                .taskAssigneeIn(currentUser)
-                .taskCandidateUser(currentUser)
-                .taskCandidateGroupIn(currentAuthorities)
-                .endOr()
-                .filterByCreated(recsQuery)
-                .sortByQuery(recsQuery)
-                .initializeFormKeys()
-                .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
-                .map {
-                    RecordRef.create(AppName.EPROC, ID, it.id)
-                }
-        }
-
-        log.debug { "Camunda task count: $camundaCountTime ms" }
-        log.debug { "Camunda tasks: $tasksFromCamundaTime ms" }
+        val tasksResult = procTaskService.getCurrentUserTasksIds(
+            predicate,
+            recsQuery.page,
+            listOf(sortBy)
+        )
+        val tasksRefs = tasksResult.entities.map { RecordRef.create(AppName.EPROC, ID, it) }
 
         val result = RecsQueryRes<RecordRef>()
 
-        result.setRecords(tasksFromCamunda)
-        result.setTotalCount(camundaCount)
-        result.setHasMore(camundaCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
+        result.setRecords(tasksRefs)
+        result.setTotalCount(tasksResult.totalCount)
 
         return result
     }
 
-    override fun getRecordsAtts(recordsId: List<String>): List<ProcTaskRecord?>? {
-        if (recordsId.isEmpty()) {
+    override fun getRecordsAtts(recordIds: List<String>): List<ProcTaskRecord?>? {
+        if (recordIds.isEmpty()) {
             return emptyList()
         }
 
@@ -131,7 +103,7 @@ class ProcTaskRecords(
 
             val procRefs = mutableListOf<String>()
 
-            recordsId.forEach {
+            recordIds.forEach {
                 val ref = RecordRef.valueOf(it)
                 if (ref.isAlfTaskRef()) {
                     records[it] = createTaskRecordFromAlf(ref)
@@ -153,7 +125,7 @@ class ProcTaskRecords(
                 }
             }
 
-            result = recordsId.map { records[it] }
+            result = recordIds.map { records[it] }
         }
 
         log.debug { "Get Camunda Tasks records atts: $resultTime ms" }
@@ -309,43 +281,6 @@ class ProcTaskRecords(
             return name.substring(DOCUMENT_FIELD_PREFIX.length)
                 .replace("_".toRegex(), ":")
         }
-    }
-}
-
-fun TaskQuery.filterByCreated(recsQuery: RecordsQuery): TaskQuery {
-    val createdAttPredicate = recsQuery.getAttCreatedValuePredicate() ?: return this
-
-    return when (createdAttPredicate.getType()) {
-        ValuePredicate.Type.GT -> {
-            this.taskCreatedAfter(Date.from(createdAttPredicate.getValue().getAsInstant()))
-        }
-
-        ValuePredicate.Type.LE -> {
-            this.taskCreatedBefore(Date.from(createdAttPredicate.getValue().getAsInstant()))
-        }
-
-        else -> {
-            error(
-                "Unsupported predicate type: ${createdAttPredicate.getType()} " +
-                    "for attribute ${createdAttPredicate.getAttribute()}"
-            )
-        }
-    }
-}
-
-fun TaskQuery.sortByQuery(recsQuery: RecordsQuery): TaskQuery {
-    val sortByCreated = recsQuery.getSortByCreated()
-        ?: return this.orderByTaskCreateTime()
-            .desc()
-
-    if (sortByCreated.attribute != RecordConstants.ATT_CREATED) {
-        error("Unsupported sort attribute: ${sortByCreated.attribute}")
-    }
-
-    return if (sortByCreated.ascending) {
-        this.orderByTaskCreateTime().asc()
-    } else {
-        this.orderByTaskCreateTime().desc()
     }
 }
 
