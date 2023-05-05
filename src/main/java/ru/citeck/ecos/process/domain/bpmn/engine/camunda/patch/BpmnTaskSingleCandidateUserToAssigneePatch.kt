@@ -26,7 +26,7 @@ class BpmnTaskSingleCandidateUserToAssigneePatch(
             .initializeFormKeys()
             .list()
 
-        log.error { "Found ${tasksWithCandidateUsers.size} for BpmnTaskSingleCandidateUserToAssigneePatch patch" }
+        log.info { "Found ${tasksWithCandidateUsers.size} for BpmnTaskSingleCandidateUserToAssigneePatch patch" }
 
         val filtered = tasksWithCandidateUsers
             .filter {
@@ -35,10 +35,10 @@ class BpmnTaskSingleCandidateUserToAssigneePatch(
                 it.assignee == null && candidateUsers.size == 1 && candidateGroups.isEmpty()
             }
 
-        log.error { "Filtered ${filtered.size} for BpmnTaskSingleCandidateUserToAssigneePatch patch" }
+        log.info { "Filtered ${filtered.size} for BpmnTaskSingleCandidateUserToAssigneePatch patch" }
 
         filtered.forEach {
-            log.error { "Patch SingleCandidateUser task ${it.id}" }
+            log.info { "Patch SingleCandidateUser task ${it.id}" }
 
             val assigneeUser = camundaTaskService.getIdentityLinksForTask(it.id).first().userId
             it.assignee = assigneeUser
