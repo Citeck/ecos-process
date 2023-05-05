@@ -11,6 +11,8 @@ import org.camunda.bpm.engine.delegate.TaskListener
 import org.camunda.bpm.engine.impl.bpmn.behavior.UserTaskActivityBehavior
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl
+import org.camunda.bpm.engine.task.IdentityLink
+import org.camunda.bpm.engine.task.IdentityLinkType
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
@@ -262,4 +264,26 @@ fun ActivityImpl.addTaskListener(eventName: String, listener: TaskListener) {
             listener
         )
     }
+}
+
+fun Collection<IdentityLink>.splitToUserGroupCandidates(): Pair<Set<String>, Set<String>> {
+    if (this.isEmpty()) {
+        return Pair(emptySet(), emptySet())
+    }
+
+    val candidateUsers = mutableSetOf<String>()
+    val candidateGroups = mutableSetOf<String>()
+
+    this.forEach {
+        if (it.type == IdentityLinkType.CANDIDATE) {
+            it.userId?.let { userId ->
+                candidateUsers.add(userId)
+            }
+            it.groupId?.let { groupId ->
+                candidateGroups.add(groupId)
+            }
+        }
+    }
+
+    return Pair(candidateUsers, candidateGroups)
 }
