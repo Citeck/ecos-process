@@ -2,8 +2,8 @@
 id: dmn-def
 
 name:
-  en: DMN Definition
-  ru: Описание DMN
+  en: DMN model
+  ru: Модель DMN
 
 system: true
 sourceId: eproc/dmn-def
@@ -20,10 +20,10 @@ defaultCreateVariant: false
 createVariants:
 
   - id: create-new-process-def # UI use this ID as default create variant
-    name: { ru: Создать DMN, en: Create DMN }
+    name: { ru: Создать DMN модель, en: Create DMN model}
 
   - id: upload-proc-def
-    name: { ru: Загрузить процесс, en: Upload process }
+    name: { ru: Загрузить DMN модель, en: Upload DMN model }
     formRef: uiserv/form@ecos-module-upload
 
 model:

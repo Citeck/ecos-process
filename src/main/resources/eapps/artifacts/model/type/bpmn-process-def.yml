@@ -2,8 +2,8 @@
 id: bpmn-process-def
 
 name:
-  en: ECOS BPMN Process Definition
-  ru: Описание BPMN процесса ECOS
+  en: BPMN model
+  ru: Модель BPMN
 
 system: true
 sourceId: eproc/bpmn-def
@@ -20,10 +20,10 @@ defaultCreateVariant: false
 createVariants:
 
   - id: create-new-process-def # UI use this ID as default create variant
-    name: { ru: Создать camunda процесс, en: Create camunda process }
+    name: { ru: Создать BPMN модель, en: Create BPMN model }
 
   - id: upload-proc-def
-    name: { ru: Загрузить процесс, en: Upload process }
+    name: { ru: Загрузить BPMN модель, en: Upload BPMN model }
     formRef: uiserv/form@ecos-module-upload
 
 model:
