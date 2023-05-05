@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.patch
 import mu.KotlinLogging
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.proctask.converter.splitToUserGroupCandidates
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.splitToUserGroupCandidates
 import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosPatch
 import java.util.concurrent.Callable
 
