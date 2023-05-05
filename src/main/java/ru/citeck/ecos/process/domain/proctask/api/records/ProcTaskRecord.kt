@@ -8,8 +8,8 @@ import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
-import ru.citeck.ecos.process.domain.proctask.service.ProcTaskOwnership
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
+import ru.citeck.ecos.process.domain.proctask.service.TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP
 import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -93,7 +93,7 @@ class ProcTaskRecord(
             }
 
             if (TASK_PERMISSION_REASSIGN.equals(name, ignoreCase = true)) {
-                return AuthContext.getCurrentAuthorities().contains(ProcTaskOwnership.GROUP_TASKS_REASSIGN_ALLOWED)
+                return AuthContext.getCurrentAuthorities().contains(TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP)
             }
 
             log.warn { "Request unknown permission <$name> for task ${this@ProcTaskRecord.id}" }

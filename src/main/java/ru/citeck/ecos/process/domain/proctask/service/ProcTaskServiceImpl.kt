@@ -8,16 +8,13 @@ import org.camunda.bpm.engine.task.NativeTaskQuery
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.data.sql.repo.find.DbFindPage
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
 import ru.citeck.ecos.data.sql.repo.find.DbFindSort
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_LAST_TASK_COMPLETOR
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_COMPLETED_BY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.splitToUserGroupCandidates
@@ -26,7 +23,6 @@ import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
-import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import java.time.Instant

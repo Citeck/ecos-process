@@ -4,9 +4,12 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.perms.EcosPermissionDelegateApi
 import ru.citeck.ecos.webapp.api.perms.PermissionType
+
+const val TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP = "GROUP_WORKFLOW_TASKS_REASSIGN_ALLOWED"
 
 @Component
 class ProcTaskOwnership(
@@ -16,7 +19,8 @@ class ProcTaskOwnership(
 ) {
 
     companion object {
-        const val GROUP_TASKS_REASSIGN_ALLOWED = "GROUP_WORKFLOW_TASKS_REASSIGN_ALLOWED"
+        private const val PERSON_SOURCE_ID = "person"
+        private const val PERSON_AUTHORITIES_LIST_ATT = "authorities.list[]"
     }
 
     fun performAction(data: TaskOwnershipChangeData) {
@@ -33,7 +37,7 @@ class ProcTaskOwnership(
 
                     val currentUser = AuthContext.getCurrentUser()
 
-                    if (task.documentRef.isNotEmpty() && userId.dontHaveReadPermsToRecord(task.documentRef)) {
+                    if (task.documentRef.isNotEmpty() && dontHaveReadPermsToRecord(userId, task.documentRef)) {
                         ecosPermissionDelegateApi.delegate(task.documentRef, PermissionType.READ, currentUser, userId)
                     }
                 }
@@ -41,8 +45,12 @@ class ProcTaskOwnership(
         }
     }
 
-    private fun String.dontHaveReadPermsToRecord(record: EntityRef): Boolean {
-        return AuthContext.runAs(this) {
+    private fun dontHaveReadPermsToRecord(userId: String, record: EntityRef): Boolean {
+        val userAuthorities = recordsService.getAtt(
+            EntityRef.create(AppName.EMODEL, PERSON_SOURCE_ID, userId), PERSON_AUTHORITIES_LIST_ATT
+        ).asStrList()
+
+        return AuthContext.runAs(userId, userAuthorities) {
             !recordsService.getAtt(
                 record,
                 "permissions._has.Read?bool!"
@@ -59,7 +67,7 @@ class ProcTaskOwnership(
             return
         }
 
-        if (AuthContext.getCurrentAuthorities().contains(GROUP_TASKS_REASSIGN_ALLOWED)) {
+        if (AuthContext.getCurrentAuthorities().contains(TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP)) {
             return
         }
 
