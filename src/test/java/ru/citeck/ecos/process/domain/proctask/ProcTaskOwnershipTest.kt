@@ -14,7 +14,6 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_GROUP_ORIGINAL
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_USER_ORIGINAL
 import ru.citeck.ecos.process.domain.proctask.api.records.*
-import ru.citeck.ecos.process.domain.proctask.converter.splitToUserGroupCandidates
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -352,7 +351,6 @@ class ProcTaskOwnershipTest {
 
         taskService.setAssignee(task.id, "harry")
         candidateGroups.forEach { taskService.addCandidateGroup(task.id, it) }
-
 
         AuthContext.runAs("harry") {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
