@@ -161,11 +161,12 @@ object BpmnIO {
     }
 
     // todo: replace return value by BpmnProcessDef
-    fun generateDefaultDef(processDefId: String, name: MLText, ecosType: EntityRef): TDefinitions {
+    fun generateDefaultDef(defData: BpmnProcessDefInitData): TDefinitions {
 
-        val defId = generateElementId("Definitions")
+        with(defData) {
+            val defId = generateElementId("Definitions")
 
-        val defaultDef = """
+            val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>
             <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -190,11 +191,26 @@ object BpmnIO {
             </bpmn:definitions>
         """.trimIndent()
 
-        val def = BpmnXmlUtils.readFromString(defaultDef)
-        def.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
-        def.otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(name)
-        def.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
+            val def = BpmnXmlUtils.readFromString(defaultDef)
+            def.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
+            def.otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(name)
+            def.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
+            def.otherAttributes[BPMN_PROP_FORM_REF] = form.toString()
+            def.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
+            def.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
+            def.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
 
-        return def
+            return def
+        }
     }
+
+    data class BpmnProcessDefInitData(
+        val processDefId: String,
+        val name: MLText,
+        val ecosType: EntityRef,
+        val form: EntityRef,
+        val sectionRef: EntityRef,
+        val enabled: Boolean,
+        val autoStartEnabled: Boolean
+    )
 }

@@ -368,7 +368,17 @@ class BpmnProcDefRecords(
                 autoStartEnabled = record.autoStartEnabled,
                 name = record.name,
                 data = newDefData ?: BpmnXmlUtils.writeToString(
-                    BpmnIO.generateDefaultDef(record.processDefId, record.name, record.ecosType)
+                    BpmnIO.generateDefaultDef(
+                        BpmnIO.BpmnProcessDefInitData(
+                            record.processDefId,
+                            record.name,
+                            record.ecosType,
+                            record.formRef,
+                            record.sectionRef,
+                            record.enabled,
+                            record.autoStartEnabled
+                        )
+                    )
                 ).toByteArray(),
                 ecosTypeRef = record.ecosType,
                 formRef = record.formRef,
