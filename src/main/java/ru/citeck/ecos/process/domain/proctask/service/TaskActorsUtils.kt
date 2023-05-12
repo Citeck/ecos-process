@@ -27,15 +27,15 @@ private lateinit var utils: TaskActorsUtils
 
 private val log = KotlinLogging.logger {}
 
-fun ProcTaskDto.currentUserIsTaskActor(): Boolean {
-    return isCurrentUserTaskActor(id, assignee, candidateUsers, candidateGroups, documentType)
+fun ProcTaskDto.isCurrentUserTaskActorOrDelegate(): Boolean {
+    return isCurrentUserTaskActorOrDelegate(id, assignee, candidateUsers, candidateGroups, documentType)
 }
 
-fun ProcTaskRecord.currentUserIsTaskActor(): Boolean {
-    return isCurrentUserTaskActor(id, assignee, candidateUsers, candidateGroups, documentType)
+fun ProcTaskRecord.isCurrentUserTaskActorOrDelegate(): Boolean {
+    return isCurrentUserTaskActorOrDelegate(id, assignee, candidateUsers, candidateGroups, documentType)
 }
 
-private fun isCurrentUserTaskActor(
+private fun isCurrentUserTaskActorOrDelegate(
     taskId: String,
     assignee: EntityRef,
     candidateUsers: List<EntityRef>,

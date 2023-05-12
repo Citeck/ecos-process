@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
@@ -324,7 +323,7 @@ class ProcTaskRecords(
         }
 
         private fun checkPermissionToCompleteTask() {
-            if (!task.currentUserIsTaskActor()) {
+            if (!task.isCurrentUserTaskActorOrDelegate()) {
                 throw IllegalStateException("Task mutate denied. Current user is not a task actor")
             }
         }

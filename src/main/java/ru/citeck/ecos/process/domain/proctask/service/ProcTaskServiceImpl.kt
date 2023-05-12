@@ -105,7 +105,7 @@ class ProcTaskServiceImpl(
         }
 
         return getTasksByProcess(processId).filter {
-            it.currentUserIsTaskActor()
+            it.isCurrentUserTaskActorOrDelegate()
         }
     }
 
@@ -123,7 +123,7 @@ class ProcTaskServiceImpl(
         }
 
         return getTasksByDocument(document).filter {
-            it.currentUserIsTaskActor()
+            it.isCurrentUserTaskActorOrDelegate()
         }
     }
 
@@ -199,8 +199,10 @@ class ProcTaskServiceImpl(
         if (task.assignee.getLocalId() == currentUser) {
             return ""
         }
-        val candidates = HashSet(task.candidateUsersOriginal)
-        candidates.addAll(task.candidateGroupsOriginal)
+        val candidatesRefs = HashSet(task.candidateUsers)
+        candidatesRefs.addAll(task.candidateGroups)
+        val candidates = authoritiesApi.getAuthorityNames(candidatesRefs.toList())
+
         if (task.assignee.isEmpty() && candidates.any { currentAuthorities.contains(it) }) {
             return ""
         }
@@ -219,7 +221,7 @@ class ProcTaskServiceImpl(
             }
         } else {
             delegations.find { delegation ->
-                delegation.delegatedAuthorities.any { candidates.contains(it) }
+                candidates.any { delegation.delegatedAuthorities.contains(it) }
             }
         }
         if (delegation == null) {

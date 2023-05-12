@@ -64,7 +64,7 @@ class ProcTaskOwnership(
             return
         }
 
-        if (task.currentUserIsTaskActor()) {
+        if (task.isCurrentUserTaskActorOrDelegate()) {
             return
         }
 

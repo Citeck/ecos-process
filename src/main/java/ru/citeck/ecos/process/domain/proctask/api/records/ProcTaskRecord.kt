@@ -10,7 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.proctask.service.TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP
-import ru.citeck.ecos.process.domain.proctask.service.currentUserIsTaskActor
+import ru.citeck.ecos.process.domain.proctask.service.isCurrentUserTaskActorOrDelegate
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
@@ -89,7 +89,7 @@ class ProcTaskRecord(
                 return true
             }
 
-            if (this@ProcTaskRecord.currentUserIsTaskActor()) {
+            if (this@ProcTaskRecord.isCurrentUserTaskActorOrDelegate()) {
                 return true
             }
 
