@@ -5,8 +5,6 @@ import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.context.lib.auth.AuthRole
-import ru.citeck.ecos.context.lib.auth.AuthUser
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
 import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
@@ -198,7 +196,7 @@ class ProcTaskServiceImpl(
         currentAuthorities: Set<String>
     ): String {
 
-        if (task.assignee.getLocalId() == currentUser || AuthContext.isRunAsSystemOrAdmin()) {
+        if (task.assignee.getLocalId() == currentUser) {
             return ""
         }
         val candidatesRefs = HashSet(task.candidateUsers)
@@ -208,10 +206,9 @@ class ProcTaskServiceImpl(
         if (task.assignee.isEmpty() && candidates.any { currentAuthorities.contains(it) }) {
             return ""
         }
-        val permissionDeniedMsg = "Permission denied. You can't complete task ${task.id}"
         val documentType = task.documentType
         if (documentType.isNullOrBlank()) {
-            error(permissionDeniedMsg)
+            return ""
         }
         val delegations = delegationService.getActiveAuthDelegations(
             currentUser,
@@ -227,7 +224,7 @@ class ProcTaskServiceImpl(
             }
         }
         if (delegation == null) {
-            error(permissionDeniedMsg)
+            return ""
         }
         return delegation.delegator
     }
