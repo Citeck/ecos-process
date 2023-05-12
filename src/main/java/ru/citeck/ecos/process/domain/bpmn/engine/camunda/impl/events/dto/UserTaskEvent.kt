@@ -24,6 +24,7 @@ data class UserTaskEvent(
     var comment: String? = null,
     var outcome: String? = null,
     var outcomeName: MLText? = null,
+    var completedOnBehalfOf: String? = null,
     var document: RecordRef? = null,
     var roles: List<TaskRole> = emptyList(),
 

@@ -3,241 +3,92 @@ package ru.citeck.ecos.process.domain.proctask.service
 import mu.KotlinLogging
 import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
-import org.camunda.bpm.engine.impl.TaskQueryProperty
-import org.camunda.bpm.engine.task.NativeTaskQuery
 import org.springframework.stereotype.Service
-import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.context.lib.auth.AuthGroup
-import ru.citeck.ecos.context.lib.auth.AuthRole
-import ru.citeck.ecos.data.sql.repo.find.DbFindPage
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
-import ru.citeck.ecos.data.sql.repo.find.DbFindSort
-import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
+import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
-import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.predicate.model.Predicate
-import ru.citeck.ecos.records2.predicate.model.ValuePredicate
+import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.*
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import kotlin.system.measureTimeMillis
 
 @Service
 class ProcTaskServiceImpl(
+    private val authoritiesApi: EcosAuthoritiesApi,
     private val camundaTaskService: TaskService,
     private val camundaTaskFormService: FormService,
-    private val cacheableTaskConverter: CacheableTaskConverter
+    private val cacheableTaskConverter: CacheableTaskConverter,
+    private val delegationService: DelegationService
 ) : ProcTaskService {
 
     companion object {
         private val log = KotlinLogging.logger {}
-        private const val SQL_QUERY_FIELDS_PH = "__FIELDS__"
-
-        private const val TASK_TABLE_SQL_ALIAS = "task"
-        private val TASK_ATTS_SQL_MAPPING = mapOf(
-            RecordConstants.ATT_CREATED to "$TASK_TABLE_SQL_ALIAS.${TaskQueryProperty.CREATE_TIME.name}"
-        )
-        private val TASK_ATTS_TYPES = mapOf(
-            RecordConstants.ATT_CREATED to AttributeType.DATETIME
-        )
     }
 
-    override fun getCurrentUserTasksIds(
+    override fun findTasks(predicate: Predicate): DbFindRes<String> {
+        return findTasks(predicate, emptyList(), QueryPage.create {})
+    }
+
+    override fun findTasks(
         predicate: Predicate,
-        page: QueryPage,
-        sortBy: List<SortBy>
+        sortBy: List<SortBy>,
+        page: QueryPage
     ): DbFindRes<String> {
 
-        val fullAuth = AuthContext.getCurrentFullAuth()
-
-        val actors = mutableSetOf(fullAuth.getUser())
-        actors.addAll(fullAuth.getAuthorities())
-
-        val users = actors.filter { !it.startsWith(AuthGroup.PREFIX) && !it.startsWith(AuthRole.PREFIX) }
-        val groups = actors.filter { it.startsWith(AuthGroup.PREFIX) }
-
-        val sorting = sortBy.mapNotNull {
-            val field = TASK_ATTS_SQL_MAPPING[it.attribute]
-            if (!field.isNullOrBlank()) {
-                DbFindSort(field, it.ascending)
+        val preparedPredicate = PredicateUtils.mapValuePredicates(predicate) {
+            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
+                var actor = it.getValue().asText()
+                if (actor == "\$CURRENT") {
+                    actor = AuthContext.getCurrentUser()
+                }
+                val delegations = delegationService.getActiveAuthDelegations(actor, emptyList())
+                if (delegations.isNotEmpty()) {
+                    val actorsVariants = mutableListOf<Predicate>()
+                    actorsVariants.add(it)
+                    delegations.forEach { delegation ->
+                        val delegationConditions = mutableListOf<Predicate>()
+                        delegationConditions.add(
+                            Predicates.`in`(
+                                ProcTaskSqlQueryBuilder.ATT_ACTORS,
+                                delegation.delegatedAuthorities
+                            )
+                        )
+                        if (delegation.delegatedTypes.isNotEmpty()) {
+                            delegationConditions.add(
+                                Predicates.inVals(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE, delegation.delegatedTypes)
+                            )
+                        } else {
+                            delegationConditions.add(
+                                Predicates.notEmpty(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE)
+                            )
+                        }
+                        actorsVariants.add(AndPredicate.of(delegationConditions))
+                    }
+                    OrPredicate.of(actorsVariants)
+                } else {
+                    it
+                }
             } else {
-                null
+                it
             }
+        } ?: VoidPredicate.INSTANCE
+
+        if (predicate is VoidPredicate && !AuthContext.isRunAsSystemOrAdmin()) {
+            return DbFindRes.empty()
         }
 
-        val params = mutableMapOf<String, Any?>()
-
-        var baseSqlSelectQuery = "SELECT $SQL_QUERY_FIELDS_PH from act_ru_task $TASK_TABLE_SQL_ALIAS " +
-            "LEFT JOIN act_ru_identitylink ilink on ilink.task_id_ = $TASK_TABLE_SQL_ALIAS.id_ " +
-            "WHERE ($TASK_TABLE_SQL_ALIAS.assignee_ IN (${addSqlQueryParams(params, users)})" +
-            "OR ($TASK_TABLE_SQL_ALIAS.assignee_ IS NULL " +
-            "AND ilink.type_ = 'candidate' " +
-            "AND (" +
-            "ilink.group_id_ IN (${addSqlQueryParams(params, groups)}) " +
-            "OR ilink.user_id_ IN (${addSqlQueryParams(params, users)})" +
-            ")" +
-            "))"
-
-        val queryBuilder = StringBuilder(baseSqlSelectQuery)
-        addPredicateConditions(queryBuilder, predicate, params)
-        baseSqlSelectQuery = queryBuilder.toString()
-
-        fun createTasksQuery(
-            selectFields: String,
-            page: DbFindPage = DbFindPage.ALL,
-            sorting: List<DbFindSort> = emptyList()
-        ): NativeTaskQuery {
-
-            val limit = page.maxItems
-            val offset = page.skipCount
-
-            var fullSelectFields = selectFields
-            sorting.forEach {
-                fullSelectFields += ",${it.column}"
-            }
-
-            val sqlSelectQuery = StringBuilder(baseSqlSelectQuery.replace(SQL_QUERY_FIELDS_PH, fullSelectFields))
-
-            if (sorting.isNotEmpty()) {
-                sqlSelectQuery.append(" ORDER BY ")
-                sorting.forEach {
-                    sqlSelectQuery.append(it.column)
-                    sqlSelectQuery.append(
-                        if (it.ascending) {
-                            " ASC,"
-                        } else {
-                            " DESC,"
-                        }
-                    )
-                }
-                sqlSelectQuery.setLength(sqlSelectQuery.length - 1)
-            }
-
-            if (limit >= 0) {
-                sqlSelectQuery.append(" LIMIT $limit")
-            }
-            if (offset > 0) {
-                sqlSelectQuery.append(" OFFSET $offset")
-            }
-            var query = camundaTaskService.createNativeTaskQuery().sql(sqlSelectQuery.toString())
-            for ((key, value) in params) {
-                query = query.parameter(key, value)
-            }
-            return query
-        }
-
-        val tasksLimit = if (page.maxItems < 0) {
-            1000
-        } else {
-            page.maxItems
-        }
-
-        val taskIds: List<String>
-        val tasksFromCamundaTime = measureTimeMillis {
-            taskIds = createTasksQuery(
-                "DISTINCT $TASK_TABLE_SQL_ALIAS.${TaskQueryProperty.TASK_ID.name}",
-                DbFindPage(page.skipCount, tasksLimit),
-                sorting
-            ).list().map {
-                it.id
-            }
-        }
-        val totalCount: Long
-        val camundaCountTime = measureTimeMillis {
-            totalCount = createTasksQuery(
-                "COUNT(DISTINCT $TASK_TABLE_SQL_ALIAS.${TaskQueryProperty.TASK_ID.name})"
-            ).count()
-        }
-        log.debug { "Camunda task count: $camundaCountTime ms" }
-        log.debug { "Camunda tasks: $tasksFromCamundaTime ms" }
-
-        return DbFindRes(taskIds, totalCount)
-    }
-
-    private fun addSqlQueryParams(params: MutableMap<String, Any?>, values: Collection<Any?>): String {
-        val result = StringBuilder()
-        for (value in values) {
-            val paramName = "p${params.size}"
-            params[paramName] = value
-            if (result.isNotEmpty()) {
-                result.append(",")
-            }
-            result.append("#{$paramName}")
-        }
-        return result.toString()
-    }
-
-    private fun addPredicateConditions(query: StringBuilder, predicate: Predicate, params: MutableMap<String, Any?>) {
-
-        if (predicate is ValuePredicate) {
-            val field = TASK_ATTS_SQL_MAPPING[predicate.getAttribute()]
-            if (field.isNullOrBlank()) {
-                return
-            }
-            val operator = when (predicate.getType()) {
-                ValuePredicate.Type.GT -> ">"
-                ValuePredicate.Type.LT -> "<"
-                ValuePredicate.Type.GE -> ">="
-                ValuePredicate.Type.LE -> "<="
-                else -> null
-            } ?: return
-
-            val attType = TASK_ATTS_TYPES[predicate.getAttribute()] ?: AttributeType.TEXT
-            val predicateValue = mutableListOf<Any?>()
-            castSqlParamValueToListOf(predicate.getValue(), attType, predicateValue)
-
-            query.append(" AND ")
-                .append(field)
-                .append(" ")
-                .append(operator)
-                .append(" ")
-                .append(addSqlQueryParams(params, predicateValue))
-        }
-    }
-
-    private fun castSqlParamValueToListOf(value: DataValue, type: AttributeType, result: MutableList<Any?>) {
-        if (value.isArray()) {
-            value.forEach {
-                castSqlParamValueToListOf(it, type, result)
-            }
-            return
-        }
-        if (value.isNull()) {
-            result.add(null)
-        }
-        val convertedValue: Any = when (type) {
-            AttributeType.DATETIME,
-            AttributeType.DATE -> {
-                val dateTime = if (value.isTextual()) {
-                    val txt = value.asText()
-                    OffsetDateTime.parse(
-                        if (!txt.contains('T')) {
-                            "${txt}T00:00:00Z"
-                        } else {
-                            txt
-                        }
-                    )
-                } else if (value.isNumber()) {
-                    OffsetDateTime.ofInstant(Instant.ofEpochMilli(value.asLong()), ZoneOffset.UTC)
-                } else {
-                    error("Unknown date or datetime value: '$value'")
-                }
-                if (type == AttributeType.DATE) {
-                    dateTime.toLocalDate()
-                } else {
-                    dateTime
-                }
-            }
-            else -> value.asText()
-        }
-        result.add(convertedValue)
+        return ProcTaskSqlQueryBuilder(authoritiesApi, camundaTaskService)
+            .addConditions(preparedPredicate)
+            .setPage(page.skipCount, page.maxItems)
+            .setSorting(sortBy)
+            .selectTasks()
     }
 
     override fun getTasksByProcess(processId: String): List<ProcTaskDto> {
@@ -316,9 +167,17 @@ class ProcTaskServiceImpl(
     }
 
     override fun completeTask(taskId: String, outcome: Outcome, variables: Map<String, Any?>) {
+
         val currentUser = AuthContext.getCurrentUser()
+        val currentAuthorities = AuthContext.getCurrentAuthorities().toSet()
+
+        val task = getTaskById(taskId) ?: error("Task with id '$taskId' doesn't found")
+        val completedOnBehalfOf = getCompletedOnBehalfOfValue(task, currentUser, currentAuthorities)
 
         camundaTaskService.setVariableLocal(taskId, BPMN_TASK_COMPLETED_BY, currentUser)
+        if (completedOnBehalfOf.isNotEmpty()) {
+            camundaTaskService.setVariableLocal(taskId, BPMN_TASK_COMPLETED_ON_BEHALF_OF, completedOnBehalfOf)
+        }
 
         val completionVariables = variables.toMutableMap()
         completionVariables[outcome.outcomeId()] = outcome.value
@@ -329,6 +188,44 @@ class ProcTaskServiceImpl(
 
         cacheableTaskConverter.removeFromActualTaskCache(taskId)
         camundaTaskFormService.submitTaskForm(taskId, completionVariables)
+    }
+
+    private fun getCompletedOnBehalfOfValue(
+        task: ProcTaskDto,
+        currentUser: String,
+        currentAuthorities: Set<String>
+    ): String {
+
+        if (task.assignee.getLocalId() == currentUser) {
+            return ""
+        }
+        val candidates = HashSet(task.candidateUsersOriginal)
+        candidates.addAll(task.candidateGroupsOriginal)
+        if (task.assignee.isEmpty() && candidates.any { currentAuthorities.contains(it) }) {
+            return ""
+        }
+        val permissionDeniedMsg = "Permission denied. You can't complete task ${task.id}"
+        val documentType = task.documentType
+        if (documentType.isNullOrBlank()) {
+            error(permissionDeniedMsg)
+        }
+        val delegations = delegationService.getActiveAuthDelegations(
+            currentUser,
+            listOf(documentType)
+        )
+        val delegation = if (task.assignee.isNotEmpty()) {
+            delegations.find { delegation ->
+                delegation.delegatedAuthorities.contains(task.assignee.getLocalId())
+            }
+        } else {
+            delegations.find { delegation ->
+                delegation.delegatedAuthorities.any { candidates.contains(it) }
+            }
+        }
+        if (delegation == null) {
+            error(permissionDeniedMsg)
+        }
+        return delegation.delegator
     }
 
     override fun getVariables(taskId: String): Map<String, Any?> {

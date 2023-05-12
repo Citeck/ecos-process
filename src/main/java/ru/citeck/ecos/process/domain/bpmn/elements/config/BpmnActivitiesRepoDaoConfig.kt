@@ -28,21 +28,21 @@ class BpmnActivitiesRepoDaoConfig(
             override fun getAuthoritiesWithReadPermission(): Set<String> {
                 return setOf(AuthGroup.EVERYONE)
             }
-
-            override fun isCurrentUserHasWritePerms(): Boolean {
-                return false
-            }
-
-            override fun isCurrentUserHasAttReadPerms(name: String): Boolean {
+            override fun hasAttReadPerms(name: String): Boolean {
                 return true
             }
-
-            override fun isCurrentUserHasAttWritePerms(name: String): Boolean {
+            override fun hasAttWritePerms(name: String): Boolean {
+                return false
+            }
+            override fun hasReadPerms(): Boolean {
+                return true
+            }
+            override fun hasWritePerms(): Boolean {
                 return false
             }
         }
         val permsComponent = object : DbPermsComponent {
-            override fun getRecordPerms(record: Any): DbRecordPerms {
+            override fun getRecordPerms(user: String, authorities: Set<String>, record: Any): DbRecordPerms {
                 return accessPerms
             }
         }

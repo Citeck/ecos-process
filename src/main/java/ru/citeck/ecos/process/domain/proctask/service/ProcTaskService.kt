@@ -9,7 +9,9 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 
 interface ProcTaskService {
 
-    fun getCurrentUserTasksIds(predicate: Predicate, page: QueryPage, sortBy: List<SortBy>): DbFindRes<String>
+    fun findTasks(predicate: Predicate): DbFindRes<String>
+
+    fun findTasks(predicate: Predicate, sortBy: List<SortBy>, page: QueryPage): DbFindRes<String>
 
     fun getTasksByProcess(processId: String): List<ProcTaskDto>
 

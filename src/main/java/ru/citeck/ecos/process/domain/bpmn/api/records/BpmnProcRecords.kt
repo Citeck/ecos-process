@@ -2,16 +2,21 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 
 @Component
 class BpmnProcRecords(
@@ -63,7 +68,17 @@ class BpmnProcRecords(
             if (!key.startsWith(SYS_VAR_PREFIX)) {
                 when (key) {
                     BPMN_DOCUMENT -> {
-                        processVariables[BPMN_DOCUMENT_REF] = value.asJavaObj()
+                        val documentRef = value.asText()
+                        processVariables[BPMN_DOCUMENT_REF] = documentRef
+                        val typeId = AuthContext.runAsSystem {
+                            recordsService.getAtt(
+                                documentRef.toEntityRef(),
+                                RecordConstants.ATT_TYPE + ScalarType.LOCAL_ID_SCHEMA
+                            ).asText()
+                        }
+                        if (typeId.isNotBlank()) {
+                            processVariables[BPMN_DOCUMENT_TYPE] = typeId
+                        }
                         businessKey = value.asJavaObj().toString()
                     }
                     else -> processVariables[key] = value.asJavaObj()

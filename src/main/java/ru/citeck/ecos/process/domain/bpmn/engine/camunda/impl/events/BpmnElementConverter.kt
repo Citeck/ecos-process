@@ -87,6 +87,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         comment = variables[COMMENT_VAR]?.toString(),
         outcome = outcome.value,
         outcomeName = outcome.name,
+        completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,
         document = getDocumentRef()
     )
 }

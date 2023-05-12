@@ -4,6 +4,11 @@ name: { ru: Активные задачи, en: Active tasks }
 sourceId: eproc/proc-task
 system: true
 
+predicate:
+  t: eq
+  a: actor
+  v: $CURRENT
+
 actions:
   - uiserv/action@view-task
   - uiserv/action@view-task-in-background

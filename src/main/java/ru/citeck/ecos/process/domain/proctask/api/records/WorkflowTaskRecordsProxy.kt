@@ -4,6 +4,9 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.model.AndPredicate
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
@@ -75,19 +78,21 @@ class WorkflowTaskRecordsProxy(
 
     private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery): RecsQueryRes<*> {
         val result = RecsQueryRes<RecordRef>()
-        if (query.document.isBlank()) return result
-
-        val taskRefs = if (query.actor == CURRENT_USER_FLAG) {
-            procTaskService.getTasksByDocumentForCurrentUser(query.document)
-        } else {
-            procTaskService.getTasksByDocument(query.document)
-        }.map {
-            RecordRef.create("eproc", ProcTaskRecords.ID, it.id)
+        if (query.document.isBlank() || !query.active) {
+            return result
+        }
+        val conditions = mutableListOf<Predicate>(
+            Predicates.eq("document", query.document)
+        )
+        if (query.actor.isNotEmpty()) {
+            conditions.add(Predicates.eq("actor", query.actor))
         }
 
-        result.setRecords(taskRefs)
-        result.setTotalCount(taskRefs.size.toLong())
-
+        val tasksQueryRes = procTaskService.findTasks(AndPredicate.of(conditions))
+        result.setRecords(tasksQueryRes.entities.map {
+            RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it)
+        })
+        result.setTotalCount(tasksQueryRes.totalCount)
         return result
     }
 

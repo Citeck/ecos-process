@@ -76,6 +76,7 @@ class CacheableTaskConverter(
                 } else {
                     RecordRef.EMPTY
                 },
+                documentType = variables[BPMN_DOCUMENT_TYPE] as? String,
                 dueDate = dueDate?.toInstant(),
                 followUpDate = followUpDate?.toInstant(),
                 created = createTime.toInstant(),

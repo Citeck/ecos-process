@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
@@ -74,7 +75,6 @@ class ProcTaskRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        // TODO: check actor filter $CURRENT and filter task query
 
         val predicate = if (recsQuery.language == PredicateService.LANGUAGE_PREDICATE) {
             recsQuery.getQuery(Predicate::class.java)
@@ -87,10 +87,10 @@ class ProcTaskRecords(
         val sortBy = recsQuery.getSortByCreated()
             ?: SortBy(RecordConstants.ATT_CREATED, false)
 
-        val tasksResult = procTaskService.getCurrentUserTasksIds(
+        val tasksResult = procTaskService.findTasks(
             predicate,
-            recsQuery.page,
-            listOf(sortBy)
+            listOf(sortBy),
+            recsQuery.page
         )
         val tasksRefs = tasksResult.entities.map { RecordRef.create(AppName.EPROC, ID, it) }
 
@@ -172,8 +172,8 @@ class ProcTaskRecords(
 
     private fun LocalRecordAtts.toTaskOwnershipChangeData(taskId: String): TaskOwnershipChangeData {
         val changeOwner = getAtt(CHANGE_OWNER_ATT)
-        val actionData = changeOwner.get(CHANGE_OWNER_ACTION_ATT).asText()
-        val userData = changeOwner.get(CHANGE_OWNER_USER_ATT).asText()
+        val actionData = changeOwner[CHANGE_OWNER_ACTION_ATT].asText()
+        val userData = changeOwner[CHANGE_OWNER_USER_ATT].asText()
 
         if (actionData.isBlank()) {
             error("Action type is mandatory for change owner action")

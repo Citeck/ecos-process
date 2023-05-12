@@ -7,6 +7,7 @@ import ru.citeck.ecos.events2.type.RecordCreatedEvent
 import ru.citeck.ecos.events2.type.RecordDraftStatusChangedEvent
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -59,7 +60,10 @@ class BpmnProcessAutoStarter(
         }
 
         val documentRef = eventData.eventRef.toString()
-        val processVariables = mapOf(BPMN_DOCUMENT_REF to documentRef)
+        val processVariables = mapOf(
+            BPMN_DOCUMENT_REF to documentRef,
+            BPMN_DOCUMENT_TYPE to eventData.typeRef.getLocalId()
+        )
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
         bpmnProcService.startProcess(procDef.id, documentRef, processVariables)
