@@ -1,0 +1,14 @@
+---
+id: task-comments-broadcastable
+name:
+  ru: Транслируемые комментарии задачи
+  en: Broadcastable task comments
+prefix: ''
+attributes:
+  - id: broadcastComments
+    name:
+      en: Broadcast comments
+      ru: Транслировать комментарии
+    type: BOOLEAN
+    multiple: false
+    mandatory: false

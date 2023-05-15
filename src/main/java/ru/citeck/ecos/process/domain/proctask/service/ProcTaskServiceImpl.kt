@@ -6,18 +6,24 @@ import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
+import ru.citeck.ecos.model.lib.comments.dto.CommentDto
+import ru.citeck.ecos.model.lib.comments.dto.CommentTag
+import ru.citeck.ecos.model.lib.comments.dto.CommentTagType
+import ru.citeck.ecos.model.lib.comments.service.CommentsService
 import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
-import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
+import ru.citeck.ecos.process.domain.proctask.dto.*
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.*
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import kotlin.system.measureTimeMillis
+
+private const val TASK_COMMENT_BROADCAST_ASPECT = "task-comments-broadcastable"
 
 @Service
 class ProcTaskServiceImpl(
@@ -25,7 +31,9 @@ class ProcTaskServiceImpl(
     private val camundaTaskService: TaskService,
     private val camundaTaskFormService: FormService,
     private val cacheableTaskConverter: CacheableTaskConverter,
-    private val delegationService: DelegationService
+    private val delegationService: DelegationService,
+    private val commentsService: CommentsService,
+    private val recordsService: RecordsService
 ) : ProcTaskService {
 
     companion object {
@@ -166,28 +174,80 @@ class ProcTaskServiceImpl(
         return result
     }
 
-    override fun completeTask(taskId: String, outcome: Outcome, variables: Map<String, Any?>) {
+    override fun completeTask(completeData: CompleteTaskData) {
+        with(completeData) {
+            val taskId = task.id
+            val currentUser = AuthContext.getCurrentUser()
+            val currentAuthorities = AuthContext.getCurrentAuthorities().toSet()
 
-        val currentUser = AuthContext.getCurrentUser()
-        val currentAuthorities = AuthContext.getCurrentAuthorities().toSet()
+            val completedOnBehalfOf = getCompletedOnBehalfOfValue(completeData.task, currentUser, currentAuthorities)
 
-        val task = getTaskById(taskId) ?: error("Task with id '$taskId' doesn't found")
-        val completedOnBehalfOf = getCompletedOnBehalfOfValue(task, currentUser, currentAuthorities)
+            val taskLocalVariables = mutableMapOf<String, Any>()
+            taskLocalVariables[BPMN_TASK_COMPLETED_BY] = currentUser
 
-        camundaTaskService.setVariableLocal(taskId, BPMN_TASK_COMPLETED_BY, currentUser)
-        if (completedOnBehalfOf.isNotEmpty()) {
-            camundaTaskService.setVariableLocal(taskId, BPMN_TASK_COMPLETED_ON_BEHALF_OF, completedOnBehalfOf)
+            if (completedOnBehalfOf.isNotEmpty()) {
+                taskLocalVariables[BPMN_TASK_COMPLETED_ON_BEHALF_OF] = completedOnBehalfOf
+            }
+
+            val completionVariables = variables.toMutableMap()
+            completionVariables[outcome.outcomeId()] = outcome.value
+            completionVariables[outcome.nameId()] = outcome.name.toString()
+            completionVariables[BPMN_LAST_TASK_COMPLETOR] = currentUser
+
+            val taskComment = getComment()
+            taskComment?.let { comment ->
+                taskLocalVariables[BPMN_COMMENT] = comment
+                completionVariables[BPMN_LAST_TASK_COMMENT] = comment
+            }
+
+            log.debug {
+                "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables, " +
+                    "taskLocalVariables=$taskLocalVariables"
+            }
+
+            cacheableTaskConverter.removeFromActualTaskCache(taskId)
+
+            camundaTaskService.setVariablesLocal(taskId, taskLocalVariables)
+            camundaTaskFormService.submitTaskForm(taskId, completionVariables)
+
+            taskComment?.let {
+                createTaskCommentIfRequired(it, task)
+            }
+        }
+    }
+
+    private fun createTaskCommentIfRequired(comment: String, task: ProcTaskDto) {
+        if (comment.isBlank() || task.documentRef.isEmpty()) {
+            return
         }
 
-        val completionVariables = variables.toMutableMap()
-        completionVariables[outcome.outcomeId()] = outcome.value
-        completionVariables[outcome.nameId()] = outcome.name.toString()
-        completionVariables[BPMN_LAST_TASK_COMPLETOR] = currentUser
+        val hasNoBroadcastCommentsAspect = recordsService.getAtt(
+            task.documentRef, "_aspects._has.$TASK_COMMENT_BROADCAST_ASPECT?bool!"
+        ).asBoolean().not()
+        if (hasNoBroadcastCommentsAspect) {
+            return
+        }
 
-        log.debug { "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables" }
+        val broadcastCommentsDisabled = recordsService.getAtt(
+            task.documentRef,
+            "$TASK_COMMENT_BROADCAST_ASPECT:broadcastComments?bool"
+        ).asBoolean(true).not()
+        if (broadcastCommentsDisabled) {
+            return
+        }
 
-        cacheableTaskConverter.removeFromActualTaskCache(taskId)
-        camundaTaskFormService.submitTaskForm(taskId, completionVariables)
+        val commentDto = CommentDto(
+            text = comment,
+            record = task.documentRef,
+            tags = listOf(
+                CommentTag(
+                    type = CommentTagType.TASK,
+                    name = task.name
+                )
+            )
+        )
+
+        commentsService.createComment(commentDto)
     }
 
     private fun getCompletedOnBehalfOfValue(
@@ -231,6 +291,10 @@ class ProcTaskServiceImpl(
 
     override fun getVariables(taskId: String): Map<String, Any?> {
         return camundaTaskService.getVariables(taskId)
+    }
+
+    override fun getVariable(taskId: String, variableName: String): Any? {
+        return camundaTaskService.getVariable(taskId, variableName)
     }
 
     override fun claimTask(taskId: String, userId: String) {

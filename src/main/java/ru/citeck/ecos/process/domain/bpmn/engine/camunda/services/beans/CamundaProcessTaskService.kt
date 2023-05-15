@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
+import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 
 @Component("tasks")
@@ -55,7 +56,7 @@ class CamundaProcessTaskService(
                     name = defaultOutcomeNameFromTask ?: defaultDoneOutcome.name
                 )
 
-                procTaskService.completeTask(task.id, outcome, emptyMap())
+                procTaskService.completeTask(CompleteTaskData(task, outcome, emptyMap()))
             }
     }
 }

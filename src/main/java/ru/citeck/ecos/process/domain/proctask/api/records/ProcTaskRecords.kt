@@ -12,6 +12,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_PREFIX
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords.Companion.ALF_TASK_PREFIX
 import ru.citeck.ecos.process.domain.proctask.converter.toRecord
+import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.*
 import ru.citeck.ecos.records2.RecordConstants
@@ -160,7 +161,13 @@ class ProcTaskRecords(
 
         log.debug { "Submit task ${record.id} form with outcome: $outcome and variables: ${mutateInfo.taskVariables}" }
 
-        procTaskService.completeTask(record.id, outcome, mutateInfo.taskVariables)
+        procTaskService.completeTask(
+            CompleteTaskData(
+                task,
+                outcome,
+                mutateInfo.taskVariables
+            )
+        )
 
         return record.id
     }

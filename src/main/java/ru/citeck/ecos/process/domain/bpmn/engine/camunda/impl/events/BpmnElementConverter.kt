@@ -4,7 +4,6 @@ import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
-import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
@@ -84,7 +83,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         priority = priority,
         executionId = executionId,
         name = getTitle(),
-        comment = variables[COMMENT_VAR]?.toString(),
+        comment = variables[BPMN_COMMENT]?.toString(),
         outcome = outcome.value,
         outcomeName = outcome.name,
         completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,

@@ -4,8 +4,8 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.COMMENT_VAR
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
@@ -174,7 +174,8 @@ class ProcTaskRecord(
             return alfTaskAtts.getAtt(name)
         }
 
-        if (name == COMMENT_VAR) {
+        // Current active task (non-historic) cannot have comments. So we should avoid to return value from process scope
+        if (name == BPMN_COMMENT) {
             return null
         }
 
@@ -200,8 +201,7 @@ class ProcTaskRecord(
         }
 
         if (!historic && engineAtts.contains(name)) {
-            val variables = prv.procTaskService.getVariables(id)
-            val value = variables[name]
+            val value = prv.procTaskService.getVariable(id, name)
 
             log.debug { "procTaskRecord $id request to task engine variables $id = $name. Possible performance issues" }
 

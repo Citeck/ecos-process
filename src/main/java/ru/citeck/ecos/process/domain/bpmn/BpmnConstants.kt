@@ -8,6 +8,5 @@ const val BPMN_CAMUNDA_ENGINE = "camunda"
 const val SYS_VAR_PREFIX = "_"
 
 const val DOCUMENT_FIELD_PREFIX = "_ECM_"
-const val COMMENT_VAR = "comment"
 
 const val DEFAULT_SCRIPT_ENGINE_LANGUAGE = "javascript"
