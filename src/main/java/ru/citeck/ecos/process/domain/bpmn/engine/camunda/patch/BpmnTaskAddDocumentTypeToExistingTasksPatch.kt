@@ -79,7 +79,7 @@ class BpmnTaskAddDocumentTypeToExistingTasksPatch(
                     RecordConstants.ATT_TYPE + ScalarType.LOCAL_ID_SCHEMA
                 ).asText().ifBlank { "base" }
 
-                log.info { "Update process $processId with record $documentRef and document type '$documentType'"  }
+                log.info { "Update process $processId with record $documentRef and document type '$documentType'" }
                 camundaRuntimeService.setVariable(processId, BPMN_DOCUMENT_TYPE, documentType)
             }
         }

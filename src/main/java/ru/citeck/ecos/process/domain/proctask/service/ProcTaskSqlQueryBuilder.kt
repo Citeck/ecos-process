@@ -235,7 +235,7 @@ class ProcTaskSqlQueryBuilder(
     private fun addEmptyVariableCondition(
         name: String?,
         isProcessVar: Boolean
-    ) : Boolean {
+    ): Boolean {
 
         if (name.isNullOrBlank()) {
             return false
@@ -247,8 +247,10 @@ class ProcTaskSqlQueryBuilder(
         } else {
             condition.append("$TASK_ALIAS.id_ = task_id_")
         }
-        condition.append(" AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='string' " +
-            "AND text_ IS NOT NULL AND text_ != ''")
+        condition.append(
+            " AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='string' " +
+                "AND text_ IS NOT NULL AND text_ != ''"
+        )
         condition.append(")")
         return true
     }

@@ -10,6 +10,7 @@ import ru.citeck.ecos.model.lib.comments.dto.CommentDto
 import ru.citeck.ecos.model.lib.comments.dto.CommentTag
 import ru.citeck.ecos.model.lib.comments.dto.CommentTagType
 import ru.citeck.ecos.model.lib.comments.service.CommentsService
+import ru.citeck.ecos.model.lib.delegation.dto.AuthDelegation
 import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
@@ -56,7 +57,12 @@ class ProcTaskServiceImpl(
                 if (actor == "\$CURRENT") {
                     actor = AuthContext.getCurrentUser()
                 }
-                val delegations = delegationService.getActiveAuthDelegations(actor, emptyList())
+
+                val delegations: List<AuthDelegation>
+                val delegationsGetTime = measureTimeMillis {
+                    delegations = delegationService.getActiveAuthDelegations(actor, emptyList())
+                }
+                log.debug { "Get active auth delegations: $delegationsGetTime ms" }
                 if (delegations.isNotEmpty()) {
                     val actorsVariants = mutableListOf<Predicate>()
                     actorsVariants.add(it)
@@ -220,7 +226,8 @@ class ProcTaskServiceImpl(
         }
 
         val hasNoBroadcastCommentsAspect = recordsService.getAtt(
-            task.documentRef, "_aspects._has.$TASK_COMMENT_BROADCAST_ASPECT?bool!"
+            task.documentRef,
+            "_aspects._has.$TASK_COMMENT_BROADCAST_ASPECT?bool!"
         ).asBoolean().not()
         if (hasNoBroadcastCommentsAspect) {
             return

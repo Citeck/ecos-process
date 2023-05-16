@@ -89,9 +89,11 @@ class WorkflowTaskRecordsProxy(
         }
 
         val tasksQueryRes = procTaskService.findTasks(AndPredicate.of(conditions))
-        result.setRecords(tasksQueryRes.entities.map {
-            RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it)
-        })
+        result.setRecords(
+            tasksQueryRes.entities.map {
+                RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it)
+            }
+        )
         result.setTotalCount(tasksQueryRes.totalCount)
         return result
     }
