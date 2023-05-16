@@ -6,5 +6,6 @@ data class BpmnShapeDef(
     val id: String,
     val elementRef: String,
     val bounds: BoundsDef,
-    val expanded: Boolean
+    val expanded: Boolean,
+    val colored: BpmnColoredDef? = null,
 )

@@ -1,5 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram
 
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_BIOCOLOR_FILL
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_BIOCOLOR_STROKE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_COLOR_BACKGROUND_COLOR
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_COLOR_BORDER_COLOR
+import ru.citeck.ecos.process.domain.bpmn.io.convert.bpmnColoredFromAttributes
+import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toDef
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toOmg
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnShapeDef
@@ -17,6 +23,7 @@ class BpmnShapeConverter : EcosOmgConverter<BpmnShapeDef, BPMNShape> {
             elementRef = element.bpmnElement.localPart,
             bounds = element.bounds.toDef(),
             expanded = element.isIsExpanded ?: true,
+            colored = bpmnColoredFromAttributes(element.otherAttributes)
         )
     }
 
@@ -26,6 +33,11 @@ class BpmnShapeConverter : EcosOmgConverter<BpmnShapeDef, BPMNShape> {
             bpmnElement = QName("", element.elementRef)
             bounds = element.bounds.toOmg()
             isIsExpanded = element.expanded
+
+            otherAttributes.putIfNotBlank(BPMN_COLOR_BACKGROUND_COLOR, element.colored?.backgroundColor)
+            otherAttributes.putIfNotBlank(BPMN_COLOR_BORDER_COLOR, element.colored?.borderColor)
+            otherAttributes.putIfNotBlank(BPMN_BIOCOLOR_STROKE, element.colored?.stroke)
+            otherAttributes.putIfNotBlank(BPMN_BIOCOLOR_FILL, element.colored?.fill)
         }
     }
 }

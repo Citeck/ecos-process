@@ -3,12 +3,19 @@ package ru.citeck.ecos.process.domain.bpmn.io
 import javax.xml.namespace.QName
 
 const val NS_BPMN = "http://www.omg.org/spec/BPMN/20100524/MODEL"
+const val NS_BPMN_COLOR = "http://www.omg.org/spec/BPMN/non-normative/color/1.0"
+const val NS_BPMN_BIO_COLOR = "http://bpmn.io/schema/bpmn/biocolor/1.0"
 const val NS_ECOS_BPMN = "http://www.citeck.ru/ecos/bpmn/1.0"
 const val NS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
 
 val XSI_TYPE = QName(NS_XSI, "type")
 val SCRIPT_LANGUAGE_ATTRIBUTE = QName("", "language")
 const val BPMN_T_FORMAT_EXPRESSION = "bpmn:tFormalExpression"
+
+val BPMN_COLOR_BACKGROUND_COLOR = QName(NS_BPMN_COLOR, "background-color")
+val BPMN_COLOR_BORDER_COLOR = QName(NS_BPMN_COLOR, "border-color")
+val BPMN_BIOCOLOR_STROKE = QName(NS_BPMN_BIO_COLOR, "stroke")
+val BPMN_BIOCOLOR_FILL = QName(NS_BPMN_BIO_COLOR, "fill")
 
 val BPMN_PROP_ECOS_TYPE = QName(NS_ECOS_BPMN, "ecosType")
 val BPMN_PROP_ENABLED = QName(NS_ECOS_BPMN, "enabled")

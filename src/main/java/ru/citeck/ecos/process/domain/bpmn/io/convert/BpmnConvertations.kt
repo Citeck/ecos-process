@@ -14,6 +14,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnArtifactDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnColoredDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.PointDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
@@ -196,6 +197,24 @@ fun conditionFromAttributes(atts: Map<QName, String>): BpmnConditionDef {
             } ?: ConditionConfig()
         } ?: ConditionConfig()
     )
+}
+
+fun bpmnColoredFromAttributes(atts: Map<QName, String>): BpmnColoredDef? {
+    val backgroundColor = atts[BPMN_COLOR_BACKGROUND_COLOR]
+    val borderColor = atts[BPMN_COLOR_BORDER_COLOR]
+    val stroke = atts[BPMN_BIOCOLOR_STROKE]
+    val fill = atts[BPMN_BIOCOLOR_FILL]
+
+    if (backgroundColor != null && borderColor != null && stroke != null && fill != null) {
+        return BpmnColoredDef(
+            backgroundColor = backgroundColor,
+            borderColor = borderColor,
+            stroke = stroke,
+            fill = fill
+        )
+    }
+
+    return null
 }
 
 fun getCamundaJobRetryTimeCycleFieldConfig(
