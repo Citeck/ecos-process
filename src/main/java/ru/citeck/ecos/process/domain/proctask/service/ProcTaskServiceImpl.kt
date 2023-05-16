@@ -182,7 +182,7 @@ class ProcTaskServiceImpl(
 
             val completedOnBehalfOf = getCompletedOnBehalfOfValue(completeData.task, currentUser, currentAuthorities)
 
-            val taskLocalVariables = mutableMapOf<String, Any>()
+            val taskLocalVariables = mutableMapOf<String, Any?>()
             taskLocalVariables[BPMN_TASK_COMPLETED_BY] = currentUser
 
             if (completedOnBehalfOf.isNotEmpty()) {
@@ -195,10 +195,8 @@ class ProcTaskServiceImpl(
             completionVariables[BPMN_LAST_TASK_COMPLETOR] = currentUser
 
             val taskComment = getComment()
-            taskComment?.let { comment ->
-                taskLocalVariables[BPMN_COMMENT] = comment
-                completionVariables[BPMN_LAST_TASK_COMMENT] = comment
-            }
+            taskLocalVariables[BPMN_COMMENT] = taskComment
+            completionVariables[BPMN_LAST_TASK_COMMENT] = taskComment
 
             log.debug {
                 "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables, " +
