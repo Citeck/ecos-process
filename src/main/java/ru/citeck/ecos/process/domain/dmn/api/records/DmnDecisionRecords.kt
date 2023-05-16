@@ -70,9 +70,9 @@ class DmnDecisionRecords(
 
     private inner class DecisionRecord(
         val id: String,
-        val key: String,
+        val key: String? = "",
         val definition: EntityRef = EntityRef.EMPTY,
         val version: Int,
-        val name: String
+        val name: String? = ""
     )
 }
