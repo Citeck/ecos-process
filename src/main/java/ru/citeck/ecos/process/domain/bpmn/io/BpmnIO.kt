@@ -189,7 +189,7 @@ object BpmnIO {
                 </bpmndi:BPMNPlane>
               </bpmndi:BPMNDiagram>
             </bpmn:definitions>
-        """.trimIndent()
+            """.trimIndent()
 
             val def = BpmnXmlUtils.readFromString(defaultDef)
             def.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()

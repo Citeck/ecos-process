@@ -43,7 +43,7 @@ class BpmnProcDefVersionRecords(
         val procDefRev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, UUID.fromString(recordId))
             ?: error("Process definition not found for version: $recordId")
 
-        if (procDefRev.procDefId.isNullOrBlank()) {
+        if (procDefRev.procDefId.isBlank()) {
             error("Process definition id is blank for version: $recordId")
         }
 

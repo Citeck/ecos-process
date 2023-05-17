@@ -47,7 +47,7 @@ class ProcTaskRecord(
     val id: String,
     val priority: Int = 0,
     val formRef: RecordRef = RecordRef.EMPTY,
-    val processInstanceId: RecordRef? = null,
+    val processInstanceRef: RecordRef? = null,
     val documentRef: RecordRef? = null,
     val documentType: String? = null,
     val title: MLText? = null,
@@ -155,7 +155,7 @@ class ProcTaskRecord(
 
     @AttName("workflow")
     fun getWorkflow(): RecordRef? {
-        return processInstanceId
+        return processInstanceRef
     }
 
     fun getAtt(name: String): Any? {
