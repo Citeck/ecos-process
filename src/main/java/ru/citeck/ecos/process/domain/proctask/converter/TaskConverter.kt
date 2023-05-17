@@ -45,7 +45,7 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         id = id,
         priority = priority,
         formRef = formRef,
-        processInstanceId = processInstanceId,
+        processInstanceRef = processInstanceId,
         documentRef = documentRef,
         documentType = documentType,
         created = created,

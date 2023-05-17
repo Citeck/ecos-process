@@ -190,8 +190,7 @@ const val BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME =
     "bpmn-event-subscriptions-by-deployment-id-cache"
 
 fun ProcDefRevDto.getBpmnSignalEventSubscriptions(): List<EventSubscription> {
-    val defXml = this.data?.let { String(it, Charsets.UTF_8) }
-        ?: error("Deployed definition cannot be empty")
+    val defXml = String(this.data, Charsets.UTF_8)
 
     return try {
         BpmnIO.importEcosBpmn(defXml).signalsEventDefsMeta.map {
