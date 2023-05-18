@@ -83,7 +83,13 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 }
             }
 
-            otherAttributes[CAMUNDA_PRIORITY] = element.priority.toCamundaCode().toString()
+            val priority = if (element.priorityExpression.isNullOrBlank()) {
+                element.priority.toCamundaCode().toString()
+            } else {
+                element.priorityExpression
+            }
+            otherAttributes[CAMUNDA_PRIORITY] = priority
+
             otherAttributes[CAMUNDA_FORM_KEY] = element.formRef.toString()
 
             otherAttributes.putIfNotBlank(CAMUNDA_DUE_DATE, element.dueDate)

@@ -21,6 +21,7 @@ data class BpmnUserTaskDef(
 
     val formRef: RecordRef,
     val priority: TaskPriority,
+    val priorityExpression: String? = null,
 
     val dueDate: String? = null,
     val followUpDate: String? = null,

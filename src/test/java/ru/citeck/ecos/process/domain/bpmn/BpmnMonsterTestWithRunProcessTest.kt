@@ -266,6 +266,27 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    fun `task priority expression check`() {
+        val procId = "test-user-task-priority-expression"
+        saveAndDeployBpmn(USER_TASK, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it.priority).isEqualTo(TaskPriority.LOW.toCamundaCode())
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to docRef.toString(),
+                "priority" to 3
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
     fun `task assignment by roles`() {
         val procId = "test-user-task-role"
         saveAndDeployBpmn(USER_TASK, procId)

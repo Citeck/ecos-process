@@ -208,12 +208,41 @@
               "label": "task_priority_high",
               "value": "HIGH"
             }
+          ],
+          "headers": [
+            {
+              "key": "",
+              "value": ""
+            }
           ]
         },
         "defaultValue": "",
         "customDefaultValue": "value = \"MEDIUM\";",
         "optionalWhenDisabled": false,
+        "customConditional": "show = _.isEmpty(data.priorityExpression) || data.priorityExpression.trim().length === 0;",
         "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Приоритет (выражение)",
+          "en": "Priority (expression)"
+        },
+        "key": "priorityExpression",
+        "tooltip": {
+          "ru": "Expression для получения приоритета задачи из переменных или сервисов.\n\nВыражение должно вернуть число, представляющее собой приоритет:\nВысокий - 1\nСредний - 2\nНизкий - 3",
+          "en": "Expression to get the task priority from variables or services.\n\nExpression should return a number that represents the priority:\nHigh - 1\nMedium - 2\nLow - 3"
+        },
+        "inputMasks": [
+          {
+            "label": "",
+            "mask": ""
+          }
+        ],
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
         "input": true
       },
       {

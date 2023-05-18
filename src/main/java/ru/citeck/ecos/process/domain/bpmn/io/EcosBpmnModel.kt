@@ -44,6 +44,7 @@ val BPMN_PROP_ASSIGNEES = QName(NS_ECOS_BPMN, "assignees")
 val BPMN_PROP_FORM_REF = QName(NS_ECOS_BPMN, "formRef")
 val BPMN_PROP_OUTCOMES = QName(NS_ECOS_BPMN, "outcomes")
 val BPMN_PROP_PRIORITY = QName(NS_ECOS_BPMN, "priority")
+val BPMN_PROP_PRIORITY_EXPRESSION = QName(NS_ECOS_BPMN, "priorityExpression")
 val BPMN_PROP_DUE_DATE = QName(NS_ECOS_BPMN, "dueDate")
 val BPMN_PROP_FOLLOW_UP_DATE = QName(NS_ECOS_BPMN, "followUpDate")
 
