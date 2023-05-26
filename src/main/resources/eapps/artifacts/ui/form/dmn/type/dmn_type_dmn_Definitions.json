@@ -5,7 +5,7 @@
     "en": "DMN Definitions Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
   "system": true,
@@ -16,7 +16,7 @@
         "formRef": "uiserv/form@dmn-base-form-elements",
         "input": true,
         "key": "includeForm2",
-        "label": "Dmn base form element",
+        "label": "Форма: Dmn base form elements",
         "type": "includeForm"
       },
       {
@@ -32,9 +32,40 @@
         "optionalWhenDisabled": false,
         "type": "mlText",
         "input": true
+      },
+      {
+        "label": {
+          "ru": "Модель",
+          "en": "Model"
+        },
+        "key": "model",
+        "keyLabel": "",
+        "addAnother": "Add Another",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "datamap",
+        "input": true,
+        "valueComponent": {
+          "label": {
+            "ru": "Value"
+          },
+          "key": "value",
+          "inputMasks": [
+            {
+              "label": "",
+              "mask": ""
+            }
+          ],
+          "defaultValue": "",
+          "refreshOn": [],
+          "optionalWhenDisabled": false,
+          "type": "textfield",
+          "input": true
+        }
       }
     ],
     "formId": "dmn-type-dmn:Definitions"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }

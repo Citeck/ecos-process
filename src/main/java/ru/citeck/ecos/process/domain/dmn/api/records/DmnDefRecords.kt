@@ -390,6 +390,13 @@ class DmnDefRecords(
             return String(rev.data, StandardCharsets.UTF_8)
         }
 
+        @AttName("model")
+        fun getModel(): Map<String, String> {
+            return getDefinition()?.let {
+                return DmnIO.importEcosDmn(it).model
+            } ?: emptyMap()
+        }
+
         @AttName("?json")
         fun getJson(): DmnDefinitionDef? {
             error("Json representation is not supported")

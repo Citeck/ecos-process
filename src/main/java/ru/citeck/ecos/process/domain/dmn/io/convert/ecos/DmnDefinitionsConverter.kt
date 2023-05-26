@@ -6,6 +6,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.propMandatoryError
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_DEF_ID
+import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_MODEL
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.dmn.model.ecos.DmnDefinitionDef
 import ru.citeck.ecos.process.domain.dmn.model.omg.TDefinitions
@@ -23,9 +24,14 @@ class DmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions>
 
         val name = element.otherAttributes[DMN_PROP_NAME_ML] ?: element.name
 
+        @Suppress("UNCHECKED_CAST")
         return DmnDefinitionDef(
             id = defId,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            model = Json.mapper.convert(
+                element.otherAttributes[DMN_PROP_MODEL],
+                Map::class.java
+            ) as Map<String, String>? ?: emptyMap(),
             dmnDef = element
         )
     }
@@ -34,6 +40,8 @@ class DmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions>
         return element.dmnDef.apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
+
+            otherAttributes[DMN_PROP_MODEL] = Json.mapper.toString(element.model)
         }
     }
 }

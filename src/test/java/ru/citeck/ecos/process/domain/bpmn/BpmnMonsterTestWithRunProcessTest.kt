@@ -3103,7 +3103,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    fun `dmn test with multiple decisions and input with feel`() {
+        fun `dmn test with required decisions and input with feel`() {
         val procId = "dmn-test-multiple-input-expression"
         saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
         saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)

@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.dmn.model.omg.TDefinitions
 data class DmnDefinitionDef(
     val id: String,
     val name: MLText,
+    val model: Map<String, String> = emptyMap(),
 
     val dmnDef: TDefinitions
 )
