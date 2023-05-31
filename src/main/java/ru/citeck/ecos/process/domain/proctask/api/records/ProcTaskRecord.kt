@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
@@ -15,6 +16,7 @@ import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -25,6 +27,7 @@ import javax.annotation.PostConstruct
 internal val log = KotlinLogging.logger {}
 
 private const val TASK_PERMISSION_REASSIGN = "Reassign"
+private const val ATT_PREVIEW_INFO_JSON = "previewInfo${ScalarType.JSON_SCHEMA}"
 
 /**
  * @author Roman Makarskiy
@@ -156,6 +159,10 @@ class ProcTaskRecord(
     @AttName("workflow")
     fun getWorkflow(): RecordRef? {
         return processInstanceRef
+    }
+
+    fun getPreviewInfo(): DataValue {
+        return prv.recordsService.getAtt(documentRef, ATT_PREVIEW_INFO_JSON)
     }
 
     fun getAtt(name: String): Any? {
