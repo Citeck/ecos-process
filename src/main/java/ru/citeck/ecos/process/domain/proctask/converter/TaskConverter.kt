@@ -60,6 +60,8 @@ fun ProcTaskDto.toRecord(): ProcTaskRecord {
         candidateUsers = candidateUsers,
         candidateGroups = candidateGroups,
         possibleOutcomes = possibleOutcomes,
+        comment = comment,
+        lastComment = lastComment,
         definitionKey = definitionKey,
         documentAtts = let {
             if (documentRef == RecordRef.EMPTY || RecordRef.valueOf(id).isAlfTaskRef()) {
