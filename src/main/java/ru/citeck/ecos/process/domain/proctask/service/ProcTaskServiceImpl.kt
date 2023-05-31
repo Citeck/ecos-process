@@ -202,7 +202,6 @@ class ProcTaskServiceImpl(
 
             val taskComment = getComment()
             taskLocalVariables[BPMN_TASK_COMMENT_LOCAL] = taskComment
-            completionVariables[BPMN_LAST_TASK_COMMENT] = taskComment
 
             log.debug {
                 "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables, " +
