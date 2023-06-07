@@ -6,7 +6,6 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
@@ -70,6 +69,9 @@ class ProcTaskRecord(
     val candidateGroups: List<EntityRef> = emptyList(),
 
     val possibleOutcomes: List<TaskOutcome> = emptyList(),
+
+    val comment: String? = null,
+    val lastComment: String? = null,
 
     val documentAtts: RecordAtts = RecordAtts(),
 
@@ -165,6 +167,11 @@ class ProcTaskRecord(
         return prv.recordsService.getAtt(documentRef, ATT_PREVIEW_INFO_JSON)
     }
 
+    @AttName("lastcomment")
+    fun getLastCommentLegacyAtt(): String? {
+        return lastComment
+    }
+
     fun getAtt(name: String): Any? {
         val mapping = if (isAlfTask(id)) {
             ProcTaskRecords.EPROC_TO_ALF_TASK_ATTS
@@ -179,11 +186,6 @@ class ProcTaskRecord(
             }
 
             return alfTaskAtts.getAtt(name)
-        }
-
-        // Current active task (non-historic) cannot have comments. So we should avoid to return value from process scope
-        if (name == BPMN_COMMENT) {
-            return null
         }
 
         if (mapping.containsKey(name)) {
