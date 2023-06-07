@@ -24,6 +24,8 @@ class BpmnActivitiesRepoDaoConfig(
 
     @Bean
     fun bpmnActivitiesRepoDao(eventsService: EventsService, dataSourceManager: EcosDataSourceManager): RecordsDao {
+
+        //TODO: add permissions based on BpmnProcDef
         val accessPerms = object : DbRecordPerms {
             override fun getAuthoritiesWithReadPermission(): Set<String> {
                 return setOf(AuthGroup.EVERYONE)

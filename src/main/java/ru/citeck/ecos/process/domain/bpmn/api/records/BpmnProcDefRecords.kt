@@ -190,23 +190,6 @@ class BpmnProcDefRecords(
         return ProcDefPermsValue(this)
     }
 
-    //TODO: remove
-//    private fun hasWritePerms(recordRef: RecordRef): Boolean {
-//        if (AuthContext.isRunAsSystem()) {
-//            return true
-//        }
-//        if (isNewRecord(recordRef) && AuthContext.isRunAsAdmin()) {
-//            return true
-//        }
-//        val recordPerms = recordPermsService.getRecordPerms(recordRef)
-//        val roles = getRoles(recordRef)
-//        return recordPerms?.isWriteAllowed(roles) ?: false
-//    }
-//
-//    private fun isNewRecord(recordRef: RecordRef): Boolean {
-//        return recordRef.getLocalId().isEmpty()
-//    }
-
     private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
         val predicate = Predicates.and(
             Predicates.eq("type", "ecosbpm:processModel"),
