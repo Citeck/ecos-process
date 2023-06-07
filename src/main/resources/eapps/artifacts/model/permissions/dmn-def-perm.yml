@@ -4,8 +4,21 @@ typeRef: "emodel/type@dmn-def"
 permissions:
 
   matrix:
-    admin:
+    bp-administrator:
       ANY: WRITE
-    EVERYONE:
+    bp-manager:
+      ANY: WRITE
+    bp-developer:
+      ANY: WRITE
+    bp-viewer:
       ANY: READ
-  rules: []
+  rules:
+    - roles:
+        - bp-administrator
+      permissions:
+        - deploy
+        - editInstance
+    - roles:
+        - bp-developer
+      permissions:
+        - deploy

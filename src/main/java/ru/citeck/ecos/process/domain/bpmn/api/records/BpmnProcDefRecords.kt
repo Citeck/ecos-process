@@ -11,9 +11,6 @@ import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
-import ru.citeck.ecos.model.lib.role.service.RoleService
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
@@ -26,6 +23,7 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
+import ru.citeck.ecos.process.domain.procdef.perms.ProcDefPermsValue
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -57,8 +55,6 @@ class BpmnProcDefRecords(
     private val procDefService: ProcDefService,
     private val camundaRepoService: RepositoryService,
     private val remoteWebAppsApi: EcosRemoteWebAppsApi,
-    private val recordPermsService: RecordPermsService,
-    private val roleService: RoleService,
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val bpmnEventSubscriptionService: BpmnEventSubscriptionService
 ) : AbstractRecordsDao(),
@@ -76,8 +72,9 @@ class BpmnProcDefRecords(
         private const val DEFAULT_MAX_ITEMS = 10000000
 
         private val log = KotlinLogging.logger {}
-        private val BPMN_PROC_DEF_TYPE = TypeUtils.getTypeRef("bpmn-process-def")
     }
+
+    override fun getId() = SOURCE_ID
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
 
@@ -95,7 +92,11 @@ class BpmnProcDefRecords(
         )
 
         var numberOfExecutedRequests = 0
-        val maxItems = if (recsQuery.page.maxItems > 0) recsQuery.page.maxItems else DEFAULT_MAX_ITEMS
+        val maxItems = if (recsQuery.page.maxItems > 0) {
+            recsQuery.page.maxItems
+        } else {
+            DEFAULT_MAX_ITEMS
+        }
         var requiredAmount = maxItems
         val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
@@ -108,15 +109,15 @@ class BpmnProcDefRecords(
 
             val checkedRecords: List<BpmnProcDefRecord>
             if (AuthContext.isRunAsSystem()) {
-                checkedRecords = unfilteredBatch.map(::toBpmnProcDefRecord)
+                checkedRecords = unfilteredBatch.map { BpmnProcDefRecord(it) }
                     .take(requiredAmount)
                 numberOfPermissionsCheck = checkedRecords.size
             } else {
                 checkedRecords = unfilteredBatch.asSequence()
-                    .map(::toBpmnProcDefRecord)
+                    .map { BpmnProcDefRecord(it) }
                     .filter {
                         numberOfPermissionsCheck++
-                        hasReadPerms(it)
+                        it.getPermissions().hasReadPerms()
                     }
                     .take(requiredAmount)
                     .toList()
@@ -150,71 +151,9 @@ class BpmnProcDefRecords(
         res.setTotalCount(totalCount)
         res.setHasMore(res.getTotalCount() > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
+        log.trace { "Perms check count of bpmn proc def: $numberOfPermissionsCheck" }
+
         return res
-    }
-
-    private fun toBpmnProcDefRecord(procDefDto: ProcDefDto): BpmnProcDefRecord {
-        return BpmnProcDefRecord(procDefDto)
-    }
-
-    private fun toRecordRef(id: String): RecordRef {
-        return RecordRef.create(APP_NAME, SOURCE_ID, id)
-    }
-
-    private fun hasReadPerms(bpmnProcDefRecord: BpmnProcDefRecord): Boolean {
-        val procDefRecordRef = toRecordRef(bpmnProcDefRecord.getId())
-        val recordPerms = recordPermsService.getRecordPerms(procDefRecordRef)
-        val roles = getRoles(procDefRecordRef)
-        return recordPerms?.isReadAllowed(roles) ?: false
-    }
-
-    private fun hasWritePerms(recordRef: RecordRef): Boolean {
-        if (AuthContext.isRunAsSystem()) {
-            return true
-        }
-        if (isNewRecord(recordRef) && AuthContext.isRunAsAdmin()) {
-            return true
-        }
-        val recordPerms = recordPermsService.getRecordPerms(recordRef)
-        val roles = getRoles(recordRef)
-        return recordPerms?.isWriteAllowed(roles) ?: false
-    }
-
-    private fun isNewRecord(recordRef: RecordRef): Boolean {
-        return recordRef.getLocalId().isEmpty()
-    }
-
-    private fun getRoles(recordRef: RecordRef): List<String> {
-        return roleService.getRolesId(BPMN_PROC_DEF_TYPE)
-            .filter { roleService.isRoleMember(recordRef, it) }
-            .toList()
-    }
-
-    private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
-        val predicate = Predicates.and(
-            Predicates.eq("type", "ecosbpm:processModel"),
-        )
-        val processes = recordsService.query(
-            RecordsQuery.create {
-                withSourceId("alfresco/")
-                withLanguage(PredicateService.LANGUAGE_PREDICATE)
-                withQuery(predicate)
-                withMaxItems(300)
-            },
-            ProcDefAlfAtts::class.java
-        )
-        return processes.getRecords().map {
-            if (StringUtils.isBlank(it.sectionRef) ||
-                it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
-            ) {
-
-                it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
-            } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
-
-                it.sectionRef = "${EprocApp.NAME}/bpmn-section@" + it.sectionRef?.substringAfterLast('/')
-            }
-            AlfProcDefRecord(it)
-        }
     }
 
     private fun loadDefinitionsByPredicateWithDataFromAlfresco(query: RecordsQuery): Any {
@@ -243,7 +182,60 @@ class BpmnProcDefRecords(
         )
     }
 
+    private fun String.toProcDefRef(): EntityRef {
+        return EntityRef.create(APP_NAME, SOURCE_ID, this)
+    }
+
+    private fun EntityRef.getPerms(): ProcDefPermsValue {
+        return ProcDefPermsValue(this)
+    }
+
+    //TODO: remove
+//    private fun hasWritePerms(recordRef: RecordRef): Boolean {
+//        if (AuthContext.isRunAsSystem()) {
+//            return true
+//        }
+//        if (isNewRecord(recordRef) && AuthContext.isRunAsAdmin()) {
+//            return true
+//        }
+//        val recordPerms = recordPermsService.getRecordPerms(recordRef)
+//        val roles = getRoles(recordRef)
+//        return recordPerms?.isWriteAllowed(roles) ?: false
+//    }
+//
+//    private fun isNewRecord(recordRef: RecordRef): Boolean {
+//        return recordRef.getLocalId().isEmpty()
+//    }
+
+    private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
+        val predicate = Predicates.and(
+            Predicates.eq("type", "ecosbpm:processModel"),
+        )
+        val processes = recordsService.query(
+            RecordsQuery.create {
+                withSourceId("alfresco/")
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(predicate)
+                withMaxItems(300)
+            },
+            ProcDefAlfAtts::class.java
+        )
+        return processes.getRecords().map {
+            if (StringUtils.isBlank(it.sectionRef) ||
+                it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
+            ) {
+
+                it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
+            } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
+
+                it.sectionRef = "${EprocApp.NAME}/bpmn-section@" + it.sectionRef?.substringAfterLast('/')
+            }
+            AlfProcDefRecord(it)
+        }
+    }
+
     override fun getRecordAtts(recordId: String): Any? {
+        //TODO: check perms
 
         if (recordId.startsWith("flowable$") || recordId.startsWith("activiti$")) {
             return RecordRef.create("alfresco", "workflow", "def_$recordId")
@@ -310,9 +302,11 @@ class BpmnProcDefRecords(
 
     override fun saveMutatedRec(record: BpmnMutateRecord): String {
 
-        val recordRef = toRecordRef(record.id)
-        if (!hasWritePerms(recordRef)) {
-            throw RuntimeException("Permissions denied. RecordRef: $recordRef")
+        val procDefRef = record.id.toProcDefRef()
+        val perms = procDefRef.getPerms()
+
+        if (!perms.hasWritePerms()) {
+            error("Permissions denied for mutate: $procDefRef")
         }
 
         val newDefinition = record.definition ?: ""
@@ -433,6 +427,10 @@ class BpmnProcDefRecords(
         if (record.action == BpmnProcDefActions.DEPLOY.toString()) {
             // TODO: move to separate service
 
+            if (!perms.hasDeployPerms()) {
+                error("Permissions denied for deploy: $procDefRef")
+            }
+
             val camundaFormat = BpmnIO.exportCamundaBpmnToString(newEcosBpmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
@@ -447,7 +445,7 @@ class BpmnProcDefRecords(
 
             procDefEventEmitter.emitProcDefDeployed(
                 ProcDefEvent(
-                    procDefRef = recordRef,
+                    procDefRef = procDefRef,
                     version = procDefResult.version.toDouble().inc()
                 )
             )
@@ -465,16 +463,13 @@ class BpmnProcDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-        val recordRef = toRecordRef(recordId)
-        return if (hasWritePerms(recordRef)) {
+        return if (recordId.toProcDefRef().getPerms().hasWritePerms()) {
             procDefService.delete(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
             DelStatus.OK
         } else {
             DelStatus.PROTECTED
         }
     }
-
-    override fun getId() = SOURCE_ID
 
     inner class AlfProcDefRecord(
         private val alfAtts: ProcDefAlfAtts
@@ -529,6 +524,12 @@ class BpmnProcDefRecords(
     inner class BpmnProcDefRecord(
         private val procDef: ProcDefDto
     ) {
+
+        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef()) }
+
+        fun getPermissions(): ProcDefPermsValue {
+            return permsValue
+        }
 
         fun getEcosType(): EntityRef {
             return procDef.ecosTypeRef

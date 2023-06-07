@@ -1,0 +1,31 @@
+---
+id: create-bp-roles-groups
+date: 2023-06-06T00:00:00Z
+type: mutate
+targetApp: emodel
+config:
+  records:
+    - id: emodel/authority-group@
+      attributes:
+        id: bp-administrator
+        name:
+          ru: Администратор бизнес процессов
+          en: Business Process Administrator
+    - id: emodel/authority-group@
+      attributes:
+        id: bp-manager
+        name:
+          ru: Менеджер бизнес процессов
+          en: Business Process Manager
+    - id: emodel/authority-group@
+      attributes:
+        id: bp-developer
+        name:
+          ru: Разработчик бизнес процессов
+          en: Business Process Developer
+    - id: emodel/authority-group@
+      attributes:
+        id: bp-viewer
+        name:
+          ru: Читатель бизнес процессов
+          en: Business Process Viewer

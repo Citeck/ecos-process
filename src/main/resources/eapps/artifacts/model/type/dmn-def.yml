@@ -28,15 +28,28 @@ createVariants:
 
 model:
   roles:
-    - id: admin
+    - id: bp-administrator
       name:
-        ru: Администратор
-        en: Administrator
-      attribute: ''
+        ru: Администратор бизнес процессов
+        en: Business Process Administrator
       assignees:
+        - GROUP_bp-administrator
         - GROUP_ECOS_ADMINISTRATORS
-    - id: EVERYONE
+    - id: bp-manager
       name:
-        ru: Все пользователи
-        en: All users
-      attribute: ''
+        ru: Менеджер бизнес процессов
+        en: Business Process Manager
+      assignees:
+        - GROUP_bp-manager
+    - id: bp-developer
+      name:
+        ru: Разработчик бизнес процессов
+        en: Business Process Developer
+      assignees:
+        - GROUP_bp-developer
+    - id: bp-viewer
+      name:
+        ru: Читатель бизнес процессов
+        en: Business Process Viewer
+      assignees:
+        - GROUP_bp-viewer

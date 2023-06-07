@@ -10,9 +10,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
-import ru.citeck.ecos.model.lib.role.service.RoleService
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
@@ -25,8 +22,10 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
+import ru.citeck.ecos.process.domain.procdef.perms.ProcDefPermsValue
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -52,8 +51,6 @@ const val DMN_RECOURSE_NAME_POSTFIX = ".dmn"
 @Component
 class DmnDefRecords(
     private val procDefService: ProcDefService,
-    private val recordPermsService: RecordPermsService,
-    private val roleService: RoleService,
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val camundaRepoService: RepositoryService
 ) : AbstractRecordsDao(),
@@ -66,8 +63,6 @@ class DmnDefRecords(
         private const val QUERY_BATCH_SIZE = 100
         private const val LIMIT_REQUESTS_COUNT = 100000
         private const val DEFAULT_MAX_ITEMS = 10000000
-
-        private val DMN_DEF_TYPE = TypeUtils.getTypeRef("dmn-def")
 
         private val log = KotlinLogging.logger {}
     }
@@ -105,15 +100,16 @@ class DmnDefRecords(
 
             val checkedRecords: List<DmnDefRecord>
             if (AuthContext.isRunAsSystem()) {
-                checkedRecords = unfilteredBatch.map { it.toDmnRecord() }
+                checkedRecords = unfilteredBatch
+                    .map { DmnDefRecord(it) }
                     .take(requiredAmount)
                 numberOfPermissionsCheck = checkedRecords.size
             } else {
                 checkedRecords = unfilteredBatch.asSequence()
-                    .map { it.toDmnRecord() }
+                    .map { DmnDefRecord(it) }
                     .filter {
                         numberOfPermissionsCheck++
-                        it.hasReadPerms()
+                        it.getPermissions().hasReadPerms()
                     }
                     .take(requiredAmount)
                     .toList()
@@ -128,7 +124,7 @@ class DmnDefRecords(
             log.warn("Request count limit reached! Request: $recsQuery")
         }
 
-        var totalCount = procDefService.getCount(predicate)
+        val totalCount = procDefService.getCount(predicate)
 
         val res = RecsQueryRes(result)
         res.setTotalCount(totalCount)
@@ -156,9 +152,12 @@ class DmnDefRecords(
     }
 
     override fun saveMutatedRec(record: DmnMutateRecord): String {
-        val dmnRef = record.id.toDmnRef()
-        if (!dmnRef.hasWritePerms()) {
-            throw RuntimeException("Permissions denied. RecordRef: $dmnRef")
+
+        val procDefRef = record.id.toProcDefRef()
+        val perms = procDefRef.getPerms()
+
+        if (!perms.hasWritePerms()) {
+            throw RuntimeException("Permissions denied. RecordRef: $procDefRef")
         }
 
         val newDefinition = record.definition ?: ""
@@ -249,6 +248,10 @@ class DmnDefRecords(
         if (record.action == DmnDefActions.DEPLOY.toString()) {
             // TODO: move to separate service
 
+            if (!perms.hasDeployPerms()) {
+                error("Permissions denied for deploy: $procDefRef")
+            }
+
             val camundaFormat = DmnIO.exportCamundaDmnToString(newEcosDmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
@@ -262,7 +265,7 @@ class DmnDefRecords(
 
             procDefEventEmitter.emitProcDefDeployed(
                 ProcDefEvent(
-                    procDefRef = dmnRef,
+                    procDefRef = procDefRef,
                     version = procDefResult.version.toDouble().inc()
                 )
             )
@@ -277,41 +280,6 @@ class DmnDefRecords(
         val ecosDmnDef = DmnIO.importEcosDmn(newDefinition)
         DmnIO.exportEcosDmn(ecosDmnDef)
         DmnIO.exportCamundaDmn(ecosDmnDef)
-    }
-
-    private fun ProcDefDto.toDmnRecord(): DmnDefRecord {
-        return DmnDefRecord(this)
-    }
-
-    private fun DmnDefRecord.hasReadPerms(): Boolean {
-        val dmnDefRef = this.getId().toDmnRef()
-        val recordPerms = recordPermsService.getRecordPerms(dmnDefRef)
-        return recordPerms?.isReadAllowed(dmnDefRef.getRoles()) ?: false
-    }
-
-    private fun EntityRef.hasWritePerms(): Boolean {
-        if (AuthContext.isRunAsSystem()) {
-            return true
-        }
-        if (this.isNewRecord() && AuthContext.isRunAsAdmin()) {
-            return true
-        }
-        val recordPerms = recordPermsService.getRecordPerms(this)
-        return recordPerms?.isWriteAllowed(this.getRoles()) ?: false
-    }
-
-    private fun EntityRef.isNewRecord(): Boolean {
-        return this.getLocalId().isEmpty()
-    }
-
-    private fun EntityRef.getRoles(): List<String> {
-        return roleService.getRolesId(DMN_DEF_TYPE)
-            .filter { roleService.isRoleMember(this, it) }
-            .toList()
-    }
-
-    private fun String.toDmnRef(): EntityRef {
-        return EntityRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, this)
     }
 
     override fun getRecordAtts(recordId: String): Any? {
@@ -341,8 +309,8 @@ class DmnDefRecords(
     }
 
     override fun delete(recordId: String): DelStatus {
-        val ref = recordId.toDmnRef()
-        return if (ref.hasWritePerms()) {
+        val ref = recordId.toProcDefRef()
+        return if (ref.getPerms().hasWritePerms()) {
             procDefService.delete(ProcDefRef.create(DMN_PROC_TYPE, ref.getLocalId()))
             DelStatus.OK
         } else {
@@ -353,6 +321,12 @@ class DmnDefRecords(
     inner class DmnDefRecord(
         private val procDef: ProcDefDto
     ) {
+
+        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef()) }
+
+        fun getPermissions(): ProcDefPermsValue {
+            return permsValue
+        }
 
         fun getId(): String {
             return procDef.id
@@ -477,5 +451,13 @@ class DmnDefRecords(
         override fun toString(): String {
             return "DmnMutateRecord(id='$id', defId='$defId', name=$name)"
         }
+    }
+
+    private fun String.toProcDefRef(): EntityRef {
+        return RecordRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, this)
+    }
+
+    private fun EntityRef.getPerms(): ProcDefPermsValue {
+        return ProcDefPermsValue(this)
     }
 }
