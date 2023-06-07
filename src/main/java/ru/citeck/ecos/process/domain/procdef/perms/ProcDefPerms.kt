@@ -1,11 +1,13 @@
 package ru.citeck.ecos.process.domain.procdef.perms
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.permissions.service.RecordPermsService
 import ru.citeck.ecos.model.lib.permissions.service.roles.RolesPermissions
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
@@ -39,7 +41,9 @@ class ProcDefPermsValue(
     }
 
     private val currentUserRoles by lazy {
-        val typeRef = srv.recordsService.getAtt(recordRef, RecordConstants.ATT_TYPE + "?id").toEntityRef()
+        val typeRef = srv.recordsService.getAtt(
+            recordRef, RecordConstants.ATT_TYPE + ScalarType.ID_SCHEMA
+        ).toEntityRef()
         srv.roleService.getRolesId(typeRef)
             .filter { srv.roleService.isRoleMember(recordRef, it) }
             .toList()
@@ -64,10 +68,19 @@ class ProcDefPermsValue(
     }
 
     fun hasWritePerms(): Boolean {
+        //TODO: its temporary solution, need to fix it after https://citeck.atlassian.net/browse/ECOSCOM-5138
+        if (isNewRecord(recordRef) && AuthContext.isRunAsAdmin()) {
+            return true
+        }
+
         return has(PERMS_WRITE)
     }
 
     fun hasDeployPerms(): Boolean {
         return has(PERMS_DEPLOY)
+    }
+
+    private fun isNewRecord(recordRef: EntityRef): Boolean {
+        return recordRef.getLocalId().isEmpty()
     }
 }
