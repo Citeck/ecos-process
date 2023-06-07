@@ -79,6 +79,7 @@ class CacheableTaskConverter(
                 documentType = variables[BPMN_DOCUMENT_TYPE] as? String,
                 dueDate = dueDate?.toInstant(),
                 followUpDate = followUpDate?.toInstant(),
+                lastComment = localVariables[BPMN_LAST_COMMENT_LOCAL] as? String,
                 created = createTime.toInstant(),
                 assignee = authorityService.getAuthorityRef(assignee),
                 sender = authorityService.getAuthorityRef(sender),
@@ -107,14 +108,26 @@ class CacheableTaskConverter(
         with(task) {
             var nameMl = MLText(name)
             var documentRef = RecordRef.EMPTY
+            var comment: String? = null
+            var lastComment: String? = null
 
             camundaHistoryService.createHistoricVariableInstanceQuery()
                 .taskIdIn(id)
-                .variableNameIn(BPMN_NAME_ML)
+                .variableNameIn(BPMN_NAME_ML, BPMN_TASK_COMMENT_LOCAL, BPMN_LAST_COMMENT_LOCAL)
                 .list()
                 .forEach {
-                    if (it.name == BPMN_NAME_ML) {
-                        nameMl = Json.mapper.convert(it.value, MLText::class.java) ?: MLText(name)
+                    when (it.name) {
+                        BPMN_NAME_ML -> {
+                            nameMl = Json.mapper.convert(it.value, MLText::class.java) ?: MLText(name)
+                        }
+
+                        BPMN_TASK_COMMENT_LOCAL -> {
+                            comment = it.value?.toString()
+                        }
+
+                        BPMN_LAST_COMMENT_LOCAL -> {
+                            lastComment = it.value?.toString()
+                        }
                     }
                 }
 
@@ -137,6 +150,8 @@ class CacheableTaskConverter(
                 ended = endTime?.toInstant(),
                 durationInMillis = durationInMillis,
                 dueDate = dueDate?.toInstant(),
+                comment = comment,
+                lastComment = lastComment,
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
                     RecordRef.EMPTY
                 } else {

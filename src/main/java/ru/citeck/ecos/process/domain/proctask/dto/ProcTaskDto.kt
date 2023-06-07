@@ -53,7 +53,10 @@ data class ProcTaskDto(
 
     val historic: Boolean = false,
 
-    val engineAtts: List<String> = emptyList()
+    val engineAtts: List<String> = emptyList(),
+
+    val comment: String? = null,
+    val lastComment: String? = null
 
 ) : Serializable {
 

@@ -10,11 +10,9 @@ data class CompleteTaskData(
 )
 
 fun CompleteTaskData.getComment(): String? {
-    val comment = variables[BPMN_COMMENT] as? String
+    val comment = variables[BPMN_COMMENT] as? String ?: return null
 
-    return if (comment.isNullOrBlank()) {
+    return comment.ifBlank {
         null
-    } else {
-        comment
     }
 }
