@@ -9,7 +9,6 @@ import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorResp
 
-
 @Component
 class EvaluateDecisionWebExecutor(
     private val ecosDmnService: EcosDmnService
@@ -27,9 +26,8 @@ class EvaluateDecisionWebExecutor(
             requestData.variables
         )
 
-        response.getBodyWriter().writeDto(ComputeDmnDecisionResponseDto(evalResult));
+        response.getBodyWriter().writeDto(ComputeDmnDecisionResponseDto(evalResult))
     }
-
 
     override fun getPath(): String {
         return ComputeDmnDecisionWebApi.PATH

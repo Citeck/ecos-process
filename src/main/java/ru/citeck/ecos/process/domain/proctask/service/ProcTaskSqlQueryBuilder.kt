@@ -203,7 +203,6 @@ class ProcTaskSqlQueryBuilder(
         } else if (PROC_VARIABLES_MAPPING.containsKey(attribute)) {
 
             return addVariableCondition(PROC_VARIABLES_MAPPING[attribute], value, type, true)
-
         } else if (TASK_ATTS_MAPPING.containsKey(attribute)) {
 
             val field = TASK_ATTS_MAPPING[attribute]

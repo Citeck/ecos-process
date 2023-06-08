@@ -8,5 +8,4 @@ interface EcosDmnService {
         decisionRef: EntityRef,
         variables: Map<String, Any?>
     ): Map<String, List<Any>>
-
 }

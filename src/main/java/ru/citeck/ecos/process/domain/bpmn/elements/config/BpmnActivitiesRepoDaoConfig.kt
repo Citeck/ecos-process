@@ -25,8 +25,12 @@ class BpmnActivitiesRepoDaoConfig(
     @Bean
     fun bpmnActivitiesRepoDao(eventsService: EventsService, dataSourceManager: EcosDataSourceManager): RecordsDao {
 
-        //TODO: add permissions based on BpmnProcDef
+        // TODO: add permissions based on BpmnProcDef
         val accessPerms = object : DbRecordPerms {
+            override fun getAllowedPermissions(): Set<String> {
+                return emptySet()
+            }
+
             override fun getAuthoritiesWithReadPermission(): Set<String> {
                 return setOf(AuthGroup.EVERYONE)
             }
@@ -40,6 +44,10 @@ class BpmnActivitiesRepoDaoConfig(
                 return true
             }
             override fun hasWritePerms(): Boolean {
+                return false
+            }
+
+            override fun isAllowed(permission: String): Boolean {
                 return false
             }
         }

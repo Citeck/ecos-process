@@ -43,7 +43,6 @@ class EcosDmnServiceImpl(
         return result.mapValues { (_, value) -> value.toList() }
     }
 
-
     private fun EntityRef.toDecisionKey(): String {
         val keyParts = getLocalId().split(":")
         if (keyParts.size != 3) {
@@ -57,5 +56,4 @@ class EcosDmnServiceImpl(
 
         return decisionKey
     }
-
 }

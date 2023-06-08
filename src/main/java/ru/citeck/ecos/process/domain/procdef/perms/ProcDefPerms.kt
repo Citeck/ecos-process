@@ -42,7 +42,8 @@ class ProcDefPermsValue(
 
     private val currentUserRoles by lazy {
         val typeRef = srv.recordsService.getAtt(
-            recordRef, RecordConstants.ATT_TYPE + ScalarType.ID_SCHEMA
+            recordRef,
+            RecordConstants.ATT_TYPE + ScalarType.ID_SCHEMA
         ).toEntityRef()
         srv.roleService.getRolesId(typeRef)
             .filter { srv.roleService.isRoleMember(recordRef, it) }
@@ -50,6 +51,10 @@ class ProcDefPermsValue(
     }
 
     override fun has(name: String): Boolean {
+        if (AuthContext.isRunAsSystem()) {
+            return true
+        }
+
         val perms = recordPerms ?: return false
 
         if (name.equals(PERMS_READ, true)) {
@@ -68,7 +73,11 @@ class ProcDefPermsValue(
     }
 
     fun hasWritePerms(): Boolean {
-        //TODO: its temporary solution, need to fix it after https://citeck.atlassian.net/browse/ECOSCOM-5138
+        if (AuthContext.isRunAsSystem()) {
+            return true
+        }
+
+        // TODO: its temporary solution, need to fix it after https://citeck.atlassian.net/browse/ECOSCOM-5138
         if (isNewRecord(recordRef) && AuthContext.isRunAsAdmin()) {
             return true
         }

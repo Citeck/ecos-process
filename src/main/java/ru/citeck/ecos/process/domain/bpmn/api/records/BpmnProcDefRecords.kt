@@ -218,7 +218,6 @@ class BpmnProcDefRecords(
     }
 
     override fun getRecordAtts(recordId: String): Any? {
-        //TODO: check perms
 
         if (recordId.startsWith("flowable$") || recordId.startsWith("activiti$")) {
             return RecordRef.create("alfresco", "workflow", "def_$recordId")
