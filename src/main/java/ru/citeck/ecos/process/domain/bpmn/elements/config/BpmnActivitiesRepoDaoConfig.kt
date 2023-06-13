@@ -27,7 +27,8 @@ class BpmnActivitiesRepoDaoConfig(
 
         // TODO: add permissions based on BpmnProcDef
         val accessPerms = object : DbRecordPerms {
-            override fun getAllowedPermissions(): Set<String> {
+
+            override fun getAdditionalPerms(): Set<String> {
                 return emptySet()
             }
 
@@ -44,10 +45,6 @@ class BpmnActivitiesRepoDaoConfig(
                 return true
             }
             override fun hasWritePerms(): Boolean {
-                return false
-            }
-
-            override fun isAllowed(permission: String): Boolean {
                 return false
             }
         }
