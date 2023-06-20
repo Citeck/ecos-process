@@ -5,7 +5,7 @@
             <bpmn:outgoing >Flow_0ddyg6k</bpmn:outgoing>
         </bpmn:startEvent>
         <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="Activity_0xmza7p" name="" id="Flow_0ddyg6k" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:businessRuleTask name="DMN Specific Version" id="Activity_0xmza7p" ecos:decisionBinding="VERSION" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;DMN Specific Version&quot;}" ecos:mapDecisionResult="SINGLE_ENTRY" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:decisionRef="eproc/dmn-decision@Decision_spec_version:1:44b3f80b-cede-11ed-be99-8a539fadc585" ecos:resultVariable="result_var" ecos:decisionVersion="2">
+        <bpmn:businessRuleTask name="DMN Specific Version" id="Activity_0xmza7p" ecos:decisionBinding="VERSION" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;DMN Specific Version&quot;}" ecos:mapDecisionResult="SINGLE_ENTRY" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:decisionRef="eproc/dmn-decision-latest@Decision_spec_version" ecos:resultVariable="result_var" ecos:decisionVersion="2">
             <bpmn:incoming >Flow_0ddyg6k</bpmn:incoming>
             <bpmn:outgoing >Flow_0ixl8ld</bpmn:outgoing>
         </bpmn:businessRuleTask>

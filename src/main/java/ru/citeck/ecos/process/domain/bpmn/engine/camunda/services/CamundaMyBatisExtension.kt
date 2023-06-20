@@ -1,10 +1,12 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services
 
 import org.camunda.bpm.engine.HistoryService
+import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.impl.context.Context
+import org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionDefinitionEntity
 import org.camunda.bpm.engine.impl.interceptor.Command
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,6 +18,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis.BpmnMyBa
 import javax.annotation.PostConstruct
 
 private const val SELECT_TASKS_BY_IDS = "selectHistoricTaskInstanceByIds"
+private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES = "selectEventSubscriptionsByEventNames"
+private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES_LIKE_START = "selectEventSubscriptionsByEventNamesLikeStart"
+private const val TRUNCATE_EVENT_SUBSCRIPTIONS = "truncateEventSubscriptions"
+private const val SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS = "selectLatestDecisionDefinitionsByKeys"
 
 @Component
 class CamundaMyBatisExtension(
@@ -41,6 +47,8 @@ class CamundaMyBatisExtension(
             val params: Map<String, Any> = mapOf(
                 "taskIds" to ids
             )
+
+            @Suppress("UNCHECKED_CAST")
             it.dbSqlSession.selectList(SELECT_TASKS_BY_IDS, params) as List<HistoricTaskInstance>
         }
 
@@ -52,8 +60,10 @@ class CamundaMyBatisExtension(
             val params: Map<String, Any> = mapOf(
                 "eventSubscriptionEventNames" to eventNames
             )
+
+            @Suppress("UNCHECKED_CAST")
             it.dbSqlSession.selectList(
-                "selectEventSubscriptionsByEventNames",
+                SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES,
                 params
             ) as List<EventSubscriptionEntity>
         }
@@ -68,8 +78,10 @@ class CamundaMyBatisExtension(
             val params: Map<String, Any> = mapOf(
                 "eventSubscriptionEventNames" to eventNamesWithLikeStartPattern
             )
+
+            @Suppress("UNCHECKED_CAST")
             it.dbSqlSession.selectList(
-                "selectEventSubscriptionsByEventNamesLikeStart",
+                SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES_LIKE_START,
                 params
             ) as List<EventSubscriptionEntity>
         }
@@ -100,10 +112,26 @@ class CamundaMyBatisExtension(
 
     fun deleteAllEventSubscriptions() {
         val command = Command {
-            it.dbSqlSession.sqlSession.update("truncateEventSubscriptions")
+            it.dbSqlSession.sqlSession.update(TRUNCATE_EVENT_SUBSCRIPTIONS)
         }
 
         factory.commandExecutorTxRequired.execute(command)
+    }
+
+    fun getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "keys" to keys
+            )
+
+            @Suppress("UNCHECKED_CAST")
+            it.dbSqlSession.selectList(
+                SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS,
+                params
+            ) as List<DecisionDefinitionEntity>
+        }
+
+        return factory.commandExecutorTxRequired.execute(command)
     }
 }
 
@@ -119,4 +147,8 @@ fun RuntimeService.getEventSubscriptionsByEventNames(eventNames: List<String>): 
 
 fun RuntimeService.getEventSubscriptionsByEventNamesLikeStart(eventNames: List<String>): List<EventSubscriptionEntity> {
     return ext.getEventSubscriptionsByEventNamesLikeStart(eventNames)
+}
+
+fun RepositoryService.getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {
+    return ext.getLatestDecisionDefinitionsByKeys(keys)
 }

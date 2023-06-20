@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionDefinitionEntity">
+
+    <!--from org/camunda/bpm/engine/impl/mapping/entity/DecisionDefinition.xml-->
+    <resultMap id="decisionDefinitionResultMap"
+               type="org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionDefinitionEntity">
+        <id property="id" column="ID_" jdbcType="VARCHAR"/>
+        <result property="revision" column="REV_"/>
+        <result property="category" column="CATEGORY_"/>
+        <result property="name" column="NAME_"/>
+        <result property="key" column="KEY_" jdbcType="VARCHAR"/>
+        <result property="version" column="VERSION_" jdbcType="INTEGER"/>
+        <result property="deploymentId" column="DEPLOYMENT_ID_" jdbcType="VARCHAR"/>
+        <result property="resourceName" column="RESOURCE_NAME_" jdbcType="VARCHAR"/>
+        <result property="diagramResourceName" column="DGRM_RESOURCE_NAME_" jdbcType="VARCHAR"/>
+        <result property="decisionRequirementsDefinitionId" column="DEC_REQ_ID_" jdbcType="VARCHAR"/>
+        <result property="decisionRequirementsDefinitionKey" column="DEC_REQ_KEY_" jdbcType="VARCHAR"/>
+        <result property="tenantId" column="TENANT_ID_" jdbcType="VARCHAR"/>
+        <result property="historyTimeToLive" column="HISTORY_TTL_" jdbcType="INTEGER"/>
+        <result property="versionTag" column="VERSION_TAG_" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectLatestDecisionDefinitionsByKeys" parameterType="string" resultMap="decisionDefinitionResultMap">
+        select * from ${prefix}ACT_RE_DECISION_DEF DEF
+        <where>
+            <foreach collection="keys" item="key" open="DEF.KEY_ in (" separator=", " close=")">
+                #{key}
+            </foreach>
+        </where>
+        and DEF.version_ = (select max(version_) from ${prefix}ACT_RE_DECISION_DEF where key_ = DEF.key_)
+    </select>
+
+</mapper>

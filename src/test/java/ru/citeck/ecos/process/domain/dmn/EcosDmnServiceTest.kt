@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.dmn.service.EcosDmnService
 import ru.citeck.ecos.process.domain.saveAndDeployDmnFromResource
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 @ExtendWith(EcosSpringExtension::class)
@@ -23,8 +22,8 @@ class EcosDmnServiceTest {
         val procId = "simple-dmn-test"
         saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
 
-        val result = ecosDmnService.evaluateDecisionAndCollectMapEntries(
-            EntityRef.valueOf("eproc/dmn-decision@Decision_simple-dmn:1:uuid"),
+        val result = ecosDmnService.evaluateDecisionByKeyAndCollectMapEntries(
+            "Decision_simple-dmn",
             mapOf(
                 "color" to "red"
             )
@@ -42,8 +41,8 @@ class EcosDmnServiceTest {
         val procId = "dmn-test-multiple-input-expression"
         saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
 
-        val result = ecosDmnService.evaluateDecisionAndCollectMapEntries(
-            EntityRef.valueOf("eproc/dmn-decision@Decision_dish_beverages:1:uuid"),
+        val result = ecosDmnService.evaluateDecisionByKeyAndCollectMapEntries(
+            "Decision_dish_beverages",
             mapOf(
                 "season" to "Spring",
                 "guestCount" to 10,

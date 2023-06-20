@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.dmn.api.records
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.DecisionDefinition
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestDecisionDefinitionsByKeys
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
@@ -12,12 +13,12 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
-class DmnDecisionRecords(
+class DmnDecisionLatestRecords(
     private val camundaRepositoryService: RepositoryService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
-        const val ID = "dmn-decision"
+        const val ID = "dmn-decision-latest"
     }
 
     override fun getId(): String {
@@ -27,12 +28,14 @@ class DmnDecisionRecords(
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
         val count = camundaRepositoryService
             .createDecisionDefinitionQuery()
+            .latestVersion()
             .count()
 
         val decisions = camundaRepositoryService
             .createDecisionDefinitionQuery()
+            .latestVersion()
             .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
-                EntityRef.create(AppName.EPROC, ID, it.id)
+                EntityRef.create(AppName.EPROC, ID, it.key)
             }
 
         val result = RecsQueryRes<EntityRef>()
@@ -46,17 +49,14 @@ class DmnDecisionRecords(
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
         return camundaRepositoryService
-            .createDecisionDefinitionQuery()
-            .decisionDefinitionIdIn(*recordIds.toTypedArray())
-            .list()
+            .getLatestDecisionDefinitionsByKeys(recordIds)
             .map {
                 it.toDecisionRecord()
             }
     }
 
-    private fun DecisionDefinition.toDecisionRecord() = DecisionRecord(
-        id = id,
-        key = key,
+    private fun DecisionDefinition.toDecisionRecord() = DecisionLatestRecord(
+        id = key,
         definition = EntityRef.create(
             AppName.EPROC,
             DMN_DEF_SOURCE_ID,
@@ -66,9 +66,8 @@ class DmnDecisionRecords(
         name = name
     )
 
-    private inner class DecisionRecord(
+    private inner class DecisionLatestRecord(
         val id: String,
-        val key: String? = "",
         val definition: EntityRef = EntityRef.EMPTY,
         val version: Int,
         val name: String? = ""

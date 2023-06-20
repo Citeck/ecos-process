@@ -3046,6 +3046,30 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["green", "yellow", "red"])
+    fun `simple dmn decision with dmn decision ref test`(color: String) {
+        val procId = "simple-dmn-test-with-dmn-decision-ref"
+        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/simple-dmn-test.dmn.xml", "simple-dmn-test")
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                "color" to color
+            )
+        ).execute()
+
+        val colorActionMapping = mapOf(
+            "green" to "go",
+            "yellow" to "prepare",
+            "red" to "stop"
+        )
+        assertThat(scenario.instance(process)).variables().containsEntry("action", colorActionMapping[color])
+
+        verify(process).hasFinished("endEvent")
+    }
+
     @Test
     fun `dmn with specific decision version`() {
         val procId = "dmn-test-specific-version"

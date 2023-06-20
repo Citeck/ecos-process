@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.model.lib.computed.ComputeDmnDecisionRequestDto
 import ru.citeck.ecos.model.lib.computed.ComputeDmnDecisionResponseDto
 import ru.citeck.ecos.model.lib.computed.ComputeDmnDecisionWebApi
+import ru.citeck.ecos.process.domain.dmn.dto.toDecisionKey
 import ru.citeck.ecos.process.domain.dmn.service.EcosDmnService
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
@@ -21,8 +22,8 @@ class EvaluateDecisionWebExecutor(
             error("Decision ref can't be empty")
         }
 
-        val evalResult = ecosDmnService.evaluateDecisionAndCollectMapEntries(
-            requestData.decisionRef,
+        val evalResult = ecosDmnService.evaluateDecisionByKeyAndCollectMapEntries(
+            requestData.decisionRef.toDecisionKey(),
             requestData.variables
         )
 

@@ -5,7 +5,12 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionEx
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
+import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionRecords
+import ru.citeck.ecos.process.domain.dmn.dto.toDecisionKey
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+
+private val allowedSourceIds = listOf(DmnDecisionRecords.ID, DmnDecisionLatestRecords.ID)
 
 data class BpmnBusinessRuleTaskDef(
     val id: String,
@@ -18,7 +23,7 @@ data class BpmnBusinessRuleTaskDef(
     val jobConfig: JobConfig,
 
     val decisionRef: EntityRef,
-    val decisionRefKey: String = decisionRef.getLocalId().split(":")[0],
+    val decisionRefKey: String = decisionRef.toDecisionKey(),
     val binding: DecisionRefBinding,
 
     val resultVariable: String? = null,
@@ -32,21 +37,21 @@ data class BpmnBusinessRuleTaskDef(
 
     init {
         if (decisionRef.isNotEmpty()) {
-            decisionRef.getLocalId().split(":").let {
-                if (it.size != 3) {
-                    throw EcosBpmnElementDefinitionException(
-                        id,
-                        "Invalid decisionRef id format: $decisionRef"
-                    )
-                }
+            val sourceId = decisionRef.getSourceId()
 
-                val decisionKey = it[0]
-                if (decisionKey.isBlank()) {
-                    throw EcosBpmnElementDefinitionException(
-                        id,
-                        "Invalid decisionRef id key: $decisionRef"
-                    )
-                }
+            if (sourceId !in allowedSourceIds) {
+                throw EcosBpmnElementDefinitionException(
+                    id,
+                    "Invalid decisionRef sourceId: $decisionRef. Allowed sourceIds: $allowedSourceIds"
+                )
+            }
+
+            val decisionKey = decisionRef.toDecisionKey()
+            if (decisionKey.isBlank()) {
+                throw EcosBpmnElementDefinitionException(
+                    id,
+                    "Decision key can't be blank: $decisionRef"
+                )
             }
         }
 
@@ -59,6 +64,7 @@ data class BpmnBusinessRuleTaskDef(
                     )
                 }
             }
+
             DecisionRefBinding.VERSION_TAG -> {
                 if (versionTag.isNullOrBlank()) {
                     throw EcosBpmnElementDefinitionException(
@@ -67,6 +73,7 @@ data class BpmnBusinessRuleTaskDef(
                     )
                 }
             }
+
             else -> {
                 // do nothing
             }

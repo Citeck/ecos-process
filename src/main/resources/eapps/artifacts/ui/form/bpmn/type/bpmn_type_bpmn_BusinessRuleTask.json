@@ -56,7 +56,7 @@
               "required": true
             },
             "modalTitle": "",
-            "journalId": "dmn-decision",
+            "journalId": "dmn-decision-latest",
             "queryData": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,

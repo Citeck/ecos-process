@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.dmn.service
 import mu.KotlinLogging
 import org.camunda.bpm.engine.DecisionService
 import org.springframework.stereotype.Service
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private const val DEFAULT_OUTPUT_VARIABLE_NAME = "output"
 
@@ -16,14 +15,12 @@ class EcosDmnServiceImpl(
         private val log = KotlinLogging.logger {}
     }
 
-    override fun evaluateDecisionAndCollectMapEntries(
-        decisionRef: EntityRef,
+    override fun evaluateDecisionByKeyAndCollectMapEntries(
+        key: String,
         variables: Map<String, Any?>
     ): Map<String, List<Any>> {
 
-        val decisionKey = decisionRef.toDecisionKey()
-
-        val tableResult = decisionService.evaluateDecisionTableByKey(decisionKey, variables)
+        val tableResult = decisionService.evaluateDecisionTableByKey(key, variables)
 
         val result = mutableMapOf<String, MutableCollection<Any>>()
 
@@ -38,22 +35,8 @@ class EcosDmnServiceImpl(
             }
         }
 
-        log.debug { "Eval dmn decision: $decisionRef, variables: $variables, result: $result" }
+        log.debug { "Eval dmn decision by key: $key, variables: $variables, result: $result" }
 
         return result.mapValues { (_, value) -> value.toList() }
-    }
-
-    private fun EntityRef.toDecisionKey(): String {
-        val keyParts = getLocalId().split(":")
-        if (keyParts.size != 3) {
-            error("Invalid decision ref: $this")
-        }
-
-        val decisionKey = keyParts[0]
-        if (decisionKey.isBlank()) {
-            error("Decision key can't be blank")
-        }
-
-        return decisionKey
     }
 }

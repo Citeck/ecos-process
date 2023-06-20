@@ -26,7 +26,7 @@
                                ecos:name_ml="{&quot;ru&quot;:&quot;Simple DMN&quot;}"
                                ecos:mapDecisionResult="COLLECT_ENTRIES"
                                ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}"
-                               ecos:decisionRef="eproc/dmn-decision@Decision_dish_beverages:1:4844efdf-ced0-11ed-9417-ce9b28987d38"
+                               ecos:decisionRef="eproc/dmn-decision-latest@Decision_dish_beverages"
                                ecos:resultVariable="beveragesResult">
             <bpmn:incoming>Flow_0ddyg6k</bpmn:incoming>
             <bpmn:outgoing>Flow_0ixl8ld</bpmn:outgoing>

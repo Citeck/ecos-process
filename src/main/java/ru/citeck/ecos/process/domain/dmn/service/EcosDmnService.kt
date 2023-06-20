@@ -1,11 +1,8 @@
 package ru.citeck.ecos.process.domain.dmn.service
 
-import ru.citeck.ecos.webapp.api.entity.EntityRef
-
 interface EcosDmnService {
-
-    fun evaluateDecisionAndCollectMapEntries(
-        decisionRef: EntityRef,
+    fun evaluateDecisionByKeyAndCollectMapEntries(
+        key: String,
         variables: Map<String, Any?>
     ): Map<String, List<Any>>
 }

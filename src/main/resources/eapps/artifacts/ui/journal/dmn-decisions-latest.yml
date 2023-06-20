@@ -1,7 +1,7 @@
-id: dmn-decision
+id: dmn-decision-latest
 name: { ru: Решения, en: Decisions }
 
-sourceId: eproc/dmn-decision
+sourceId: eproc/dmn-decision-latest
 system: true
 
 columns:
@@ -10,13 +10,6 @@ columns:
     name:
       en: Name
       ru: Имя
-    searchable: false
-    sortable: false
-
-  - id: version
-    name:
-      en: Version
-      ru: Версия
     searchable: false
     sortable: false
 
