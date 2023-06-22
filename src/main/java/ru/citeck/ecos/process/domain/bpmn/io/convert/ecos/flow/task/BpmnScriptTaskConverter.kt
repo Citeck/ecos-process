@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task
+package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json

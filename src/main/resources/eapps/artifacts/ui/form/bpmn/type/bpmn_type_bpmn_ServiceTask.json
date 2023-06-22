@@ -1,0 +1,109 @@
+{
+  "id": "bpmn-type-bpmn:ServiceTask",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Service Task Form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {
+    "ru": {
+      "service_task_type_external": "Внешняя задача"
+    },
+    "en": {
+      "service_task_type_external": "External task"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Тип",
+          "en": "Type"
+        },
+        "key": "serviceTaskType",
+        "disabled": true,
+        "validate": {
+          "required": true
+        },
+        "dataSrc": "values",
+        "data": {
+          "values": [
+            {
+              "label": "service_task_type_external",
+              "value": "EXTERNAL"
+            }
+          ],
+          "headers": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ]
+        },
+        "defaultValue": "EXTERNAL",
+        "optionalWhenDisabled": false,
+        "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Топик внешней задачи",
+          "en": "External Task Topic"
+        },
+        "key": "externalTaskTopic",
+        "tooltip": {
+          "ru": "TODO"
+        },
+        "validate": {
+          "required": true,
+          "pattern": "([a-zA-Z0-9-]+$)",
+          "maxLength": 50
+        },
+        "inputMasks": [
+          {
+            "label": "",
+            "mask": ""
+          }
+        ],
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "conditional": {
+          "show": "true",
+          "when": "serviceTaskType",
+          "eq": "EXTERNAL"
+        },
+        "type": "textfield",
+        "rows": 30,
+        "input": true
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-multi-instance",
+        "input": true,
+        "key": "includeForm4",
+        "label": "Форма: BPMN base form Multi Instance",
+        "type": "includeForm"
+      }
+    ],
+    "formId": "bpmn-type-bpmn:ServiceTask"
+  },
+  "attributes": {},
+  "notExists": false
+}

@@ -1,0 +1,34 @@
+{
+  "id": "bpmn-type-bpmn:ErrorEvent",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Error Event"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      }
+    ],
+    "formId": "bpmn-type-bpmn:ErrorEvent"
+  },
+  "attributes": {},
+  "notExists": false
+}

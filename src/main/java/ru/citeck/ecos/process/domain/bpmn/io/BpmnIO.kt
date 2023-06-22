@@ -16,14 +16,14 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.Camund
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaCollaborationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaLaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaLaneSetConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaParticipantConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.signal.CamundaSignalConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.task.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.signal.CamundaSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnAssociationConverter
@@ -43,8 +43,8 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnLaneSetConver
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnParticipantConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.signal.BpmnSignalConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.signal.BpmnSignalConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
@@ -77,10 +77,12 @@ object BpmnIO {
             BpmnUserTaskConverter::class,
             BpmnExclusiveGatewayConverter::class,
             BpmnScriptTaskConverter::class,
+            BpmnServiceTaskConverter::class,
             BpmnParallelGatewayConverter::class,
             BpmnIntermediateCatchEventConverter::class,
             BpmnIntermediateThrowEventConverter::class,
             BpmnTimerEventDefinitionConverter::class,
+            BpmnErrorEventDefinitionConverter::class,
             BpmnBoundaryEventConverter::class,
             BpmnTextAnnotationConverter::class,
             BpmnAssociationConverter::class,
@@ -114,10 +116,12 @@ object BpmnIO {
             CamundaUserTaskConverter::class,
             CamundaExclusiveGatewayConverter::class,
             CamundaScriptTaskConverter::class,
+            CamundaServiceTaskConverter::class,
             CamundaParallelGatewayConverter::class,
             CamundaIntermediateCatchEventConverter::class,
             CamundaIntermediateThrowEventConverter::class,
             CamundaTimerEventDefinitionConverter::class,
+            CamundaErrorEventDefinitionConverter::class,
             CamundaBoundaryEventConverter::class,
             CamundaTextAnnotationConverter::class,
             CamundaAssociationConverter::class,

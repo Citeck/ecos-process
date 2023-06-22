@@ -23,6 +23,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -386,6 +387,7 @@ private fun convertTEventDefinitionToBpmnEventDef(
     val typeToTransform = when (val type = eventDefinition[0].declaredType) {
         TTimerEventDefinition::class.java -> BpmnTimerEventDef::class.java
         TSignalEventDefinition::class.java -> BpmnSignalEventDef::class.java
+        TErrorEventDefinition::class.java -> BpmnErrorEventDef::class.java
         else -> error("Class $type not supported")
     }
 
@@ -447,12 +449,17 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
             )
         }
 
+        is BpmnErrorEventDef -> {
+            //do nothing
+        }
+
         else -> error("Class $bpmnEventDef not supported")
     }
 
     val typeToTransform = when (val type = bpmnEventDef.javaClass) {
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
         BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
+        BpmnErrorEventDef::class.java -> TErrorEventDefinition::class.java
         else -> error("Class $type not supported")
     }
 
@@ -486,6 +493,7 @@ private fun fillCamundaEventDefPayloadFromBpmnEventDef(
     val typeToTransform = when (val type = bpmnEventDef.javaClass) {
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
         BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
+        BpmnErrorEventDef::class.java -> TErrorEventDefinition::class.java
         else -> error("Class $type not supported")
     }
 

@@ -71,6 +71,8 @@ val BPMN_PROP_ASYNC_CONFIG = QName(NS_ECOS_BPMN, "asyncConfig")
 val BPMN_PROP_JOB_CONFIG = QName(NS_ECOS_BPMN, "jobConfig")
 val BPMN_PROP_TIME_CONFIG = QName(NS_ECOS_BPMN, "timeConfig")
 val BPMN_PROP_SCRIPT = QName(NS_ECOS_BPMN, "script")
+val BPMN_PROP_SERVICE_TASK_TYPE = QName(NS_ECOS_BPMN, "serviceTaskType")
+val BPMN_PROP_EXTERNAL_TASK_TOPIC = QName(NS_ECOS_BPMN, "externalTaskTopic")
 
 val BPMN_MULTI_INSTANCE_CONFIG = QName(NS_ECOS_BPMN, "multiInstanceConfig")
 

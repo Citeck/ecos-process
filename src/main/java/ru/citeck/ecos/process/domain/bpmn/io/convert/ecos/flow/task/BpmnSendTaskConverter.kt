@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.task
+package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task
 
 import org.apache.commons.lang3.LocaleUtils
 import ru.citeck.ecos.commons.data.MLText
