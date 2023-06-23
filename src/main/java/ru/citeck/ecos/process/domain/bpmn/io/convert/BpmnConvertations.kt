@@ -450,7 +450,7 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
         }
 
         is BpmnErrorEventDef -> {
-            //do nothing
+            // do nothing
         }
 
         else -> error("Class $bpmnEventDef not supported")

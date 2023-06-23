@@ -30,7 +30,6 @@ data class BpmnServiceTaskDef(
             )
         }
     }
-
 }
 
 enum class ServiceTaskType {

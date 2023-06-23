@@ -16,6 +16,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.Camund
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.signal.CamundaSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaCollaborationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaLaneConverter
@@ -23,7 +24,6 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaLaneSet
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.pool.CamundaParticipantConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process.CamundaSubProcessConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.signal.CamundaSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.BpmnDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnAssociationConverter
@@ -37,14 +37,14 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclu
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.signal.BpmnSignalConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnCollaborationConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnLaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnLaneSetConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.pool.BpmnParticipantConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnProcessConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process.BpmnSubProcessConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.signal.BpmnSignalConverter
-import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
