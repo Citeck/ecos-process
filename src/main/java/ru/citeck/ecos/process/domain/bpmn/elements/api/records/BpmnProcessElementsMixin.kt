@@ -1,8 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.elements.api.records
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
+import ecos.guava30.com.google.common.cache.CacheBuilder
+import ecos.guava30.com.google.common.cache.CacheLoader
+import ecos.guava30.com.google.common.cache.LoadingCache
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE

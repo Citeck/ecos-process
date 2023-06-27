@@ -1,8 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
+import ecos.guava30.com.google.common.cache.CacheBuilder
+import ecos.guava30.com.google.common.cache.CacheLoader
+import ecos.guava30.com.google.common.cache.LoadingCache
 import mu.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.delegate.DelegateExecution
