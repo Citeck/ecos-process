@@ -1,0 +1,260 @@
+{
+  "id": "bpmn-type-bpmn:ConditionalEvent",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Conditional Event Form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {
+    "ru": {
+      "CREATE": "Создание",
+      "UPDATE": "Обновление",
+      "DELETE": "Удаление"
+    },
+    "en": {
+      "CREATE": "Create",
+      "UPDATE": "Update",
+      "DELETE": "Delete"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "input": true,
+        "key": "includeForm2",
+        "label": "Форма: Bpmn base form elements",
+        "type": "includeForm"
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "condition-panel",
+        "title": {
+          "ru": "Условие",
+          "en": "Condition"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Имя переменной",
+              "en": "Variable name"
+            },
+            "key": "variableName",
+            "tooltip": {
+              "ru": "По умолчанию вычисление условия происходит при обновлении каждой переменной. Вы можете задать имя переменной для ограничения вычисления только для конкретной переменной.",
+              "en": "By default, the condition evaluation is triggered when each variable is updated. You can specify a variable name to restrict the calculation to a specific variable."
+            },
+            "validate": {
+              "pattern": "^[a-zA-Z0-9-_*]+$"
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "События переменной",
+              "en": "Variable events"
+            },
+            "key": "variableEvents",
+            "tooltip": {
+              "en": "Сan be used to restrict the type of change",
+              "ru": "Можно использовать для ограничения типа изменений"
+            },
+            "multiple": true,
+            "reorder": false,
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": "CREATE",
+                  "value": "CREATE"
+                },
+                {
+                  "label": "UPDATE",
+                  "value": "UPDATE"
+                },
+                {
+                  "label": "DELETE",
+                  "value": "DELETE"
+                }
+              ],
+              "headers": [
+                {
+                  "key": "",
+                  "value": ""
+                }
+              ]
+            },
+            "defaultValue": [],
+            "optionalWhenDisabled": false,
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Тип условия",
+              "en": "Condition Type"
+            },
+            "key": "conditionType",
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": "SCRIPT",
+                  "value": "SCRIPT"
+                },
+                {
+                  "label": "EXPRESSION",
+                  "value": "EXPRESSION"
+                }
+              ],
+              "headers": [
+                {
+                  "key": "",
+                  "value": ""
+                }
+              ]
+            },
+            "defaultValue": "EXPRESSION",
+            "optionalWhenDisabled": false,
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "conditionConfig Container"
+            },
+            "key": "conditionConfig",
+            "hideLabel": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "label": {
+                  "ru": "SCRIPT",
+                  "en": "SCRIPT"
+                },
+                "key": "fn",
+                "hidden": true,
+                "validate": {
+                  "required": true
+                },
+                "editor": "ace",
+                "wysiwyg": {
+                  "mode": "ace/mode/javascript"
+                },
+                "defaultValue": "// some script;",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "logic": [
+                  {
+                    "name": "logic:show",
+                    "trigger": {
+                      "type": "javascript",
+                      "javascript": "result = _.get(data, 'conditionType') === 'SCRIPT';"
+                    },
+                    "actions": [
+                      {
+                        "name": "action:show",
+                        "type": "property",
+                        "property": {
+                          "label": "Hidden",
+                          "value": "hidden",
+                          "type": "boolean"
+                        },
+                        "state": "false"
+                      }
+                    ]
+                  }
+                ],
+                "as": "string",
+                "type": "textarea",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "EXPRESSION"
+                },
+                "key": "expression",
+                "hidden": true,
+                "validate": {
+                  "required": true
+                },
+                "placeholder": {
+                  "ru": "${foo == \"bar\"}"
+                },
+                "inputMasks": [
+                  {
+                    "label": "",
+                    "mask": ""
+                  }
+                ],
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "logic": [
+                  {
+                    "name": "logic:show",
+                    "trigger": {
+                      "type": "simple",
+                      "simple": {
+                        "show": true,
+                        "when": "conditionType",
+                        "eq": "EXPRESSION"
+                      }
+                    },
+                    "actions": [
+                      {
+                        "name": "action:show",
+                        "type": "property",
+                        "property": {
+                          "label": "Hidden",
+                          "value": "hidden",
+                          "type": "boolean"
+                        },
+                        "state": "false"
+                      }
+                    ]
+                  }
+                ],
+                "type": "textfield",
+                "input": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "formRef": "uiserv/form@bpmn-base-form-async",
+        "input": true,
+        "key": "includeForm3",
+        "label": "Форма: BPMN base form Async",
+        "type": "includeForm"
+      }
+    ],
+    "formId": "bpmn-type-bpmn:ConditionalEvent"
+  },
+  "attributes": {},
+  "notExists": false
+}

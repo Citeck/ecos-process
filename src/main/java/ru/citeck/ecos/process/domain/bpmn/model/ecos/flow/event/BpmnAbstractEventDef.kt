@@ -9,7 +9,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerE
 @JsonSubTypes(
     JsonSubTypes.Type(value = BpmnTimerEventDef::class, name = "timerEvent"),
     JsonSubTypes.Type(value = BpmnSignalEventDef::class, name = "signalEvent"),
-    JsonSubTypes.Type(value = BpmnTerminateEventDef::class, name = "terminateEvent")
+    JsonSubTypes.Type(value = BpmnTerminateEventDef::class, name = "terminateEvent"),
+    JsonSubTypes.Type(value = BpmnConditionalEventDef::class, name = "conditionalEvent")
 )
 abstract class BpmnAbstractEventDef {
     abstract val id: String

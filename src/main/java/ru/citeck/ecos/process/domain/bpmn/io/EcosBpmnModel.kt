@@ -72,6 +72,9 @@ val BPMN_PROP_JOB_CONFIG = QName(NS_ECOS_BPMN, "jobConfig")
 val BPMN_PROP_TIME_CONFIG = QName(NS_ECOS_BPMN, "timeConfig")
 val BPMN_PROP_SCRIPT = QName(NS_ECOS_BPMN, "script")
 
+val BPMN_PROP_VARIABLE_NAME = QName(NS_ECOS_BPMN, "variableName")
+val BPMN_PROP_VARIABLE_EVENTS = QName(NS_ECOS_BPMN, "variableEvents")
+
 val BPMN_MULTI_INSTANCE_CONFIG = QName(NS_ECOS_BPMN, "multiInstanceConfig")
 
 val BPMN_PROP_ECOS_TASK_TYPE = QName(NS_ECOS_BPMN, "taskType")
