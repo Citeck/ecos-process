@@ -23,7 +23,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnErrorEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnConditionalEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnTerminateEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -189,13 +190,7 @@ fun conditionFromAttributes(atts: Map<QName, String>): BpmnConditionDef {
             ConditionType.valueOf(it.uppercase())
         } ?: ConditionType.NONE,
         config = atts[BPMN_PROP_CONDITION_CONFIG]?.let {
-            Json.mapper.read(it)?.let { node ->
-                ConditionConfig(
-                    fn = node["fn"].asText(),
-                    expression = node["expression"].asText(),
-                    outcome = Outcome(node["outcome"].asText())
-                )
-            } ?: ConditionConfig()
+            Json.mapper.read(it, ConditionConfig::class.java)
         } ?: ConditionConfig()
     )
 }
@@ -388,6 +383,8 @@ private fun convertTEventDefinitionToBpmnEventDef(
         TTimerEventDefinition::class.java -> BpmnTimerEventDef::class.java
         TSignalEventDefinition::class.java -> BpmnSignalEventDef::class.java
         TErrorEventDefinition::class.java -> BpmnErrorEventDef::class.java
+        TTerminateEventDefinition::class.java -> BpmnTerminateEventDef::class.java
+        TConditionalEventDefinition::class.java -> BpmnConditionalEventDef::class.java
         else -> error("Class $type not supported")
     }
 
@@ -453,6 +450,23 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
             // do nothing
         }
 
+        is BpmnTerminateEventDef -> {
+            // do nothing
+        }
+
+        is BpmnConditionalEventDef -> {
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_VARIABLE_NAME, bpmnEventDef.variableName)
+            event.otherAttributes.putIfNotBlank(
+                BPMN_PROP_VARIABLE_EVENTS, Json.mapper.toString(bpmnEventDef.variableEvents)
+            )
+
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_CONDITION_TYPE, bpmnEventDef.condition.type.name)
+            event.otherAttributes.putIfNotBlank(
+                BPMN_PROP_CONDITION_CONFIG, Json.mapper.toString(bpmnEventDef.condition.config)
+            )
+
+        }
+
         else -> error("Class $bpmnEventDef not supported")
     }
 
@@ -460,6 +474,8 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
         BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
         BpmnErrorEventDef::class.java -> TErrorEventDefinition::class.java
+        BpmnTerminateEventDef::class.java -> TTerminateEventDefinition::class.java
+        BpmnConditionalEventDef::class.java -> TConditionalEventDefinition::class.java
         else -> error("Class $type not supported")
     }
 
@@ -494,6 +510,8 @@ private fun fillCamundaEventDefPayloadFromBpmnEventDef(
         BpmnTimerEventDef::class.java -> TTimerEventDefinition::class.java
         BpmnSignalEventDef::class.java -> TSignalEventDefinition::class.java
         BpmnErrorEventDef::class.java -> TErrorEventDefinition::class.java
+        BpmnTerminateEventDef::class.java -> TTerminateEventDefinition::class.java
+        BpmnConditionalEventDef::class.java -> TConditionalEventDefinition::class.java
         else -> error("Class $type not supported")
     }
 

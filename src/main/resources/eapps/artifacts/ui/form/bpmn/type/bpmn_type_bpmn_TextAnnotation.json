@@ -9,20 +9,7 @@
   "customModule": null,
   "typeRef": "",
   "width": "lg",
-  "i18n": {
-    "ru": {
-      "EXPRESSION": "Выражение",
-      "SCRIPT": "Скрипт",
-      "OUTCOME": "Исходящий",
-      "NONE": "Нет"
-    },
-    "en": {
-      "EXPRESSION": "Expression",
-      "SCRIPT": "Script",
-      "OUTCOME": "Outcome",
-      "NONE": "None"
-    }
-  },
+  "i18n": {},
   "definition": {
     "components": [
       {

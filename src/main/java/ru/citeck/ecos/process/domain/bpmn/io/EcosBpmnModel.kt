@@ -74,6 +74,9 @@ val BPMN_PROP_SCRIPT = QName(NS_ECOS_BPMN, "script")
 val BPMN_PROP_SERVICE_TASK_TYPE = QName(NS_ECOS_BPMN, "serviceTaskType")
 val BPMN_PROP_EXTERNAL_TASK_TOPIC = QName(NS_ECOS_BPMN, "externalTaskTopic")
 
+val BPMN_PROP_VARIABLE_NAME = QName(NS_ECOS_BPMN, "variableName")
+val BPMN_PROP_VARIABLE_EVENTS = QName(NS_ECOS_BPMN, "variableEvents")
+
 val BPMN_MULTI_INSTANCE_CONFIG = QName(NS_ECOS_BPMN, "multiInstanceConfig")
 
 val BPMN_PROP_ECOS_TASK_TYPE = QName(NS_ECOS_BPMN, "taskType")

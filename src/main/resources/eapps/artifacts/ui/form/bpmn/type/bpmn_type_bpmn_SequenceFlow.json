@@ -1,14 +1,14 @@
 {
   "id": "bpmn-type-bpmn:SequenceFlow",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "BPMN Sequence Flow Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {
     "ru": {
       "EXPRESSION": "Выражение",
@@ -108,8 +108,17 @@
             },
             "key": "outcome",
             "hidden": true,
+            "validate": {
+              "required": true
+            },
             "dataSrc": "custom",
             "data": {
+              "headers": [
+                {
+                  "key": "",
+                  "value": ""
+                }
+              ],
               "custom": "const isOutcome = _.get(data, 'conditionType') === 'OUTCOME';\nconst getIncomingOutcomes = _.get(instance, 'root.options.editor.getIncomingOutcomes');\n\nif (!isOutcome|| !_.isFunction(getIncomingOutcomes)) {\n  values = [];\n  return;\n}\n\nconst result = getIncomingOutcomes();\n\nif (!result) {\n  values = [];\n  return;\n}\n\nconst outcomes = [];\n\nresult.forEach(item => {\n  const taskId = (item.id|| '').replace(/\\:/g, '_');\n  \n  item.outcomes.forEach(o => {\n    const outcomeId = (o.id|| '').replace(/\\:/g, '_');\n\n    outcomes.push({\n      value: `${taskId}:${outcomeId}`,\n      label: `${item.name} - ${o.name}`\n    });\n  });\n});\n\nvalues = outcomes;"
             },
             "optionalWhenDisabled": false,
@@ -145,6 +154,9 @@
             },
             "key": "fn",
             "hidden": true,
+            "validate": {
+              "required": true
+            },
             "editor": "ace",
             "wysiwyg": {
               "mode": "ace/mode/javascript"
@@ -183,9 +195,18 @@
             },
             "key": "expression",
             "hidden": true,
+            "validate": {
+              "required": true
+            },
             "placeholder": {
               "ru": "${someVariable}"
             },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
@@ -219,7 +240,9 @@
           }
         ]
       }
-    ]
+    ],
+    "formId": "bpmn-type-bpmn:SequenceFlow"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }

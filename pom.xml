@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>1.30.1</version>
+        <version>1.30.5</version>
     </parent>
 
     <properties>
@@ -84,7 +84,6 @@
             <artifactId>mongodb</artifactId>
             <scope>test</scope>
         </dependency>
-
 
         <dependency>
             <groupId>org.testcontainers</groupId>

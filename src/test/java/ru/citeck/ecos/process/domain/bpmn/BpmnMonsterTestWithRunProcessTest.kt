@@ -3151,6 +3151,9 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    // TODO: Add test for Terminate Event
+    // TODO: Add test for Conditional Event
+
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
         action: () -> Unit

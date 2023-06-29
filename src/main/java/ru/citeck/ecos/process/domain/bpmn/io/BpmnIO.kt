@@ -83,6 +83,7 @@ object BpmnIO {
             BpmnIntermediateThrowEventConverter::class,
             BpmnTimerEventDefinitionConverter::class,
             BpmnErrorEventDefinitionConverter::class,
+            BpmnTerminateEventDefinitionConverter::class,
             BpmnBoundaryEventConverter::class,
             BpmnTextAnnotationConverter::class,
             BpmnAssociationConverter::class,
@@ -96,7 +97,8 @@ object BpmnIO {
             BpmnLaneConverter::class,
             BpmnInclusiveGatewayConverter::class,
             BpmnEventBasedGatewayConverter::class,
-            BpmnBusinessRuleTaskConverter::class
+            BpmnBusinessRuleTaskConverter::class,
+            BpmnConditionalEventDefinitionConverter::class
         ),
         extensionTypeResolver
     )
@@ -122,6 +124,7 @@ object BpmnIO {
             CamundaIntermediateThrowEventConverter::class,
             CamundaTimerEventDefinitionConverter::class,
             CamundaErrorEventDefinitionConverter::class,
+            CamundaTerminateEventDefinitionConverter::class,
             CamundaBoundaryEventConverter::class,
             CamundaTextAnnotationConverter::class,
             CamundaAssociationConverter::class,
@@ -135,7 +138,8 @@ object BpmnIO {
             CamundaLaneConverter::class,
             CamundaInclusiveGatewayConverter::class,
             CamundaEventBasedGatewayConverter::class,
-            CamundaBusinessRuleTaskConverter::class
+            CamundaBusinessRuleTaskConverter::class,
+            CamundaConditionalEventDefinitionConverter::class
         ),
         extensionTypeResolver
     )
