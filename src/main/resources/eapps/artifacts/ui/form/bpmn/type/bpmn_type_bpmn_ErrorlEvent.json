@@ -20,6 +20,142 @@
         "type": "includeForm"
       },
       {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "error-panel",
+        "title": {
+          "ru": "Ошибка",
+          "en": "Error"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Имя ошибки",
+              "en": "Error name"
+            },
+            "key": "errorName",
+            "validate": {
+              "required": true,
+              "pattern": "([a-zA-Z0-9-]+$)",
+              "maxLength": 50
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Код",
+              "en": "Code"
+            },
+            "key": "errorCode",
+            "validate": {
+              "pattern": "([a-zA-Z0-9-]+$)",
+              "maxLength": 50
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Сообщение",
+              "en": "Message"
+            },
+            "key": "errorMessage",
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "input": true,
+            "key": "horizontalLine",
+            "type": "horizontalLine"
+          },
+          {
+            "label": {
+              "ru": "Переменная кода",
+              "en": "Code variable"
+            },
+            "key": "errorCodeVariable",
+            "tooltip": {
+              "ru": "Определите имя переменной, которая будет содержать код ошибки",
+              "en": "Define the name of the variable that will contain the error code"
+            },
+            "validate": {
+              "pattern": "([a-zA-Z0-9-_]+$)",
+              "maxLength": 50
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Переменная ошибки",
+              "en": "Message variable"
+            },
+            "key": "errorMessageVariable",
+            "tooltip": {
+              "en": "Define the name of the variable that will cotain the error message",
+              "ru": "Определите имя переменной, в которой будет содержаться сообщение об ошибке"
+            },
+            "validate": {
+              "pattern": "([a-zA-Z0-9-_]+$)",
+              "maxLength": 50
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true
+          }
+        ]
+      },
+      {
         "formRef": "uiserv/form@bpmn-base-form-async",
         "input": true,
         "key": "includeForm3",
