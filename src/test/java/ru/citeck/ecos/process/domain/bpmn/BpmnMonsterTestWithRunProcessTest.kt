@@ -75,6 +75,8 @@ private const val SUB_PROCESS = "subprocess"
 private const val SEND_TASK = "sendtask"
 private const val TIMER = "timer"
 private const val BPMN_EVENTS = "bpmnevents"
+private const val ERROR = "error"
+private const val SERVICE_TASK = "servicetask"
 
 /**
  * Why all tests places on one monster class?
@@ -3157,7 +3159,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test service task with expression and result variable`() {
         val procId = "test-service-task-expression"
 
-        saveAndDeployBpmn("servicetask", procId)
+        saveAndDeployBpmn(SERVICE_TASK, procId)
 
         val scenario = run(process).startByKey(
             procId
@@ -3174,7 +3176,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event`() {
         val procId = "test-catch-error-from-service-task"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
@@ -3188,7 +3190,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with different catch code should not be catched`() {
         val procId = "test-catch-error-with-different-catch-code-from-service-task"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
@@ -3202,7 +3204,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with different catch code should be catched from error event without code`() {
         val procId = "test-catch-error-with-different-catch-code-and-catch-all-event"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
@@ -3217,7 +3219,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with multiple catch code - catch code 1`() {
         val procId = "test-catch-error-with-multiple-catch"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId,
@@ -3235,7 +3237,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with multiple catch code - catch code 2`() {
         val procId = "test-catch-error-with-multiple-catch"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId,
@@ -3253,7 +3255,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test error start event sub process`() {
         val procId = "test-error-start-event-sub-process"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         val scenario = run(process).startByKey(
             procId
@@ -3268,7 +3270,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test error boundary event sub process`() {
         val procId = "test-error-boundary-event-sub-process"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
@@ -3282,7 +3284,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error with code and message variables`() {
         val procId = "test-catch-error-with-variables"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         val scenario = run(process).startByKey(
             procId
@@ -3299,7 +3301,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test error start event sub process - check message from variable`() {
         val procId = "test-error-start-event-sub-process-message-from-prop"
 
-        saveAndDeployBpmn("error", procId)
+        saveAndDeployBpmn(ERROR, procId)
 
         val scenario = run(process).startByKey(
             procId
@@ -3310,6 +3312,29 @@ class BpmnMonsterTestWithRunProcessTest {
         assertThat(scenario.instance(process)).variables().containsEntry("messageVariable", "its throw message")
 
         verify(process).hasFinished("endEvent")
+    }
+
+    // ---TERMINATE EVENT TESTS ---
+
+    @Test
+    fun `terminate event should terminate process`() {
+        val procId = "test-terminate-event"
+        saveAndDeployBpmn(ERROR, procId)
+
+        val doc = "doc@terminate"
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "documentRef" to doc
+            )
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+
+        val taskCount = procTaskService.getTasksByDocument(doc).size
+        assertThat(taskCount).isEqualTo(0)
+
     }
 
     // TODO: Add test for Terminate Event
