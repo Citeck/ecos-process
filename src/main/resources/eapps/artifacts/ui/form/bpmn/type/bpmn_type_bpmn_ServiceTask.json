@@ -11,10 +11,12 @@
   "system": true,
   "i18n": {
     "ru": {
-      "service_task_type_external": "Внешняя задача"
+      "service_task_type_external": "Внешняя задача",
+      "service_task_type_expression": "Выражение"
     },
     "en": {
-      "service_task_type_external": "External task"
+      "service_task_type_external": "External task",
+      "service_task_type_expression": "Expression"
     }
   },
   "definition": {
@@ -32,7 +34,6 @@
           "en": "Type"
         },
         "key": "serviceTaskType",
-        "disabled": true,
         "validate": {
           "required": true
         },
@@ -42,6 +43,10 @@
             {
               "label": "service_task_type_external",
               "value": "EXTERNAL"
+            },
+            {
+              "label": "service_task_type_expression",
+              "value": "EXPRESSION"
             }
           ],
           "headers": [
@@ -85,6 +90,58 @@
         },
         "type": "textfield",
         "rows": 30,
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Выражение",
+          "en": "Expression"
+        },
+        "key": "expression",
+        "validate": {
+          "required": true
+        },
+        "inputMasks": [
+          {
+            "label": "",
+            "mask": ""
+          }
+        ],
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "conditional": {
+          "show": "true",
+          "when": "serviceTaskType",
+          "eq": "EXPRESSION"
+        },
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Переменная результата",
+          "en": "Result varibale"
+        },
+        "key": "resultVariable",
+        "validate": {
+          "pattern": "[a-zA-Z0-9-_*]+$",
+          "maxLength": 50
+        },
+        "inputMasks": [
+          {
+            "label": "",
+            "mask": ""
+          }
+        ],
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "conditional": {
+          "show": "true",
+          "when": "serviceTaskType",
+          "eq": "EXPRESSION"
+        },
+        "type": "textfield",
         "input": true
       },
       {

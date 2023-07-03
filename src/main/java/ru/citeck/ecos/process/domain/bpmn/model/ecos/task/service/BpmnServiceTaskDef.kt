@@ -17,7 +17,10 @@ data class BpmnServiceTaskDef(
     val jobConfig: JobConfig,
 
     val type: ServiceTaskType,
+
     val externalTaskTopic: String? = null,
+    val expression: String = "",
+    val resultVariable: String = "",
 
     val multiInstanceConfig: MultiInstanceConfig? = null
 ) {
@@ -29,9 +32,16 @@ data class BpmnServiceTaskDef(
                 "External task topic cannot be blank on external task"
             )
         }
+
+        if (type == ServiceTaskType.EXPRESSION && expression.isBlank()) {
+            throw EcosBpmnElementDefinitionException(
+                id,
+                "Expression cannot be blank on expression task"
+            )
+        }
     }
 }
 
 enum class ServiceTaskType {
-    EXTERNAL
+    EXTERNAL, EXPRESSION
 }

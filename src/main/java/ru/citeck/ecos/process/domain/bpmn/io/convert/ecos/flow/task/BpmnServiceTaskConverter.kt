@@ -32,6 +32,8 @@ class BpmnServiceTaskConverter : EcosOmgConverter<BpmnServiceTaskDef, TServiceTa
                 element.otherAttributes[BPMN_PROP_SERVICE_TASK_TYPE] ?: error("Service task type is not defined")
             ),
             externalTaskTopic = element.otherAttributes[BPMN_PROP_EXTERNAL_TASK_TOPIC] ?: "",
+            expression = element.otherAttributes[BPMN_PROP_EXPRESSION] ?: "",
+            resultVariable = element.otherAttributes[BPMN_PROP_RESULT_VARIABLE] ?: "",
             asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
                 ?: AsyncConfig(),
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
@@ -52,6 +54,8 @@ class BpmnServiceTaskConverter : EcosOmgConverter<BpmnServiceTaskDef, TServiceTa
 
             otherAttributes.putIfNotBlank(BPMN_PROP_SERVICE_TASK_TYPE, element.type.name)
             otherAttributes.putIfNotBlank(BPMN_PROP_EXTERNAL_TASK_TOPIC, element.externalTaskTopic)
+            otherAttributes.putIfNotBlank(BPMN_PROP_EXPRESSION, element.expression)
+            otherAttributes.putIfNotBlank(BPMN_PROP_RESULT_VARIABLE, element.resultVariable)
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
 

@@ -7,6 +7,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.getCamundaJobRetryTimeCycle
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.service.BpmnServiceTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.service.ServiceTaskType
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TServiceTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
@@ -29,8 +30,14 @@ class CamundaServiceTaskConverter : EcosOmgConverter<BpmnServiceTaskDef, TServic
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
-            otherAttributes[CAMUNDA_TYPE] = element.type.name.lowercase(Locale.getDefault())
-            otherAttributes[CAMUNDA_TOPIC] = element.externalTaskTopic
+            // set camunda:type only for external tasks
+            if (element.type == ServiceTaskType.EXTERNAL) {
+                otherAttributes[CAMUNDA_TYPE] = element.type.name.lowercase(Locale.getDefault())
+            }
+
+            otherAttributes.putIfNotBlank(CAMUNDA_TOPIC, element.externalTaskTopic)
+            otherAttributes.putIfNotBlank(CAMUNDA_EXPRESSION, element.expression)
+            otherAttributes.putIfNotBlank(CAMUNDA_RESULT_VARIABLE, element.resultVariable)
 
             otherAttributes[CAMUNDA_ASYNC_BEFORE] = element.asyncConfig.asyncBefore.toString()
             otherAttributes[CAMUNDA_ASYNC_AFTER] = element.asyncConfig.asyncAfter.toString()

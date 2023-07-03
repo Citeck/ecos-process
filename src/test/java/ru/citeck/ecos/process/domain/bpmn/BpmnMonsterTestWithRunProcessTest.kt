@@ -3151,10 +3151,26 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    // ---SERVICE TASK TESTS ---
+
+    @Test
+    fun `test service task with expression and result variable`() {
+        val procId = "test-service-task-expression"
+
+        saveAndDeployBpmn("servicetask", procId)
+
+        val scenario = run(process).startByKey(
+            procId
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
+
+        verify(process).hasFinished("endEvent")
+    }
+
     // TODO: Add test for Terminate Event
     // TODO: Add test for Conditional Event
     // TODO: Add test for Error Event
-    // TODO: Add test for Service Task Event
 
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
