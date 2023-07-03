@@ -3168,9 +3168,152 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    // ---ERROR EVENTS TESTS ---
+
+    @Test
+    fun `test catch error event`() {
+        val procId = "test-catch-error-from-service-task"
+
+        saveAndDeployBpmn("error", procId)
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("end_event_error")
+        verify(process, never()).hasFinished("end_event_success")
+    }
+
+    @Test
+    fun `test catch error event with different catch code should not be catched`() {
+        val procId = "test-catch-error-with-different-catch-code-from-service-task"
+
+        saveAndDeployBpmn("error", procId)
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process, never()).hasFinished("end_event_success")
+        verify(process, never()).hasFinished("end_event_error")
+    }
+
+    @Test
+    fun `test catch error event with different catch code should be catched from error event without code`() {
+        val procId = "test-catch-error-with-different-catch-code-and-catch-all-event"
+
+        saveAndDeployBpmn("error", procId)
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("end_event_error_catch_all")
+        verify(process, never()).hasFinished("end_event_error")
+        verify(process, never()).hasFinished("end_event_success")
+    }
+
+    @Test
+    fun `test catch error event with multiple catch code - catch code 1`() {
+        val procId = "test-catch-error-with-multiple-catch"
+
+        saveAndDeployBpmn("error", procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "code" to "code_1"
+            )
+        ).execute()
+
+        verify(process).hasFinished("end_event_code_1")
+        verify(process, never()).hasFinished("end_event_code_2")
+        verify(process, never()).hasFinished("end_event_success")
+    }
+
+    @Test
+    fun `test catch error event with multiple catch code - catch code 2`() {
+        val procId = "test-catch-error-with-multiple-catch"
+
+        saveAndDeployBpmn("error", procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "code" to "code_2"
+            )
+        ).execute()
+
+        verify(process).hasFinished("end_event_code_2")
+        verify(process, never()).hasFinished("end_event_code_1")
+        verify(process, never()).hasFinished("end_event_success")
+    }
+
+    @Test
+    fun `test error start event sub process`() {
+        val procId = "test-error-start-event-sub-process"
+
+        saveAndDeployBpmn("error", procId)
+
+        val scenario = run(process).startByKey(
+            procId
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test error boundary event sub process`() {
+        val procId = "test-error-boundary-event-sub-process"
+
+        saveAndDeployBpmn("error", procId)
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("endEventCatch")
+        verify(process, never()).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test catch error with code and message variables`() {
+        val procId = "test-catch-error-with-variables"
+
+        saveAndDeployBpmn("error", procId)
+
+        val scenario = run(process).startByKey(
+            procId
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("codeVariable", "its code")
+        assertThat(scenario.instance(process)).variables().containsEntry("msgVariable", "its message")
+
+        verify(process).hasFinished("end_event_error")
+        verify(process, never()).hasFinished("end_event_success")
+    }
+
+    @Test
+    fun `test error start event sub process - check message from variable`() {
+        val procId = "test-error-start-event-sub-process-message-from-prop"
+
+        saveAndDeployBpmn("error", procId)
+
+        val scenario = run(process).startByKey(
+            procId
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
+        assertThat(scenario.instance(process)).variables().containsEntry("codeVariable", "error-code")
+        assertThat(scenario.instance(process)).variables().containsEntry("messageVariable", "its throw message")
+
+        verify(process).hasFinished("endEvent")
+    }
+
     // TODO: Add test for Terminate Event
     // TODO: Add test for Conditional Event
-    // TODO: Add test for Error Event
 
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,

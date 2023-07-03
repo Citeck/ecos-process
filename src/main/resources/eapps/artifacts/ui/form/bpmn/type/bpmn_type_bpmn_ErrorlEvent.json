@@ -75,6 +75,27 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is error end event",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "let type = instance.options.editor.getElementType();\n\nresult = type === \"bpmn:EndEvent\";"
+                },
+                "actions": [
+                  {
+                    "name": "set mandatory",
+                    "type": "property",
+                    "property": {
+                      "label": "Required",
+                      "value": "validate.required",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
             "type": "textfield",
             "input": true
           },
@@ -93,6 +114,27 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is not error end event",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "let type = instance.options.editor.getElementType();\n\nresult = type !== \"bpmn:EndEvent\";"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
             "type": "textfield",
             "input": true
           },
@@ -124,6 +166,27 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is error end event",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "let type = instance.options.editor.getElementType();\n\nresult = type === \"bpmn:EndEvent\";"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
             "type": "textfield",
             "input": true
           },
@@ -150,6 +213,27 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is error end event",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "let type = instance.options.editor.getElementType();\n\nresult = type === \"bpmn:EndEvent\";"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Hidden",
+                      "value": "hidden",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
             "type": "textfield",
             "input": true
           }
