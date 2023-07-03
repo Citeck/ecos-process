@@ -7,19 +7,18 @@ import ru.citeck.ecos.process.common.generateElementId
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.error.BpmnErrorDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnCollaborationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.signal.BpmnSignalDef
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TCollaboration
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignal
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private const val SIGNAL_PREFIX = "Signal"
+private const val ERROR_PREFIX = "Error"
 
 class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinitions> {
 
@@ -50,6 +49,8 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             collaboration = collaboration,
             signals = context.generateSignalsFromDefs(),
             signalsEventDefsMeta = context.bpmnSignalEventDefs,
+            errors = context.generateErrorsFromDefs(),
+            errorsEventDefsMeta = context.bpmnErrorEventDefs.values.toList(),
             exporter = element.exporter,
             exporterVersion = element.exporterVersion,
             targetNamespace = element.targetNamespace
@@ -61,6 +62,10 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
     override fun export(element: BpmnDefinitionDef, context: ExportContext): TDefinitions {
         element.signals.forEach {
             context.bpmnSignalsByNames.computeIfAbsent(it.name) { _ -> it }
+        }
+
+        element.errors.forEach {
+            context.bpmnErrorsByNames.computeIfAbsent(it.name) { _ -> it }
         }
 
         return TDefinitions().apply {
@@ -83,6 +88,11 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             element.signals.forEach {
                 val signal = context.converters.export<TSignal>(it, context)
                 rootElement.add(context.converters.convertToJaxb(signal))
+            }
+
+            element.errors.forEach {
+                val error = context.converters.export<TError>(it, context)
+                rootElement.add(context.converters.convertToJaxb(error))
             }
 
             element.diagrams.forEach {
@@ -113,6 +123,10 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
 
             is TSignal -> {
                 // do nothing, we ourselves create signals from signal definitions
+            }
+
+            is TError -> {
+                // do nothing, we ourselves create errors from error definitions
             }
 
             is TCollaboration -> {
@@ -148,6 +162,19 @@ private fun ImportContext.generateSignalsFromDefs(): List<BpmnSignalDef> {
             BpmnSignalDef(
                 id = generateElementId(SIGNAL_PREFIX),
                 name = it
+            )
+        }
+}
+
+private fun ImportContext.generateErrorsFromDefs(): List<BpmnErrorDef> {
+    return this.bpmnErrorEventDefs
+        .values
+        .map {
+            BpmnErrorDef(
+                id = generateElementId(ERROR_PREFIX),
+                name = it.errorName,
+                errorCode = it.errorCode,
+                errorMessage = it.errorMessage
             )
         }
 }

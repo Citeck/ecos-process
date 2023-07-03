@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_DEF_ID
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TCollaboration
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TError
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignal
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
@@ -24,6 +25,10 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
     override fun export(element: BpmnDefinitionDef, context: ExportContext): TDefinitions {
         element.signals.forEach {
             context.bpmnSignalsByNames.computeIfAbsent(it.name) { _ -> it }
+        }
+
+        element.errors.forEach {
+            context.bpmnErrorsByNames.computeIfAbsent(it.name) { _ -> it }
         }
 
         return TDefinitions().apply {
@@ -46,6 +51,11 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
             element.signals.forEach {
                 val signal = context.converters.export<TSignal>(it, context)
                 rootElement.add(context.converters.convertToJaxb(signal))
+            }
+
+            element.errors.forEach {
+                val error = context.converters.export<TError>(it, context)
+                rootElement.add(context.converters.convertToJaxb(error))
             }
 
             element.diagrams.forEach {

@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaTex
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaEdgeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaPlaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram.CamundaShapeConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.error.CamundaErrorConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaEventBasedGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
@@ -31,6 +32,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.artifact.BpmnTextAnnot
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnEdgeConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnPlaneConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.diagram.BpmnShapeConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.error.BpmnErrorConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnEventBasedGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
@@ -91,6 +93,7 @@ object BpmnIO {
             BpmnTaskConverter::class,
             BpmnSignalEventDefinitionConverter::class,
             BpmnSignalConverter::class,
+            BpmnErrorConverter::class,
             BpmnParticipantConverter::class,
             BpmnCollaborationConverter::class,
             BpmnLaneSetConverter::class,
@@ -132,6 +135,7 @@ object BpmnIO {
             CamundaTaskConverter::class,
             CamundaSignalEventDefinitionConverter::class,
             CamundaSignalConverter::class,
+            CamundaErrorConverter::class,
             CamundaParticipantConverter::class,
             CamundaCollaborationConverter::class,
             CamundaLaneSetConverter::class,

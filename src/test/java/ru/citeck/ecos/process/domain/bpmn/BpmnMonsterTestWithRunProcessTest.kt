@@ -3153,6 +3153,8 @@ class BpmnMonsterTestWithRunProcessTest {
 
     // TODO: Add test for Terminate Event
     // TODO: Add test for Conditional Event
+    // TODO: Add test for Error Event
+    // TODO: Add test for Service Task Event
 
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,

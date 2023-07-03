@@ -2,6 +2,8 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.error.BpmnErrorDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnCollaborationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
@@ -26,6 +28,9 @@ data class BpmnDefinitionDef(
 
     val signals: List<BpmnSignalDef>,
     val signalsEventDefsMeta: List<BpmnSignalEventDef>,
+
+    val errors: List<BpmnErrorDef>,
+    val errorsEventDefsMeta: List<BpmnErrorEventDef>,
 
     val diagrams: List<BpmnDiagramDef>,
 

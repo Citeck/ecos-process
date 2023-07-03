@@ -24,7 +24,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnConditionalEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnErrorEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnTerminateEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
@@ -448,7 +448,13 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
         }
 
         is BpmnErrorEventDef -> {
-            // do nothing
+            event.otherAttributes[BPMN_PROP_ERROR_NAME] = bpmnEventDef.errorName
+
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_ERROR_CODE, bpmnEventDef.errorCode)
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_ERROR_MESSAGE, bpmnEventDef.errorMessage)
+
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_ERROR_CODE_VARIABLE, bpmnEventDef.errorCodeVariable)
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_ERROR_MESSAGE_VARIABLE, bpmnEventDef.errorMessageVariable)
         }
 
         is BpmnTerminateEventDef -> {
