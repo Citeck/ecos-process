@@ -32,7 +32,5 @@ data class BpmnConditionalEventDef(
                 "On conditional event, condition type cannot be NONE."
             )
         }
-
     }
-
 }

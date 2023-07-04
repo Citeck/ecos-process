@@ -21,5 +21,4 @@ class BpmnTestBean : CamundaProcessEngineService {
     fun throwBpmnError(errorCode: String, message: String) {
         throw BpmnError(errorCode, message)
     }
-
 }

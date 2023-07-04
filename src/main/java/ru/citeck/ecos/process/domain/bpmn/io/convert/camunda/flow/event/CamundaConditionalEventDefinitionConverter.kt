@@ -12,7 +12,8 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 
-class CamundaConditionalEventDefinitionConverter : EcosOmgConverter<BpmnConditionalEventDef, TConditionalEventDefinition> {
+class CamundaConditionalEventDefinitionConverter :
+    EcosOmgConverter<BpmnConditionalEventDef, TConditionalEventDefinition> {
     override fun import(element: TConditionalEventDefinition, context: ImportContext): BpmnConditionalEventDef {
         error("Not supported")
     }
@@ -22,7 +23,10 @@ class CamundaConditionalEventDefinitionConverter : EcosOmgConverter<BpmnConditio
             id = element.id
 
             otherAttributes.putIfNotBlank(CAMUNDA_VARIABLE_NANE, element.variableName)
-            otherAttributes.putIfNotBlank(CAMUNDA_VARIABLE_EVENTS, element.variableEvents.joinToString(","))
+            otherAttributes.putIfNotBlank(
+                CAMUNDA_VARIABLE_EVENTS,
+                element.variableEvents.joinToString(",") { it.name.lowercase() }
+            )
 
             when (element.condition.type) {
                 ConditionType.EXPRESSION -> condition = element.condition.config.expressionToTExpression()

@@ -30,7 +30,7 @@ class BpmnTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
                 ?: JobConfig(),
             multiInstanceConfig = element.toMultiInstanceConfig(),
-            ecosTaskDefinition = element.convertToBpmnEcosTaskDef(context)
+            ecosTaskDefinition = element.convertToBpmnEcosTaskDef()
         )
     }
 

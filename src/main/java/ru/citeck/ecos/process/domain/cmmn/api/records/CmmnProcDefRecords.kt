@@ -49,33 +49,33 @@ class CmmnProcDefRecords(
         private val log = KotlinLogging.logger {}
     }
 
-    override fun queryRecords(query: RecordsQuery): Any? {
+    override fun queryRecords(recsQuery: RecordsQuery): Any? {
 
-        if (query.language != PredicateService.LANGUAGE_PREDICATE) {
+        if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE) {
             return null
         }
 
         val predicate = Predicates.and(
-            query.getQuery(Predicate::class.java),
+            recsQuery.getQuery(Predicate::class.java),
             Predicates.eq("procType", CMMN_PROC_TYPE)
         )
 
         val result = procDefService.findAll(
             predicate,
-            query.page.maxItems,
-            query.page.skipCount
+            recsQuery.page.maxItems,
+            recsQuery.page.skipCount
         ).map { CmmnProcDefRecord(it) }
 
         val res = RecsQueryRes(result)
         res.setTotalCount(procDefService.getCount(predicate))
-        res.setHasMore(res.getTotalCount() > query.page.maxItems + query.page.skipCount)
+        res.setHasMore(res.getTotalCount() > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return res
     }
 
-    override fun getRecordAtts(record: String): Any? {
+    override fun getRecordAtts(recordId: String): Any? {
 
-        val ref = ProcDefRef.create(CMMN_PROC_TYPE, record)
+        val ref = ProcDefRef.create(CMMN_PROC_TYPE, recordId)
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {

@@ -73,8 +73,8 @@ class BpmnProcDefVersionRecords(
         return result
     }
 
-    override fun getRecordsAtts(recordsId: List<String>): List<Any> {
-        return procDefService.getProcessDefRevs(recordsId.map { UUID.fromString(it) }).map {
+    override fun getRecordsAtts(recordIds: List<String>): List<Any> {
+        return procDefService.getProcessDefRevs(recordIds.map { UUID.fromString(it) }).map {
             it.toVersionRecord()
         }
     }

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config
 
-//TODO: remove
+// TODO: remove
 // @Configuration
 // class CamundaSecurityConfig {
 //

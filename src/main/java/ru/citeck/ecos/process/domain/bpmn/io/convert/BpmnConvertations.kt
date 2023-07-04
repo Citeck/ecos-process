@@ -24,8 +24,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnConditionalEventDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnTerminateEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -331,7 +331,7 @@ fun MultiInstanceConfig.toTLoopCharacteristics(context: ExportContext): TLoopCha
     }
 }
 
-fun TTask.convertToBpmnEcosTaskDef(context: ImportContext): BpmnAbstractEcosTaskDef? {
+fun TTask.convertToBpmnEcosTaskDef(): BpmnAbstractEcosTaskDef? {
     val taskType = otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] ?: return null
     if (taskType.isBlank()) {
         return null
@@ -427,7 +427,7 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
             event.otherAttributes.putIfNotBlank(BPMN_PROP_EVENT_TYPE, bpmnEventDef.eventType?.name)
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE,
-                bpmnEventDef.eventFilterByRecordType?.name
+                bpmnEventDef.eventFilterByRecordType.name
             )
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE,
@@ -464,14 +464,15 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
         is BpmnConditionalEventDef -> {
             event.otherAttributes.putIfNotBlank(BPMN_PROP_VARIABLE_NAME, bpmnEventDef.variableName)
             event.otherAttributes.putIfNotBlank(
-                BPMN_PROP_VARIABLE_EVENTS, Json.mapper.toString(bpmnEventDef.variableEvents)
+                BPMN_PROP_VARIABLE_EVENTS,
+                Json.mapper.toString(bpmnEventDef.variableEvents)
             )
 
             event.otherAttributes.putIfNotBlank(BPMN_PROP_CONDITION_TYPE, bpmnEventDef.condition.type.name)
             event.otherAttributes.putIfNotBlank(
-                BPMN_PROP_CONDITION_CONFIG, Json.mapper.toString(bpmnEventDef.condition.config)
+                BPMN_PROP_CONDITION_CONFIG,
+                Json.mapper.toString(bpmnEventDef.condition.config)
             )
-
         }
 
         else -> error("Class $bpmnEventDef not supported")

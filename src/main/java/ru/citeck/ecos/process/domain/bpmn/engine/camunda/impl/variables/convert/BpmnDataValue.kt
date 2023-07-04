@@ -102,13 +102,7 @@ class BpmnDataValue private constructor(
 
     fun isFloatingPointNumber() = data.isFloatingPointNumber()
 
-    fun isShort() = data.isShort()
-
-    fun isInt() = data.isInt()
-
     fun isLong() = data.isLong()
-
-    fun isFloat() = data.isFloat()
 
     fun isDouble() = data.isDouble()
 

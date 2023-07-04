@@ -6,6 +6,7 @@ import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
+import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
@@ -77,6 +78,7 @@ private const val TIMER = "timer"
 private const val BPMN_EVENTS = "bpmnevents"
 private const val ERROR = "error"
 private const val SERVICE_TASK = "servicetask"
+private const val CONDITIONAL = "conditional"
 
 /**
  * Why all tests places on one monster class?
@@ -114,6 +116,9 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @Autowired
     private lateinit var bpmnEventHelper: BpmnEventHelper
+
+    @Autowired
+    private lateinit var runtimeService: RuntimeService
 
     @Mock
     private lateinit var process: ProcessScenario
@@ -3334,11 +3339,209 @@ class BpmnMonsterTestWithRunProcessTest {
 
         val taskCount = procTaskService.getTasksByDocument(doc).size
         assertThat(taskCount).isEqualTo(0)
-
     }
 
-    // TODO: Add test for Terminate Event
-    // TODO: Add test for Conditional Event
+    // ---CONDITIONAL EVENT TESTS ---
+
+    @Test
+    fun `test condition expression catch event`() {
+        val procId = "test-conditional-event-expression"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition expression catch event with predefined variable`() {
+        val procId = "test-conditional-event-expression"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition script catch event`() {
+        val procId = "test-conditional-event-script"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "not_bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition script catch event with predefined variable`() {
+        val procId = "test-conditional-event-script"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with variable name`() {
+        val procId = "test-conditional-event-variable-name"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with variable name not match`() {
+        val procId = "test-conditional-event-variable-name-not-match"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with event - create`() {
+        val procId = "test-conditional-event-variable-name-event-create"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with event - update`() {
+        val procId = "test-conditional-event-variable-name-event-update"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "not_bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with event - delete`() {
+        val procId = "test-conditional-event-variable-name-event-delete"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.removeVariable(it.processInstanceId, "foo")
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with multiple events`() {
+        val procId = "test-conditional-event-variable-name-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "not_bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test condition catch event with events not match`() {
+        val procId = "test-conditional-event-variable-name-event-not-match"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+            runtimeService.setVariable(it.processInstanceId, "foo", "bar")
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "not_bar"
+            )
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+    }
 
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
@@ -3399,7 +3602,7 @@ class BpmnMonsterTestWithRunProcessTest {
 }
 
 /**
- * Wrap equals without id, recipints ignore order
+ * Wrap equals without id, recipients ignore order
  */
 private data class NotificationEqualsWrapper(
     val dto: Notification

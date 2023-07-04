@@ -76,14 +76,14 @@ class ProcHistoricTaskRecords(
         return result
     }
 
-    override fun getRecordsAtts(recordsId: List<String>): List<ProcTaskRecord?> {
-        if (recordsId.isEmpty()) {
+    override fun getRecordsAtts(recordIds: List<String>): List<ProcTaskRecord?> {
+        if (recordIds.isEmpty()) {
             return emptyList()
         }
 
         val result: List<ProcTaskRecord?>
         val time = measureTimeMillis {
-            result = procHistoricTaskService.getHistoricTasksByIds(recordsId).map {
+            result = procHistoricTaskService.getHistoricTasksByIds(recordIds).map {
                 it?.toRecord()
             }
         }

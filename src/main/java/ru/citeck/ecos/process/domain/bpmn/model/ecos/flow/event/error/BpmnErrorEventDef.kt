@@ -19,11 +19,9 @@ data class BpmnErrorEventDef(
     val errorMessageVariable: String = "",
 ) : BpmnAbstractEventDef() {
 
-
     init {
         if (errorName.isBlank()) {
             throw EcosBpmnElementDefinitionException(id, "Error name can't be blank")
         }
     }
-
 }
