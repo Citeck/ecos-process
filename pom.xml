@@ -11,18 +11,16 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>2.9.0</version>
+        <version>1.30.9</version>
     </parent>
 
     <properties>
 
-        <camunda.spring-boot.version>7.19.0</camunda.spring-boot.version>
-        <camunda.spin.version>1.19.2</camunda.spin.version>
+        <camunda.spring-boot.version>7.17.0</camunda.spring-boot.version>
+        <camunda.spin.version>1.18.0</camunda.spin.version>
 
-        <graalvm.js.version>23.0.0</graalvm.js.version>
-
-        <querydsl.version>5.0.0</querydsl.version>
-        <mongock.version>3.3.2</mongock.version>
+        <querydsl.version>4.2.1</querydsl.version>
+        <mongock.version>3.0.2.BETA</mongock.version>
 
         <surefire-plugin.spring-context-cache.maxSize>8</surefire-plugin.spring-context-cache.maxSize>
         <failsafe-plugin.spring-context-cache.maxSize>8</failsafe-plugin.spring-context-cache.maxSize>
@@ -57,17 +55,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.graalvm.js</groupId>
-            <artifactId>js</artifactId>
-            <version>${graalvm.js.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.js</groupId>
-            <artifactId>js-scriptengine</artifactId>
-            <version>${graalvm.js.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>ru.citeck.ecos.webapp</groupId>
             <artifactId>ecos-webapp-lib-spring</artifactId>
             <version>${ecos.webapp.version}</version>
@@ -89,12 +76,6 @@
             <groupId>com.github.cloudyrock.mongock</groupId>
             <artifactId>mongock-spring</artifactId>
             <version>${mongock.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mongodb</groupId>
-                    <artifactId>mongo-java-driver</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!--    test containers mongodb    -->
@@ -133,21 +114,14 @@
 
         <dependency>
             <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-apt</artifactId>
+            <artifactId>querydsl-mongodb</artifactId>
             <version>${querydsl.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.querydsl</groupId>
-            <artifactId>querydsl-mongodb</artifactId>
+            <artifactId>querydsl-apt</artifactId>
             <version>${querydsl.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mongodb</groupId>
-                    <artifactId>mongo-java-driver</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>

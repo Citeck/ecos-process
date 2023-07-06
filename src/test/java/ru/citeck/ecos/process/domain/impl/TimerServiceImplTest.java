@@ -6,19 +6,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.citeck.ecos.commands.dto.CommandResult;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.EprocApp;
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
-import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;
-import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommandRes;
+import ru.citeck.ecos.process.domain.timer.entity.TimerEntity;
 import ru.citeck.ecos.process.domain.timer.dto.TimerCommandDto;
 import ru.citeck.ecos.process.domain.timer.dto.TimerDto;
-import ru.citeck.ecos.process.domain.timer.entity.TimerEntity;
 import ru.citeck.ecos.process.domain.timer.repo.TimerRepository;
+import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.timer.service.TimerService;
+import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;
+import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommandRes;
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension;
 
 import java.time.Instant;
@@ -117,7 +118,7 @@ public class TimerServiceImplTest {
         assertEquals((Integer) tenant, (Integer) entity.getId().getTnt());
         assertEquals(saved.getTimerId(), entity.getId().getId().toString());
 
-        assertEquals(triggerTime.truncatedTo(ChronoUnit.MILLIS), entity.getTriggerTime());
+        assertEquals(triggerTime, entity.getTriggerTime());
         assertTrue(entity.isActive());
 
         TimerCommandDto timerCommandDto = Json.getMapper().read(entity.getCommand(), TimerCommandDto.class);
@@ -176,7 +177,7 @@ public class TimerServiceImplTest {
         TimerEntity saved = entities.get(0);
         assertEquals(new EntityUuid(tenant, id), saved.getId());
         assertEquals((Integer) retryCount, saved.getRetryCounter());
-        assertEquals(triggerTime.truncatedTo(ChronoUnit.MILLIS), saved.getTriggerTime());
+        assertEquals(triggerTime, saved.getTriggerTime());
         assertEquals(active, saved.isActive());
         assertNotNull(saved.getCommand());
 

@@ -48,11 +48,3 @@ class EcosCamundaConfiguration {
         return CamundaScriptEnvResolvesConfiguration()
     }
 }
-
-@Configuration
-class DisableGraalVmJsInterpreterOnlyWarning {
-
-    init {
-        System.setProperty("polyglot.engine.WarnInterpreterOnly", "false")
-    }
-}

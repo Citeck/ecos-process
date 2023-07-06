@@ -24,27 +24,27 @@ class ScriptLogger(
         val log = KotlinLogging.logger {}
     }
 
-    fun info(message: String?) {
+    fun info(message: String) {
         log.info { appendExecutionInfo(message) }
     }
 
-    fun error(message: String?) {
+    fun error(message: String) {
         log.error { appendExecutionInfo(message) }
     }
 
-    fun warn(message: String?) {
+    fun warn(message: String) {
         log.warn { appendExecutionInfo(message) }
     }
 
-    fun debug(message: String?) {
+    fun debug(message: String) {
         log.debug { appendExecutionInfo(message) }
     }
 
-    fun trace(message: String?) {
+    fun trace(message: String) {
         log.trace { appendExecutionInfo(message) }
     }
 
-    private fun appendExecutionInfo(message: String?): String {
+    private fun appendExecutionInfo(message: String): String {
         return "\n|businessKey: ${execution.businessKey}" +
             "\n|activity: ${execution.currentActivityId} ${execution.currentActivityName}" +
             "\n|processDefId: ${execution.processDefinitionId}, processInstId: ${execution.processInstanceId}" +
