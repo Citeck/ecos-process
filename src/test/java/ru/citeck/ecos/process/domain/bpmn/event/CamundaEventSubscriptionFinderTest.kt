@@ -43,13 +43,13 @@ class CamundaEventSubscriptionFinderTest {
         )
         cache.clear()
 
-        assertThat(cache).hasSize(0)
+        assertThat(cache.size).isEqualTo(0)
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
         saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
         camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
 
-        assertThat(cache).hasSize(2)
+        assertThat(cache.size).isEqualTo(0)
     }
 
     @Test

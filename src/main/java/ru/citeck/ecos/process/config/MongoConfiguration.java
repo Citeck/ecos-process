@@ -3,24 +3,24 @@ package ru.citeck.ecos.process.config;
 import com.github.cloudyrock.mongock.SpringMongock;
 import com.github.cloudyrock.mongock.SpringMongockBuilder;
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import ru.citeck.ecos.webapp.lib.spring.context.utils.JSR310DateConverters;
 
-import javax.sql.DataSource;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,18 +37,37 @@ public class MongoConfiguration {
 
     @Bean
     public SpringMongock mongock() {
-        MongoClientURI mongoClientURI = new MongoClientURI(mongoDBURI);
-        MongoClient mongoclient = new MongoClient(mongoClientURI);
-        migrateChangeLogs(mongoClientURI, mongoclient);
-        return new SpringMongockBuilder(mongoclient, mongoClientURI.getDatabase(), MONGO_CHANGELOG_PACKAGE)
+        MongoClient mongoclient = MongoClients.create(mongoDBURI);
+        String dbName = getDBNameFromURI(mongoDBURI);
+
+        MongoDatabase db = mongoclient.getDatabase(dbName);
+        MongoTemplate template = new MongoTemplate(mongoclient, dbName);
+
+        migrateChangeLogs(db);
+        return new SpringMongockBuilder(template, MONGO_CHANGELOG_PACKAGE)
             .setLockQuickConfig()
             .build();
     }
 
-    private void migrateChangeLogs(MongoClientURI mongoClientURI, MongoClient mongoclient) {
-        MongoDatabase db = mongoclient.getDatabase(mongoClientURI.getDatabase());
-        boolean dbchangeLogIsEmpty = db.getCollection("dbchangelog").count() == 0L;
-        boolean mongockChangeLogIsEmpty = db.getCollection("mongockChangeLog").count() == 0L;
+    public static String getDBNameFromURI(String uriString) {
+        URI uri;
+        try {
+            uri = new URI(uriString);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Cloud not parse MongoDB URI: " + uriString, e);
+        }
+        String path = uri.getPath();
+        String dbName = path != null ? path.replaceAll("^/|/$", "") : null;
+        if (StringUtils.isBlank(dbName)) {
+            throw new RuntimeException("Could not parse MongoDB database name from URI: " + uriString);
+        }
+
+        return dbName;
+    }
+
+    private void migrateChangeLogs(MongoDatabase db) {
+        boolean dbchangeLogIsEmpty = db.getCollection("dbchangelog").countDocuments() == 0L;
+        boolean mongockChangeLogIsEmpty = db.getCollection("mongockChangeLog").countDocuments() == 0L;
         if (!dbchangeLogIsEmpty && mongockChangeLogIsEmpty) {
             log.info("Migrate rows from dbchangelog to mongockChangeLog");
             db.getCollection("dbchangelog")
