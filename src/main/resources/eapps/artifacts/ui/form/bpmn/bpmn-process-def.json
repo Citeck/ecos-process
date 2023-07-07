@@ -27,15 +27,7 @@
                 "input": true,
                 "validate": {
                   "required": true,
-                  "pattern": "([a-zA-Z0-9-]+$)",
-                  "custom": "",
-                  "customPrivate": false,
-                  "customMessage": "",
-                  "json": "",
-                  "minLength": "",
-                  "maxLength": "",
-                  "minWords": "",
-                  "maxWords": ""
+                  "pattern": "([a-zA-Z0-9-]+$)"
                 }
               },
               {
@@ -178,12 +170,23 @@
             "label": "Column",
             "components": [
               {
-                "label": "Save",
+                "label": {
+                  "ru": "Создать",
+                  "en": "Submit"
+                },
+                "key": "submit",
                 "state": "",
+                "headers": [
+                  {
+                    "header": "",
+                    "value": ""
+                  }
+                ],
                 "theme": "primary",
                 "block": true,
                 "disableOnInvalid": true,
-                "key": "submit",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
                 "type": "button",
                 "input": true
               }
