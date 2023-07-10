@@ -13,12 +13,16 @@
     "ru": {
       "CREATE": "Создание",
       "UPDATE": "Обновление",
-      "DELETE": "Удаление"
+      "DELETE": "Удаление",
+      "SCRIPT": "Скрипт",
+      "EXPRESSION": "Выражение"
     },
     "en": {
       "CREATE": "Create",
       "UPDATE": "Update",
-      "DELETE": "Delete"
+      "DELETE": "Delete",
+      "SCRIPT": "Script",
+      "EXPRESSION": "Expression"
     }
   },
   "definition": {
@@ -194,7 +198,8 @@
               },
               {
                 "label": {
-                  "ru": "EXPRESSION"
+                  "ru": "Выражение",
+                  "en": "Expression"
                 },
                 "key": "expression",
                 "hidden": true,
