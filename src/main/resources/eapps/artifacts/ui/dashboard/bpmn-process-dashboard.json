@@ -8,7 +8,10 @@
       {
         "id": "layout_799ac5e5-9eab-4c08-af80-5ed48d768229",
         "tab": {
-          "label": "Основное",
+          "label": {
+            "ru": "Основное",
+            "en": "General"
+          },
           "idLayout": "layout_799ac5e5-9eab-4c08-af80-5ed48d768229"
         },
         "type": "2-columns-big-small",
