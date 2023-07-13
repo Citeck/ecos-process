@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 @RestController
 @RequestMapping("/api/proc-def")
-class ProcDefVersionController(
+class ProcessDefVersionController(
     private val recordsService: RecordsService
 ) {
 

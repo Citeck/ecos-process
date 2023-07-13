@@ -50,8 +50,11 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
 
+const val BPMN_PROCESS_DEF_RECORDS_SOURCE_ID = "bpmn-def"
+const val BPMN_RESOURCE_NAME_POSTFIX = ".bpmn"
+
 @Component
-class BpmnProcDefRecords(
+class BpmnProcessDefRecords(
     private val procDefService: ProcDefService,
     private val camundaRepoService: RepositoryService,
     private val remoteWebAppsApi: EcosRemoteWebAppsApi,
@@ -61,10 +64,10 @@ class BpmnProcDefRecords(
     RecordsQueryDao,
     RecordAttsDao,
     RecordDeleteDao,
-    RecordMutateDtoDao<BpmnProcDefRecords.BpmnMutateRecord> {
+    RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
-        const val SOURCE_ID = "bpmn-def"
+
 
         private const val APP_NAME = AppName.EPROC
         private const val QUERY_BATCH_SIZE = 100
@@ -74,7 +77,7 @@ class BpmnProcDefRecords(
         private val log = KotlinLogging.logger {}
     }
 
-    override fun getId() = SOURCE_ID
+    override fun getId() = BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
 
@@ -183,7 +186,7 @@ class BpmnProcDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return EntityRef.create(APP_NAME, SOURCE_ID, this)
+        return EntityRef.create(APP_NAME, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, this)
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {
@@ -406,7 +409,7 @@ class BpmnProcDefRecords(
             procDefResult = procDefService.uploadNewRev(currentProc)
         }
 
-        if (record.action == BpmnProcDefActions.DEPLOY.toString()) {
+        if (record.action == BpmnProcessDefActions.DEPLOY.toString()) {
             // TODO: move to separate service
 
             if (!perms.hasDeployPerms()) {
@@ -417,7 +420,10 @@ class BpmnProcDefRecords(
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
             val deployResult = camundaRepoService.createDeployment()
-                .addInputStream(record.processDefId + ".bpmn", camundaFormat.byteInputStream())
+                .addInputStream(
+                    record.processDefId + BPMN_RESOURCE_NAME_POSTFIX,
+                    camundaFormat.byteInputStream()
+                )
                 .name(record.name.getClosest())
                 .source("Ecos BPMN Modeler")
                 .deployWithResult()
@@ -603,7 +609,7 @@ class BpmnProcDefRecords(
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(EprocApp.NAME, SOURCE_ID, id).toString()
+            val ref = EntityRef.create(EprocApp.NAME, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }

@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.role.service.RoleService
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.TaskRole
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ASSIGNEES
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
@@ -204,7 +204,7 @@ fun DelegateTask.getFormRef(): RecordRef {
 
 fun DelegateTask.getProcessInstanceRef(): RecordRef {
     return if (processInstanceId.isNotBlank()) {
-        RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
+        RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
     } else {
         RecordRef.EMPTY
     }
@@ -212,7 +212,7 @@ fun DelegateTask.getProcessInstanceRef(): RecordRef {
 
 fun DelegateExecution.getProcessInstanceRef(): RecordRef {
     return if (processInstanceId.isNotBlank()) {
-        RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
+        RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
     } else {
         RecordRef.EMPTY
     }

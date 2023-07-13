@@ -7,57 +7,67 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toMultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.businessrule.BpmnBusinessRuleTaskDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.businessrule.MapDecisionResult
-import ru.citeck.ecos.process.domain.bpmn.model.omg.TBusinessRuleTask
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.callactivity.BpmnCallActivityDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
-class BpmnBusinessRuleTaskConverter : EcosOmgConverter<BpmnBusinessRuleTaskDef, TBusinessRuleTask> {
-
-    override fun import(element: TBusinessRuleTask, context: ImportContext): BpmnBusinessRuleTaskDef {
+class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCallActivity> {
+    override fun import(element: TCallActivity, context: ImportContext): BpmnCallActivityDef {
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
 
-        return BpmnBusinessRuleTaskDef(
+        return BpmnCallActivityDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
-            decisionRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_DMN_DECISION_REF]),
+            processRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_PROCESS_REF]),
             binding = RefBinding.valueOf(
-                element.otherAttributes[BPMN_PROP_DMN_DECISION_BINDING]
-                    ?: error("Decision Binding is required")
+                element.otherAttributes[BPMN_PROP_PROCESS_BINDING]
+                    ?: error("Process Binding is required")
             ),
             version = let {
-                val decisionVersionStr = element.otherAttributes[BPMN_PROP_DMN_DECISION_VERSION]
-                if (decisionVersionStr.isNullOrBlank()) {
+                val processVersionStr = element.otherAttributes[BPMN_PROP_PROCESS_VERSION]
+                if (processVersionStr.isNullOrBlank()) {
                     null
                 } else {
-                    decisionVersionStr.toInt()
+                    processVersionStr.toInt()
                 }
             },
-            versionTag = element.otherAttributes[BPMN_PROP_DMN_DECISION_VERSION_TAG],
-            resultVariable = element.otherAttributes[BPMN_PROP_RESULT_VARIABLE],
-            mapDecisionResult = element.otherAttributes[BPMN_PROP_DMN_MAP_DECISION_RESULT]?.let {
-                MapDecisionResult.valueOf(it)
-            },
+            versionTag = element.otherAttributes[BPMN_PROP_PROCESS_VERSION_TAG],
+            inVariablePropagation = convertVariableMappingPropagationWithNotEmptySourceVariables(
+                element.otherAttributes[BPMN_PROP_PROCESS_IN_VARIABLE_PROPAGATION]
+            ),
+            outVariablePropagation = convertVariableMappingPropagationWithNotEmptySourceVariables(
+                element.otherAttributes[BPMN_PROP_PROCESS_OUT_VARIABLE_PROPAGATION]
+            ),
             asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
                 ?: AsyncConfig(),
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
                 ?: JobConfig(),
             multiInstanceConfig = element.toMultiInstanceConfig()
         )
+
     }
 
-    override fun export(element: BpmnBusinessRuleTaskDef, context: ExportContext): TBusinessRuleTask {
-        return TBusinessRuleTask().apply {
+    private fun convertVariableMappingPropagationWithNotEmptySourceVariables(
+        json: String?
+    ): VariablesMappingPropagation {
+        val converted = Json.mapper.read(json, VariablesMappingPropagation::class.java) ?: VariablesMappingPropagation()
+        val cleanedVariables = converted.variables.filter { it.source.isNotBlank() }
+        return converted.copy(variables = cleanedVariables)
+    }
+
+    override fun export(element: BpmnCallActivityDef, context: ExportContext): TCallActivity {
+        return TCallActivity().apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
@@ -66,13 +76,19 @@ class BpmnBusinessRuleTaskConverter : EcosOmgConverter<BpmnBusinessRuleTaskDef, 
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
-            otherAttributes[BPMN_PROP_DMN_DECISION_REF] = element.decisionRef.toString()
-            otherAttributes[BPMN_PROP_DMN_DECISION_BINDING] = element.binding.name
-            otherAttributes.putIfNotBlank(BPMN_PROP_DMN_DECISION_VERSION, element.version?.toString())
-            otherAttributes.putIfNotBlank(BPMN_PROP_DMN_DECISION_VERSION_TAG, element.versionTag)
+            otherAttributes[BPMN_PROP_PROCESS_REF] = element.processRef.toString()
+            otherAttributes[BPMN_PROP_PROCESS_BINDING] = element.binding.name
+            otherAttributes.putIfNotBlank(BPMN_PROP_PROCESS_VERSION, element.version?.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_PROCESS_VERSION_TAG, element.versionTag)
 
-            otherAttributes.putIfNotBlank(BPMN_PROP_RESULT_VARIABLE, element.resultVariable)
-            otherAttributes.putIfNotBlank(BPMN_PROP_DMN_MAP_DECISION_RESULT, element.mapDecisionResult?.name)
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_PROCESS_IN_VARIABLE_PROPAGATION,
+                Json.mapper.toString(element.inVariablePropagation)
+            )
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_PROCESS_OUT_VARIABLE_PROPAGATION,
+                Json.mapper.toString(element.outVariablePropagation)
+            )
 
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))

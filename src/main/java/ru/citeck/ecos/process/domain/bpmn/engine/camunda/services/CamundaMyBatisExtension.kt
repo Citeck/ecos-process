@@ -9,6 +9,7 @@ import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionDefinitionEntity
 import org.camunda.bpm.engine.impl.interceptor.Command
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
+import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
@@ -22,6 +23,7 @@ private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES = "selectEventSubscr
 private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES_LIKE_START = "selectEventSubscriptionsByEventNamesLikeStart"
 private const val TRUNCATE_EVENT_SUBSCRIPTIONS = "truncateEventSubscriptions"
 private const val SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS = "selectLatestDecisionDefinitionsByKeys"
+private const val SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS = "selectLatestProcessDefinitionsByKeys"
 
 @Component
 class CamundaMyBatisExtension(
@@ -133,6 +135,22 @@ class CamundaMyBatisExtension(
 
         return factory.commandExecutorTxRequired.execute(command)
     }
+
+    fun getLatestProcessDefinitionsByKeys(keys: List<String>): List<ProcessDefinitionEntity> {
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "keys" to keys
+            )
+
+            @Suppress("UNCHECKED_CAST")
+            it.dbSqlSession.selectList(
+                SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS,
+                params
+            ) as List<ProcessDefinitionEntity>
+        }
+
+        return factory.commandExecutorTxRequired.execute(command)
+    }
 }
 
 private lateinit var ext: CamundaMyBatisExtension
@@ -151,4 +169,8 @@ fun RuntimeService.getEventSubscriptionsByEventNamesLikeStart(eventNames: List<S
 
 fun RepositoryService.getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {
     return ext.getLatestDecisionDefinitionsByKeys(keys)
+}
+
+fun RepositoryService.getLatestProcessDefinitionsByKeys(keys: List<String>): List<ProcessDefinitionEntity> {
+    return ext.getLatestProcessDefinitionsByKeys(keys)
 }

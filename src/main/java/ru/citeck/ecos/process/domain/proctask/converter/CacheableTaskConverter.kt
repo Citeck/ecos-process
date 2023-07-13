@@ -11,7 +11,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY
@@ -69,7 +69,7 @@ class CacheableTaskConverter(
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
                     RecordRef.EMPTY
                 } else {
-                    RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
+                    RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
                 documentRef = if (variables[BPMN_DOCUMENT_REF] != null) {
                     RecordRef.valueOf(variables[BPMN_DOCUMENT_REF].toString())
@@ -155,7 +155,7 @@ class CacheableTaskConverter(
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
                     RecordRef.EMPTY
                 } else {
-                    RecordRef.create(AppName.EPROC, BpmnProcRecords.ID, processInstanceId)
+                    RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
                 historic = true
             )

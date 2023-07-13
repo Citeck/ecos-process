@@ -12,7 +12,7 @@ import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RECOURSE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -79,7 +79,7 @@ class DmnArtifactHandlerTest {
 
         assertEquals(1, dmnDecisions.size)
         assertEquals(DMN_TEST_DECISION_ID, dmnDecisions.first().key)
-        assertEquals(DMN_TEST_DEF_ID + DMN_RECOURSE_NAME_POSTFIX, dmnDecisions.first().resourceName)
+        assertEquals(DMN_TEST_DEF_ID + DMN_RESOURCE_NAME_POSTFIX, dmnDecisions.first().resourceName)
         assertEquals(1, dmnDecisions.first().version)
     }
 }

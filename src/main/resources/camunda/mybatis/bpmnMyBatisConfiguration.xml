@@ -10,5 +10,6 @@
         <mapper resource="camunda/mybatis/bpmnHistoricTaskMapper.xml"/>
         <mapper resource="camunda/mybatis/bpmnEventSubscriptionMapper.xml"/>
         <mapper resource="camunda/mybatis/dmnDecisionDefinitionMapper.xml"/>
+        <mapper resource="camunda/mybatis/bpmnProcessDefinitionMapper.xml"/>
     </mappers>
 </configuration>

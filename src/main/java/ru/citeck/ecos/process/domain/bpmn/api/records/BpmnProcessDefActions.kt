@@ -1,5 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-enum class BpmnProcDefActions {
+enum class BpmnProcessDefActions {
     DEPLOY
 }

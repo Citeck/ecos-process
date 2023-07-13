@@ -22,7 +22,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
 
 @Component
-class BpmnProcRecords(
+class BpmnProcessRecords(
     private val bpmnProcService: BpmnProcService,
     private val procDefService: ProcDefService
 ) : AbstractRecordsDao(),

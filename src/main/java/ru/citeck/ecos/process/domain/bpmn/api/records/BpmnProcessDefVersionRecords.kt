@@ -26,11 +26,11 @@ private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 @Component
 class BpmnProcDefVersionRecords(
     private val procDefService: ProcDefService,
-    private val bpmnProcDefRecords: BpmnProcDefRecords,
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcDefRecords.BpmnMutateRecord> {
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
-        const val ID = "${BpmnProcDefRecords.SOURCE_ID}-version"
+        const val ID = "$BPMN_PROCESS_DEF_RECORDS_SOURCE_ID-version"
     }
 
     private val versionRef = ThreadLocal<EntityRef>()
@@ -39,7 +39,7 @@ class BpmnProcDefVersionRecords(
         return ID
     }
 
-    override fun getRecToMutate(recordId: String): BpmnProcDefRecords.BpmnMutateRecord {
+    override fun getRecToMutate(recordId: String): BpmnProcessDefRecords.BpmnMutateRecord {
         val procDefRev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, UUID.fromString(recordId))
             ?: error("Process definition not found for version: $recordId")
 
@@ -49,14 +49,14 @@ class BpmnProcDefVersionRecords(
 
         versionRef.set(procDefRev.getRef())
 
-        return bpmnProcDefRecords.getRecToMutate(procDefRev.procDefId)
+        return bpmnProcessDefRecords.getRecToMutate(procDefRev.procDefId)
     }
 
-    override fun saveMutatedRec(record: BpmnProcDefRecords.BpmnMutateRecord): String {
+    override fun saveMutatedRec(record: BpmnProcessDefRecords.BpmnMutateRecord): String {
         record.createdFromVersion = versionRef.get()
         versionRef.remove()
 
-        return bpmnProcDefRecords.saveMutatedRec(record)
+        return bpmnProcessDefRecords.saveMutatedRec(record)
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {

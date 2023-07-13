@@ -101,7 +101,8 @@ object BpmnIO {
             BpmnInclusiveGatewayConverter::class,
             BpmnEventBasedGatewayConverter::class,
             BpmnBusinessRuleTaskConverter::class,
-            BpmnConditionalEventDefinitionConverter::class
+            BpmnConditionalEventDefinitionConverter::class,
+            BpmnCallActivityTaskConverter::class
         ),
         extensionTypeResolver
     )
@@ -143,7 +144,8 @@ object BpmnIO {
             CamundaInclusiveGatewayConverter::class,
             CamundaEventBasedGatewayConverter::class,
             CamundaBusinessRuleTaskConverter::class,
-            CamundaConditionalEventDefinitionConverter::class
+            CamundaConditionalEventDefinitionConverter::class,
+            CamundaCallActivityTaskConverter::class
         ),
         extensionTypeResolver
     )

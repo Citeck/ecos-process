@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.AndPredicate
@@ -123,7 +123,7 @@ class WorkflowTaskRecordsProxy(
         } else {
             procTaskService.getTasksByProcess(processRef.id)
         }.map {
-            RecordRef.create("eproc", ProcTaskRecords.ID, it.id)
+            RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it.id)
         }
 
         result.setRecords(taskRefs)
@@ -152,5 +152,5 @@ private fun String.containsAlfDelimiter(): Boolean {
 }
 
 private fun isEcosProcProcess(ref: RecordRef): Boolean {
-    return ref.sourceId == BpmnProcRecords.ID
+    return ref.sourceId == BpmnProcessRecords.ID
 }

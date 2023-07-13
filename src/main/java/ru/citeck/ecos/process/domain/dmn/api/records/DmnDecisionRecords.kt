@@ -59,8 +59,8 @@ class DmnDecisionRecords(
         key = key,
         definition = EntityRef.create(
             AppName.EPROC,
-            DMN_DEF_SOURCE_ID,
-            resourceName.substringBefore(DMN_RECOURSE_NAME_POSTFIX)
+            DMN_DEF_RECORDS_SOURCE_ID,
+            resourceName.substringBefore(DMN_RESOURCE_NAME_POSTFIX)
         ),
         version = version,
         name = name

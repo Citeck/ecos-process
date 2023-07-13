@@ -1,13 +1,14 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.businessrule
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.process.common.toDecisionKey
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionRecords
-import ru.citeck.ecos.process.domain.dmn.dto.toDecisionKey
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private val allowedSourceIds = listOf(DmnDecisionRecords.ID, DmnDecisionLatestRecords.ID)
@@ -24,7 +25,7 @@ data class BpmnBusinessRuleTaskDef(
 
     val decisionRef: EntityRef,
     val decisionRefKey: String = decisionRef.toDecisionKey(),
-    val binding: DecisionRefBinding,
+    val binding: RefBinding,
 
     val resultVariable: String? = null,
     val mapDecisionResult: MapDecisionResult? = null,
@@ -56,7 +57,7 @@ data class BpmnBusinessRuleTaskDef(
         }
 
         when (binding) {
-            DecisionRefBinding.VERSION -> {
+            RefBinding.VERSION -> {
                 if (version == null) {
                     throw EcosBpmnElementDefinitionException(
                         id,
@@ -65,7 +66,7 @@ data class BpmnBusinessRuleTaskDef(
                 }
             }
 
-            DecisionRefBinding.VERSION_TAG -> {
+            RefBinding.VERSION_TAG -> {
                 if (versionTag.isNullOrBlank()) {
                     throw EcosBpmnElementDefinitionException(
                         id,
@@ -79,13 +80,6 @@ data class BpmnBusinessRuleTaskDef(
             }
         }
     }
-}
-
-enum class DecisionRefBinding(val value: String) {
-    DEPLOYMENT("deployment"),
-    LATEST("latest"),
-    VERSION("version"),
-    VERSION_TAG("versionTag")
 }
 
 enum class MapDecisionResult(val value: String) {

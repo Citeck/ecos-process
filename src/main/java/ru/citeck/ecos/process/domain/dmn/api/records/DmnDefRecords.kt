@@ -45,8 +45,8 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
 
-const val DMN_DEF_SOURCE_ID = "dmn-def"
-const val DMN_RECOURSE_NAME_POSTFIX = ".dmn"
+const val DMN_DEF_RECORDS_SOURCE_ID = "dmn-def"
+const val DMN_RESOURCE_NAME_POSTFIX = ".dmn"
 
 @Component
 class DmnDefRecords(
@@ -68,7 +68,7 @@ class DmnDefRecords(
     }
 
     override fun getId(): String {
-        return DMN_DEF_SOURCE_ID
+        return DMN_DEF_RECORDS_SOURCE_ID
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
@@ -256,7 +256,7 @@ class DmnDefRecords(
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
             val deployResult = camundaRepoService.createDeployment()
-                .addInputStream(record.defId + DMN_RECOURSE_NAME_POSTFIX, camundaFormat.byteInputStream())
+                .addInputStream(record.defId + DMN_RESOURCE_NAME_POSTFIX, camundaFormat.byteInputStream())
                 .name(record.name.getClosest())
                 .source("Ecos DMN Modeler")
                 .deployWithResult()
@@ -403,7 +403,7 @@ class DmnDefRecords(
     class EprocDmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, id).toString()
+            val ref = EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }
@@ -454,7 +454,7 @@ class DmnDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return RecordRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, this)
+        return RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, this)
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {

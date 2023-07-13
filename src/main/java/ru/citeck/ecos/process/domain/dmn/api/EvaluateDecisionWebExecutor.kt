@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.model.lib.computed.ComputeDmnDecisionRequestDto
 import ru.citeck.ecos.model.lib.computed.ComputeDmnDecisionResponseDto
 import ru.citeck.ecos.model.lib.computed.ComputeDmnDecisionWebApi
-import ru.citeck.ecos.process.domain.dmn.dto.toDecisionKey
+import ru.citeck.ecos.process.common.toDecisionKey
 import ru.citeck.ecos.process.domain.dmn.service.EcosDmnService
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq

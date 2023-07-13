@@ -8,6 +8,7 @@ import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.constants.AppName
 
 // TODO: Remove aggregation from alfresco?
 @Component
@@ -61,7 +62,7 @@ class ProcTaskAggregator(
             .map {
                 AggregateTaskDto(
                     id = it.id,
-                    aggregationRef = RecordRef.valueOf("eproc/proc-task@${it.id}"),
+                    aggregationRef = RecordRef.valueOf("${AppName.EPROC}/proc-task@${it.id}"),
                     createTime = it.createTime
                 )
             }

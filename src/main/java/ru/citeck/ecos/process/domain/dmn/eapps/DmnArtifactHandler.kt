@@ -6,8 +6,8 @@ import ru.citeck.ecos.apps.artifact.controller.type.binary.BinArtifact
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_SOURCE_ID
-import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RECOURSE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
+import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefRecords
 import ru.citeck.ecos.process.domain.dmn.io.DmnIO
@@ -43,7 +43,7 @@ class DmnArtifactHandler(
 
             listener.accept(
                 BinArtifact(
-                    "${rev.procDefId}$DMN_RECOURSE_NAME_POSTFIX.xml",
+                    "${rev.procDefId}$DMN_RESOURCE_NAME_POSTFIX.xml",
                     ObjectData.create(),
                     data.toByteArray()
                 )
@@ -72,6 +72,6 @@ class DmnArtifactHandler(
             imageBytes = null
         )
 
-        recordsService.mutate("${AppName.EPROC}/$DMN_DEF_SOURCE_ID@", dmnMutateRecord)
+        recordsService.mutate("${AppName.EPROC}/$DMN_DEF_RECORDS_SOURCE_ID@", dmnMutateRecord)
     }
 }

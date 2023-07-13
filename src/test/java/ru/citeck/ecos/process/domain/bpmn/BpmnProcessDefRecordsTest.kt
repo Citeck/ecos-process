@@ -18,8 +18,8 @@ import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords.Companion.SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -44,10 +44,10 @@ import kotlin.test.assertEquals
 // by replacing typesRepo and permsRepo with local implementations
 // todo: remove DirtiesContext when this problem will be solved
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class BpmnProcDefRecordsTest {
+class BpmnProcessDefRecordsTest {
 
     @Autowired
-    private lateinit var bpmnProcDefRecords: BpmnProcDefRecords
+    private lateinit var bpmnProcessDefRecords: BpmnProcessDefRecords
 
     @Autowired
     private lateinit var procDefService: ProcDefService
@@ -62,7 +62,7 @@ class BpmnProcDefRecordsTest {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
         private const val COUNT_OF_PROC_DEF_TO_GENERATE = 250L
         private val queryAllProcDefs = RecordsQuery.create {
-            withSourceId(SOURCE_ID)
+            withSourceId(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID)
             withLanguage(PredicateService.LANGUAGE_PREDICATE)
             withQuery(Predicates.alwaysTrue())
         }
@@ -158,8 +158,8 @@ class BpmnProcDefRecordsTest {
     @Test
     fun queryWithoutPermissions() {
         val result = AuthContext.runAs(EmptyAuth) {
-            bpmnProcDefRecords.queryRecords(queryAllProcDefs)
-                as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
+            bpmnProcessDefRecords.queryRecords(queryAllProcDefs)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
         }
         assertEquals(250, result.getRecords().size)
         assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE, result.getTotalCount())
@@ -168,8 +168,8 @@ class BpmnProcDefRecordsTest {
     @Test
     fun queryAsSystem() {
         AuthContext.runAsSystem {
-            val result = bpmnProcDefRecords.queryRecords(queryAllProcDefs)
-                as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
+            val result = bpmnProcessDefRecords.queryRecords(queryAllProcDefs)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
             assertEquals(250, result.getRecords().size)
         }
     }
@@ -177,8 +177,8 @@ class BpmnProcDefRecordsTest {
     @Test
     fun queryAsUser() {
         AuthContext.runAs(user = "fet") {
-            val result = bpmnProcDefRecords.queryRecords(queryAllProcDefs)
-                as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
+            val result = bpmnProcessDefRecords.queryRecords(queryAllProcDefs)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
             assertEquals(250, result.getRecords().size)
         }
     }
@@ -191,8 +191,8 @@ class BpmnProcDefRecordsTest {
             .build()
 
         val result = AuthContext.runAs(user = "fet") {
-            bpmnProcDefRecords.queryRecords(querySkip100Max50)
-                as RecsQueryRes<BpmnProcDefRecords.BpmnProcDefRecord>
+            bpmnProcessDefRecords.queryRecords(querySkip100Max50)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
         }
 
         assertEquals(50, result.getRecords().size)
@@ -202,7 +202,7 @@ class BpmnProcDefRecordsTest {
     @Test
     fun deleteWithoutPermissions() {
         AuthContext.runAs(EmptyAuth) {
-            val result = bpmnProcDefRecords.delete("def-3")
+            val result = bpmnProcessDefRecords.delete("def-3")
             assertEquals(DelStatus.PROTECTED, result)
         }
     }
@@ -210,7 +210,7 @@ class BpmnProcDefRecordsTest {
     @Test
     fun deleteAsUser() {
         val result = AuthContext.runAs(user = "fet") {
-            bpmnProcDefRecords.delete("def-2")
+            bpmnProcessDefRecords.delete("def-2")
         }
         assertEquals(DelStatus.PROTECTED, result)
     }
@@ -218,7 +218,7 @@ class BpmnProcDefRecordsTest {
     @AfterAll
     fun deleteAsAdmin() {
         AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ECOS_ADMINISTRATORS")) {
-            val result = bpmnProcDefRecords.delete("def-250")
+            val result = bpmnProcessDefRecords.delete("def-250")
             assertEquals(DelStatus.OK, result)
             assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE - 1, procDefService.getCount())
         }
@@ -228,34 +228,34 @@ class BpmnProcDefRecordsTest {
     fun mutateWithoutPermissions() {
         AuthContext.runAs(EmptyAuth) {
 
-            val recToMutate = bpmnProcDefRecords.getRecToMutate("def-250")
+            val recToMutate = bpmnProcessDefRecords.getRecToMutate("def-250")
             recToMutate.enabled = false
 
             assertThrows<RuntimeException>("Permissions denied. RecordRef: eproc/bpmn-def@def-250") {
-                bpmnProcDefRecords.saveMutatedRec(recToMutate)
+                bpmnProcessDefRecords.saveMutatedRec(recToMutate)
             }
         }
     }
 
     @Test
     fun mutateAsUser() {
-        val recToMutate = bpmnProcDefRecords.getRecToMutate("def-250")
+        val recToMutate = bpmnProcessDefRecords.getRecToMutate("def-250")
         recToMutate.enabled = false
 
         assertThrows<RuntimeException>("Permissions denied. RecordRef: eproc/bpmn-def@def-250") {
             AuthContext.runAs(user = "fet") {
-                bpmnProcDefRecords.saveMutatedRec(recToMutate)
+                bpmnProcessDefRecords.saveMutatedRec(recToMutate)
             }
         }
     }
 
     @Test
     fun mutateAsAdmin() {
-        val recToMutate = bpmnProcDefRecords.getRecToMutate("def-250")
+        val recToMutate = bpmnProcessDefRecords.getRecToMutate("def-250")
         recToMutate.enabled = false
 
         val result = AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ECOS_ADMINISTRATORS")) {
-            bpmnProcDefRecords.saveMutatedRec(recToMutate)
+            bpmnProcessDefRecords.saveMutatedRec(recToMutate)
         }
         assertEquals("def-250", result)
     }

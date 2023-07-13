@@ -4,8 +4,9 @@ import mu.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefActions
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -49,7 +50,7 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
 
                 val stringDef = String(it.data)
 
-                val bpmnMutateRecord = BpmnProcDefRecords.BpmnMutateRecord(
+                val bpmnMutateRecord = BpmnProcessDefRecords.BpmnMutateRecord(
                     id = "",
                     processDefId = "",
                     name = MLText.EMPTY,
@@ -58,12 +59,12 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
                     definition = stringDef,
                     enabled = false,
                     autoStartEnabled = false,
-                    action = BpmnProcDefActions.DEPLOY.toString(),
+                    action = BpmnProcessDefActions.DEPLOY.toString(),
                     sectionRef = EntityRef.EMPTY,
                     imageBytes = null
                 )
 
-                recordsService.mutate("${AppName.EPROC}/${BpmnProcDefRecords.SOURCE_ID}@", bpmnMutateRecord)
+                recordsService.mutate("${AppName.EPROC}/$BPMN_PROCESS_DEF_RECORDS_SOURCE_ID@", bpmnMutateRecord)
             }
 
         return "Redeployed ${defs.size} process definitions"

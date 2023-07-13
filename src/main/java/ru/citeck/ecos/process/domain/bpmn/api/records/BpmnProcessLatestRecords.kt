@@ -1,9 +1,9 @@
-package ru.citeck.ecos.process.domain.dmn.api.records
+package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import org.camunda.bpm.engine.RepositoryService
-import org.camunda.bpm.engine.repository.DecisionDefinition
+import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestDecisionDefinitionsByKeys
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
@@ -13,12 +13,12 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
-class DmnDecisionLatestRecords(
+class BpmnProcessLatestRecords(
     private val camundaRepositoryService: RepositoryService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
-        const val ID = "dmn-decision-latest"
+        const val ID = "bpmn-proc-latest"
     }
 
     override fun getId(): String {
@@ -26,15 +26,13 @@ class DmnDecisionLatestRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val processDefs = camundaRepositoryService.createProcessDefinitionQuery().latestVersion().list()
-
         val count = camundaRepositoryService
-            .createDecisionDefinitionQuery()
+            .createProcessDefinitionQuery()
             .latestVersion()
             .count()
 
-        val decisions = camundaRepositoryService
-            .createDecisionDefinitionQuery()
+        val processes = camundaRepositoryService
+            .createProcessDefinitionQuery()
             .latestVersion()
             .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
                 EntityRef.create(AppName.EPROC, ID, it.key)
@@ -42,7 +40,7 @@ class DmnDecisionLatestRecords(
 
         val result = RecsQueryRes<EntityRef>()
 
-        result.setRecords(decisions)
+        result.setRecords(processes)
         result.setTotalCount(count)
         result.setHasMore(count > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
@@ -51,24 +49,24 @@ class DmnDecisionLatestRecords(
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
         return camundaRepositoryService
-            .getLatestDecisionDefinitionsByKeys(recordIds)
+            .getLatestProcessDefinitionsByKeys(recordIds)
             .map {
-                it.toDecisionRecord()
+                it.toProcessLatestRecord()
             }
     }
 
-    private fun DecisionDefinition.toDecisionRecord() = DecisionLatestRecord(
+    private fun ProcessDefinition.toProcessLatestRecord() = ProcessLatestRecord(
         id = key,
         definition = EntityRef.create(
             AppName.EPROC,
-            DMN_DEF_RECORDS_SOURCE_ID,
-            resourceName.substringBefore(DMN_RESOURCE_NAME_POSTFIX)
+            BPMN_PROCESS_DEF_RECORDS_SOURCE_ID,
+            resourceName.substringBefore(BPMN_RESOURCE_NAME_POSTFIX)
         ),
         version = version,
-        name = name
+        name = name ?: key
     )
 
-    private inner class DecisionLatestRecord(
+    private inner class ProcessLatestRecord(
         val id: String,
         val definition: EntityRef = EntityRef.EMPTY,
         val version: Int,

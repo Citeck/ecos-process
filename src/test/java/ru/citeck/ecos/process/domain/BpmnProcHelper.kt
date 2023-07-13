@@ -6,9 +6,10 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefActions
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefRecords
-import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
+import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
@@ -68,10 +69,10 @@ fun saveAndDeployBpmnFromResource(resource: String, id: String) {
 }
 
 fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcDefRecords.SOURCE_ID, "")).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = bpmnData
-        this["action"] = BpmnProcDefActions.DEPLOY.toString()
+        this["action"] = BpmnProcessDefActions.DEPLOY.toString()
     }
 
     AuthContext.runAsSystem {
@@ -88,7 +89,7 @@ fun saveAndDeployDmnFromResource(resource: String, id: String) {
 }
 
 fun saveAndDeployDmnFromString(dmnData: String, id: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, DMN_DEF_SOURCE_ID, "")).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, "")).apply {
         this["defId"] = id
         this["definition"] = dmnData
         this["action"] = DmnDefActions.DEPLOY.toString()

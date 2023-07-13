@@ -4,15 +4,17 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.DEFAULT_IN_VARIABLES_PROPAGATION_TO_CALL_ACTIVITY
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
-import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaExpression
-import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaFailedJobRetryTimeCycle
-import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
-import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaString
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnArtifactDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.Variables
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnColoredDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.math.BoundsDef
@@ -108,6 +110,14 @@ fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {
 }
 
 fun CamundaFailedJobRetryTimeCycle.jaxb(context: ExportContext): JAXBElement<CamundaFailedJobRetryTimeCycle> {
+    return context.converters.convertToJaxb(this)
+}
+
+fun CamundaIn.jaxb(context: ExportContext): JAXBElement<CamundaIn> {
+    return context.converters.convertToJaxb(this)
+}
+
+fun CamundaOut.jaxb(context: ExportContext): JAXBElement<CamundaOut> {
     return context.converters.convertToJaxb(this)
 }
 
@@ -214,6 +224,27 @@ fun bpmnColoredFromAttributes(atts: Map<QName, String>): BpmnColoredDef? {
     return null
 }
 
+fun getCamundaBusinessKeyPropagationInInElement(
+    businessKey: String?,
+    context: ExportContext
+): JAXBElement<CamundaIn> {
+    val camundaIn = CamundaIn()
+    camundaIn.businessKey = businessKey
+
+    return camundaIn.jaxb(context)
+}
+
+fun getDefaultInVariablesPropagationToCallActivity(
+    context: ExportContext
+): List<JAXBElement<CamundaIn>> {
+    return DEFAULT_IN_VARIABLES_PROPAGATION_TO_CALL_ACTIVITY.map { variable ->
+        CamundaIn().apply {
+            source = variable
+            target = variable
+        }.jaxb(context)
+    }
+}
+
 fun getCamundaJobRetryTimeCycleFieldConfig(
     timeCycleValue: String?,
     context: ExportContext
@@ -227,6 +258,73 @@ fun getCamundaJobRetryTimeCycleFieldConfig(
     )
 
     return fields.map { it.jaxb(context) }
+}
+
+internal fun String.isExpression(): Boolean {
+    return startsWith("#{") || startsWith("\${")
+}
+
+fun VariablesMappingPropagation.toCamundaInElements(context: ExportContext): List<JAXBElement<CamundaIn>> {
+    val variablesMapping = this
+    val camundaElements = mutableListOf<CamundaIn>()
+
+    if (propagateAllVariable) {
+        camundaElements.add(
+            CamundaIn().apply {
+                variables = "all"
+                local = variablesMapping.local.toString()
+            }
+        )
+    }
+
+    variablesMapping.variables.forEach { variable ->
+        camundaElements.add(
+            CamundaIn().apply {
+                if (variable.source.isExpression()) {
+                    sourceExpression = variable.source
+                } else {
+                    source = variable.source
+                }
+
+                target = variable.target
+                local = variable.local.toString()
+            }
+        )
+    }
+
+    return camundaElements.map { it.jaxb(context) }
+}
+
+fun VariablesMappingPropagation.toCamundaOutElements(context: ExportContext): List<JAXBElement<CamundaOut>> {
+    val variablesMapping = this
+
+    val camundaElements = mutableListOf<CamundaOut>()
+
+    if (propagateAllVariable) {
+        camundaElements.add(
+            CamundaOut().apply {
+                variables = "all"
+                local = variablesMapping.local.toString()
+            }
+        )
+    }
+
+    variablesMapping.variables.forEach { variable ->
+        camundaElements.add(
+            CamundaOut().apply {
+                if (variable.source.isExpression()) {
+                    sourceExpression = variable.source
+                } else {
+                    source = variable.source
+                }
+
+                target = variable.target
+                local = variable.local.toString()
+            }
+        )
+    }
+
+    return camundaElements.map { it.jaxb(context) }
 }
 
 fun Outcome.toTExpression(): TExpression {
