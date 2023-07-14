@@ -17,5 +17,4 @@ data class Variables(
             throw IllegalArgumentException("Target cannot be blank on variables mapping propagation")
         }
     }
-
 }

@@ -4,8 +4,6 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.DEFAULT_IN_VARIABLES_PROPAGATION_TO_CALL_ACTIVITY
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
@@ -13,7 +11,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnArtifactDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.artifact.BpmnTextAnnotationDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.Variables
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnColoredDef

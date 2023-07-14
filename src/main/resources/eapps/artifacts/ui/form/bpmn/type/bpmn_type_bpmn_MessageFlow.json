@@ -1,0 +1,54 @@
+{
+  "id": "bpmn-type-bpmn:MessageFlow",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Message Form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "lg",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "HTML"
+        },
+        "key": "id",
+        "labelPosition": "left-left",
+        "className": "",
+        "attrs": [
+          {
+            "attr": "",
+            "value": ""
+          }
+        ],
+        "content": "id: <span class=\"text-muted font-weight-bold\">{{data.id}}</span>",
+        "refreshOnChange": true,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "htmlelement",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "validate": {
+          "required": true
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
+      }
+    ],
+    "formId": "bpmn-type-bpmn:MessageFlow"
+  },
+  "attributes": {},
+  "notExists": false
+}

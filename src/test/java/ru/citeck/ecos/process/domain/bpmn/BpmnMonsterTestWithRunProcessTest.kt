@@ -3560,7 +3560,7 @@ class BpmnMonsterTestWithRunProcessTest {
         return ListUtils.subtract(updatedSubscriptions, existingSubscriptions)
     }
 
-    //TODO: test for call actvity
+    // TODO: test for call actvity
 
     class PotterRecord(
 

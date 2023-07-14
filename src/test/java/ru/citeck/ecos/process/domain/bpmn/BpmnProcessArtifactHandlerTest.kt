@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.apache.commons.lang3.LocaleUtils
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -12,6 +13,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -42,6 +44,11 @@ class BpmnProcessArtifactHandlerTest {
         AuthContext.runAsSystem {
             localAppService.deployLocalArtifacts()
         }
+    }
+
+    @AfterAll
+    fun tearDown() {
+        deleteAllProcDefinitions()
     }
 
     @Test

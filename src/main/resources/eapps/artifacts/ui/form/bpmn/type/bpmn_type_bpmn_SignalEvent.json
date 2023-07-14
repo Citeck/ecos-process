@@ -103,7 +103,7 @@
             "key": "manualSignalName",
             "validate": {
               "required": true,
-              "pattern": "([a-zA-Z0-9-]+$)",
+              "pattern": "([a-zA-Z0-9-_]+$)",
               "maxLength": 50
             },
             "refreshOn": [],

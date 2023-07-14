@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.task
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.common.toProcessKey
 import ru.citeck.ecos.process.domain.bpmn.io.convert.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_CALLED_ELEMENT_BINDING
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_CALLED_ELEMENT_VERSION
@@ -30,7 +31,11 @@ class CamundaCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, T
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
 
-            calledElement = QName("", element.calledActivity)
+            calledElement = if (element.calledElement.isNullOrBlank()) {
+                QName("", element.processRef.toProcessKey())
+            } else {
+                QName("", element.calledElement)
+            }
             otherAttributes[CAMUNDA_CALLED_ELEMENT_BINDING] = element.binding.value
             otherAttributes.putIfNotBlank(CAMUNDA_CALLED_ELEMENT_VERSION, element.version?.toString())
             otherAttributes.putIfNotBlank(CAMUNDA_CALLED_ELEMENT_VERSION_TAG, element.versionTag)
@@ -42,7 +47,8 @@ class CamundaCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, T
 
                 any.add(
                     getCamundaBusinessKeyPropagationInInElement(
-                        CAMUNDA_PROPAGATION_PROCESS_BUSINESS_KEY_EXPRESSION, context
+                        CAMUNDA_PROPAGATION_PROCESS_BUSINESS_KEY_EXPRESSION,
+                        context
                     )
                 )
                 any.addAll(getDefaultInVariablesPropagationToCallActivity(context))

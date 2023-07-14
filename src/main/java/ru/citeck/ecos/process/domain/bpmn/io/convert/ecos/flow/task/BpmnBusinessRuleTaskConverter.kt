@@ -7,10 +7,10 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toMultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.businessrule.BpmnBusinessRuleTaskDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.businessrule.MapDecisionResult
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBusinessRuleTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter

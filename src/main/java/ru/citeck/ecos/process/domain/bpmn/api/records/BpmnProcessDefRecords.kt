@@ -68,7 +68,6 @@ class BpmnProcessDefRecords(
 
     companion object {
 
-
         private const val APP_NAME = AppName.EPROC
         private const val QUERY_BATCH_SIZE = 100
         private const val LIMIT_REQUESTS_COUNT = 100000

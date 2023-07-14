@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.callactivity
 
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.common.toProcessKey
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
@@ -17,7 +17,7 @@ data class BpmnCallActivityDef(
     val outgoing: List<String> = emptyList(),
 
     val processRef: EntityRef,
-    val calledActivity: String = processRef.toProcessKey(),
+    val calledElement: String? = null,
     val binding: RefBinding,
 
     val inVariablePropagation: VariablesMappingPropagation = VariablesMappingPropagation(),
@@ -30,4 +30,12 @@ data class BpmnCallActivityDef(
     val jobConfig: JobConfig,
 
     val multiInstanceConfig: MultiInstanceConfig? = null
-)
+) {
+
+    init {
+        if (processRef.isEmpty() && calledElement.isNullOrEmpty()) {
+            throw EcosBpmnElementDefinitionException(id, "Process reference or called element must be specified.")
+        }
+    }
+
+}

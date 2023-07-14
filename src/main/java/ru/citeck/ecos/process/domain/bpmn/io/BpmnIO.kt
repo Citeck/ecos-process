@@ -16,6 +16,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.Camund
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.gateway.CamundaParallelGatewayConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.message.CamundaMessageFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.sequence.CamundaSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.signal.CamundaSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.task.*
@@ -38,6 +39,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnEvent
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnExclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnInclusiveGatewayConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.gateway.BpmnParallelGatewayConverter
+import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.message.BpmnMessageFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.sequence.BpmnSequenceFlowConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.signal.BpmnSignalConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task.*
@@ -102,7 +104,8 @@ object BpmnIO {
             BpmnEventBasedGatewayConverter::class,
             BpmnBusinessRuleTaskConverter::class,
             BpmnConditionalEventDefinitionConverter::class,
-            BpmnCallActivityTaskConverter::class
+            BpmnCallActivityTaskConverter::class,
+            BpmnMessageFlowConverter::class
         ),
         extensionTypeResolver
     )
@@ -145,7 +148,8 @@ object BpmnIO {
             CamundaEventBasedGatewayConverter::class,
             CamundaBusinessRuleTaskConverter::class,
             CamundaConditionalEventDefinitionConverter::class,
-            CamundaCallActivityTaskConverter::class
+            CamundaCallActivityTaskConverter::class,
+            CamundaMessageFlowConverter::class
         ),
         extensionTypeResolver
     )

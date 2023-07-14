@@ -1,0 +1,294 @@
+{
+  "id": "bpmn-type-bpmn:CallActivity",
+  "formKey": "",
+  "title": {
+    "en": "BPMN Call Activity"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": true,
+  "i18n": {
+    "ru": {
+      "process_binding_deployment": "Опубликованное с процессом",
+      "process_binding_latest": "Актуальное",
+      "process_binding_version": "Версия",
+      "process_binding_versionTag": "Тег версии"
+    },
+    "en": {
+      "process_binding_deployment": "Deployment",
+      "process_binding_latest": "Latest",
+      "process_binding_version": "Version",
+      "process_binding_versionTag": "Version tag"
+    }
+  },
+  "definition": {
+    "components": [
+      {
+        "scrollableContent": true,
+        "key": "panel2",
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "formRef": "uiserv/form@bpmn-base-form-elements",
+            "input": true,
+            "key": "includeForm",
+            "label": "Форма: Bpmn base form elements",
+            "type": "includeForm"
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel-process",
+            "title": {
+              "en": "Called process",
+              "ru": "Вызываемый процесс"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Процесс",
+                  "en": "Process"
+                },
+                "key": "processRef",
+                "validate": {
+                  "required": true
+                },
+                "modalTitle": "",
+                "journalId": "bpmn-process-latest",
+                "queryData": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = _.isEmpty(data.calledElement) || data.calledElement.trim().length === 0;",
+                "type": "selectJournal",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Вызываемый элемент",
+                  "en": "Called element"
+                },
+                "key": "calledElement",
+                "validate": {
+                  "pattern": "([a-zA-Z0-9-_]+$)"
+                },
+                "inputMasks": [
+                  {
+                    "label": "",
+                    "mask": ""
+                  }
+                ],
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true
+              },
+              {
+                "label": {
+                  "en": "Binding",
+                  "ru": "Связь"
+                },
+                "key": "processBinding",
+                "tooltip": {
+                  "ru": "Опубликованное с процессом - рассчитывается версия процесса, которая была опубликована вместе с версией текущего процесса.\nАктуальное - всегда последняя версия процесса.\nВерсия - позволяет указать конкретную версию процесса.\nТег версии - позволяет указать конкретную версию процесса по тегу.",
+                  "en": "Deployment - which evaluates the process version which was deployed with the current process version.\nLatest - which will always evaluate the latest process version.\nVersion - which allows you to specify a specific version.\nVersion tag - which allows you to specify a specific version tag."
+                },
+                "validate": {
+                  "required": true
+                },
+                "dataSrc": "values",
+                "data": {
+                  "values": [
+                    {
+                      "label": "process_binding_deployment",
+                      "value": "DEPLOYMENT"
+                    },
+                    {
+                      "label": "process_binding_latest",
+                      "value": "LATEST"
+                    },
+                    {
+                      "label": "process_binding_version",
+                      "value": "VERSION"
+                    },
+                    {
+                      "label": "process_binding_versionTag",
+                      "value": "VERSION_TAG"
+                    }
+                  ],
+                  "headers": [
+                    {
+                      "key": "",
+                      "value": ""
+                    }
+                  ]
+                },
+                "defaultValue": "LATEST",
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Версия",
+                  "en": "Version"
+                },
+                "key": "processVersion",
+                "validate": {
+                  "required": true,
+                  "integer": true,
+                  "min": 1
+                },
+                "isBigNumber": false,
+                "delimiterValue": " ",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.processBinding === 'VERSION'",
+                "defaultValue": "",
+                "type": "number",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Тег версии",
+                  "en": "Version tag"
+                },
+                "key": "processVersionTag",
+                "validate": {
+                  "required": true
+                },
+                "inputMasks": [
+                  {
+                    "label": "",
+                    "mask": ""
+                  }
+                ],
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.processBinding === 'VERSION_TAG'",
+                "type": "textfield",
+                "input": true
+              },
+              {
+                "addVerticalIndents": true,
+                "input": true,
+                "key": "horizontalLine3",
+                "type": "horizontalLine"
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel-in-variables-propagation",
+            "title": {
+              "ru": "Трансляция входящих переменных",
+              "en": "In variables propagation"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "inVariablePropagation"
+                },
+                "key": "inVariablePropagation",
+                "hideLabel": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "container",
+                "input": true,
+                "components": [
+                  {
+                    "formRef": "uiserv/form@bpmn-base-form-variables-propagation",
+                    "input": true,
+                    "key": "includeForm4",
+                    "label": "Форма: BPMN base form Variables Propagation",
+                    "type": "includeForm"
+                  },
+                  {
+                    "addVerticalIndents": true,
+                    "input": true,
+                    "key": "horizontalLine",
+                    "type": "horizontalLine"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel-out-variables-propagation",
+            "title": {
+              "ru": "Трансляция исходящих переменных",
+              "en": "Out variables propagation"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "outVariablePropagation"
+                },
+                "key": "outVariablePropagation",
+                "hideLabel": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "container",
+                "input": true,
+                "components": [
+                  {
+                    "formRef": "uiserv/form@bpmn-base-form-variables-propagation",
+                    "input": true,
+                    "key": "includeForm5",
+                    "label": "Форма: BPMN base form Variables Propagation",
+                    "type": "includeForm"
+                  },
+                  {
+                    "addVerticalIndents": true,
+                    "input": true,
+                    "key": "horizontalLine2",
+                    "type": "horizontalLine"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "formRef": "uiserv/form@bpmn-base-form-multi-instance",
+            "input": true,
+            "key": "includeForm3",
+            "label": "Форма: BPMN base form Multi Instance",
+            "type": "includeForm"
+          },
+          {
+            "formRef": "uiserv/form@bpmn-base-form-async",
+            "input": true,
+            "key": "includeForm2",
+            "label": "Форма: BPMN base form Async",
+            "type": "includeForm"
+          }
+        ]
+      }
+    ],
+    "formId": "bpmn-type-bpmn:CallActivity"
+  },
+  "attributes": {},
+  "notExists": false
+}

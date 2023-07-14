@@ -8,10 +8,10 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toMultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.callactivity.BpmnCallActivityDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
@@ -30,6 +30,7 @@ class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCal
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
             processRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_PROCESS_REF]),
+            calledElement = element.otherAttributes[BPMN_PROP_CALLED_ELEMENT],
             binding = RefBinding.valueOf(
                 element.otherAttributes[BPMN_PROP_PROCESS_BINDING]
                     ?: error("Process Binding is required")
@@ -55,7 +56,6 @@ class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCal
                 ?: JobConfig(),
             multiInstanceConfig = element.toMultiInstanceConfig()
         )
-
     }
 
     private fun convertVariableMappingPropagationWithNotEmptySourceVariables(
@@ -77,6 +77,7 @@ class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCal
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
             otherAttributes[BPMN_PROP_PROCESS_REF] = element.processRef.toString()
+            otherAttributes.putIfNotBlank(BPMN_PROP_CALLED_ELEMENT, element.calledElement)
             otherAttributes[BPMN_PROP_PROCESS_BINDING] = element.binding.name
             otherAttributes.putIfNotBlank(BPMN_PROP_PROCESS_VERSION, element.version?.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_PROCESS_VERSION_TAG, element.versionTag)
