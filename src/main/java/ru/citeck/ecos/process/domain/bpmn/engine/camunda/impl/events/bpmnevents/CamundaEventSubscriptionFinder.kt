@@ -18,6 +18,8 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import java.io.Serializable
 import java.util.*
 import kotlin.system.measureTimeMillis
@@ -226,7 +228,7 @@ data class EventSubscription(
 
         if (name != other.name) return false
         if (model != other.model) return false
-        if (Json.mapper.read(predicate) != Json.mapper.read(other.predicate)) return false
+        if (getPredicateValue() != other.getPredicateValue()) return false
 
         return true
     }
@@ -234,8 +236,15 @@ data class EventSubscription(
     override fun hashCode(): Int {
         var result = name.hashCode()
         result = 31 * result + model.hashCode()
-        result = 31 * result + (predicate?.hashCode() ?: 0)
+        result = 31 * result + getPredicateValue().hashCode()
         return result
+    }
+
+    private fun getPredicateValue(): Predicate {
+        if (predicate == null) {
+            return VoidPredicate.INSTANCE
+        }
+        return Json.mapper.read(predicate, Predicate::class.java) ?: VoidPredicate.INSTANCE
     }
 }
 
