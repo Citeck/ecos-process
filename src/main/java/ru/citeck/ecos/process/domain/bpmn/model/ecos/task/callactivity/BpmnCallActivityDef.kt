@@ -37,5 +37,4 @@ data class BpmnCallActivityDef(
             throw EcosBpmnElementDefinitionException(id, "Process reference or called element must be specified.")
         }
     }
-
 }
