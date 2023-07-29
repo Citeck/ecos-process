@@ -10,6 +10,7 @@ import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.scenario.ProcessScenario
+import org.camunda.bpm.scenario.Scenario
 import org.camunda.bpm.scenario.Scenario.run
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -38,13 +39,12 @@ import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.toCamundaCode
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
@@ -60,7 +60,6 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.util.*
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -79,6 +78,7 @@ private const val BPMN_EVENTS = "bpmnevents"
 private const val ERROR = "error"
 private const val SERVICE_TASK = "servicetask"
 private const val CONDITIONAL = "conditional"
+private const val CALL_ACTIVITY = "callactivity"
 
 /**
  * Why all tests places on one monster class?
@@ -123,6 +123,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Mock
     private lateinit var process: ProcessScenario
 
+    @Mock
+    private lateinit var childProcess: ProcessScenario
+
     @SpyBean
     private lateinit var camundaRoleService: CamundaRoleService
 
@@ -150,7 +153,7 @@ class BpmnMonsterTestWithRunProcessTest {
         private val docExplicitRef = EntityRef.valueOf("doc@explicit")
 
         private val variables_docRef = mapOf(
-            "documentRef" to docRef.toString()
+            BPMN_DOCUMENT_REF to docRef.toString()
         )
 
         private val mockRoleUserNames = listOf(USER_IVAN, USER_PETR)
@@ -285,7 +288,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "priority" to 3
             )
         ).execute()
@@ -535,7 +538,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
             )
         ).execute()
@@ -559,7 +562,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
             )
         ).execute()
@@ -591,7 +594,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to doc
+                BPMN_DOCUMENT_REF to doc
             )
         ).execute()
 
@@ -621,7 +624,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to doc
+                BPMN_DOCUMENT_REF to doc
             )
         ).execute()
 
@@ -651,7 +654,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to doc
+                BPMN_DOCUMENT_REF to doc
             )
         ).execute()
 
@@ -681,7 +684,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to doc
+                BPMN_DOCUMENT_REF to doc
             )
         ).execute()
 
@@ -711,7 +714,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to doc
+                BPMN_DOCUMENT_REF to doc
             )
         ).execute()
 
@@ -786,7 +789,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val scenario = run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "foo" to "foo"
             )
         ).execute()
@@ -823,7 +826,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val scenario = run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to harryRef.toString()
+                BPMN_DOCUMENT_REF to harryRef.toString()
             )
         ).execute()
 
@@ -841,7 +844,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val scenario = run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to harryRef.toString()
+                BPMN_DOCUMENT_REF to harryRef.toString()
             )
         ).execute()
 
@@ -862,7 +865,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "top",
             )
         ).execute()
@@ -878,7 +881,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "bottom",
             )
         ).execute()
@@ -894,7 +897,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "no-one-flow",
             )
         ).execute()
@@ -910,7 +913,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "top",
             )
         ).execute()
@@ -926,7 +929,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "bottom",
             )
         ).execute()
@@ -942,7 +945,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "no-one-flow",
             )
         ).execute()
@@ -964,7 +967,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 taskOutcome.outcomeId() to taskOutcome.value,
             )
         ).execute()
@@ -986,7 +989,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 taskOutcome.outcomeId() to taskOutcome.value,
             )
         ).execute()
@@ -1009,7 +1012,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to docRef.toString(),
+                    BPMN_DOCUMENT_REF to docRef.toString(),
                     taskOutcome.outcomeId() to taskOutcome.value,
                 )
             ).execute()
@@ -1024,7 +1027,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "foo" to "bar",
             )
         ).execute()
@@ -1041,7 +1044,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "foo" to "not_bar",
             )
         ).execute()
@@ -1104,7 +1107,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString()
+                BPMN_DOCUMENT_REF to docRef.toString()
             )
         ).execute()
 
@@ -1139,7 +1142,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString()
+                BPMN_DOCUMENT_REF to docRef.toString()
             )
         ).execute()
 
@@ -1172,7 +1175,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
             )
         ).execute()
@@ -1207,7 +1210,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
             )
         ).execute()
@@ -1228,7 +1231,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to docRef.toString()
+                    BPMN_DOCUMENT_REF to docRef.toString()
                 )
             ).execute()
         }
@@ -1242,7 +1245,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
-                        "documentRef" to docRef.toString(),
+                        BPMN_DOCUMENT_REF to docRef.toString(),
                         "currentRunAsUser" to EntityRef.EMPTY
                     )
                 )
@@ -1268,7 +1271,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to docRef.toString()
+                    BPMN_DOCUMENT_REF to docRef.toString()
                 )
             ).execute()
         }
@@ -1283,7 +1286,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
-                        "documentRef" to docRef.toString(),
+                        BPMN_DOCUMENT_REF to docRef.toString(),
                         "currentRunAsUser" to EntityRef.EMPTY
                     )
                 )
@@ -1309,7 +1312,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to docRef.toString()
+                    BPMN_DOCUMENT_REF to docRef.toString()
                 )
             ).execute()
         }
@@ -1325,7 +1328,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
-                        "documentRef" to docRef.toString(),
+                        BPMN_DOCUMENT_REF to docRef.toString(),
                         "currentRunAsUser" to EntityRef.EMPTY
                     )
                 )
@@ -1351,7 +1354,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to docRef.toString()
+                    BPMN_DOCUMENT_REF to docRef.toString()
                 )
             ).execute()
         }
@@ -1367,7 +1370,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
-                        "documentRef" to docRef.toString(),
+                        BPMN_DOCUMENT_REF to docRef.toString(),
                         "currentRunAsUser" to EntityRef.EMPTY
                     )
                 )
@@ -1558,7 +1561,7 @@ class BpmnMonsterTestWithRunProcessTest {
             run(process).startByKey(
                 procId,
                 mapOf(
-                    "documentRef" to docRef.toString()
+                    BPMN_DOCUMENT_REF to docRef.toString()
                 )
             ).execute()
         }
@@ -1573,7 +1576,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     "foo" to EntityRef.valueOf("bar"),
                     "harry" to EntityRef.valueOf("potter"),
                     "process" to mapOf(
-                        "documentRef" to docRef.toString(),
+                        BPMN_DOCUMENT_REF to docRef.toString(),
                         "currentRunAsUser" to EntityRef.EMPTY
                     )
                 )
@@ -1620,7 +1623,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to docRef.toString(),
+                BPMN_DOCUMENT_REF to docRef.toString(),
                 "timeValue" to "R/P1D"
             )
         ).execute()
@@ -1934,7 +1937,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             document,
             mapOf(
-                "documentRef" to document
+                BPMN_DOCUMENT_REF to document
             )
         ).execute()
 
@@ -2026,7 +2029,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             document,
             mapOf(
-                "documentRef" to document
+                BPMN_DOCUMENT_REF to document
             )
         ).execute()
     }
@@ -2095,7 +2098,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             document,
             mapOf(
-                "documentRef" to document
+                BPMN_DOCUMENT_REF to document
             )
         ).execute()
     }
@@ -2167,7 +2170,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             document,
             mapOf(
-                "documentRef" to document
+                BPMN_DOCUMENT_REF to document
             )
         ).execute()
     }
@@ -2322,7 +2325,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to harryRef.toString(),
+                BPMN_DOCUMENT_REF to harryRef.toString(),
                 "docForFilter" to filterDocument
             )
         ).execute()
@@ -2349,7 +2352,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to harryRef.toString(),
+                BPMN_DOCUMENT_REF to harryRef.toString(),
                 "docForFilter" to filterDocument
             )
         ).execute()
@@ -3331,7 +3334,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf(
-                "documentRef" to doc
+                BPMN_DOCUMENT_REF to doc
             )
         ).execute()
 
@@ -3543,6 +3546,214 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("endEvent")
     }
 
+    // ---CALL ACTIVITY TESTS ---
+
+    @Test
+    fun `test call activity with participant`() {
+        val procId = "test-call-activity-with-participant"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("endMain")
+    }
+
+    @Test
+    fun `test call activity with incorrect called element should throw`() {
+        val procId = "test-call-activity-with-incorrect-called-element"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        assertThrows<ProcessEngineException> {
+            run(process).startByKey(
+                procId
+            ).execute()
+        }
+    }
+
+    @Test
+    fun `test call activity with separate process`() {
+        val procId = "test-call-activity-separate-process"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        saveAndDeployBpmn(CALL_ACTIVITY, "test-call-activity-separate-process-called")
+
+        run(process).startByKey(
+            procId
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test call activity default variables propagation`() {
+        val procId = "test-call-activity-default-variables-propagation"
+
+        val processInitVariables = mapOf(
+            BPMN_DOCUMENT_REF to docRef.toString(),
+            BPMN_WORKFLOW_INITIATOR to "jhon",
+            BPMN_DOCUMENT_TYPE to "docType"
+        )
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            val allVars = runtimeService.getVariables(it.processInstanceId)
+
+            assertThat(allVars).containsKeys(*DEFAULT_IN_VARIABLES_PROPAGATION_TO_CALL_ACTIVITY.toTypedArray())
+            assertThat(allVars).containsAllEntriesOf(processInitVariables)
+
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            processInitVariables
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test call activity variables should not propagation without specifying`() {
+        val procId = "test-call-activity-default-variables-propagation"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            val allVars = runtimeService.getVariables(it.processInstanceId)
+
+            assertThat(allVars).doesNotContainKey("foo")
+
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "foo" to "bar"
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test call activity input all variables propagation`() {
+        val procId = "test-call-activity-input-all-variables-propagation"
+
+        val processInitVariables = mapOf(
+            "inputVar1" to "inputVal1",
+            "inputVar2" to 2
+        )
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            val allVars = runtimeService.getVariables(it.processInstanceId)
+
+            assertThat(allVars).containsAllEntriesOf(processInitVariables)
+
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            processInitVariables
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test call activity input specified variables propagation`() {
+        val procId = "test-call-activity-input-specified-variables-propagation"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            val allVars = runtimeService.getVariables(it.processInstanceId)
+
+            assertThat(allVars).containsAllEntriesOf(
+                mapOf(
+                    "incomeVar1" to "sourceVal1",
+                    "incomeVar2" to 2
+                )
+            )
+            assertThat(allVars).doesNotContainKey("thisVariableShouldNotPropagation")
+
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                "sourceVar1" to "sourceVal1",
+                "sourceVar2" to 2,
+                "thisVariableShouldNotPropagation" to "notPropagation"
+            )
+
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test call activity output all variables propagation`() {
+        val procId = "test-call-activity-output-all-variables-propagation"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        val scenario = run(process).startByKey(
+            procId
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsAllEntriesOf(
+            mapOf(
+                "innerVariable1" to "innerValue1",
+                "innerVariable2" to "innerValue2"
+            )
+        )
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test call activity output specified variables propagation`() {
+        val procId = "test-call-activity-output-specified-variables-propagation"
+
+        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        val scenario = run(process).startByKey(
+            procId
+        ).execute()
+
+        assertThat(scenario.instance(process)).variables().containsAllEntriesOf(
+            mapOf(
+                "incomeVariable1" to "innerValue1",
+                "incomeVariable2" to "innerValue2"
+            )
+        )
+        assertThat(scenario.instance(process)).variables().doesNotContainKey("thisVariableShouldNotPropagation")
+
+        verify(process).hasFinished("endEvent")
+    }
+
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
         action: () -> Unit
@@ -3559,8 +3770,6 @@ class BpmnMonsterTestWithRunProcessTest {
 
         return ListUtils.subtract(updatedSubscriptions, existingSubscriptions)
     }
-
-    // TODO: test for call actvity
 
     class PotterRecord(
 
