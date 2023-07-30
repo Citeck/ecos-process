@@ -10,17 +10,11 @@ sections:
     - name:
         en: BPMN models
         ru: Модели BPMN
-      shortName:
-        ru: BPMN
-        en: BPMN
       type: BPM
 
     - name:
         en: DMN models
         ru: Модели DMN
-      shortName:
-        ru: DMN
-        en: DMN
       type: DMN
 
 #    - type: JOURNAL
