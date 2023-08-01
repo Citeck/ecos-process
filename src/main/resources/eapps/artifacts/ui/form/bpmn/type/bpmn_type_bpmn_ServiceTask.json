@@ -67,9 +67,6 @@
           "en": "External Task Topic"
         },
         "key": "externalTaskTopic",
-        "tooltip": {
-          "ru": "TODO"
-        },
         "validate": {
           "required": true,
           "pattern": "([a-zA-Z0-9-_]+$)",

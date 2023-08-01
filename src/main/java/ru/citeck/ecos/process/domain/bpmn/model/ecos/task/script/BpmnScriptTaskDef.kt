@@ -24,6 +24,8 @@ data class BpmnScriptTaskDef(
 ) {
 
     init {
-        if (script.isBlank()) throw EcosBpmnElementDefinitionException(id, "Script task cannot be blank on script task")
+        if (script.isBlank()) {
+            throw EcosBpmnElementDefinitionException(id, "Script task cannot be blank on script task")
+        }
     }
 }

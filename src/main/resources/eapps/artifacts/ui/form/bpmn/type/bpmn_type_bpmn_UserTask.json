@@ -293,12 +293,21 @@
               "en": "Id"
             },
             "key": "id",
+            "validate": {
+              "pattern": "([a-zA-Z0-9-_]+$)"
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
             "defaultValue": "",
-            "pattern": "^[a-zA-Z0-9-_*]+$",
-            "minLength": 3,
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "textfield",
+            "pattern": "^[a-zA-Z0-9-_*]+$",
+            "minLength": 3,
             "input": true,
             "row": "0-0"
           },

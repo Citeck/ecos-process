@@ -1,14 +1,14 @@
 {
   "id": "bpmn-base-form-elements",
   "formKey": "",
-  "system": true,
   "title": {
     "en": "Bpmn base form elements"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
   "width": "lg",
+  "system": true,
   "i18n": {},
   "definition": {
     "components": [
@@ -36,9 +36,6 @@
           "en": "Name"
         },
         "key": "name_ml",
-        "validate": {
-          "required": true
-        },
         "refreshOn": [],
         "optionalWhenDisabled": false,
         "type": "mlText",
@@ -55,7 +52,9 @@
         "type": "mlTextarea",
         "input": true
       }
-    ]
+    ],
+    "formId": "bpmn-base-form-elements"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }

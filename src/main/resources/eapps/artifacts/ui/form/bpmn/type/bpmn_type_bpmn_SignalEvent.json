@@ -271,7 +271,7 @@
                     "name": "Обязательность",
                     "trigger": {
                       "type": "javascript",
-                      "javascript": "var type = _.get(data, \"eventType\");\nvar predicate = _.get(data, \"eventFilterByPredicate\");\n\nresult = type == 'RECORD_CREATED' && predicate.length === 0;"
+                      "javascript": "var type = _.get(data, \"eventType\", \"\");\nvar predicate = _.get(data, \"eventFilterByPredicate\", \"\");\n\nresult = type == 'RECORD_CREATED' && predicate.length === 0;"
                     },
                     "actions": [
                       {
@@ -310,7 +310,7 @@
                     "name": "mandatory",
                     "trigger": {
                       "type": "javascript",
-                      "javascript": "var type = _.get(data, \"eventType\");\nvar eventFilterByEcosType = _.get(data, \"eventFilterByEcosType\");\n\nresult = type == 'RECORD_CREATED' && eventFilterByEcosType.length === 0;"
+                      "javascript": "var type = _.get(data, \"eventType\", \"\");\nvar eventFilterByEcosType = _.get(data, \"eventFilterByEcosType\", \"\");\n\nresult = type == 'RECORD_CREATED' && eventFilterByEcosType.length === 0;"
                     },
                     "actions": [
                       {

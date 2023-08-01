@@ -53,6 +53,7 @@
           "en": "Notification type"
         },
         "key": "notificationType",
+        "disabled": true,
         "validate": {
           "required": true
         },
@@ -66,6 +67,12 @@
             {
               "label": "notification_type_firebase_push",
               "value": "FIREBASE_NOTIFICATION"
+            }
+          ],
+          "headers": [
+            {
+              "key": "",
+              "value": ""
             }
           ]
         },
