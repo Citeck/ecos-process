@@ -1,0 +1,170 @@
+{
+  "id": "bpmn-base-form-variables-propagation",
+  "formKey": "",
+  "title": {
+    "en": "BPMN base form Variables Propagation"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": true,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Транслировать все переменные",
+          "en": "Propagate all variables"
+        },
+        "key": "propagateAllVariable",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Локальные",
+          "en": "Local"
+        },
+        "key": "local",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "conditional": {
+          "show": "true",
+          "when": "propagateAllVariable",
+          "eq": "true"
+        },
+        "type": "checkbox",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel-variables",
+        "title": {
+          "ru": "Переменные",
+          "en": "Variables"
+        },
+        "theme": "info",
+        "collapsible": true,
+        "collapsed": true,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "labelWidth": 60,
+        "labelMargin": 5,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": "",
+            "key": "variables",
+            "hideLabel": true,
+            "multiple": true,
+            "validate": {
+              "minLength": "",
+              "maxLength": ""
+            },
+            "disableAddingRemovingRows": false,
+            "addAnother": "",
+            "addAnotherPosition": "bottom",
+            "removePlacement": "col",
+            "defaultOpen": false,
+            "layoutFixed": false,
+            "enableRowGroups": false,
+            "rowGroups": [
+              {
+                "label": "",
+                "numberOfRows": ""
+              }
+            ],
+            "reorder": false,
+            "defaultValue": [
+              {
+                "source": "",
+                "target": "",
+                "loval": false,
+                "local2": false
+              }
+            ],
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "datagrid",
+            "input": true,
+            "components": [
+              {
+                "label": {
+                  "ru": "Panel"
+                },
+                "key": "variables-panel",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "panel",
+                "input": false,
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Источник",
+                      "en": "Source"
+                    },
+                    "key": "source",
+                    "tooltip": {
+                      "ru": "Имя переменной или выражение",
+                      "en": "Variable name or expression"
+                    },
+                    "inputMasks": [
+                      {
+                        "label": "",
+                        "mask": ""
+                      }
+                    ],
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textfield",
+                    "input": true
+                  },
+                  {
+                    "label": {
+                      "ru": "Цель",
+                      "en": "Target"
+                    },
+                    "key": "target",
+                    "inputMasks": [
+                      {
+                        "label": "",
+                        "mask": ""
+                      }
+                    ],
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textfield",
+                    "input": true
+                  },
+                  {
+                    "label": {
+                      "ru": "Локальное",
+                      "en": "Local"
+                    },
+                    "key": "local",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "checkbox",
+                    "input": true
+                  }
+                ],
+                "row": "0-0"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "formId": "bpmn-base-form-variables-propagation"
+  },
+  "attributes": {},
+  "notExists": false
+}
