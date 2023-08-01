@@ -473,7 +473,36 @@
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "datamap",
-            "input": true
+            "input": true,
+            "valueComponent": {
+              "label": {
+                "ru": "Value"
+              },
+              "key": "value",
+              "validate": {
+                "pattern": "([a-zA-Z0-9():?\\[\\]{}._\\$\\-]+$)",
+                "required": false,
+                "custom": "",
+                "customPrivate": false,
+                "customMessage": "",
+                "json": "",
+                "minLength": "",
+                "maxLength": "",
+                "minWords": "",
+                "maxWords": ""
+              },
+              "inputMasks": [
+                {
+                  "label": "",
+                  "mask": ""
+                }
+              ],
+              "defaultValue": "Value",
+              "refreshOn": [],
+              "optionalWhenDisabled": false,
+              "type": "textfield",
+              "input": true
+            }
           }
         ]
       },
