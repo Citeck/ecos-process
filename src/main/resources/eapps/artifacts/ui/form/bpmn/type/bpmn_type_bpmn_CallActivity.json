@@ -88,6 +88,7 @@
                 "defaultValue": "",
                 "refreshOn": [],
                 "optionalWhenDisabled": false,
+                "customConditional": "let processRefIsNotSet = !data.processRef || data.processRef.trim().length === 0;\n\nshow = processRefIsNotSet;",
                 "type": "textfield",
                 "input": true
               },
