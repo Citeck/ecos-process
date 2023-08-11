@@ -266,7 +266,8 @@ class DmnDefRecords(
             procDefEventEmitter.emitProcDefDeployed(
                 ProcDefEvent(
                     procDefRef = procDefRef,
-                    version = procDefResult.version.toDouble().inc()
+                    version = procDefResult.version.toDouble().inc(),
+                    dataState = procDefResult.dataState.name
                 )
             )
 

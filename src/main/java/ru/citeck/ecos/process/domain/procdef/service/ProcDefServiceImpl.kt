@@ -20,10 +20,7 @@ import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
 import ru.citeck.ecos.process.domain.procdef.convert.toDto
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
+import ru.citeck.ecos.process.domain.procdef.dto.*
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.repo.*
@@ -67,7 +64,13 @@ class ProcDefServiceImpl(
         return procDefDto
     }
 
-    private fun uploadProcDefImpl(processDef: NewProcessDefDto): ProcDefDto {
+    override fun uploadProcDefDraft(processDef: NewProcessDefDto): ProcDefDto {
+        val procDefDto = uploadProcDefImpl(processDef, true)
+        procDefListeners[procDefDto.procType]?.forEach { it.invoke(procDefDto) }
+        return procDefDto
+    }
+
+    private fun uploadProcDefImpl(processDef: NewProcessDefDto, isRaw: Boolean = false): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
         val now = Instant.now()
@@ -77,6 +80,11 @@ class ProcDefServiceImpl(
             processDef.procType,
             processDef.id
         )
+        val dataState = if (isRaw) {
+            ProcDefRevDataState.RAW
+        } else {
+            ProcDefRevDataState.CONVERTED
+        }
 
         var newRevision = ProcDefRevEntity()
 
@@ -86,6 +94,7 @@ class ProcDefServiceImpl(
         newRevision.image = processDef.image
         newRevision.format = processDef.format
         newRevision.createdBy = AuthContext.getCurrentUser()
+        newRevision.dataState = dataState.name
 
         val sendProcDefEvent: () -> Unit
 
@@ -110,7 +119,13 @@ class ProcDefServiceImpl(
 
             sendProcDefEvent = {
                 procDefEventEmitter.emitProcDefCreate(
-                    createEvent(processDef.procType, processDef.id, FIRST_VERSION, processDef.createdFromVersion)
+                    createEvent(
+                        processDef.procType,
+                        processDef.id,
+                        FIRST_VERSION,
+                        processDef.createdFromVersion,
+                        dataState
+                    )
                 )
             }
         } else {
@@ -133,7 +148,8 @@ class ProcDefServiceImpl(
                         procType = currentProcDef!!.procType!!,
                         currentProcDef!!.extId!!,
                         newRevision.version.toDouble().inc(),
-                        processDef.createdFromVersion
+                        processDef.createdFromVersion,
+                        dataState
                     )
                 )
             }
@@ -154,7 +170,8 @@ class ProcDefServiceImpl(
         procType: String,
         id: String,
         version: Double,
-        createdFromVersion: EntityRef
+        createdFromVersion: EntityRef,
+        dataState: ProcDefRevDataState
     ): ProcDefEvent {
         return ProcDefEvent(
             procDefRef = when (procType) {
@@ -178,7 +195,8 @@ class ProcDefServiceImpl(
                         0.0
                     )
                 }
-            }
+            },
+            dataState = dataState.name
         )
     }
 
@@ -229,49 +247,21 @@ class ProcDefServiceImpl(
         val currentTenant = tenantService.getCurrent()
         val id = dto.id
         val procType = dto.procType
+
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, procType, id)
 
         val result: ProcDefDto
 
-        if (procDefEntity == null) {
+        val newProcessDefDto = dto.toNewProcessDefDto()
 
-            val newProcessDefDto = NewProcessDefDto(
-                id = dto.id,
-                name = dto.name,
-                data = dto.data,
-                image = dto.image,
-                alfType = dto.alfType,
-                ecosTypeRef = dto.ecosTypeRef,
-                formRef = dto.formRef,
-                format = dto.format,
-                procType = dto.procType,
-                enabled = dto.enabled,
-                autoStartEnabled = dto.autoStartEnabled,
-                sectionRef = dto.sectionRef,
-                createdFromVersion = dto.createdFromVersion
-            )
+        if (procDefEntity == null) {
             result = uploadProcDefImpl(newProcessDefDto)
         } else {
 
             val currentData = procDefEntity.lastRev!!.data
+            val definitionDataIsChanged = !Arrays.equals(currentData, dto.data)
 
-            if (!Arrays.equals(currentData, dto.data)) {
-
-                val newProcessDefDto = NewProcessDefDto(
-                    id = dto.id,
-                    enabled = dto.enabled,
-                    autoStartEnabled = dto.autoStartEnabled,
-                    name = dto.name,
-                    data = dto.data,
-                    image = dto.image,
-                    alfType = dto.alfType,
-                    ecosTypeRef = dto.ecosTypeRef,
-                    formRef = dto.formRef,
-                    format = dto.format,
-                    procType = dto.procType,
-                    sectionRef = dto.sectionRef,
-                    createdFromVersion = dto.createdFromVersion
-                )
+            if (definitionDataIsChanged) {
                 result = uploadProcDefImpl(newProcessDefDto)
             } else {
 
@@ -291,6 +281,116 @@ class ProcDefServiceImpl(
         procDefListeners[result.procType]?.forEach { it.invoke(result) }
 
         return result
+    }
+
+    private fun ProcDefWithDataDto.toNewProcessDefDto(): NewProcessDefDto {
+        return NewProcessDefDto(
+            id = id,
+            name = name,
+            data = data,
+            image = image,
+            alfType = alfType,
+            ecosTypeRef = ecosTypeRef,
+            formRef = formRef,
+            format = format,
+            procType = procType,
+            enabled = enabled,
+            autoStartEnabled = autoStartEnabled,
+            sectionRef = sectionRef,
+            createdFromVersion = createdFromVersion
+        )
+    }
+
+    override fun uploadNewDraftRev(dto: ProcDefWithDataDto): ProcDefDto {
+        with(dto) {
+
+            val currentTenant = tenantService.getCurrent()
+            var currentProcDef = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, procType, id)
+                ?: error("Process definition is mandatory for draft upload. Id: $id")
+
+            val now = Instant.now()
+            val currentRev = currentProcDef.lastRev!!
+            val currentData = currentRev.data
+            val definitionDataIsChanged = !Arrays.equals(currentData, data)
+            val currentUser = AuthContext.getCurrentUser()
+
+            val updateCurrentProcDefFromDto = {
+                currentProcDef.alfType = alfType
+                currentProcDef.ecosTypeRef = ecosTypeRef.toString()
+                currentProcDef.formRef = formRef.toString()
+                currentProcDef.name = mapper.toString(name)
+                currentProcDef.modified = now
+                currentProcDef.enabled = enabled
+                currentProcDef.autoStartEnabled = autoStartEnabled
+                currentProcDef.sectionRef = sectionRef.toString()
+            }
+
+            val result: ProcDefDto
+
+            if (definitionDataIsChanged) {
+
+                if (currentRev.dataState == ProcDefRevDataState.RAW.name && currentUser == currentRev.createdBy) {
+                    // update existing revision
+
+                    currentRev.data = data
+                    currentRev.image = image
+                    // Update created rev time, because it drafts rev
+                    currentRev.created = now
+                    currentRev.prevRev = currentProcDef.lastRev
+
+                    updateCurrentProcDefFromDto()
+
+                    val updatedRev = procDefRevRepo.save(currentRev)
+
+                    currentProcDef.lastRev = updatedRev
+                    currentProcDef = procDefRepo.save(currentProcDef)
+
+                    result = currentProcDef.toDto()
+                } else {
+                    // save as new revision
+
+                    var newRevision = ProcDefRevEntity()
+                    newRevision.id = EntityUuid(tenantService.getCurrent(), UUID.randomUUID())
+                    newRevision.created = now
+                    newRevision.data = data
+                    newRevision.image = image
+                    newRevision.format = format
+                    newRevision.createdBy = currentUser
+                    newRevision.dataState = ProcDefRevDataState.RAW.name
+
+                    updateCurrentProcDefFromDto()
+
+                    newRevision.version = currentProcDef.lastRev!!.version + 1
+                    newRevision.prevRev = currentProcDef.lastRev
+
+                    newRevision.processDef = currentProcDef
+                    newRevision = procDefRevRepo.save(newRevision)
+
+                    currentProcDef.lastRev = newRevision
+                    currentProcDef = procDefRepo.save(currentProcDef)
+
+                    procDefEventEmitter.emitProcDefUpdate(
+                        createEvent(
+                            procType = currentProcDef.procType!!,
+                            currentProcDef.extId!!,
+                            newRevision.version.toDouble().inc(),
+                            createdFromVersion,
+                            ProcDefRevDataState.RAW
+                        )
+                    )
+
+                    result = currentProcDef.toDto()
+                }
+            } else {
+                updateCurrentProcDefFromDto()
+
+                result = procDefRepo.save(currentProcDef).toDto()
+            }
+
+            procDefListeners[result.procType]?.forEach { it.invoke(result) }
+
+            return result
+        }
     }
 
     override fun getProcessDefRev(procType: String, procDefRevId: UUID): ProcDefRevDto? {

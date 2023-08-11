@@ -29,6 +29,9 @@ public class ProcDefDto {
     private Integer version;
 
     @NotNull
+    private ProcDefRevDataState dataState;
+
+    @NotNull
     private EntityRef ecosTypeRef;
 
     @NotNull
@@ -206,5 +209,13 @@ public class ProcDefDto {
         } else {
             this.modified = modified;
         }
+    }
+
+    public ProcDefRevDataState getDataState() {
+        return dataState;
+    }
+
+    public void setDataState(ProcDefRevDataState dataState) {
+        this.dataState = dataState;
     }
 }

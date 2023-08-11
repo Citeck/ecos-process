@@ -1,10 +1,12 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
+import org.apache.commons.lang3.LocaleUtils
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -21,6 +23,7 @@ import java.time.Instant
 import java.util.*
 
 private const val DEPLOYED_TAG = "deployed"
+private const val DRAFT_TAG = "draft"
 private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 
 @Component
@@ -87,6 +90,7 @@ class BpmnProcDefVersionRecords(
             id = id.toString(),
             version = externalVersion,
             deploymentId = deploymentId ?: "",
+            dataState = dataState,
             procDefId = procDefId,
             modified = created,
             downloadUrl = "/gateway/${AppName.EPROC}/api/proc-def/version/data?ref=${getRef()}",
@@ -98,10 +102,18 @@ class BpmnProcDefVersionRecords(
                 RecordRef.create(AppName.EMODEL, "person", createdBy)
             },
             format = format,
-            tags = if (deploymentId.isNullOrBlank()) {
-                emptyList()
-            } else {
-                listOf(DEPLOYED_TAG)
+            tags = let {
+                val tags = mutableListOf<String>()
+
+                if (!deploymentId.isNullOrBlank()) {
+                    tags.add(DEPLOYED_TAG)
+                }
+
+                if (dataState == ProcDefRevDataState.RAW) {
+                    tags.add(DRAFT_TAG)
+                }
+
+                tags
             },
             dto = this
         )
@@ -111,6 +123,7 @@ class BpmnProcDefVersionRecords(
         val id: String,
         val version: Double,
         val deploymentId: String = "",
+        val dataState: ProcDefRevDataState,
         val modified: Instant,
         val downloadUrl: String = "",
         val fileName: String = "",
@@ -126,7 +139,7 @@ class BpmnProcDefVersionRecords(
     ) {
 
         @get:AttName(".disp")
-        val disp: String
+        val disp: MLText
             get() = let {
                 var defName = procDefService.getProcessDefById(
                     ProcDefRef.create(BPMN_PROC_TYPE, procDefId)
@@ -136,7 +149,16 @@ class BpmnProcDefVersionRecords(
                     defName = procDefId
                 }
 
-                return "$defName $version"
+                val disp = "$defName $version"
+
+                if (dataState == ProcDefRevDataState.RAW) {
+                    return MLText(
+                        I18nContext.ENGLISH to "$disp (draft)",
+                        I18nContext.RUSSIAN to "$disp (черновик)"
+                    )
+                }
+
+                return MLText(disp)
             }
 
         @get:AttName("definition")

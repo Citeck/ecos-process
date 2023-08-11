@@ -18,6 +18,7 @@ val BPMN_BIOCOLOR_STROKE = QName(NS_BPMN_BIO_COLOR, "stroke")
 val BPMN_BIOCOLOR_FILL = QName(NS_BPMN_BIO_COLOR, "fill")
 
 val BPMN_PROP_ECOS_TYPE = QName(NS_ECOS_BPMN, "ecosType")
+val BPMN_PROP_DEF_STATE = QName(NS_ECOS_BPMN, "defState")
 val BPMN_PROP_ENABLED = QName(NS_ECOS_BPMN, "enabled")
 val BPMN_PROP_AUTO_START_ENABLED = QName(NS_ECOS_BPMN, "autoStartEnabled")
 val BPMN_PROP_SECTION_REF = QName(NS_ECOS_BPMN, "sectionRef")

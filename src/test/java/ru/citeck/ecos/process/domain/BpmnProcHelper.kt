@@ -67,6 +67,40 @@ fun saveAndDeployBpmnFromResource(resource: String, id: String) {
     )
 }
 
+fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActions?) {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
+        this["processDefId"] = id
+        this["definition"] = ResourceUtils.getFile("classpath:$resource")
+            .readText(StandardCharsets.UTF_8)
+
+        action?.let {
+            this["action"] = it.name
+        }
+    }
+
+    helper.recordsService.mutate(recordAtts)
+}
+
+fun saveBpmnWithActionAndReplaceDefinition(
+    resource: String,
+    id: String,
+    action: BpmnProcessDefActions?,
+    replace: Pair<String, String>
+) {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
+        this["processDefId"] = id
+        this["definition"] = ResourceUtils.getFile("classpath:$resource")
+            .readText(StandardCharsets.UTF_8)
+            .replace(replace.first, replace.second)
+
+        action?.let {
+            this["action"] = it.name
+        }
+    }
+
+    helper.recordsService.mutate(recordAtts)
+}
+
 fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
     val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
         this["processDefId"] = id
@@ -94,9 +128,7 @@ fun saveAndDeployDmnFromString(dmnData: String, id: String) {
         this["action"] = DmnDefActions.DEPLOY.toString()
     }
 
-    AuthContext.runAsSystem {
-        helper.recordsService.mutate(recordAtts)
-    }
+    helper.recordsService.mutate(recordAtts)
 }
 
 fun saveAndDeployBpmn(elementFolder: String, id: String) {

@@ -26,6 +26,8 @@ class ProcDefRevEntity {
 
     var deploymentId: String? = null
 
+    var dataState: String? = null
+
     var version = 0
 
     @DBRef(lazy = true)

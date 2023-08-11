@@ -16,7 +16,7 @@ import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
@@ -44,7 +44,7 @@ import kotlin.test.assertEquals
 // by replacing typesRepo and permsRepo with local implementations
 // todo: remove DirtiesContext when this problem will be solved
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class BpmnProcessDefRecordsTest {
+class BpmnProcessDefRecordsPermissionsTest {
 
     @Autowired
     private lateinit var bpmnProcessDefRecords: BpmnProcessDefRecords
@@ -137,7 +137,7 @@ class BpmnProcessDefRecordsTest {
                 BPMN_PROC_TYPE,
                 "xml",
                 "{http://www.citeck.ru/model/test/1.0}test-type",
-                TypeUtils.getTypeRef("type1"),
+                ModelUtils.getTypeRef("type1"),
                 RecordRef.EMPTY,
                 buildProcDefXml(id),
                 null,

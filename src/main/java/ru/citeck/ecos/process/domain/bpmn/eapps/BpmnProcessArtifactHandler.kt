@@ -9,7 +9,10 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DEF_STATE
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
+import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -38,7 +41,11 @@ class BpmnProcessArtifactHandler(
             val rev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, dto.revisionId)
                 ?: error("Revision not found for procDef: ${dto.id}")
 
-            val data = validateFormatAndGetEcosBpmnString(rev.data)
+            val data = if (rev.dataState == ProcDefRevDataState.RAW) {
+                String(rev.data)
+            } else {
+                validateFormatAndGetEcosBpmnString(rev.data)
+            }
 
             listener.accept(BinArtifact("${rev.procDefId}.bpmn.xml", ObjectData.create(), data.toByteArray()))
         }
@@ -54,6 +61,8 @@ class BpmnProcessArtifactHandler(
     override fun deployArtifact(artifact: BinArtifact) {
 
         val stringDef = String(artifact.data)
+        val definition = BpmnXmlUtils.readFromString(stringDef)
+        val isRAW = definition.otherAttributes[BPMN_PROP_DEF_STATE] == ProcDefRevDataState.RAW.name
 
         val bpmnMutateRecord = BpmnProcessDefRecords.BpmnMutateRecord(
             id = "",
@@ -64,7 +73,11 @@ class BpmnProcessArtifactHandler(
             definition = stringDef,
             enabled = false,
             autoStartEnabled = false,
-            action = BpmnProcessDefActions.DEPLOY.toString(),
+            action = if (isRAW) {
+                BpmnProcessDefActions.DRAFT.name
+            } else {
+                BpmnProcessDefActions.DEPLOY.name
+            },
             sectionRef = EntityRef.EMPTY,
             imageBytes = null
         )

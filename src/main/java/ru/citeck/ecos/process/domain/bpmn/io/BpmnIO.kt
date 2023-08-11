@@ -1,8 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.io
 
-import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.common.generateElementId
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnMutateData
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDefinitionsConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDiagramConverter
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.artifact.CamundaAssociationConverter
@@ -54,7 +54,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
-import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 
 object BpmnIO {
 
@@ -178,8 +178,7 @@ object BpmnIO {
         return BpmnXmlUtils.writeToString(exportCamundaBpmn(definitions))
     }
 
-    // todo: replace return value by BpmnProcessDef
-    fun generateDefaultDef(defData: BpmnProcessDefInitData): TDefinitions {
+    fun generateDefaultDef(defData: BpmnMutateData): TDefinitions {
 
         with(defData) {
             val defId = generateElementId("Definitions")
@@ -213,22 +212,13 @@ object BpmnIO {
             def.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
             def.otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(name)
             def.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
-            def.otherAttributes[BPMN_PROP_FORM_REF] = form.toString()
+            def.otherAttributes[BPMN_PROP_FORM_REF] = formRef.toString()
             def.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
             def.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
             def.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
+            def.otherAttributes[BPMN_PROP_DEF_STATE] = ProcDefRevDataState.CONVERTED.toString()
 
             return def
         }
     }
-
-    data class BpmnProcessDefInitData(
-        val processDefId: String,
-        val name: MLText,
-        val ecosType: EntityRef,
-        val form: EntityRef,
-        val sectionRef: EntityRef,
-        val enabled: Boolean,
-        val autoStartEnabled: Boolean
-    )
 }

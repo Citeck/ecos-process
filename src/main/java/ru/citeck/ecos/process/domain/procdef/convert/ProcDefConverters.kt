@@ -4,6 +4,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
@@ -21,6 +22,7 @@ fun ProcDefRevEntity.toDto(): ProcDefRevDto {
         created = created,
         createdBy = createdBy,
         deploymentId = deploymentId,
+        dataState = ProcDefRevDataState.from(dataState),
         version = version,
         initialData = data
     )
@@ -42,6 +44,7 @@ fun ProcDefEntity.toDto(): ProcDefDto {
     procDefDto.sectionRef = EntityRef.valueOf(sectionRef).ifEmpty {
         EntityRef.create(EprocApp.NAME, procDefDto.procType + "-section", "DEFAULT")
     }
+    procDefDto.dataState = ProcDefRevDataState.from(lastRev?.dataState)
     val entityCreated = created ?: Instant.EPOCH
     val entityModified = modified ?: Instant.EPOCH
     val lastRevCreated = lastRev?.created ?: Instant.EPOCH

@@ -1,8 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.apache.commons.lang3.LocaleUtils
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
+import org.camunda.bpm.engine.RepositoryService
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -15,6 +16,7 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -24,6 +26,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private const val BPMN_TEST_PROCESS_ID = "bpmn-test-process"
+private const val BPMN_TEST_DRAFT_PROCESS_ID = "test-draft-process-artifact-handler"
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
@@ -39,38 +42,56 @@ class BpmnProcessArtifactHandlerTest {
     @Autowired
     private lateinit var procDefService: ProcDefService
 
-    @BeforeAll
+    @Autowired
+    private lateinit var camundaRepositoryService: RepositoryService
+
+    @BeforeEach
     fun setUp() {
         AuthContext.runAsSystem {
             localAppService.deployLocalArtifacts()
         }
     }
 
-    @AfterAll
+    @AfterEach
     fun tearDown() {
         deleteAllProcDefinitions()
+
+        camundaRepositoryService.createDeploymentQuery().list().forEach {
+            camundaRepositoryService.deleteDeployment(it.id, true)
+        }
     }
 
     @Test
     fun `check definition meta data of loaded process from artifact`() {
-        val deployed = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
 
-        assertNotNull(deployed)
+        assertNotNull(definition)
 
-        assertEquals(BPMN_TEST_PROCESS_ID, deployed.id)
-        assertEquals(MLText(mapOf(LocaleUtils.toLocale("ru") to "Test process")), deployed.name)
+        assertEquals(BPMN_TEST_PROCESS_ID, definition.id)
+        assertEquals(MLText(mapOf(LocaleUtils.toLocale("ru") to "Test process")), definition.name)
 
-        assertEquals(RecordRef.valueOf("uiserv/form@test-bpmn-form"), deployed.formRef)
-        assertEquals(RecordRef.valueOf("emodel/type@type-ecos-fin-request"), deployed.ecosTypeRef)
-        assertEquals(BPMN_FORMAT, deployed.format)
-        assertEquals(BPMN_PROC_TYPE, deployed.procType)
+        assertEquals(RecordRef.valueOf("uiserv/form@test-bpmn-form"), definition.formRef)
+        assertEquals(RecordRef.valueOf("emodel/type@type-ecos-fin-request"), definition.ecosTypeRef)
+        assertEquals(BPMN_FORMAT, definition.format)
+        assertEquals(BPMN_PROC_TYPE, definition.procType)
 
-        assertNull(deployed.alfType)
+        assertNull(definition.alfType)
 
-        assertTrue(deployed.enabled)
-        assertTrue(deployed.autoStartEnabled)
+        assertTrue(definition.enabled)
+        assertTrue(definition.autoStartEnabled)
 
-        assertTrue(deployed.data != null && deployed.data.isNotEmpty())
+        assertTrue(definition.data != null && definition.data.isNotEmpty())
+    }
+
+    @Test
+    fun `loaded process should save revision with converted data state`() {
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+
+        assertEquals(1, revisions.size)
+
+        val revision = revisions.first()
+
+        assertEquals(ProcDefRevDataState.CONVERTED, revision.dataState)
     }
 
     @Test
@@ -80,5 +101,38 @@ class BpmnProcessArtifactHandlerTest {
         assertEquals(1, definitions.size)
         assertEquals(BPMN_TEST_PROCESS_ID, definitions.first().key)
         assertEquals(1, definitions.first().version)
+    }
+
+    @Test
+    fun `check definition meta data of loaded draft process from artifact`() {
+        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_DRAFT_PROCESS_ID))
+
+        assertNotNull(definition)
+
+        assertEquals(BPMN_TEST_DRAFT_PROCESS_ID, definition.id)
+        assertEquals(MLText(mapOf(LocaleUtils.toLocale("ru") to "Test draft process")), definition.name)
+
+        assertEquals(RecordRef.valueOf("uiserv/form@ecos-test-form"), definition.formRef)
+        assertEquals(RecordRef.valueOf("emodel/type@test-type"), definition.ecosTypeRef)
+
+        assertEquals(BPMN_FORMAT, definition.format)
+        assertEquals(BPMN_PROC_TYPE, definition.procType)
+
+        assertNull(definition.alfType)
+
+        assertTrue(definition.enabled)
+
+        assertTrue(definition.data != null && definition.data.isNotEmpty())
+    }
+
+    @Test
+    fun `loaded draft process should save revision with raw data state`() {
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_DRAFT_PROCESS_ID))
+
+        assertEquals(1, revisions.size)
+
+        val revision = revisions.first()
+
+        assertEquals(ProcDefRevDataState.RAW, revision.dataState)
     }
 }

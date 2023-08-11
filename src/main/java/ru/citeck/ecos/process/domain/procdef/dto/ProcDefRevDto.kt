@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.procdef.dto
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
@@ -43,6 +44,8 @@ data class ProcDefRevDto(
     var createdBy: String? = null,
     var deploymentId: String? = null,
 
+    var dataState: ProcDefRevDataState,
+
     var version: Int = 0,
 
     val initialData: ByteArray? = null
@@ -56,5 +59,19 @@ data class ProcDefRevDto(
     override fun toString(): String {
         return "ProcDefRevDto(id=$id, format=$format, image=${image?.contentToString()}, procDefId=$procDefId, " +
             "created=$created, createdBy=$createdBy, deploymentId=$deploymentId, version=$version)"
+    }
+}
+
+enum class ProcDefRevDataState {
+    RAW, CONVERTED;
+
+    companion object {
+
+        fun from(value: String?): ProcDefRevDataState = if (value.isNullOrBlank()) {
+            CONVERTED
+        } else {
+            valueOf(value)
+        }
+
     }
 }
