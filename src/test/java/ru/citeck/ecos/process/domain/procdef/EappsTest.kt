@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.procdef
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -25,15 +26,18 @@ class EappsTest {
 
     @Test
     fun cmmnControllerTest() {
-        testProcessController("process/cmmn", "general-case-template.xml")
+        testProcessController("process/cmmn", listOf("general-case-template.xml"))
     }
 
     @Test
     fun bpmnControllerTest() {
-        testProcessController("process/bpmn", "test-process.bpmn.xml")
+        testProcessController(
+            "process/bpmn",
+            listOf("test-process.bpmn.xml", "test-draft-process-artifact-handler.bpmn.xml")
+        )
     }
 
-    private fun testProcessController(artifactType: String, expectedMetaId: String) {
+    private fun testProcessController(artifactType: String, expectedMetaIds: List<String>) {
         val typesDir = localAppService.getArtifactTypesDir()
 
         val artifactsDir = localAppService.getArtifactsDir(
@@ -42,12 +46,13 @@ class EappsTest {
             Instant.now()
         )
 
-        val cmmnTypeCtx = artifactService.getType(artifactType)!!
+        val processTypeCtx = artifactService.getType(artifactType)!!
         val artifacts = artifactService.readArtifacts(artifactsDir, artifactService.loadTypes(typesDir))
 
-        assertEquals(1, artifacts[artifactType]!!.size)
-        val meta = artifactService.getArtifactMeta(cmmnTypeCtx, artifacts[artifactType]!![0])!!
+        assertEquals(expectedMetaIds.size, artifacts[artifactType]!!.size)
 
-        assertEquals(expectedMetaId, meta.id)
+        val actualMetaIds = artifacts[artifactType]!!.map { artifactService.getArtifactMeta(processTypeCtx, it)!!.id }
+
+        assertThat(actualMetaIds).containsExactlyInAnyOrderElementsOf(expectedMetaIds)
     }
 }
