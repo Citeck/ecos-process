@@ -161,7 +161,7 @@
             "wysiwyg": {
               "mode": "ace/mode/javascript"
             },
-            "defaultValue": "// some script;",
+            "defaultValue": " ",
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "logic": [
