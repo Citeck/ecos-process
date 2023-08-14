@@ -28,6 +28,9 @@
         "tooltip": {
           "ru": "JavaScript"
         },
+        "validate": {
+          "required": true
+        },
         "placeholder": {
           "en": "write script here",
           "ru": "напишите здесь скрипт"
