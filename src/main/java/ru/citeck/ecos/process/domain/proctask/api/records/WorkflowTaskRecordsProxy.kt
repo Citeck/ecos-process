@@ -78,12 +78,14 @@ class WorkflowTaskRecordsProxy(
 
     private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery): RecsQueryRes<*> {
         val result = RecsQueryRes<RecordRef>()
-        if (query.document.isBlank() || !query.active) {
+        if (!query.active) {
             return result
         }
-        val conditions = mutableListOf<Predicate>(
-            Predicates.eq("document", query.document)
-        )
+        val conditions = mutableListOf<Predicate>()
+
+        if (!query.document.isBlank()) {
+            conditions.add(Predicates.eq("document", query.document))
+        }
         if (query.actor.isNotEmpty()) {
             conditions.add(Predicates.eq("actor", query.actor))
         }
