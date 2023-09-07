@@ -10,7 +10,9 @@ import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.impl.proxy.RecordsDaoProxy
+import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -30,13 +32,15 @@ class WorkflowTaskRecordsProxy(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*> {
         val query = recsQuery.getQuery(TaskQuery::class.java)
         val document = RecordRef.valueOf(query.document)
+        val sortBy = recsQuery.sortBy
+        val page = recsQuery.page
 
         if (documentIsProcess(document)) {
             return queryTasksForAnyProcessEngine(recsQuery, document)
         }
 
         val documentTasksFromAlf = queryFromAlf(recsQuery)
-        val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query)
+        val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query, sortBy, page)
 
         val result = RecsQueryRes<Any>()
         result.setRecords(documentTasksFromAlf.getRecords() + documentTasksFromEProc.getRecords())
@@ -76,7 +80,7 @@ class WorkflowTaskRecordsProxy(
         return recordsService.mutate(toMutate).map { it.id }
     }
 
-    private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery): RecsQueryRes<*> {
+    private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery, sortBy: List<SortBy>, page: QueryPage): RecsQueryRes<*> {
         val result = RecsQueryRes<RecordRef>()
         if (!query.active) {
             return result
@@ -90,7 +94,7 @@ class WorkflowTaskRecordsProxy(
             conditions.add(Predicates.eq("actor", query.actor))
         }
 
-        val tasksQueryRes = procTaskService.findTasks(AndPredicate.of(conditions))
+        val tasksQueryRes = procTaskService.findTasks(AndPredicate.of(conditions), sortBy, page)
         result.setRecords(
             tasksQueryRes.entities.map {
                 RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it)
