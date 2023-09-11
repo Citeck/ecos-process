@@ -209,12 +209,12 @@ class BpmnProcessDefRecordsActionsTest {
     fun `save draft definition multiple times with different definition and users should save as new revision`() {
         val procId = "draft-bpmn-process"
 
-        //save as admin
+        // save as admin
         AuthContext.runAsFull("admin", listOf("ROLE_ADMIN")) {
             saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
         }
 
-        //save as system
+        // save as system
         saveBpmnWithActionAndReplaceDefinition(
             "test/bpmn/$procId.bpmn.xml",
             procId,
@@ -242,6 +242,4 @@ class BpmnProcessDefRecordsActionsTest {
             saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, defAction)
         }
     }
-
-
 }
