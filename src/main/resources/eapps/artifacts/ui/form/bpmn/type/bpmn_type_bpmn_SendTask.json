@@ -123,8 +123,8 @@
                     "name": "hide",
                     "type": "property",
                     "property": {
-                      "label": "Disabled",
-                      "value": "disabled",
+                      "label": "Hidden",
+                      "value": "hidden",
                       "type": "boolean"
                     },
                     "state": "true"
