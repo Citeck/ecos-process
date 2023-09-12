@@ -111,6 +111,27 @@
             "queryData": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "is notification body selected",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "result = !!data.notificationBody || !!data.notificationTitle;"
+                },
+                "actions": [
+                  {
+                    "name": "hide",
+                    "type": "property",
+                    "property": {
+                      "label": "Disabled",
+                      "value": "disabled",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
             "type": "selectJournal",
             "input": true
           },
