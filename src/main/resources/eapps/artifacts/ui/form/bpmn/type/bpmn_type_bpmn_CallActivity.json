@@ -76,6 +76,10 @@
                   "en": "Called element"
                 },
                 "key": "calledElement",
+                "tooltip": {
+                  "ru": "ID процесса",
+                  "en": "Process ID"
+                },
                 "validate": {
                   "pattern": "([a-zA-Z0-9-_]+$)"
                 },
