@@ -15,6 +15,7 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.BpmnEventSubscriptionService
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
@@ -211,7 +212,7 @@ class BpmnProcessDefRecords(
                 it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
             ) {
 
-                it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
+                it.sectionRef = DEFAULT_BPMN_SECTION
             } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
 
                 it.sectionRef = "${EprocApp.NAME}/bpmn-section@" + it.sectionRef?.substringAfterLast('/')
