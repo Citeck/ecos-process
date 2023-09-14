@@ -54,6 +54,7 @@ class ProcTaskRecords(
         private val log = KotlinLogging.logger {}
 
         private const val FORM_INFO_ATT = "_formInfo"
+        private const val SUBORDINATES_TASKS_LANGUAGE = "subordinates-tasks"
 
         const val ID = "proc-task"
         const val ALF_TASK_PREFIX = "workspace"
@@ -80,6 +81,10 @@ class ProcTaskRecords(
             recsQuery.getQuery(Predicate::class.java)
         } else if (recsQuery.language.isEmpty()) {
             Predicates.alwaysTrue()
+        } else if (recsQuery.language == SUBORDINATES_TASKS_LANGUAGE) {
+            val manager = recsQuery.query.get("manager").asText()
+            val subordinates = getSubordinatesList(manager)
+            Predicates.inVals("actor", subordinates)
         } else {
             error("Unsupported language: ${recsQuery.language}")
         }
@@ -293,6 +298,22 @@ class ProcTaskRecords(
         )
     }
 
+    private fun getSubordinatesList(manager: String): Collection<String> {
+        val subordinates = recordsService.query(
+            RecordsQuery.create {
+                withSourceId("emodel/person")
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(Predicates.eq("manager", manager))
+                withMaxItems(100)
+            },
+            Person::class.java
+        )
+        val idList = subordinates.getRecords().map { it.id }
+
+        return idList
+    }
+
+
     inner class TaskMutateVariables(
         private val task: ProcTaskDto,
         record: LocalRecordAtts
@@ -372,4 +393,8 @@ fun RecordRef.isAlfTaskRef(): Boolean {
 private data class FormInfo(
     val formId: String = "",
     val submitName: MLText = MLText()
+)
+
+private data class Person(
+    val id: String
 )
