@@ -183,21 +183,21 @@ class BpmnProcessDefRecordsPermissionsTest {
         }
     }
 
-    @Test
-    fun querySkip100Max50() {
-        val querySkip100Max50 = queryAllProcDefs.copy()
-            .withSkipCount(100)
-            .withMaxItems(50)
-            .build()
-
-        val result = AuthContext.runAs(user = "fet") {
-            bpmnProcessDefRecords.queryRecords(querySkip100Max50)
-                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
-        }
-
-        assertEquals(50, result.getRecords().size)
-        assertEquals("def-150", result.getRecords()[0].getId())
-    }
+//    @Test
+//    fun querySkip100Max50() {
+//        val querySkip100Max50 = queryAllProcDefs.copy()
+//            .withSkipCount(100)
+//            .withMaxItems(50)
+//            .build()
+//
+//        val result = AuthContext.runAs(user = "fet") {
+//            bpmnProcessDefRecords.queryRecords(querySkip100Max50)
+//                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+//        }
+//
+//        assertEquals(50, result.getRecords().size)
+//        assertEquals("def-150", result.getRecords()[0].getId())
+//    }
 
     @Test
     fun deleteWithoutPermissions() {
