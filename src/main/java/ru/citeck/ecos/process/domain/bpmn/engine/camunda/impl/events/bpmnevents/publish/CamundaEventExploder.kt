@@ -3,8 +3,8 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 import mu.KotlinLogging
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 
 @Component
 class CamundaEventExploder(

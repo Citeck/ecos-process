@@ -11,13 +11,15 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>1.39.0</version>
+        <version>1.41.1</version>
     </parent>
 
     <properties>
 
         <camunda.spring-boot.version>7.17.0</camunda.spring-boot.version>
         <camunda.spin.version>1.18.0</camunda.spin.version>
+
+        <ecos.bpmn-commons-values.version>1.0.0</ecos.bpmn-commons-values.version>
 
         <querydsl.version>4.2.1</querydsl.version>
         <mongock.version>3.0.2.BETA</mongock.version>
@@ -64,6 +66,12 @@
                     <artifactId>jsr311-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.bpmn</groupId>
+            <artifactId>ecos-bpmn-commons-values</artifactId>
+            <version>${ecos.bpmn-commons-values.version}</version>
         </dependency>
 
         <!--    MongoDB     -->

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans
 
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
+import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 
 @Component("DataValue")
 class CamundaProcessBpmnDataValueScriptComponent : CamundaProcessEngineService {
