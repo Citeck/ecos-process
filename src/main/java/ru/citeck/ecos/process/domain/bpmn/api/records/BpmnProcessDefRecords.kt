@@ -114,6 +114,7 @@ class BpmnProcessDefRecords(
             val checkedRecords: List<BpmnProcDefRecord>
             if (AuthContext.isRunAsSystem()) {
                 checkedRecords = unfilteredBatch.map { BpmnProcDefRecord(it) }
+                    .drop(recsQuery.page.skipCount)
                     .take(requiredAmount)
                 numberOfPermissionsCheck = checkedRecords.size
             } else {
@@ -123,6 +124,7 @@ class BpmnProcessDefRecords(
                         numberOfPermissionsCheck++
                         it.getPermissions().hasReadPerms()
                     }
+                    .drop(recsQuery.page.skipCount)
                     .take(requiredAmount)
                     .toList()
             }
