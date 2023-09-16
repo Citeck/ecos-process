@@ -183,21 +183,77 @@ class BpmnProcessDefRecordsPermissionsTest {
         }
     }
 
-//    @Test
-//    fun querySkip100Max50() {
-//        val querySkip100Max50 = queryAllProcDefs.copy()
-//            .withSkipCount(100)
-//            .withMaxItems(50)
-//            .build()
-//
-//        val result = AuthContext.runAs(user = "fet") {
-//            bpmnProcessDefRecords.queryRecords(querySkip100Max50)
-//                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
-//        }
-//
-//        assertEquals(50, result.getRecords().size)
-//        assertEquals("def-150", result.getRecords()[0].getId())
-//    }
+    @Test
+    fun querySkip100Max50() {
+        val querySkip100Max50 = queryAllProcDefs.copy()
+            .withSkipCount(100)
+            .withMaxItems(50)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip100Max50)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(50, result.getRecords().size)
+        assertEquals(true, result.getHasMore())
+        assertEquals("def-150", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
+
+    @Test
+    fun querySkip20Max30() {
+        val querySkip20Max30 = queryAllProcDefs.copy()
+            .withSkipCount(20)
+            .withMaxItems(30)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip20Max30)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(30, result.getRecords().size)
+        assertEquals(true, result.getHasMore())
+        assertEquals("def-230", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
+
+    @Test
+    fun querySkip120Max30() {
+        val querySkip120Max30 = queryAllProcDefs.copy()
+            .withSkipCount(120)
+            .withMaxItems(30)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip120Max30)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(30, result.getRecords().size)
+        assertEquals(true, result.getHasMore())
+        assertEquals("def-130", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
+
+    @Test
+    fun querySkip249Max101() {
+        val querySkip249Max101 = queryAllProcDefs.copy()
+            .withSkipCount(249)
+            .withMaxItems(101)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip249Max101)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(1, result.getRecords().size)
+        assertEquals(false, result.getHasMore())
+        assertEquals("def-1", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
 
     @Test
     fun deleteWithoutPermissions() {

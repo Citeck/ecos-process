@@ -101,7 +101,8 @@ class BpmnProcessDefRecords(
         } else {
             DEFAULT_MAX_ITEMS
         }
-        var requiredAmount = maxItems + recsQuery.page.skipCount
+        val skip = recsQuery.page.skipCount % QUERY_BATCH_SIZE
+        var requiredAmount = maxItems + skip
         val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
         do {
@@ -128,7 +129,7 @@ class BpmnProcessDefRecords(
             }
 
             result.addAll(checkedRecords)
-            requiredAmount = maxItems - result.size
+            requiredAmount -= checkedRecords.size
             val hasMore = unfilteredBatch.size == QUERY_BATCH_SIZE
         } while (hasMore &&
             requiredAmount != 0 &&
@@ -139,8 +140,10 @@ class BpmnProcessDefRecords(
             log.warn("Request count limit reached! Request: $recsQuery")
         }
 
-        if (recsQuery.page.skipCount <= result.size) {
-            result.subList(0, recsQuery.page.skipCount).clear()
+        if (skip <= result.size) {
+            result.subList(0, skip).clear()
+        } else {
+            result.clear()
         }
 
         var totalCount = procDefService.getCount(predicate)
