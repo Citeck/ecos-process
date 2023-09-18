@@ -407,13 +407,8 @@ class ProcTaskServiceImpl(
                 withSourceId("emodel/person")
                 withLanguage(PredicateService.LANGUAGE_PREDICATE)
                 withQuery(Predicates.eq("manager", managerId))
-                withMaxItems(100)
-            },
-            Person::class.java
-        ).getRecords().map { it.id }
+                withMaxItems(300)
+            }
+        ).getRecords().map { it.getLocalId() }
     }
-
-    private data class Person(
-        val id: String
-    )
 }
