@@ -101,7 +101,7 @@ class BpmnProcessDefRecords(
         } else {
             DEFAULT_MAX_ITEMS
         }
-        val skip = recsQuery.page.skipCount % QUERY_BATCH_SIZE
+        val skip = recsQuery.page.skipCount
         var requiredAmount = maxItems + skip
         val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
@@ -109,7 +109,7 @@ class BpmnProcessDefRecords(
             val unfilteredBatch = procDefService.findAll(
                 predicate,
                 QUERY_BATCH_SIZE,
-                recsQuery.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
+                QUERY_BATCH_SIZE * numberOfExecutedRequests++
             )
 
             val checkedRecords: List<BpmnProcDefRecord>
