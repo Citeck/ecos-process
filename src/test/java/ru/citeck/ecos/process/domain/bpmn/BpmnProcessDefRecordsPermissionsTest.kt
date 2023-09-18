@@ -20,6 +20,7 @@ import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
+import ru.citeck.ecos.process.domain.buildProcDefXml
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -316,27 +317,4 @@ class BpmnProcessDefRecordsPermissionsTest {
         assertEquals("def-250", result)
     }
 
-    private fun buildProcDefXml(id: String): ByteArray {
-        return """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                              xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                              xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                              xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                              id="Definitions_$id" targetNamespace="http://bpmn.io/schema/bpmn"
-                              xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
-                              exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0"
-                              ecos:processDefId="$id">
-              <bpmn:process id="Process_$id" isExecutable="false">
-                <bpmn:startEvent id="StartEvent_0lly8qf">
-                  <bpmn:outgoing>Flow_15brz3r</bpmn:outgoing>
-                </bpmn:startEvent>
-                <bpmn:sequenceFlow id="Flow_15brz3r" sourceRef="StartEvent_0lly8qf" targetRef="Event_0fitnzy"/>
-                <bpmn:endEvent id="Event_0fitnzy">
-                  <bpmn:incoming>Flow_15brz3r</bpmn:incoming>
-                </bpmn:endEvent>
-              </bpmn:process>
-            </bpmn:definitions>
-        """.trimIndent().toByteArray(StandardCharsets.UTF_8)
-    }
 }
