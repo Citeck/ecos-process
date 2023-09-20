@@ -82,6 +82,8 @@ val BPMN_PROP_SERVICE_TASK_TYPE = QName(NS_ECOS_BPMN, "serviceTaskType")
 val BPMN_PROP_EXTERNAL_TASK_TOPIC = QName(NS_ECOS_BPMN, "externalTaskTopic")
 val BPMN_PROP_EXPRESSION = QName(NS_ECOS_BPMN, "expression")
 
+val BPMN_PROP_REACT_ON_DOCUMENT_CHANGE = QName(NS_ECOS_BPMN, "reactOnDocumentChange")
+val BPMN_PROP_DOCUMENT_VARIABLES = QName(NS_ECOS_BPMN, "documentVariables")
 val BPMN_PROP_VARIABLE_NAME = QName(NS_ECOS_BPMN, "variableName")
 val BPMN_PROP_VARIABLE_EVENTS = QName(NS_ECOS_BPMN, "variableEvents")
 

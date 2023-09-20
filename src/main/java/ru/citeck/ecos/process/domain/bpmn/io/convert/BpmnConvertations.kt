@@ -557,6 +557,12 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
         }
 
         is BpmnConditionalEventDef -> {
+            event.otherAttributes[BPMN_PROP_REACT_ON_DOCUMENT_CHANGE] = bpmnEventDef.reactOnDocumentChange.toString()
+            event.otherAttributes.putIfNotBlank(
+                BPMN_PROP_DOCUMENT_VARIABLES,
+                Json.mapper.toString(bpmnEventDef.documentVariables)
+            )
+
             event.otherAttributes.putIfNotBlank(BPMN_PROP_VARIABLE_NAME, bpmnEventDef.variableName)
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_VARIABLE_EVENTS,

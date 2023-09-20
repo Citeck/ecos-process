@@ -9,7 +9,7 @@ import org.camunda.bpm.engine.impl.util.EnsureUtil
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EVENT
 
-class SignalEventByIdCmd(
+class SendSignalEventByIdCmd(
     private val signalId: String,
     eventData: BpmnDataValue
 ) : Command<Unit> {
