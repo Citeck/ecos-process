@@ -18,9 +18,9 @@ import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelperJava
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
-import ru.citeck.ecos.process.domain.buildProcDefXml
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
@@ -34,7 +34,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.context.model.ModelServiceFactoryConfig
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-import java.nio.charset.StandardCharsets
 import kotlin.test.assertEquals
 
 @Suppress("UNCHECKED_CAST")
@@ -140,7 +139,7 @@ class BpmnProcessDefRecordsPermissionsTest {
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 ModelUtils.getTypeRef("type1"),
                 RecordRef.EMPTY,
-                buildProcDefXml(id),
+                BpmnProcHelperJava.buildProcDefXml(id),
                 null,
                 true,
                 false
@@ -316,5 +315,4 @@ class BpmnProcessDefRecordsPermissionsTest {
         }
         assertEquals("def-250", result)
     }
-
 }

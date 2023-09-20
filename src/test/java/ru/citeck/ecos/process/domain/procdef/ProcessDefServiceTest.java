@@ -10,6 +10,7 @@ import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils;
 import ru.citeck.ecos.process.EprocApp;
+import ru.citeck.ecos.process.domain.BpmnProcHelperJava;
 import ru.citeck.ecos.process.domain.cmmn.CmmnConstantsKt;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProc;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProcResp;
@@ -39,7 +40,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.citeck.ecos.process.domain.BpmnProcHelperKt.buildProcDefXml;
 import static ru.citeck.ecos.process.domain.bpmn.BpmnConstantsKt.BPMN_PROC_TYPE;
 
 @ExtendWith(EcosSpringExtension.class)
@@ -190,7 +190,7 @@ public class ProcessDefServiceTest {
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 EntityRef.EMPTY,
                 EntityRef.EMPTY,
-                buildProcDefXml(id),
+                BpmnProcHelperJava.buildProcDefXml(id),
                 null,
                 true,
                 false,
