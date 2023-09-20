@@ -3571,7 +3571,6 @@ class BpmnMonsterTestWithRunProcessTest {
                     )
                 )
             )
-
         }
 
         run(process).startByKey(
@@ -3604,7 +3603,6 @@ class BpmnMonsterTestWithRunProcessTest {
                     )
                 )
             )
-
         }
 
         run(process).startByKey(
@@ -3637,7 +3635,6 @@ class BpmnMonsterTestWithRunProcessTest {
                     )
                 )
             )
-
         }
 
         run(process).startByKey(
@@ -3673,7 +3670,6 @@ class BpmnMonsterTestWithRunProcessTest {
                     )
                 )
             )
-
         }
 
         run(process).startByKey(
@@ -3706,7 +3702,6 @@ class BpmnMonsterTestWithRunProcessTest {
                     )
                 )
             )
-
         }
 
         run(process).startByKey(
@@ -3750,7 +3745,6 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("endEvent")
         verify(process).hasFinished("endFromEvent")
     }
-
 
     // ---CALL ACTIVITY TESTS ---
 
@@ -4025,7 +4019,6 @@ class BpmnMonsterTestWithRunProcessTest {
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")
     )
-
 }
 
 /**

@@ -52,7 +52,7 @@ class CamundaEventSubscriptionFinder(
                     if (defRev.deploymentId.isNullOrBlank()) {
                         log.warn {
                             "Deployment id is null or blank for proc def rev: $defRev. " +
-                                    "Its wrong, because we find only deployed proc defs"
+                                "Its wrong, because we find only deployed proc defs"
                         }
                         return@forEach
                     }

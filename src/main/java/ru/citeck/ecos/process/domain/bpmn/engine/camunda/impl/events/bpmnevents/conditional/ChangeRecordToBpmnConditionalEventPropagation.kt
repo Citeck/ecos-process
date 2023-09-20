@@ -21,11 +21,9 @@ class BpmnConditionalEventsListener(
             withAction { updated ->
 
                 bpmnConditionalEventsProcessor.processEvent(updated)
-
             }
         }
     }
-
 }
 
 @Component
@@ -41,17 +39,16 @@ class BpmnConditionalEventsProcessor(
 
         camundaEventSubscriptionFinder.getActualCamundaConditionalEventsForBusinessKey(updated.record.toString())
             .filter { conditionalEvent ->
-                conditionalEvent.event.reactOnDocumentChange
-                        && conditionalEvent.event.documentVariables.isEmpty()
-                        || conditionalEvent.event.documentVariables.any {
-                    it in updated.changed
-                }
+                conditionalEvent.event.reactOnDocumentChange &&
+                    conditionalEvent.event.documentVariables.isEmpty() ||
+                    conditionalEvent.event.documentVariables.any {
+                        it in updated.changed
+                    }
             }
             .forEach {
                 camundaEventExploder.fireConditionalEvent(it.id)
             }
     }
-
 }
 
 data class RecordUpdatedEvent(

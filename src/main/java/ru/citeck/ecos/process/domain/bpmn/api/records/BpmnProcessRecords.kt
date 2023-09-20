@@ -48,7 +48,6 @@ class BpmnProcessRecords(
         return ID
     }
 
-    //TODO: write tests
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val procQuery = recsQuery.getQuery(BpmnProcQuery::class.java)
 
@@ -100,7 +99,6 @@ class BpmnProcessRecords(
 
         val action = MutateAction.getFromAtts(record)
 
-        //TODO: write tests
         return when (action) {
             MutateAction.START -> {
                 val processInstance = startProcess(record)
@@ -207,4 +205,3 @@ class BpmnProcessRecords(
         return recordId.contains("$")
     }
 }
-

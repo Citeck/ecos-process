@@ -17,5 +17,4 @@ class FireConditionalEventCmd(
 
         subs.eventReceived(stubEvent, false)
     }
-
 }
