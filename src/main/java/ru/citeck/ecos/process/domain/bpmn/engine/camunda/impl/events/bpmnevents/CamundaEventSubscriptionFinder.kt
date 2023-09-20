@@ -52,7 +52,7 @@ class CamundaEventSubscriptionFinder(
                     if (defRev.deploymentId.isNullOrBlank()) {
                         log.warn {
                             "Deployment id is null or blank for proc def rev: $defRev. " +
-                                "Its wrong, because we find only deployed proc defs"
+                                    "Its wrong, because we find only deployed proc defs"
                         }
                         return@forEach
                     }
@@ -281,8 +281,9 @@ fun ProcDefRevDto.getBpmnConditionalEvents(): List<ConditionalEvent> {
     return try {
         BpmnIO.importEcosBpmn(defXml).conditionalEventDefsMeta.map { conditionalEvent ->
             ConditionalEvent(
-                elementId = conditionalEvent.elementId,
-                documentVariables = conditionalEvent.documentVariables.filter { it.isNotBlank() }
+                reactOnDocumentChange = conditionalEvent.reactOnDocumentChange,
+                documentVariables = conditionalEvent.documentVariables.filter { it.isNotBlank() },
+                elementId = conditionalEvent.elementId
             )
         }
     } catch (e: Exception) {
@@ -336,6 +337,7 @@ data class CamundaEventSubscription(
 )
 
 data class ConditionalEvent(
+    val reactOnDocumentChange: Boolean,
     val elementId: String,
     val documentVariables: List<String>
 )

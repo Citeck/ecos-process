@@ -3584,6 +3584,39 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    fun `conditional event should not react on document change if reaction flag is false`() {
+        val procId = "test-conditional-disabled-document-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        emptyList()
+                    )
+                )
+            )
+
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+    }
+
+    @Test
     fun `test conditional event with document variables react on document change`() {
         val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
 
@@ -3717,6 +3750,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("endEvent")
         verify(process).hasFinished("endFromEvent")
     }
+
 
     // ---CALL ACTIVITY TESTS ---
 

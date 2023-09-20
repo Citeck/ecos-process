@@ -18,7 +18,6 @@ class BpmnConditionalEventsListener(
         eventsService.addListener<RecordUpdatedEvent> {
             withEventType(RecordChangedEvent.TYPE)
             withDataClass(RecordUpdatedEvent::class.java)
-            withTransactional(true)
             withAction { updated ->
 
                 bpmnConditionalEventsProcessor.processEvent(updated)
@@ -36,10 +35,15 @@ class BpmnConditionalEventsProcessor(
 ) {
 
     fun processEvent(updated: RecordUpdatedEvent) {
+        if (updated.record == null || updated.changed == null) {
+            return
+        }
 
         camundaEventSubscriptionFinder.getActualCamundaConditionalEventsForBusinessKey(updated.record.toString())
             .filter { conditionalEvent ->
-                conditionalEvent.event.documentVariables.isEmpty() || conditionalEvent.event.documentVariables.any {
+                conditionalEvent.event.reactOnDocumentChange
+                        && conditionalEvent.event.documentVariables.isEmpty()
+                        || conditionalEvent.event.documentVariables.any {
                     it in updated.changed
                 }
             }
@@ -52,7 +56,7 @@ class BpmnConditionalEventsProcessor(
 
 data class RecordUpdatedEvent(
     @AttName("record?id")
-    val record: EntityRef,
+    val record: EntityRef? = null,
     @AttName("diff.list[].id")
-    val changed: List<String> = emptyList()
+    val changed: List<String>? = null
 )
