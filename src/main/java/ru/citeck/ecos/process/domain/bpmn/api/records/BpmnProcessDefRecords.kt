@@ -101,20 +101,20 @@ class BpmnProcessDefRecords(
         } else {
             DEFAULT_MAX_ITEMS
         }
-        var requiredAmount = maxItems
+        val skip = recsQuery.page.skipCount
+        var requiredAmount = maxItems + skip
         val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
         do {
             val unfilteredBatch = procDefService.findAll(
                 predicate,
                 QUERY_BATCH_SIZE,
-                recsQuery.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
+                QUERY_BATCH_SIZE * numberOfExecutedRequests++
             )
 
             val checkedRecords: List<BpmnProcDefRecord>
             if (AuthContext.isRunAsSystem()) {
                 checkedRecords = unfilteredBatch.map { BpmnProcDefRecord(it) }
-                    .drop(recsQuery.page.skipCount)
                     .take(requiredAmount)
                 numberOfPermissionsCheck = checkedRecords.size
             } else {
@@ -124,13 +124,12 @@ class BpmnProcessDefRecords(
                         numberOfPermissionsCheck++
                         it.getPermissions().hasReadPerms()
                     }
-                    .drop(recsQuery.page.skipCount)
                     .take(requiredAmount)
                     .toList()
             }
 
             result.addAll(checkedRecords)
-            requiredAmount = maxItems - result.size
+            requiredAmount -= checkedRecords.size
             val hasMore = unfilteredBatch.size == QUERY_BATCH_SIZE
         } while (hasMore &&
             requiredAmount != 0 &&
@@ -139,6 +138,12 @@ class BpmnProcessDefRecords(
 
         if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
             log.warn("Request count limit reached! Request: $recsQuery")
+        }
+
+        if (skip <= result.size) {
+            result.subList(0, skip).clear()
+        } else {
+            result.clear()
         }
 
         var totalCount = procDefService.getCount(predicate)

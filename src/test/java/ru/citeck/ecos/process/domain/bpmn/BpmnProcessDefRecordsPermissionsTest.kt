@@ -18,6 +18,7 @@ import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelperJava
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -33,7 +34,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.context.model.ModelServiceFactoryConfig
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
-import java.nio.charset.StandardCharsets
 import kotlin.test.assertEquals
 
 @Suppress("UNCHECKED_CAST")
@@ -139,7 +139,7 @@ class BpmnProcessDefRecordsPermissionsTest {
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 ModelUtils.getTypeRef("type1"),
                 RecordRef.EMPTY,
-                buildProcDefXml(id),
+                BpmnProcHelperJava.buildProcDefXml(id),
                 null,
                 true,
                 false
@@ -196,7 +196,63 @@ class BpmnProcessDefRecordsPermissionsTest {
         }
 
         assertEquals(50, result.getRecords().size)
+        assertEquals(true, result.getHasMore())
         assertEquals("def-150", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
+
+    @Test
+    fun querySkip20Max30() {
+        val querySkip20Max30 = queryAllProcDefs.copy()
+            .withSkipCount(20)
+            .withMaxItems(30)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip20Max30)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(30, result.getRecords().size)
+        assertEquals(true, result.getHasMore())
+        assertEquals("def-230", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
+
+    @Test
+    fun querySkip120Max30() {
+        val querySkip120Max30 = queryAllProcDefs.copy()
+            .withSkipCount(120)
+            .withMaxItems(30)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip120Max30)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(30, result.getRecords().size)
+        assertEquals(true, result.getHasMore())
+        assertEquals("def-130", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
+    }
+
+    @Test
+    fun querySkip249Max101() {
+        val querySkip249Max101 = queryAllProcDefs.copy()
+            .withSkipCount(249)
+            .withMaxItems(101)
+            .build()
+
+        val result = AuthContext.runAs(user = "fet") {
+            bpmnProcessDefRecords.queryRecords(querySkip249Max101)
+                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcDefRecord>
+        }
+
+        assertEquals(1, result.getRecords().size)
+        assertEquals(false, result.getHasMore())
+        assertEquals("def-1", result.getRecords()[0].getId())
+        assertEquals(250, result.getTotalCount())
     }
 
     @Test
@@ -258,29 +314,5 @@ class BpmnProcessDefRecordsPermissionsTest {
             bpmnProcessDefRecords.saveMutatedRec(recToMutate)
         }
         assertEquals("def-250", result)
-    }
-
-    private fun buildProcDefXml(id: String): ByteArray {
-        return """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                              xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                              xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                              xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                              id="Definitions_$id" targetNamespace="http://bpmn.io/schema/bpmn"
-                              xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0"
-                              exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0"
-                              ecos:processDefId="$id">
-              <bpmn:process id="Process_$id" isExecutable="false">
-                <bpmn:startEvent id="StartEvent_0lly8qf">
-                  <bpmn:outgoing>Flow_15brz3r</bpmn:outgoing>
-                </bpmn:startEvent>
-                <bpmn:sequenceFlow id="Flow_15brz3r" sourceRef="StartEvent_0lly8qf" targetRef="Event_0fitnzy"/>
-                <bpmn:endEvent id="Event_0fitnzy">
-                  <bpmn:incoming>Flow_15brz3r</bpmn:incoming>
-                </bpmn:endEvent>
-              </bpmn:process>
-            </bpmn:definitions>
-        """.trimIndent().toByteArray(StandardCharsets.UTF_8)
     }
 }
