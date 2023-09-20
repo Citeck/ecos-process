@@ -8,14 +8,18 @@ import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Service
 class BpmnProcServiceImpl(
     private val camundaRuntimeService: RuntimeService,
     private val camundaRepositoryService: RepositoryService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val bpmnEventEmitter: BpmnEventEmitter
 ) : BpmnProcService {
 
     override fun startProcess(processKey: String, businessKey: String?, variables: Map<String, Any?>): ProcessInstance {
@@ -27,11 +31,32 @@ class BpmnProcServiceImpl(
         val processVariables = variables.toMutableMap()
         processVariables[BPMN_WORKFLOW_INITIATOR] = AuthContext.getCurrentUser()
 
-        return camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, processVariables)
+        val instance = camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, processVariables)
+
+        bpmnEventEmitter.emitProcessStart(
+            ProcessStartEvent(
+                processKey = processKey,
+                processInstanceId = instance.id,
+                processDefinitionId = instance.processDefinitionId,
+                document = EntityRef.valueOf(businessKey)
+            )
+        )
+
+        return instance
+    }
+
+    override fun setVariables(processInstanceId: String, variables: Map<String, Any?>) {
+        camundaRuntimeService.setVariables(processInstanceId, variables)
     }
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {
         return camundaRuntimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult()
+    }
+
+    override fun getProcessInstancesForBusinessKey(businessKey: String): List<ProcessInstance> {
+        return camundaRuntimeService.createProcessInstanceQuery()
+            .processInstanceBusinessKey(businessKey)
+            .list()
     }
 
     override fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition? {
