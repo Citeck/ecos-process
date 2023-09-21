@@ -80,6 +80,7 @@ private const val ERROR = "error"
 private const val SERVICE_TASK = "servicetask"
 private const val CONDITIONAL = "conditional"
 private const val CALL_ACTIVITY = "callactivity"
+private const val BUSINESS_KEY = "businessKey"
 
 /**
  * Why all tests places on one monster class?
@@ -3950,6 +3951,50 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
         assertThat(scenario.instance(process)).variables().doesNotContainKey("thisVariableShouldNotPropagation")
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    // ---BUSINESS KEY TESTS ---
+
+    @Test
+    fun `resolve business key by document test`() {
+        val procId = "test-resolve-business-key"
+
+        saveAndDeployBpmn(BUSINESS_KEY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it.processInstance.businessKey).isEqualTo(docRef.toString())
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            variables_docRef
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `resolve business key by source business key test`() {
+        val procId = "test-resolve-business-key"
+
+        saveAndDeployBpmn(BUSINESS_KEY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it.processInstance.businessKey).isEqualTo(docRef.toString())
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString()
+        ).execute()
 
         verify(process).hasFinished("endEvent")
     }

@@ -4,7 +4,6 @@ import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 
-// TODO: write tests
 @Component("businessKeyResolver")
 class CamundaBusinessKeyResolver : CamundaProcessEngineService {
     override fun getKey(): String {
