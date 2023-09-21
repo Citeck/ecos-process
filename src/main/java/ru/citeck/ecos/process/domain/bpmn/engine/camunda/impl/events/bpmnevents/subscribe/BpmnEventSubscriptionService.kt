@@ -7,8 +7,13 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
+import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional.BpmnConditionalEventsProcessor
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional.RecordUpdatedEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventProcessor
+import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.*
 import javax.annotation.PostConstruct
@@ -17,34 +22,41 @@ import javax.annotation.PostConstruct
 class BpmnEventSubscriptionService(
     private val camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder,
     private val eventsService: EventsService,
-    private val camundaEventProcessor: CamundaEventProcessor
+    private val camundaEventProcessor: CamundaEventProcessor,
+    private val bpmnConditionalEventsProcessor: BpmnConditionalEventsProcessor
 ) {
 
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
-    private val listeners = mutableMapOf<String, Pair<CombinedEventSubscription, List<ListenerHandle>>>()
+    private val eventListeners =
+        Collections.synchronizedMap(mutableMapOf<String, Pair<CombinedEventSubscription, List<ListenerHandle>>>())
+    private val conditionalEventListener = Collections.synchronizedMap(mutableMapOf<ListenerHandle, Set<String>>())
 
     @PostConstruct
     fun initListeners() {
         Thread {
-            val combinedSubscriptions = camundaEventSubscriptionFinder.findAllDeployedSubscriptions().combine()
+            val deployedData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+            val combinedSubscriptions = deployedData.subscriptions.combine()
 
             for (subscription in combinedSubscriptions) {
-                if (listeners.containsKey(subscription.eventName)) {
+                if (eventListeners.containsKey(subscription.eventName)) {
                     throw IllegalStateException("Event ${subscription.eventName} already registered")
                 }
 
-                addListener(subscription)
+                addSubscriptionListener(subscription)
             }
+
+            registerConditionalEventsListeners(deployedData.conditionalEventsEcosTypes)
 
             log.info {
                 buildString {
                     appendLine("\n================Register BPMN Ecos Event Subscriptions======================")
-                    for ((eventName, listener) in listeners) {
+                    for ((eventName, listener) in eventListeners) {
                         appendLine("Event: $eventName, atts: ${listener.first.attributes}")
                     }
+                    appendLine("Conditional events: ${deployedData.conditionalEventsEcosTypes}")
                     appendLine("============================================================================")
                 }
             }
@@ -52,14 +64,15 @@ class BpmnEventSubscriptionService(
     }
 
     fun addSubscriptionsForDefRev(procDefRevId: UUID) {
-        val subscriptions = camundaEventSubscriptionFinder.getSubscriptionsByProcDefRevId(procDefRevId).combine()
+        val deployedSubscriptionsData = camundaEventSubscriptionFinder.getDeployedSubscriptionsDataByProcDefRevId(procDefRevId)
+        val combinedSubscriptions = deployedSubscriptionsData.subscriptions.combine()
 
-        log.debug { "Add subscriptions for procDefRevId: $procDefRevId, subscriptions: \n$subscriptions" }
+        log.debug { "Add subscriptions for procDefRevId: $procDefRevId, subscriptions: \n$combinedSubscriptions" }
 
-        for (subscription in subscriptions) {
+        for (subscription in combinedSubscriptions) {
             val (eventName, attributes) = subscription
 
-            if (listeners.containsKey(eventName)) {
+            if (eventListeners.containsKey(eventName)) {
                 if (requireUpdateExistingListener(subscription)) {
                     log.debug {
                         "BPMN Ecos Event Subscription Event: $eventName exists and need to update model"
@@ -68,13 +81,13 @@ class BpmnEventSubscriptionService(
                     // TODO: At current implementation we just re-registered listener.
                     // In future we can just update model - https://citeck.atlassian.net/browse/ECOSENT-2452.
 
-                    val currentAtts = listeners[eventName]!!.first.attributes
+                    val currentAtts = eventListeners[eventName]!!.first.attributes
                     val concatenatedAttsSubscription = subscription.copy(attributes = currentAtts + attributes)
 
-                    listeners[eventName]?.second?.forEach { it.remove() }
-                    listeners.remove(eventName)
+                    eventListeners[eventName]?.second?.forEach { it.remove() }
+                    eventListeners.remove(eventName)
 
-                    addListener(concatenatedAttsSubscription)
+                    addSubscriptionListener(concatenatedAttsSubscription)
                 } else {
                     log.debug {
                         "BPMN Ecos Event Subscription Event: $eventName exists and no need to update"
@@ -82,12 +95,14 @@ class BpmnEventSubscriptionService(
                 }
             } else {
                 log.debug { "Register new BPMN Ecos Event Subscription Event: $eventName" }
-                addListener(subscription)
+                addSubscriptionListener(subscription)
             }
         }
+
+        registerConditionalEventsListeners(deployedSubscriptionsData.conditionalEventsEcosTypes)
     }
 
-    private fun addListener(subscription: CombinedEventSubscription) {
+    private fun addSubscriptionListener(subscription: CombinedEventSubscription) {
         val (eventName, attributes) = subscription
 
         val listenerEventNames = let {
@@ -117,11 +132,57 @@ class BpmnEventSubscriptionService(
             }
         }
 
-        listeners[eventName] = subscription to addedListeners
+        eventListeners[eventName] = subscription to addedListeners
+    }
+
+    private fun registerConditionalEventsListeners(ecosTypes: Set<EntityRef>) {
+        log.debug { "Request to register conditional events for types: $ecosTypes" }
+
+        if (conditionalEventListener.size > 1) {
+            throw IllegalStateException("Conditional event listener can be only one")
+        }
+
+        val newTypes = ecosTypes.map { it.toString() }.toSet()
+        val existingTypes = conditionalEventListener.values.flatten().toSet()
+
+        val existingListener = if (conditionalEventListener.isNotEmpty()) {
+            conditionalEventListener.keys.first()
+        } else {
+            null
+        }
+
+        if (existingListener != null && existingTypes.containsAll(newTypes)) {
+            log.debug { "Conditional events already registered with types: $existingTypes" }
+            return
+        }
+
+        val concatenatedTypes = existingTypes + newTypes
+
+        val predicateFilterByTypes = Predicates.and(
+            Predicates.`in`("record._type?id", concatenatedTypes),
+        )
+
+        // TODO: At current implementation we just re-registered listener.
+        // In future we can just update model - https://citeck.atlassian.net/browse/ECOSENT-2452.
+        existingListener?.remove()
+        val listener = eventsService.addListener<RecordUpdatedEvent> {
+            withEventType(RecordChangedEvent.TYPE)
+            withDataClass(RecordUpdatedEvent::class.java)
+            withFilter(predicateFilterByTypes)
+            withTransactional(true)
+            withAction { updated ->
+                bpmnConditionalEventsProcessor.processEvent(updated)
+            }
+        }
+
+        log.debug { "Register new conditional events for types: $concatenatedTypes" }
+
+        conditionalEventListener.clear()
+        conditionalEventListener[listener] = concatenatedTypes
     }
 
     private fun requireUpdateExistingListener(newSubscription: CombinedEventSubscription): Boolean {
-        val existingSubscription = listeners[newSubscription.eventName]!!.first
+        val existingSubscription = eventListeners[newSubscription.eventName]!!.first
         return !existingSubscription.attributes.containsAll(newSubscription.attributes)
     }
 }

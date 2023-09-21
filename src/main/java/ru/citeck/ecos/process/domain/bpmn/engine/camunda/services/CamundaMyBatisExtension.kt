@@ -139,12 +139,11 @@ class CamundaMyBatisExtension(
 
         aggregatedSubscriptions.addAll(filtered)
 
-        // remove duplicates
-        val subscriptionsIds = mutableSetOf<String>()
-        return aggregatedSubscriptions.filter {
-            val id = it.id ?: ""
-            id.isNotBlank() && subscriptionsIds.add(id)
-        }
+        return aggregatedSubscriptions
+            .filter {
+                it.id != null && it.id.isNotBlank()
+            }
+            .distinct()
     }
 
     fun deleteAllEventSubscriptions() {

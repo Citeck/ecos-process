@@ -21,6 +21,7 @@ import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.io.Serializable
 import java.util.*
 import kotlin.system.measureTimeMillis
@@ -41,8 +42,9 @@ class CamundaEventSubscriptionFinder(
         private val log = KotlinLogging.logger {}
     }
 
-    fun findAllDeployedSubscriptions(): List<EventSubscription> {
-        val result: List<EventSubscription>
+    fun findDeployedSubscriptionsData(): DeployedSubscriptionsData {
+        val ecosTypes = mutableSetOf<EntityRef>()
+        val subscriptions: List<EventSubscription>
 
         val time = measureTimeMillis {
             val eventDefsOfDeploymentId = mutableMapOf<String, List<EventSubscription>>()
@@ -57,10 +59,14 @@ class CamundaEventSubscriptionFinder(
                         return@forEach
                     }
 
-                    val subscriptions = defRev.getBpmnSignalEventSubscriptions()
-                    eventDefsOfDeploymentId[defRev.deploymentId!!] = subscriptions
+                    val deployedData = defRev.parseDeployedSubscriptionsData()
+                    eventDefsOfDeploymentId[defRev.deploymentId!!] = deployedData.subscriptions
+                    ecosTypes.addAll(deployedData.conditionalEventsEcosTypes)
 
-                    cachedEventSubscriptionProvider.warmupEventSubscriptionCache(defRev.deploymentId!!, subscriptions)
+                    cachedEventSubscriptionProvider.warmupEventSubscriptionCache(
+                        defRev.deploymentId!!,
+                        deployedData.subscriptions
+                    )
                 }
             }
 
@@ -73,12 +79,12 @@ class CamundaEventSubscriptionFinder(
                 fillEventSubscriptions(slice.content)
             }
 
-            result = eventDefsOfDeploymentId.values.flatten()
+            subscriptions = eventDefsOfDeploymentId.values.flatten()
         }
 
-        log.debug { "Find All Deployed Subscriptions ${result.size} in $time ms" }
+        log.debug { "Find All Deployed Subscriptions ${subscriptions.size} in $time ms" }
 
-        return result
+        return DeployedSubscriptionsData(ecosTypes, subscriptions)
     }
 
     fun getActualCamundaSubscriptions(eventData: IncomingEventData): List<CamundaEventSubscription> {
@@ -203,11 +209,11 @@ class CamundaEventSubscriptionFinder(
         return found.firstOrNull()
     }
 
-    fun getSubscriptionsByProcDefRevId(procDefRevId: UUID): List<EventSubscription> {
+    fun getDeployedSubscriptionsDataByProcDefRevId(procDefRevId: UUID): DeployedSubscriptionsData {
         val procDefRev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDefRevId)
             ?: error("Process definition revision not found by id: $procDefRevId")
 
-        return procDefRev.getBpmnSignalEventSubscriptions()
+        return procDefRev.parseDeployedSubscriptionsData()
     }
 }
 
@@ -228,7 +234,7 @@ class CachedEventSubscriptionProvider(
             return emptyList()
         }
 
-        return defRev.getBpmnSignalEventSubscriptions()
+        return defRev.parseDeployedSubscriptionsData().subscriptions
     }
 
     @Cacheable(cacheNames = [BPMN_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME])
@@ -256,23 +262,38 @@ const val BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME =
 const val BPMN_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME =
     "bpmn-conditional-event-subscriptions-by-deployment-id-cache"
 
-fun ProcDefRevDto.getBpmnSignalEventSubscriptions(): List<EventSubscription> {
+private fun ProcDefRevDto.parseDeployedSubscriptionsData(): DeployedSubscriptionsData {
     val defXml = String(this.data, Charsets.UTF_8)
-
-    return try {
-        BpmnIO.importEcosBpmn(defXml).signalsEventDefsMeta.map {
-            EventSubscription(
-                elementId = it.elementId,
-                name = ComposedEventName.fromString(it.signalName),
-                model = it.eventModel,
-                predicate = it.eventFilterByPredicate?.let { pr -> Json.mapper.toString(pr) }
-            )
-        }
+    val definition = try {
+        BpmnIO.importEcosBpmn(defXml)
     } catch (e: Exception) {
         ktLog.debug(e) { "Cannot parse definition: ${this.id}" }
-
-        emptyList()
+        return DeployedSubscriptionsData(emptySet(), emptyList())
     }
+
+    val definitionHasConditionalEventWithReactOnDocumentChange = definition.conditionalEventDefsMeta.any {
+        it.reactOnDocumentChange
+    }
+
+    val ecosTypes = mutableSetOf<EntityRef>()
+    if (definitionHasConditionalEventWithReactOnDocumentChange) {
+        ecosTypes.add(definition.ecosType)
+        definition.collaboration?.participants?.forEach { participant ->
+            ecosTypes.add(participant.ecosType)
+        }
+    }
+    val notEmptyTypes = ecosTypes.filter { it.isNotEmpty() }.toSet()
+
+    val subscriptions = definition.signalsEventDefsMeta.map {
+        EventSubscription(
+            elementId = it.elementId,
+            name = ComposedEventName.fromString(it.signalName),
+            model = it.eventModel,
+            predicate = it.eventFilterByPredicate?.let { pr -> Json.mapper.toString(pr) }
+        )
+    }
+
+    return DeployedSubscriptionsData(notEmptyTypes, subscriptions)
 }
 
 fun ProcDefRevDto.getBpmnConditionalEvents(): List<ConditionalEvent> {
@@ -292,6 +313,11 @@ fun ProcDefRevDto.getBpmnConditionalEvents(): List<ConditionalEvent> {
         emptyList()
     }
 }
+
+data class DeployedSubscriptionsData(
+    val conditionalEventsEcosTypes: Set<EntityRef>,
+    val subscriptions: List<EventSubscription>
+)
 
 data class EventSubscription(
     val elementId: String,
