@@ -50,6 +50,54 @@
         "components": [
           {
             "label": {
+              "ru": "Реагировать на изменение документа",
+              "en": "React on document update"
+            },
+            "key": "reactOnDocumentChange",
+            "tooltip": {
+              "ru": "Вычисление условия будет дополнительно происходить, если был изменен документ, по которому запущен процесс",
+              "en": "The condtion evaluation will additionally take place if the document on which the process is started has been changed"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "checkbox",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Переменные документа"
+            },
+            "key": "documentVariables",
+            "tooltip": {
+              "ru": "По умолчанию вычисление условия происходит при обновлении любой переменной документа. Рекомендуется указать переменные для ограничения области вычислений.",
+              "en": "By default, the condition is evaluated when any document variable is updated. It is recommended to specify variables to limit the scope of calculations."
+            },
+            "multiple": true,
+            "validate": {
+              "pattern": "^[a-zA-Z0-9-_*]+$"
+            },
+            "inputMasks": [
+              {
+                "label": "",
+                "mask": ""
+              }
+            ],
+            "reorder": false,
+            "defaultValue": [
+              ""
+            ],
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "reactOnDocumentChange",
+              "eq": "true"
+            },
+            "type": "textfield",
+            "input": true
+          },
+          {
+            "label": {
               "ru": "Имя переменной",
               "en": "Variable name"
             },
@@ -70,6 +118,11 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "false",
+              "when": "reactOnDocumentChange",
+              "eq": "true"
+            },
             "type": "textfield",
             "input": true
           },
@@ -110,6 +163,11 @@
             },
             "defaultValue": [],
             "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "false",
+              "when": "reactOnDocumentChange",
+              "eq": "true"
+            },
             "type": "ecosSelect",
             "input": true
           },

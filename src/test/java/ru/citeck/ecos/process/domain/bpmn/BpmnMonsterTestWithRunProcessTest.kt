@@ -80,7 +80,7 @@ private const val ERROR = "error"
 private const val SERVICE_TASK = "servicetask"
 private const val CONDITIONAL = "conditional"
 private const val CALL_ACTIVITY = "callactivity"
-private const val BUSINESS_KEY = "businessKey"
+private const val BUSINESS_KEY = "businesskey"
 
 /**
  * Why all tests places on one monster class?
