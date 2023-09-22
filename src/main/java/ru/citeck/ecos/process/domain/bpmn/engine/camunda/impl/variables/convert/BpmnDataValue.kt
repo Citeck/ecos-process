@@ -12,6 +12,10 @@ import java.math.BigInteger
 import java.time.Instant
 import java.util.function.BiConsumer
 
+@Deprecated(
+    "Class was moved to lib",
+    ReplaceWith("BpmnDataValue", imports = ["ru.citeck.ecos.bpmn.commons.values.BpmnDataValue"])
+)
 class BpmnDataValue private constructor(
     private val data: DataValue = DataValue.createObj()
 ) {

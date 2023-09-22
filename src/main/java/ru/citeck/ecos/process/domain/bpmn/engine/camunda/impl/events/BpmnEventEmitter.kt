@@ -5,12 +5,14 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 
 const val BPMN_EVENT_USER_TASK_CREATE = "bpmn-user-task-create"
 const val BPMN_EVENT_USER_TASK_COMPLETE = "bpmn-user-task-complete"
 const val BPMN_EVENT_USER_TASK_ASSIGN = "bpmn-user-task-assign"
 const val BPMN_EVENT_FLOW_ELEMENT_START = "bpmn-flow-element-start"
+const val BPMN_EVENT_PROCESS_START = "bpmn-process-start"
 
 /**
  * @author Roman Makarskiy
@@ -22,6 +24,14 @@ class BpmnEventEmitter(
     @Value("\${spring.application.name}")
     private val appName: String
 ) {
+
+    private val processStartEmitter = eventsService.getEmitter(
+        EmitterConfig.create<ProcessStartEvent> {
+            source = appName
+            eventType = BPMN_EVENT_PROCESS_START
+            eventClass = ProcessStartEvent::class.java
+        }
+    )
 
     private val flowElementsStartEmitter = eventsService.getEmitter(
         EmitterConfig.create<FlowElementEvent> {
@@ -54,6 +64,10 @@ class BpmnEventEmitter(
             eventClass = UserTaskEvent::class.java
         }
     )
+
+    fun emitProcessStart(event: ProcessStartEvent) {
+        processStartEmitter.emit(event)
+    }
 
     fun emitElementStart(event: FlowElementEvent) {
         flowElementsStartEmitter.emit(event)

@@ -6,10 +6,10 @@ import org.camunda.bpm.engine.impl.interceptor.CommandContext
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
+import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EVENT
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 
-class SignalEventByIdCmd(
+class SendSignalEventByIdCmd(
     private val signalId: String,
     eventData: BpmnDataValue
 ) : Command<Unit> {

@@ -6,7 +6,4 @@
 
     <root level="WARN"/>
 
-    <logger name="org.camunda.bpm.scenario" level="debug"/>
-    <logger name="ru.citeck.ecos.process" level="debug"/>
-    <logger name="ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords" level="info"/>
 </configuration>

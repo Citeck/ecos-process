@@ -16,7 +16,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportCo
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
-private const val CAMUNDA_PROPAGATION_PROCESS_BUSINESS_KEY_EXPRESSION = "#{execution.processBusinessKey}"
+private const val CAMUNDA_PROPAGATION_PROCESS_BUSINESS_KEY_EXPRESSION = "#{businessKeyResolver.resolve(execution)}"
 
 class CamundaCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCallActivity> {
     override fun import(element: TCallActivity, context: ImportContext): BpmnCallActivityDef {

@@ -58,6 +58,18 @@
         </where>
     </select>
 
+    <select id="selectConditionalEventSubscriptionsByProcessInstanceIds" parameterType="java.lang.String"
+            resultMap="eventSubscriptionResultMap">
+        select * from ${prefix}ACT_RU_EVENT_SUBSCR T
+        <where>
+            <foreach collection="processInstanceIds" item="processInstanceId"
+                     open="T.PROC_INST_ID_ in (" separator=", " close=")">
+                #{processInstanceId}
+            </foreach>
+        </where>
+        and T.EVENT_TYPE_ = 'conditional'
+    </select>
+
     <update id="truncateEventSubscriptions">
         truncate table ${prefix}ACT_RU_EVENT_SUBSCR
     </update>

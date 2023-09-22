@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
+import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.notifications.lib.Notification
@@ -11,7 +12,6 @@ import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.app.AppContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson

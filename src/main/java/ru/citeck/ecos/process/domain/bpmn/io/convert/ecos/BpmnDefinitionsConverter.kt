@@ -50,6 +50,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             collaboration = collaboration,
             signals = context.generateSignalsFromDefs(),
             signalsEventDefsMeta = context.bpmnSignalEventDefs,
+            conditionalEventDefsMeta = context.conditionalEventDefs,
             errors = context.generateErrorsFromDefs(),
             errorsEventDefsMeta = context.bpmnErrorEventDefs.values.toList(),
             exporter = element.exporter,
