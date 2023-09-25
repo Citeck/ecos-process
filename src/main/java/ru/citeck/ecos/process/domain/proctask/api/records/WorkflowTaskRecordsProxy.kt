@@ -40,11 +40,15 @@ class WorkflowTaskRecordsProxy(
         }
 
         val documentTasksFromAlf = queryFromAlf(recsQuery)
-        val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query, sortBy, page)
-
+        val documentTasksFromEProc: RecsQueryRes<*> = if (webAppsApi.isAppAvailable(AppName.ALFRESCO) && document.isEmpty()) {
+            RecsQueryRes<Any>()
+        } else {
+            queryTasksForDocumentFromEcosProcess(query, sortBy, page)
+        }
         val result = RecsQueryRes<Any>()
         result.setRecords(documentTasksFromAlf.getRecords() + documentTasksFromEProc.getRecords())
         result.setTotalCount(documentTasksFromAlf.getTotalCount() + documentTasksFromEProc.getTotalCount())
+        result.setHasMore(documentTasksFromAlf.getHasMore() || documentTasksFromEProc.getHasMore())
 
         return result
     }
