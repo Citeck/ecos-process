@@ -107,6 +107,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
             otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = element.id
             otherAttributes[BPMN_PROP_FORM_REF] = element.formRef.toString()
+            otherAttributes[BPMN_PROP_SECTION_REF] = element.sectionRef.toString()
             otherAttributes[BPMN_PROP_DEF_STATE] = ProcDefRevDataState.CONVERTED.name
         }
     }
