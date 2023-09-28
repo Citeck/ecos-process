@@ -21,6 +21,8 @@ import javax.annotation.PostConstruct
 private const val SELECT_TASKS_BY_IDS = "selectHistoricTaskInstanceByIds"
 private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES = "selectEventSubscriptionsByEventNames"
 private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES_LIKE_START = "selectEventSubscriptionsByEventNamesLikeStart"
+private const val SELECT_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_PROCESS_INSTANCE_IDS =
+    "selectConditionalEventSubscriptionsByProcessInstanceIds"
 private const val TRUNCATE_EVENT_SUBSCRIPTIONS = "truncateEventSubscriptions"
 private const val SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS = "selectLatestDecisionDefinitionsByKeys"
 private const val SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS = "selectLatestProcessDefinitionsByKeys"
@@ -90,26 +92,58 @@ class CamundaMyBatisExtension(
 
         val subscriptions = ArrayList(factory.commandExecutorTxRequired.execute(command))
 
-        val commandContext = Context.getCommandContext()
-        if (commandContext != null) {
-            // Search subscriptions in command context.
-            // selectList from DB doesn't return subscriptions which was created in current transaction
-            val manager = commandContext.eventSubscriptionManager as? CustomEventSubscriptionManager
-            val createdSubscriptions = manager?.getCreatedSubscriptions() ?: emptyList()
-            for (subscription in createdSubscriptions) {
-                val eventName = subscription.eventName ?: ""
-                if (eventNames.any { name -> eventName.startsWith(name) }) {
-                    subscriptions.add(subscription)
-                }
-            }
+        return aggregateEventSubscriptionsFromContext(subscriptions) { subscription ->
+            val eventName = subscription.eventName ?: ""
+            eventNames.any { name -> eventName.startsWith(name) }
+        }
+    }
+
+    internal fun getConditionalEventSubscriptionsByProcessInstanceIds(processInstanceIds: List<String>): List<EventSubscriptionEntity> {
+        if (processInstanceIds.isEmpty()) {
+            return emptyList()
         }
 
-        // remove duplicates
-        val subscriptionsIds = mutableSetOf<String>()
-        return subscriptions.filter {
-            val id = it.id ?: ""
-            id.isNotBlank() && subscriptionsIds.add(id)
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "processInstanceIds" to processInstanceIds
+            )
+
+            @Suppress("UNCHECKED_CAST")
+            it.dbSqlSession.selectList(
+                SELECT_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_PROCESS_INSTANCE_IDS,
+                params
+            ) as List<EventSubscriptionEntity>
         }
+
+        val subscriptions = factory.commandExecutorTxRequired.execute(command)
+
+        return aggregateEventSubscriptionsFromContext(subscriptions) { subscription ->
+            processInstanceIds.any { id -> id == subscription.processInstanceId }
+        }
+    }
+
+    /**
+     * SelectList from DB doesn't return subscriptions which was created in current transaction, so we need to
+     * search subscriptions in command context.
+     */
+    private fun aggregateEventSubscriptionsFromContext(
+        sourceList: List<EventSubscriptionEntity>,
+        contextSubscriptionFilter: (EventSubscriptionEntity) -> Boolean
+    ): List<EventSubscriptionEntity> {
+        val commandContext = Context.getCommandContext() ?: return sourceList
+        val aggregatedSubscriptions = sourceList.toMutableList()
+        val manager = commandContext.eventSubscriptionManager as? CustomEventSubscriptionManager
+
+        val contextSubscriptions = manager?.getCreatedSubscriptions() ?: emptyList()
+        val filtered = contextSubscriptions.filter { contextSubscriptionFilter.invoke(it) }
+
+        aggregatedSubscriptions.addAll(filtered)
+
+        return aggregatedSubscriptions
+            .filter {
+                it.id != null && it.id.isNotBlank()
+            }
+            .distinct()
     }
 
     fun deleteAllEventSubscriptions() {
@@ -165,6 +199,12 @@ fun RuntimeService.getEventSubscriptionsByEventNames(eventNames: List<String>): 
 
 fun RuntimeService.getEventSubscriptionsByEventNamesLikeStart(eventNames: List<String>): List<EventSubscriptionEntity> {
     return ext.getEventSubscriptionsByEventNamesLikeStart(eventNames)
+}
+
+fun RuntimeService.getConditionalEventSubscriptionsByProcessInstanceIds(
+    processInstanceIds: List<String>
+): List<EventSubscriptionEntity> {
+    return ext.getConditionalEventSubscriptionsByProcessInstanceIds(processInstanceIds)
 }
 
 fun RepositoryService.getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {

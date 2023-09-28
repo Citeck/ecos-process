@@ -15,6 +15,7 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.BpmnEventSubscriptionService
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
@@ -100,14 +101,15 @@ class BpmnProcessDefRecords(
         } else {
             DEFAULT_MAX_ITEMS
         }
-        var requiredAmount = maxItems
+        val skip = recsQuery.page.skipCount
+        var requiredAmount = maxItems + skip
         val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
         do {
             val unfilteredBatch = procDefService.findAll(
                 predicate,
                 QUERY_BATCH_SIZE,
-                recsQuery.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
+                QUERY_BATCH_SIZE * numberOfExecutedRequests++
             )
 
             val checkedRecords: List<BpmnProcDefRecord>
@@ -127,7 +129,7 @@ class BpmnProcessDefRecords(
             }
 
             result.addAll(checkedRecords)
-            requiredAmount = maxItems - result.size
+            requiredAmount -= checkedRecords.size
             val hasMore = unfilteredBatch.size == QUERY_BATCH_SIZE
         } while (hasMore &&
             requiredAmount != 0 &&
@@ -136,6 +138,12 @@ class BpmnProcessDefRecords(
 
         if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
             log.warn("Request count limit reached! Request: $recsQuery")
+        }
+
+        if (skip <= result.size) {
+            result.subList(0, skip).clear()
+        } else {
+            result.clear()
         }
 
         var totalCount = procDefService.getCount(predicate)
@@ -211,7 +219,7 @@ class BpmnProcessDefRecords(
                 it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
             ) {
 
-                it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
+                it.sectionRef = DEFAULT_BPMN_SECTION
             } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
 
                 it.sectionRef = "${EprocApp.NAME}/bpmn-section@" + it.sectionRef?.substringAfterLast('/')

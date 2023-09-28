@@ -1,6 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event
 
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOCUMENT_VARIABLES
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_REACT_ON_DOCUMENT_CHANGE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_VARIABLE_EVENTS
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_VARIABLE_NAME
 import ru.citeck.ecos.process.domain.bpmn.io.convert.conditionFromAttributes
@@ -16,8 +18,12 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportCo
 
 class BpmnConditionalEventDefinitionConverter : EcosOmgConverter<BpmnConditionalEventDef, TConditionalEventDefinition> {
     override fun import(element: TConditionalEventDefinition, context: ImportContext): BpmnConditionalEventDef {
-        return BpmnConditionalEventDef(
+        val conditionalEvent = BpmnConditionalEventDef(
             id = element.id,
+            reactOnDocumentChange = element.otherAttributes[BPMN_PROP_REACT_ON_DOCUMENT_CHANGE]?.toBoolean() ?: false,
+            documentVariables = element.otherAttributes[BPMN_PROP_DOCUMENT_VARIABLES]?.let {
+                Json.mapper.readList(it, String::class.java)
+            } ?: emptyList(),
             variableName = element.otherAttributes[BPMN_PROP_VARIABLE_NAME] ?: "",
             variableEvents = element.otherAttributes[BPMN_PROP_VARIABLE_EVENTS]?.let {
                 val type = Json.mapper.getSetType(BpmnVariableEvents::class.java)
@@ -25,6 +31,10 @@ class BpmnConditionalEventDefinitionConverter : EcosOmgConverter<BpmnConditional
             } ?: emptySet(),
             condition = conditionFromAttributes(element.otherAttributes)
         )
+
+        context.conditionalEventDefs.add(conditionalEvent)
+
+        return conditionalEvent
     }
 
     override fun export(element: BpmnConditionalEventDef, context: ExportContext): TConditionalEventDefinition {

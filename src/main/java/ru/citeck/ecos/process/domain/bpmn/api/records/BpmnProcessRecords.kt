@@ -1,5 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
+import mu.KotlinLogging
+import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
@@ -17,9 +19,13 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
+import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import java.util.*
 
 @Component
 class BpmnProcessRecords(
@@ -27,21 +33,48 @@ class BpmnProcessRecords(
     private val procDefService: ProcDefService
 ) : AbstractRecordsDao(),
     RecordAttsDao,
+    RecordsQueryDao,
     RecordMutateDao {
 
     companion object {
         const val ID = "bpmn-proc"
+
+        private const val BPMN_PROC_MUTATE_ACTION_FLAG = "action"
+
+        private val log = KotlinLogging.logger {}
     }
 
     override fun getId(): String {
         return ID
     }
 
+    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
+        val procQuery = recsQuery.getQuery(BpmnProcQuery::class.java)
+
+        if (procQuery.document == null || procQuery.document.isEmpty()) {
+            return RecsQueryRes()
+        }
+
+        val foundProcess = bpmnProcService.getProcessInstancesForBusinessKey(procQuery.document.toString())
+            .map {
+                EntityRef.create(AppName.EPROC, ID, it.id)
+            }
+
+        log.debug { "Found process instances for document ${procQuery.document}: \n$foundProcess" }
+
+        val result = RecsQueryRes<EntityRef>()
+
+        result.setRecords(foundProcess)
+        result.setTotalCount(foundProcess.size.toLong())
+
+        return result
+    }
+
     override fun getRecordAtts(recordId: String): Any? {
         if (isAlfProcessDef(recordId)) {
             var ref = RecordRef.valueOf(recordId)
             if (ref.appName.isBlank()) {
-                ref = ref.withAppName("alfresco")
+                ref = ref.withAppName(AppName.ALFRESCO)
             }
 
             if (ref.sourceId.isBlank()) {
@@ -59,11 +92,27 @@ class BpmnProcessRecords(
 
     override fun mutate(record: LocalRecordAtts): String {
         if (isAlfProcessDef(record.id)) {
-            val alfRef = RecordRef.create("alfresco", "workflow", "def_${record.id}")
+            val alfRef = RecordRef.create(AppName.ALFRESCO, "workflow", "def_${record.id}")
             val res = recordsService.mutate(alfRef, record.attributes)
             return res.id
         }
 
+        val action = MutateAction.getFromAtts(record)
+
+        return when (action) {
+            MutateAction.START -> {
+                val processInstance = startProcess(record)
+                processInstance.id
+            }
+
+            MutateAction.UPDATE -> {
+                updateVariables(record)
+                record.id
+            }
+        }
+    }
+
+    private fun startProcess(record: LocalRecordAtts): ProcessInstance {
         val processVariables = mutableMapOf<String, Any?>()
         var businessKey: String? = null
 
@@ -91,13 +140,33 @@ class BpmnProcessRecords(
             }
         }
 
-        val processInstance = bpmnProcService.startProcess(
+        log.debug { "Starting process ${record.id}, businessKey: $businessKey with variables: \n$processVariables" }
+
+        return bpmnProcService.startProcess(
             record.id,
             businessKey,
             processVariables.toMap()
         )
+    }
 
-        return processInstance.id
+    private fun updateVariables(record: LocalRecordAtts) {
+        val processInstance = bpmnProcService.getProcessInstance(record.id)
+            ?: throw IllegalArgumentException("Process instance not found: ${record.id}")
+
+        val processVariables = mutableMapOf<String, Any?>()
+
+        record.attributes.forEach { key, value ->
+            if (key == BPMN_PROC_MUTATE_ACTION_FLAG) {
+                return@forEach
+            }
+
+            processVariables[key] = value.asJavaObj()
+        }
+
+        log.debug {
+            "Updating process instance ${processInstance.id} with variables: \n$processVariables"
+        }
+        bpmnProcService.setVariables(processInstance.id, processVariables)
     }
 
     class ProcRecord(
@@ -108,6 +177,27 @@ class BpmnProcessRecords(
         @AttName(".disp")
         fun getDisp(): MLText {
             return MLText(key)
+        }
+    }
+
+    class BpmnProcQuery(
+        val document: EntityRef? = null
+    )
+
+    private enum class MutateAction {
+        START,
+        UPDATE;
+
+        companion object {
+            fun getFromAtts(record: LocalRecordAtts): MutateAction {
+                record.attributes.get(BPMN_PROC_MUTATE_ACTION_FLAG).let {
+                    return if (it.isNotEmpty()) {
+                        valueOf(it.asText().uppercase(Locale.getDefault()))
+                    } else {
+                        START
+                    }
+                }
+            }
         }
     }
 

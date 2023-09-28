@@ -137,6 +137,10 @@
           "en": "Task form"
         },
         "key": "formRef",
+        "tooltip": {
+          "ru": "Если не выбрать значение, форма будет сгенерирована автоматически с указанными результатами задачи",
+          "en": "If no value is selected, the form will be generated automatically with the specified task outcomes"
+        },
         "modalTitle": "",
         "journalId": "ecos-forms",
         "queryData": "",

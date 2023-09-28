@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.procdef.dto
 
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
@@ -72,6 +71,5 @@ enum class ProcDefRevDataState {
         } else {
             valueOf(value)
         }
-
     }
 }

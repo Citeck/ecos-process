@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import org.apache.commons.lang3.LocaleUtils
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext

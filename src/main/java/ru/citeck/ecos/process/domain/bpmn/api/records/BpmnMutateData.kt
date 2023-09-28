@@ -24,6 +24,7 @@ class BpmnMutateDataProcessor {
         var recordId = mutateRecord.id
         var ecosType = mutateRecord.ecosType
         var formRef = mutateRecord.formRef
+        var sectionRef = mutateRecord.sectionRef
         var name = mutateRecord.name
         var processDefId = mutateRecord.processDefId
         var enabled = mutateRecord.enabled
@@ -39,6 +40,7 @@ class BpmnMutateDataProcessor {
 
                 ecosType = EntityRef.valueOf(draftDefinition.otherAttributes[BPMN_PROP_ECOS_TYPE])
                 formRef = EntityRef.valueOf(draftDefinition.otherAttributes[BPMN_PROP_FORM_REF])
+                sectionRef = EntityRef.valueOf(draftDefinition.otherAttributes[BPMN_PROP_SECTION_REF])
                 name =
                     Json.mapper.convert(draftDefinition.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java)
                         ?: MLText()
@@ -58,6 +60,7 @@ class BpmnMutateDataProcessor {
 
                 ecosType = ecosBpmnDefinition.ecosType
                 formRef = ecosBpmnDefinition.formRef
+                sectionRef = ecosBpmnDefinition.sectionRef
                 name = ecosBpmnDefinition.name
                 processDefId = ecosBpmnDefinition.id
                 enabled = ecosBpmnDefinition.enabled
@@ -84,7 +87,7 @@ class BpmnMutateDataProcessor {
             formRef = formRef,
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
-            sectionRef = mutateRecord.sectionRef,
+            sectionRef = sectionRef,
             createdFromVersion = mutateRecord.createdFromVersion,
             image = mutateRecord.imageBytes,
             newEcosDefinition = if (newEcosDefinition.isBlank()) {

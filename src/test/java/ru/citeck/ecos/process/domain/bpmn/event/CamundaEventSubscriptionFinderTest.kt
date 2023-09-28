@@ -13,6 +13,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 const val SUBSCRIPTION = "subscription"
@@ -47,7 +48,7 @@ class CamundaEventSubscriptionFinderTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
         saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
-        camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
 
         assertThat(cache).hasSize(2)
     }
@@ -78,8 +79,10 @@ class CamundaEventSubscriptionFinderTest {
             """.trimIndent()
         )
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
 
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(2)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             eventSubscription,
@@ -97,7 +100,10 @@ class CamundaEventSubscriptionFinderTest {
         val procId = "test-subscriptions-boundary-non-interrupting-signal-events"
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
+
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(1)
 
         assertThat(foundSubscription[0]).isEqualTo(
@@ -114,7 +120,10 @@ class CamundaEventSubscriptionFinderTest {
         val procId = "test-subscriptions-boundary-signal-events"
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
+
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(1)
 
         assertThat(foundSubscription[0]).isEqualTo(
@@ -132,7 +141,10 @@ class CamundaEventSubscriptionFinderTest {
         val procId = "test-subscriptions-end-signal-events"
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
+
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(1)
 
         assertThat(foundSubscription[0]).isEqualTo(
@@ -149,7 +161,10 @@ class CamundaEventSubscriptionFinderTest {
         val procId = "test-subscriptions-throw-signal-events"
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
+
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(1)
 
         assertThat(foundSubscription[0]).isEqualTo(
@@ -167,8 +182,10 @@ class CamundaEventSubscriptionFinderTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
 
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(2)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             EventSubscription(
@@ -190,7 +207,9 @@ class CamundaEventSubscriptionFinderTest {
 
         saveAndDeployBpmn(SUBSCRIPTION, procId)
 
-        val foundSubscription = camundaEventSubscriptionFinder.findAllDeployedSubscriptions()
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+        val foundSubscription = subscriptionsData.subscriptions
+
         val eventSubscription = EventSubscription(
             elementId = "event_signal_1",
             name = "signal-1;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName(),
@@ -198,6 +217,7 @@ class CamundaEventSubscriptionFinderTest {
             predicate = null
         )
 
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).hasSize(0)
         assertThat(foundSubscription).hasSize(4)
         assertThat(foundSubscription).containsExactlyInAnyOrder(
             eventSubscription,
@@ -213,6 +233,23 @@ class CamundaEventSubscriptionFinderTest {
                 elementId = "event_signal_4",
                 name = "signal-4;\${$BPMN_BUSINESS_KEY};ANY;pr_0".toComposedEventName()
             )
+        )
+    }
+
+    @Test
+    fun `check conditional events ecos types in deployed subscriptions data `() {
+        val procId = "test-conditional-event-subscriptions"
+
+        saveAndDeployBpmn(SUBSCRIPTION, procId)
+
+        val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+
+        assertThat(subscriptionsData.subscriptions).hasSize(0)
+        assertThat(subscriptionsData.conditionalEventsEcosTypes).containsExactlyInAnyOrder(
+            EntityRef.valueOf("emodel/type@type_1"),
+            EntityRef.valueOf("emodel/type@type_2"),
+            EntityRef.valueOf("emodel/type@type_3"),
+            EntityRef.valueOf("emodel/type@type_4"),
         )
     }
 

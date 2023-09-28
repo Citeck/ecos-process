@@ -16,12 +16,15 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.*
+import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.*
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.system.measureTimeMillis
 
 private const val TASK_COMMENT_BROADCAST_ASPECT = "task-comments-broadcastable"
@@ -50,8 +53,17 @@ class ProcTaskServiceImpl(
         sortBy: List<SortBy>,
         page: QueryPage
     ): DbFindRes<String> {
+        val managerToActorsPredicate = PredicateUtils.mapValuePredicates(predicate) {
+            if (it.getAttribute() == "actorManager") {
+                val manager = it.getValue().asText()
+                val subordinates = getSubordinatesList(manager)
+                Predicates.inVals("actor", subordinates)
+            } else {
+                it
+            }
+        }
 
-        val preparedPredicate = PredicateUtils.mapValuePredicates(predicate) {
+        val preparedPredicate = PredicateUtils.mapValuePredicates(managerToActorsPredicate) {
             if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
                 var actor = it.getValue().asText()
                 if (actor == "\$CURRENT") {
@@ -381,5 +393,22 @@ class ProcTaskServiceImpl(
 
         camundaTaskService.removeVariableLocal(taskId, BPMN_TASK_CANDIDATES_USER_ORIGINAL)
         camundaTaskService.removeVariableLocal(taskId, BPMN_TASK_CANDIDATES_GROUP_ORIGINAL)
+    }
+
+    private fun getSubordinatesList(manager: String): Collection<String> {
+        val managerId = if (manager == "\$CURRENT") {
+            authoritiesApi.getPersonRef(AuthContext.getCurrentUser())
+        } else {
+            EntityRef.valueOf(manager)
+        }
+
+        return recordsService.query(
+            RecordsQuery.create {
+                withSourceId("emodel/person")
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(Predicates.eq("manager", managerId))
+                withMaxItems(300)
+            }
+        ).getRecords().map { it.getLocalId() }
     }
 }

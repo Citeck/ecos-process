@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
@@ -230,6 +231,14 @@ class ProcDefServiceImpl(
         }
         if (StringUtils.isNotBlank(predQuery.moduleId)) {
             query = query.and(QProcDefEntity.procDefEntity.extId.likeIgnoreCase("%" + predQuery.moduleId + "%"))
+        }
+        if (StringUtils.isNotBlank(predQuery.sectionRef)) {
+            val sectionEntity = QProcDefEntity.procDefEntity.sectionRef
+            query = if (predQuery.sectionRef.equals(DEFAULT_BPMN_SECTION)) {
+                query.and(sectionEntity.eq(DEFAULT_BPMN_SECTION).or(sectionEntity.isEmpty).or(sectionEntity.isNull))
+            } else {
+                query.and(QProcDefEntity.procDefEntity.sectionRef.eq(predQuery.sectionRef))
+            }
         }
         return query
     }
@@ -541,5 +550,6 @@ class ProcDefServiceImpl(
     class PredicateQuery {
         val moduleId: String? = null
         val procType: String? = null
+        val sectionRef: String? = null
     }
 }

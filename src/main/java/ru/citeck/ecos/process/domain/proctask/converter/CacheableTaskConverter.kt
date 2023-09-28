@@ -56,8 +56,8 @@ class CacheableTaskConverter(
                 name = localVariables[BPMN_NAME_ML] as? MLText ?: MLText.EMPTY,
                 possibleOutcomes = let {
                     @Suppress("UNCHECKED_CAST")
-                    val outcomes = localVariables[BPMN_POSSIBLE_OUTCOMES] as? List<TaskOutcome>
-                    return@let outcomes ?: emptyList()
+                    val outcomes = localVariables[BPMN_POSSIBLE_OUTCOMES] as? List<TaskOutcome> ?: emptyList()
+                    return@let outcomes.filter { it.id.isNotBlank() }
                 },
                 isDeleted = if (task is TaskEntity) {
                     task.isDeleted

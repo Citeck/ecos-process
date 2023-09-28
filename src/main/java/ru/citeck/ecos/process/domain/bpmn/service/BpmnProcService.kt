@@ -7,7 +7,11 @@ interface BpmnProcService {
 
     fun startProcess(processKey: String, businessKey: String? = null, variables: Map<String, Any?>): ProcessInstance
 
+    fun setVariables(processInstanceId: String, variables: Map<String, Any?>)
+
     fun getProcessInstance(processInstanceId: String): ProcessInstance?
+
+    fun getProcessInstancesForBusinessKey(businessKey: String): List<ProcessInstance>
 
     fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition?
 
