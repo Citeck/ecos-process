@@ -9,6 +9,7 @@ import javax.ws.rs.container.ContainerResponseContext
 import javax.ws.rs.container.ContainerResponseFilter
 import javax.ws.rs.core.MultivaluedMap
 
+// TODO: remove
 @Configuration
 @ApplicationPath("/engine-rest")
 class CamundaJerseyConfig : CamundaJerseyResourceConfig() {
