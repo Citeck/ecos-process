@@ -22,5 +22,6 @@ package ru.citeck.ecos.process.config
 //        http
 //            .authorizeRequests()
 //            .antMatchers("/engine-rest/**").hasAnyAuthority(AuthRole.ADMIN, AuthRole.SYSTEM)
+//            .antMatchers("/camunda/**").hasAnyAuthority(AuthRole.ADMIN)
 //    }
 //}

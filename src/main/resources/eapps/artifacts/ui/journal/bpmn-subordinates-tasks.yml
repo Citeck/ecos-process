@@ -35,10 +35,11 @@ columns:
       config:
         actionId: view-task
 
-  - id: assignee
+  - id: actors
     name:
       en: Assignee
       ru: Ответственный
+    multiple: true
 
   - id: documentRef
     name:
