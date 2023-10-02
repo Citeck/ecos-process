@@ -225,7 +225,8 @@ class ProcTaskSqlQueryBuilder(
                 .append(" ")
                 .append(operator)
                 .append(" ")
-                .append(addSqlQueryParams(condition, predicateValue))
+            addSqlQueryParams(condition, predicateValue)
+            return true
         }
 
         return false
