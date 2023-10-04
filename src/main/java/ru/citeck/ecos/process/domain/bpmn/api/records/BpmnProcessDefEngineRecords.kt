@@ -89,7 +89,7 @@ class BpmnProcessDefEngineRecords(
             ecosDefRev = ecosDefRev?.let {
                 EntityRef.create(
                     AppName.EPROC,
-                    BpmnProcessDefVersionRecords.ID,
+                    BpmnProcDefVersionRecords.ID,
                     it.id.toString()
                 )
             } ?: EntityRef.EMPTY,
