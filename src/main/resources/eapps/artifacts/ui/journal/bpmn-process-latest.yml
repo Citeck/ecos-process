@@ -1,7 +1,7 @@
 id: bpmn-process-latest
 name: { ru: Процессы, en: Processes }
 
-sourceId: eproc/bpmn-proc-latest
+sourceId: eproc/bpmn-def-engine
 system: true
 
 columns:
@@ -13,7 +13,7 @@ columns:
     searchable: false
     sortable: false
 
-  - id: definition
+  - id: ecosDefRev.processDefRef
     name:
       en: Definition
       ru: Описание
