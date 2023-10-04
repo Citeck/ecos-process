@@ -24,7 +24,7 @@ class CamundaJerseyConfig : CamundaJerseyResourceConfig() {
             val headers: MultivaluedMap<String, Any> = responseContext.headers
 
             // Здесь нужно указать домен, с которого разрешено обращаться к API. Получить можно из [EcosWebAppProps.webUrl]
-            headers.add("Access-Control-Allow-Origin", "http://localhost:7070")
+            headers.add("Access-Control-Allow-Origin", "http://localhost:8083")
             headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
             headers.add("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, X-Codingpedia")
             headers.add("Access-Control-Allow-Credentials", "true")
