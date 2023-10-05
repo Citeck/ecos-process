@@ -7,6 +7,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 data class BpmnStartEventDef(
     val id: String,
     val name: MLText,
+    val number: String,
     val documentation: MLText,
 
     val outgoing: List<String>,

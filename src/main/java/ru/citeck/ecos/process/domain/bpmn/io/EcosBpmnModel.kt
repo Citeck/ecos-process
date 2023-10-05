@@ -24,6 +24,7 @@ val BPMN_PROP_AUTO_START_ENABLED = QName(NS_ECOS_BPMN, "autoStartEnabled")
 val BPMN_PROP_SECTION_REF = QName(NS_ECOS_BPMN, "sectionRef")
 val BPMN_PROP_PROCESS_DEF_ID = QName(NS_ECOS_BPMN, "processDefId")
 val BPMN_PROP_NAME_ML = QName(NS_ECOS_BPMN, "name_ml")
+val BPMN_PROP_NUMBER = QName(NS_ECOS_BPMN, "number")
 val BPMN_PROP_DOC = QName(NS_ECOS_BPMN, "documentation")
 
 val BPMN_PROP_NOTIFICATION_TEMPLATE = QName(NS_ECOS_BPMN, "notificationTemplate")

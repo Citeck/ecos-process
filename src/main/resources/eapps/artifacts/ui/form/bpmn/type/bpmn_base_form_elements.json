@@ -32,6 +32,24 @@
       },
       {
         "label": {
+          "ru": "Номер элемента",
+          "en": "Element number"
+        },
+        "key": "number",
+        "inputMasks": [
+          {
+            "label": "",
+            "mask": ""
+          }
+        ],
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
           "ru": "Имя",
           "en": "Name"
         },
