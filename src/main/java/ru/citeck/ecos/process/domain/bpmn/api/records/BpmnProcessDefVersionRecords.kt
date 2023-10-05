@@ -164,6 +164,10 @@ class BpmnProcDefVersionRecords(
         val definition: String
             get() = String(data, Charsets.UTF_8)
 
+        @get:AttName("processDefRef")
+        val processDefRef: EntityRef
+            get() = EntityRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, procDefId)
+
         /**
          *  Lazy load data to avoid memory leaks. See [ProcDefRevDto.data]
          */
