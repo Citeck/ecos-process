@@ -7,7 +7,7 @@
 #
 # Можно подумать нужно ли показывать preview процесса, может быть переключения видов - список / плитка с preview.
 #
-# Должна быть пагиниция, c возможностью выбора количества элементов на странице.
+# Должна быть пагинация, с возможностью выбора количества элементов на странице.
 # Поиск через окно поиска в шапке, поиск осуществляется по идентификатору процесса. см ProcessDefinitionsListFilter
 
 # @name ProcessDefinitionsEngineList
@@ -19,7 +19,9 @@ Content-Type: application/json
     "query": {
         "sourceId": "eproc/bpmn-def-engine",
         "query": {
-            "onlyLatestVersion": true
+            "att": "onlyLatestVersion",
+            "t": "eq",
+            "val": false
         },
         "page": {
             "maxItems": 10,

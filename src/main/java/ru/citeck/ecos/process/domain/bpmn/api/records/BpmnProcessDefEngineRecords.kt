@@ -4,6 +4,8 @@ import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
@@ -28,27 +30,30 @@ class BpmnProcessDefEngineRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val query = recsQuery.getQuery(EngineDefQuery::class.java)
+        val pred = recsQuery.getQuery(Predicate::class.java)
+        val query = PredicateUtils.convertToDto(pred, EngineDefQuery::class.java)
 
         val countDefQueryBuilder = camundaRepositoryService
             .createProcessDefinitionQuery()
         if (query.onlyLatestVersion) {
             countDefQueryBuilder.latestVersion()
         }
-        if (query.keyLike.isNotBlank()) {
-            countDefQueryBuilder.processDefinitionKeyLike("%${query.keyLike}%")
+        if (query.key.isNotBlank()) {
+            countDefQueryBuilder.processDefinitionKeyLike("%${query.key}%")
         }
 
         val count = countDefQueryBuilder.count()
-
+        if (count == 0L) {
+            return RecsQueryRes<EntityRef>()
+        }
 
         val defQueryBuilder = camundaRepositoryService
             .createProcessDefinitionQuery()
         if (query.onlyLatestVersion) {
             defQueryBuilder.latestVersion()
         }
-        if (query.keyLike.isNotBlank()) {
-            defQueryBuilder.processDefinitionKeyLike("%${query.keyLike}%")
+        if (query.key.isNotBlank()) {
+            defQueryBuilder.processDefinitionKeyLike("%${query.key}%")
         }
 
         val processes = defQueryBuilder
@@ -89,7 +94,7 @@ class BpmnProcessDefEngineRecords(
             ecosDefRev = ecosDefRev?.let {
                 EntityRef.create(
                     AppName.EPROC,
-                    BpmnProcessDefVersionRecords.ID,
+                    BpmnProcDefVersionRecords.ID,
                     it.id.toString()
                 )
             } ?: EntityRef.EMPTY,
@@ -117,7 +122,7 @@ class BpmnProcessDefEngineRecords(
     }
 }
 
-private data class EngineDefQuery(
-    val onlyLatestVersion: Boolean = true,
-    val keyLike: String = ""
+data class EngineDefQuery(
+    var onlyLatestVersion: Boolean = true,
+    var key: String = ""
 )

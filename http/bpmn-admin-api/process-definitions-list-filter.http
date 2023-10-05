@@ -1,5 +1,5 @@
 # Фильтрация списка process definition по ID процесса (key).
-# Использовать атрибут keyLike.
+# Использовать атрибут key.
 
 # @name ProcessDefinitionsEngineListFilter
 POST http://localhost/gateway/api/records/query
@@ -10,8 +10,19 @@ Content-Type: application/json
     "query": {
         "sourceId": "eproc/bpmn-def-engine",
         "query": {
-            "onlyLatestVersion": true,
-            "keyLike": "contract"
+            "t": "and",
+            "val": [
+                {
+                    "att": "onlyLatestVersion",
+                    "t": "eq",
+                    "val": true
+                },
+                {
+                    "att": "key",
+                    "t": "like",
+                    "val": "contract"
+                }
+            ]
         },
         "page": {
             "maxItems": 10,
