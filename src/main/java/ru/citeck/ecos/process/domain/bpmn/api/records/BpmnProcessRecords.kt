@@ -87,7 +87,7 @@ class BpmnProcessRecords(
         val def = bpmnProcService.getProcessDefinitionByProcessInstanceId(recordId) ?: return ProcRecord()
         val defRev = procDefService.getProcessDefRevByDeploymentId(def.deploymentId) ?: return ProcRecord()
 
-        return ProcRecord(def.key, EntityRef.create(AppName.EPROC, BpmnProcDefVersionRecords.ID, defRev.id.toString()))
+        return ProcRecord(def.key, EntityRef.create(AppName.EPROC, BpmnProcessDefVersionRecords.ID, defRev.id.toString()))
     }
 
     override fun mutate(record: LocalRecordAtts): String {
