@@ -1,0 +1,48 @@
+# Скрин просмотра определенной версии процесса. Список запущенных процессов.
+
+# В списке пользователю показываем:
+# Статус - какая-то иконка, Ок / Не ок. В зависимости от наличия инцидентов.
+# Если isSuspended = true, то рисуем иконку "пауза"
+# Id инстанса процесса eproc/bpmn-proc@ - ссылка, по нажатию провалдиваемся в просмотр инстанса в рамках админки
+# Документ, по которому запущен БП (ссылка)
+# Время старта процесса
+#
+# Поддерживается сортировка только по startTime, она зашита по умолчанию.
+# В список добавить возможность сортировки по startTIme asc / desc
+#
+# В query параметр bpmnEngineDef обязательный
+# Добавить возможность фильтрации по `document` - entityRef. Пример см ProcessDefinitionViewProcessInstancesFilterDocument
+
+# @name ProcessDefinitionViewProcessInstances
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-proc",
+        "query": {
+            "att": "bpmnEngineDef",
+            "t": "eq",
+            "val": "eproc/bpmn-def-engine@a1795c90-5dd0-11ee-9787-62d3dfa44630"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "startTime"
+            }
+        ]
+    },
+    "attributes": {
+        "disp": "?disp",
+        "isSuspended": "isSuspended?bool",
+        "document": "documentRef",
+        "startTime": "startTime",
+        "incidents": "incidents[]{?id}"
+    }
+}
+

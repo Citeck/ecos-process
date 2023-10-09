@@ -1,0 +1,45 @@
+# Скрин просмотра определенной версии процесса. Список запущенных процессов с фильтрацией по документу.
+
+# @name ProcessDefinitionViewProcessInstancesFilterDocument
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-proc",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "att": "bpmnEngineDef",
+                    "t": "eq",
+                    "val": "eproc/bpmn-def-engine@af361b68-6076-11ee-89a3-0a02ccb1d0e7"
+                },
+                {
+                    "att": "document",
+                    "t": "eq",
+                    "val": "emodel/some-doc@39116e7d-33c1-4c89-b6b2-197b582b4073"
+                }
+            ]
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "startTime"
+            }
+        ]
+    },
+    "attributes": {
+        "disp": "?disp",
+        "isSuspended": "isSuspended?bool",
+        "document": "documentRef",
+        "startTime": "startTime",
+        "incidents": "incidents[]{?id}"
+    }
+}
+

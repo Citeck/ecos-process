@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
@@ -18,6 +19,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import kotlin.system.measureTimeMillis
 
 @Component
 class BpmnProcessDefEngineRecords(
@@ -28,6 +30,8 @@ class BpmnProcessDefEngineRecords(
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
+        private val log = KotlinLogging.logger {}
+
         const val ID = "bpmn-def-engine"
 
         private const val KEY_ATT = "key"
@@ -41,22 +45,30 @@ class BpmnProcessDefEngineRecords(
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
         val predicate = recsQuery.getQuery(Predicate::class.java)
 
-        val totalCount = camundaRepositoryService
-            .createProcessDefinitionQuery()
-            .applyPredicate(predicate)
-            .count()
+        val totalCount: Long
+        val totalCountTime = measureTimeMillis {
+            totalCount = camundaRepositoryService
+                .createProcessDefinitionQuery()
+                .applyPredicate(predicate)
+                .count()
+        }
 
-        val processes = camundaRepositoryService
-            .createProcessDefinitionQuery()
-            .applyPredicate(predicate)
-            .applySort(recsQuery)
-            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
-                EntityRef.create(AppName.EPROC, ID, it.id)
-            }
+        val defs: List<EntityRef>
+        val defsTime = measureTimeMillis {
+            defs = camundaRepositoryService
+                .createProcessDefinitionQuery()
+                .applyPredicate(predicate)
+                .applySort(recsQuery)
+                .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
+                    EntityRef.create(AppName.EPROC, ID, it.id)
+                }
+        }
+
+        log.debug { "$ID total count time: $totalCountTime, defs time: $defsTime" }
 
         val result = RecsQueryRes<EntityRef>()
 
-        result.setRecords(processes)
+        result.setRecords(defs)
         result.setTotalCount(totalCount)
         result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
@@ -111,15 +123,23 @@ class BpmnProcessDefEngineRecords(
         }
     }
 
+    //TODO: why request by one id?
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
-        return camundaRepositoryService
-            .createProcessDefinitionQuery()
-            .processDefinitionIdIn(*recordIds.toTypedArray())
-            .list()
-            .map {
-                val entity = it as ProcessDefinitionEntity
-                ProcessDefinitionEngineRecord(entity)
-            }
+        val atts: List<ProcessDefinitionEngineRecord>
+        val attsTime = measureTimeMillis {
+            atts = camundaRepositoryService
+                .createProcessDefinitionQuery()
+                .processDefinitionIdIn(*recordIds.toTypedArray())
+                .list()
+                .map {
+                    val entity = it as ProcessDefinitionEntity
+                    ProcessDefinitionEngineRecord(entity)
+                }
+        }
+
+        log.debug { "$ID get atts time: $attsTime, size: ${recordIds.size}" }
+
+        return atts
     }
 
     private inner class ProcessDefinitionEngineRecord(
