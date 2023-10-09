@@ -12,7 +12,7 @@ Content-Type: application/json
             "t": "and",
             "val": [
                 {
-                    "att": "bpmnEngineDef",
+                    "att": "bpmnDefEngine",
                     "t": "eq",
                     "val": "eproc/bpmn-def-engine@af361b68-6076-11ee-89a3-0a02ccb1d0e7"
                 },

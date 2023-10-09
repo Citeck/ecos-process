@@ -10,7 +10,7 @@
 # Поддерживается сортировка только по startTime, она зашита по умолчанию.
 # В список добавить возможность сортировки по startTIme asc / desc
 #
-# В query параметр bpmnEngineDef обязательный
+# В query параметр bpmnDefEngine обязательный
 # Добавить возможность фильтрации по `document` - entityRef. Пример см ProcessDefinitionViewProcessInstancesFilterDocument
 
 # @name ProcessDefinitionViewProcessInstances
@@ -22,7 +22,7 @@ Content-Type: application/json
     "query": {
         "sourceId": "eproc/bpmn-proc",
         "query": {
-            "att": "bpmnEngineDef",
+            "att": "bpmnDefEngine",
             "t": "eq",
             "val": "eproc/bpmn-def-engine@a1795c90-5dd0-11ee-9787-62d3dfa44630"
         },

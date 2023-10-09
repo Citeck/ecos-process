@@ -1,0 +1,35 @@
+#
+
+# @name
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-incident",
+        "query": {
+            "att": "bpmnDefEngine",
+            "t": "eq",
+            "val": "eproc/bpmn-def-engine@a1795c90-5dd0-11ee-9787-62d3dfa44630"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "startTime"
+            }
+        ]
+    },
+    "attributes": {
+        "disp": "?disp",
+        "isSuspended": "isSuspended?bool",
+        "document": "documentRef",
+        "startTime": "startTime",
+        "incidents": "incidents[]{?id}"
+    }
+}
+

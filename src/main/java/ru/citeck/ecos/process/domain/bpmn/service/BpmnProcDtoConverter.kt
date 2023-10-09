@@ -26,8 +26,8 @@ fun ProcessInstanceQuery.toCamundaQuery(): ProcessInstanceQueryDto {
         query.businessKey = businessKey
     }
 
-    if (bpmnEngineDef.isNotEmpty()) {
-        val camundaProcessDefId = bpmnEngineDef.getLocalId()
+    if (bpmnDefEngine.isNotEmpty()) {
+        val camundaProcessDefId = bpmnDefEngine.getLocalId()
         query.processDefinitionId = camundaProcessDefId
     }
 

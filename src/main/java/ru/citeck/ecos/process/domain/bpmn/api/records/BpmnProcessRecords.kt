@@ -56,7 +56,7 @@ class BpmnProcessRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
-        // TODO: allow query only if bpmnEngineDef is not empty? Because we need to know camunda process definition id
+        // TODO: allow query only if bpmnDefEngine is not empty? Because we need to know camunda process definition id
         // for permission check
 
         val procQuery = recsQuery.toProcessInstanceQuery()
@@ -86,7 +86,7 @@ class BpmnProcessRecords(
 
         return ProcessInstanceQuery(
             businessKey = bpmnQuery.document.toString(),
-            bpmnEngineDef = bpmnQuery.bpmnEngineDef,
+            bpmnDefEngine = bpmnQuery.bpmnDefEngine,
             page = page,
             sortBy = if (sortBy.isEmpty()) {
                 SortBy.create().build()
@@ -278,7 +278,7 @@ class BpmnProcessRecords(
 
     data class BpmnProcQuery(
         var document: EntityRef = EntityRef.EMPTY,
-        var bpmnEngineDef: EntityRef = EntityRef.EMPTY
+        var bpmnDefEngine: EntityRef = EntityRef.EMPTY
     )
 
     private enum class MutateAction {

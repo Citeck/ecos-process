@@ -36,7 +36,7 @@ interface BpmnProcService {
 
 data class ProcessInstanceQuery(
     val businessKey: String = "",
-    val bpmnEngineDef: EntityRef = EntityRef.EMPTY,
+    val bpmnDefEngine: EntityRef = EntityRef.EMPTY,
 
     val page: QueryPage,
     val sortBy: SortBy

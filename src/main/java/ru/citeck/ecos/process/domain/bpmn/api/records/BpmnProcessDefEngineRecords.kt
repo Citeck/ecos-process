@@ -42,7 +42,7 @@ class BpmnProcessDefEngineRecords(
         return ID
     }
 
-    override fun queryRecords(recsQuery: RecordsQuery): Any? {
+    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
 
         val totalCount: Long

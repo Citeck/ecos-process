@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_DEFINITION_ID
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
@@ -31,8 +30,7 @@ private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 @Component
 class BpmnProcessDefVersionRecords(
     private val procDefService: ProcDefService,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
-    private val camundaRepositoryService: RepositoryService
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
@@ -144,25 +142,6 @@ class BpmnProcessDefVersionRecords(
 
         private val dto: ProcDefRevDto
     ) {
-
-        // TODO: rewrite / remove
-//        @get:AttName(CAMUNDA_DEFINITION_ID)
-//        val camundaDefinitionId: String by lazy {
-//            val result = camundaRepositoryService
-//                .createProcessDefinitionQuery()
-//                .deploymentId(deploymentId)
-//                .list()
-//
-//            if (result.isEmpty()) {
-//                return@lazy ""
-//            }
-//
-//            if (result.size > 1) {
-//                error("Found more than one process definition for deployment id: $deploymentId")
-//            }
-//
-//            result[0].id ?: ""
-//        }
 
         @get:AttName(".disp")
         val disp: MLText
