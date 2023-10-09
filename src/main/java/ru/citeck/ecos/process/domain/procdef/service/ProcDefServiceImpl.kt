@@ -230,7 +230,10 @@ class ProcDefServiceImpl(
             query = query.and(QProcDefEntity.procDefEntity.procType.eq(predQuery.procType))
         }
         if (StringUtils.isNotBlank(predQuery.moduleId)) {
-            query = query.and(QProcDefEntity.procDefEntity.extId.likeIgnoreCase("%" + predQuery.moduleId + "%"))
+            query = query.and(QProcDefEntity.procDefEntity.extId.containsIgnoreCase(predQuery.moduleId))
+        }
+        if (StringUtils.isNotBlank(predQuery.name)) {
+            query = query.and(QProcDefEntity.procDefEntity.name.containsIgnoreCase(predQuery.name))
         }
         if (StringUtils.isNotBlank(predQuery.sectionRef)) {
             val sectionEntity = QProcDefEntity.procDefEntity.sectionRef
@@ -551,5 +554,6 @@ class ProcDefServiceImpl(
         val moduleId: String? = null
         val procType: String? = null
         val sectionRef: String? = null
+        val name: String? = null
     }
 }

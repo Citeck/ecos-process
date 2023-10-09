@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import javax.annotation.PostConstruct
 
+//TODO: remove
 @Component
 class BpmnProcessStatisticsProvider(
     val camundaRuntimeService: RuntimeService
@@ -73,7 +74,3 @@ class BpmnProcessDefinitionStatisticsValue(
 
 }
 
-data class BpmnProcessStatistics(
-    val incidentsCount: Long,
-    val instancesCount: Long
-)

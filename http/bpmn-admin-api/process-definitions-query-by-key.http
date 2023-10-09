@@ -1,0 +1,44 @@
+# Поиск задеплоенных process definition по ключу.
+# Сортируем по версии, выше - самая свежая.
+
+# @name ProcessDefinitionsQueryByKey
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-def-engine",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "att": "onlyLatestVersion",
+                    "t": "eq",
+                    "val": false
+                },
+                {
+                    "att": "key",
+                    "t": "eq",
+                    "val": "process-key-there"
+                }
+            ]
+        },
+        "page": {
+            "maxItems": 10,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "version"
+            }
+        ]
+    },
+    "attributes": {
+        "disp": "?disp",
+        "version": "ecosDefRev.version?num",
+        "statistics": "statistics{incidentCount:incidentsCount?num,instancesCount:instancesCount?num}"
+    }
+}
+

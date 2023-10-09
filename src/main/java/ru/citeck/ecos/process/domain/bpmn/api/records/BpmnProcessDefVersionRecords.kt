@@ -1,13 +1,16 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
+import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CAMUNDA_DEFINITION_ID
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
@@ -26,9 +29,10 @@ private const val DRAFT_TAG = "draft"
 private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 
 @Component
-class BpmnProcDefVersionRecords(
+class BpmnProcessDefVersionRecords(
     private val procDefService: ProcDefService,
     private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+    private val camundaRepositoryService: RepositoryService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
@@ -62,11 +66,15 @@ class BpmnProcDefVersionRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val record = recsQuery.getQuery(VersionQuery::class.java).record
-        val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, record.getLocalId())
+        val query = recsQuery.getQuery(VersionQuery::class.java)
+        val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, query.record.getLocalId())
 
-        val versions = procDefService.getProcessDefRevs(procDefRef).map {
+        var versions = procDefService.getProcessDefRevs(procDefRef).map {
             it.toVersionRecord()
+        }
+
+        if (query.onlyDeployed) {
+            versions = versions.filter { it.deploymentId.isNotBlank() }
         }
 
         val result = RecsQueryRes<VersionRecord>()
@@ -137,6 +145,25 @@ class BpmnProcDefVersionRecords(
         private val dto: ProcDefRevDto
     ) {
 
+        // TODO: rewrite / remove
+//        @get:AttName(CAMUNDA_DEFINITION_ID)
+//        val camundaDefinitionId: String by lazy {
+//            val result = camundaRepositoryService
+//                .createProcessDefinitionQuery()
+//                .deploymentId(deploymentId)
+//                .list()
+//
+//            if (result.isEmpty()) {
+//                return@lazy ""
+//            }
+//
+//            if (result.size > 1) {
+//                error("Found more than one process definition for deployment id: $deploymentId")
+//            }
+//
+//            result[0].id ?: ""
+//        }
+
         @get:AttName(".disp")
         val disp: MLText
             get() = let {
@@ -160,6 +187,15 @@ class BpmnProcDefVersionRecords(
                 return MLText(disp)
             }
 
+        @get:AttName(RecordConstants.ATT_MODIFIED)
+        val attModified: Instant
+            get() = modified
+
+
+        @get:AttName(RecordConstants.ATT_MODIFIER)
+        val attModifier: EntityRef
+            get() = modifier
+
         @get:AttName("definition")
         val definition: String
             get() = String(data, Charsets.UTF_8)
@@ -178,9 +214,10 @@ class BpmnProcDefVersionRecords(
 }
 
 private fun ProcDefRevDto.getRef(): EntityRef {
-    return RecordRef.create(AppName.EPROC, BpmnProcDefVersionRecords.ID, id.toString())
+    return RecordRef.create(AppName.EPROC, BpmnProcessDefVersionRecords.ID, id.toString())
 }
 
 data class VersionQuery(
-    val record: EntityRef
+    val record: EntityRef,
+    val onlyDeployed: Boolean = false
 )

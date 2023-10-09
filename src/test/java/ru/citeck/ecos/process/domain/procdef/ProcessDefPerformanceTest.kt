@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcDefVersionRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefVersionRecords
 import ru.citeck.ecos.process.domain.bpmn.api.records.VersionQuery
 import ru.citeck.ecos.process.domain.getBpmnProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -127,10 +127,10 @@ class ProcessDefPerformanceTest {
     fun `Getting many revisions from version records without data att should go without a memory leak`() {
         val allRecords = recordsService.query(
             RecordsQuery.create {
-                withSourceId(BpmnProcDefVersionRecords.ID)
+                withSourceId(BpmnProcessDefVersionRecords.ID)
                 withQuery(
                     VersionQuery(
-                        EntityRef.create(BpmnProcDefVersionRecords.ID, procDefRef.id),
+                        EntityRef.create(BpmnProcessDefVersionRecords.ID, procDefRef.id),
                     )
                 )
                 withMaxItems(Int.MAX_VALUE)
