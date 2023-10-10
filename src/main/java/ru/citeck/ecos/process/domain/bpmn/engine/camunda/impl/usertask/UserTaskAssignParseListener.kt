@@ -38,17 +38,17 @@ class UserTaskAssignParseListener(
 
         if (multiInstanceAutoMode) {
             activity.addTaskListener(TaskListener.EVENTNAME_CREATE, multiInstanceAutoModeUserTaskAssignListener)
-            log.debug { "Add multiInstanceAutoModeUserTaskAssignListener to ${activity.id}" }
+            log.trace { "Add multiInstanceAutoModeUserTaskAssignListener to ${activity.id}" }
             return
         }
 
         if (manualRecipientsMode) {
             activity.addTaskListener(TaskListener.EVENTNAME_CREATE, manualRecipientsModeUserTaskAssignListener)
-            log.debug { "Add manualRecipientsModeUserTaskAssignListener to ${activity.id}" }
+            log.trace { "Add manualRecipientsModeUserTaskAssignListener to ${activity.id}" }
             return
         }
 
         activity.addTaskListener(TaskListener.EVENTNAME_CREATE, recipientsFromRolesUserTaskAssignListener)
-        log.debug { "Add recipientsFromRolesUserTaskAssignListener to ${activity.id}" }
+        log.trace { "Add recipientsFromRolesUserTaskAssignListener to ${activity.id}" }
     }
 }

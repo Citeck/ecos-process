@@ -1,6 +1,42 @@
-#
+# Скрин просмотра определенной версии процесса. Список инцидентов.
 
-# @name
+# В списке пользователю показываем:
+#
+# message (Сообщение) - Предусмотреть, что текст может быть длинный.
+# По нажатию показываем пользователю полный stackTrace в большом окне.
+# Получить stackTrace можно по атрибуту `causeRef.stackTrace`
+# Добавить кнопку для копирования в буфер обмена.
+#
+# processInstance (Экземпляр процесса) - ссылка на инстанс процесса, по нажатию проваливаемся в просмотр инстанса в рамках админки.
+# отображаем id инстанса, например 5bde4da9-5d26-11ee-a087-22e5aeaa8a65
+#
+# created (Создан) - время создания инцидента
+#
+# activityId (Элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+#
+# failedActivityId (Отказавший элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+#
+# incidentType (Тип)
+#
+# note (Примечание) - Заметка о ициденте, Предусмотреть, что текст может быть длинный.
+# По клику открывается окно редактирования заметки. Для сохранения отправить mutate запрос на атрибут `note`.
+#
+# Действия:
+# Увеличить количество попыток - значок как в админке. По нажатию всплывает диалоговое окно.
+# Заголовок - Изменение количества попыток выполнения
+# Сообщение - Количество попыток выполнения неуспешной задачи в выбранном инциденте будет изменено на указанное.
+# Котнрол выбора Integer, по умолчанию 1. Возможно ввести только положительное значение.
+# Кнопки - Отмена, Изменить
+# Отправить mutate запрос для рекорда из атрибута .causeRef с атрибутом `retries` и значением из диалога.
+# После отправки - обновить список инцидентов, обновленный должен исчезнуть из списка.
+#
+# По умолчанию сортировка по _created.
+# В список добавить возможность сортировки по _created, processInstance, activityId, incidentType - asc / desc
+#
+# В query параметр bpmnDefEngine обязательный
+# Добавить возможность фильтрации по `message`. Пример см ProcessDefinitionViewProcessIncidentsFilterMessage
+
+# @name ProcessDefinitionViewProcessIncidents
 POST http://localhost/gateway/api/records/query
 Authorization: Basic admin admin
 Content-Type: application/json
@@ -11,7 +47,7 @@ Content-Type: application/json
         "query": {
             "att": "bpmnDefEngine",
             "t": "eq",
-            "val": "eproc/bpmn-def-engine@a1795c90-5dd0-11ee-9787-62d3dfa44630"
+            "val": "eproc/bpmn-def-engine@4e215304-5c80-11ee-8cae-1e6ab6bff9b4"
         },
         "page": {
             "maxItems": 30,
@@ -20,16 +56,18 @@ Content-Type: application/json
         "sortBy": [
             {
                 "ascending": false,
-                "attribute": "startTime"
+                "attribute": "_created"
             }
         ]
     },
     "attributes": {
-        "disp": "?disp",
-        "isSuspended": "isSuspended?bool",
-        "document": "documentRef",
-        "startTime": "startTime",
-        "incidents": "incidents[]{?id}"
+        "message": "message",
+        "processInstance": "processInstance.id",
+        "created": "_created",
+        "activityId": "activityId",
+        "failedActivityId": "failedActivityId",
+        "incidentType": "incidentType",
+        "note": "note"
     }
 }
 

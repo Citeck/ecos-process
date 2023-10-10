@@ -52,6 +52,9 @@ class BpmnProcessDefEngineRecords(
                 .applyPredicate(predicate)
                 .count()
         }
+        if (totalCount == 0L) {
+            return RecsQueryRes()
+        }
 
         val defs: List<EntityRef>
         val defsTime = measureTimeMillis {
@@ -123,7 +126,6 @@ class BpmnProcessDefEngineRecords(
         }
     }
 
-    //TODO: why request by one id?
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
         val atts: List<ProcessDefinitionEngineRecord>
         val attsTime = measureTimeMillis {

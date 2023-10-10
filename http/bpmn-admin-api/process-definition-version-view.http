@@ -59,7 +59,7 @@ Content-Type: application/json
         "allRunningInstancesCount": "overallStatistics.instancesCount?num",
         "statistics": "statistics{incidentCount:incidentsCount?num,instancesCount:instancesCount?num}",
         "activityStatistics": "activityStatistics[]?json",
-        "bpmnData": "ecosDefRev.data"
+        "bpmnData": "ecosDefRev.definition"
 
     }
 }
