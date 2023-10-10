@@ -9,6 +9,7 @@ import ru.citeck.ecos.records2.RecordRef
 data class BpmnUserTaskDef(
     val id: String,
     val name: MLText,
+    val number: Int?,
     val documentation: MLText,
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),

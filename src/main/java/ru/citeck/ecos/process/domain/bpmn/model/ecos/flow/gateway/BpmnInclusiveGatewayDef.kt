@@ -5,7 +5,7 @@ import ru.citeck.ecos.commons.data.MLText
 data class BpmnInclusiveGatewayDef(
     val id: String,
     val name: MLText,
-    val number: String,
+    val number: Int?,
     val documentation: MLText,
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),

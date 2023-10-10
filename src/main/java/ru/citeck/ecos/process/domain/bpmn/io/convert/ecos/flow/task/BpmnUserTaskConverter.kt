@@ -32,6 +32,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
         return BpmnUserTaskDef(
             id = element.id,
             name = nameMl,
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
@@ -81,6 +82,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS_MODE, element.manualRecipientsMode.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS, Json.mapper.toString(element.manualRecipients))
 
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
             element.multiInstanceConfig?.let {
                 loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
                 otherAttributes[BPMN_MULTI_INSTANCE_CONFIG] = Json.mapper.toString(it)

@@ -36,16 +36,17 @@
           "en": "Element number"
         },
         "key": "number",
-        "inputMasks": [
-          {
-            "label": "",
-            "mask": ""
-          }
-        ],
-        "defaultValue": "",
+        "validate": {
+          "integer": false
+        },
+        "isBigNumber": false,
+        "delimiterValue": " ",
+        "decimalValue": "",
         "refreshOn": [],
         "optionalWhenDisabled": false,
-        "type": "textfield",
+        "decimalLimit": 0,
+        "defaultValue": "",
+        "type": "number",
         "input": true
       },
       {

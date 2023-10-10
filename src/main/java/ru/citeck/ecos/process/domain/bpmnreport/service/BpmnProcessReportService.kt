@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmnreport.service
 
-import mu.KotlinLogging
 import org.apache.commons.lang3.LocaleUtils
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
@@ -20,10 +19,6 @@ class BpmnProcessReportService(
     val reportElementsService: ReportElementsService
 ) {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
-
     fun generateReportElementListForBpmnDefinition(bpmnDefinition: BpmnDefinitionDef): List<ReportElement> {
         val ecosType = bpmnDefinition.ecosType
         val flowElements = bpmnDefinition.process.first().flowElements
@@ -35,6 +30,8 @@ class BpmnProcessReportService(
         listElements.addAll(convertBpmnFlowElementToReportElements(flowElements, ecosType))
         addAnnotationsToReportElements(listElements, artifacts)
         addLanesToReportElements(listElements, laneSets)
+
+        listElements.sortBy { it.number }
 
         return listElements
     }
@@ -69,8 +66,20 @@ class BpmnProcessReportService(
     ) {
         for (laneSet in laneSets) {
             for (lane in laneSet.lanes) {
-                val laneElement = ReportLaneElement(lane.name)
-                lane.flowRefs.forEach { elementId -> elements.find { it.id == elementId }?.lane = laneElement }
+                val laneElement = ReportLaneElement(lane.name, lane.documentation)
+
+                fun addLaneToElements(elementNames: List<String>) {
+                    elementNames.forEach { elementId ->
+                        elements.find { it.id == elementId }?.let { element ->
+                            element.lane = laneElement
+                            element.subProcessElement?.elements?.let {
+                                addLaneToElements(element.subProcessElement?.elements!!)
+                            }
+                        }
+                    }
+                }
+
+                addLaneToElements(lane.flowRefs)
             }
         }
     }
@@ -83,12 +92,12 @@ class BpmnProcessReportService(
 
         for (flowElement in flowElements) {
 
-            val elementType = ElementType.values().find { it.flowElementType == flowElement.type }
-//            val elementType = ElementType.values().find { it.flowElementType == flowElement.type } ?: continue
+            val elementType = ElementType.values().find { it.flowElementType == flowElement.type } ?: continue
 
-            val reportElement =
-                ReportElement(flowElement.id, flowElement.type, flowElement.data, flowElement.data["number"].asText())
-//            val reportElement = ReportElement(flowElement.id, flowElement.data["number"].asText())
+            val reportElement = ReportElement(
+                flowElement.id,
+                flowElement.data["number"].takeIf { it.isNotNull() }?.asInt()
+            )
 
             when (elementType) {
                 //Status
@@ -116,21 +125,49 @@ class BpmnProcessReportService(
                 }
 
                 //Task
-                ElementType.USER_TASK, ElementType.SCRIPT_TASK, ElementType.SEND_TASK -> {
+                ElementType.USER_TASK, ElementType.SCRIPT_TASK,
+                ElementType.SEND_TASK, ElementType.BUSINESS_RULE_TASK -> {
                     reportElement.taskElement =
                         reportElementsService.convertReportTaskElement(flowElement, elementType, ecosType)
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 
-                else -> {}
+                //SubProcess
+                ElementType.SUB_PROCESS -> {
+                    reportElement.subProcessElement =
+                        reportElementsService.convertReportSubProcessElement(flowElement, elementType)
+
+                    val subProcessElements = flowElement.data["flowElements"].asList(BpmnFlowElementDef::class.java)
+                    val subProcessArtifacts = flowElement.data["artifacts"].asList(BpmnArtifactDef::class.java)
+
+                    val elementsFromSubProcess = convertBpmnFlowElementToReportElements(subProcessElements, ecosType)
+                    if (elementsFromSubProcess.isNotEmpty()) {
+                        addAnnotationsToReportElements(elementsFromSubProcess, subProcessArtifacts)
+                        reportElement.subProcessElement?.elements = elementsFromSubProcess.map { it.id }
+
+                        elementsFromSubProcess.forEach {
+                            it.subProcessElement = ReportSubProcessElement().apply {
+                                type = reportElement.subProcessElement?.type ?: ""
+                                name = reportElement.subProcessElement?.name ?: MLText()
+                            }
+                        }
+
+                        elements.addAll(elementsFromSubProcess)
+                    }
+
+                    reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
+                }
+
+                //CallActivity
+                ElementType.CALL_ACTIVITY -> {
+                    reportElement.subProcessElement =
+                        reportElementsService.convertReportCallActivityElement(flowElement, elementType)
+                    reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
+                }
             }
-
-
-
 
             elements.add(reportElement)
         }
-
 
         return elements
     }
@@ -174,8 +211,6 @@ class BpmnProcessReportService(
                         .mapValues { (_, values) -> values.joinToString(" - ") }
 
                     reportSequenceElement.outcome = MLText(mergedMap)
-
-                    //тут код
 
                     MLText(
                         LocaleUtils.toLocale("en") to "Outcome",

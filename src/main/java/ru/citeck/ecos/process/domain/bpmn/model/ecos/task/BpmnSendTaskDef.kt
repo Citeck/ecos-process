@@ -11,6 +11,8 @@ import java.util.*
 data class BpmnSendTaskDef(
     val id: String,
     val name: MLText,
+    val number: Int?,
+    val documentation: MLText,
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),
 

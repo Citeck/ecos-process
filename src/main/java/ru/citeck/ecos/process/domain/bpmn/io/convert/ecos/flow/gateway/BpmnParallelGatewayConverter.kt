@@ -22,7 +22,7 @@ class BpmnParallelGatewayConverter : EcosOmgConverter<BpmnParallelGatewayDef, TP
         return BpmnParallelGatewayDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            number = element.otherAttributes[BPMN_PROP_NUMBER] ?: "",
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
@@ -44,9 +44,10 @@ class BpmnParallelGatewayConverter : EcosOmgConverter<BpmnParallelGatewayDef, TP
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
-            otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, element.number)
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
+
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
         }
     }
 }

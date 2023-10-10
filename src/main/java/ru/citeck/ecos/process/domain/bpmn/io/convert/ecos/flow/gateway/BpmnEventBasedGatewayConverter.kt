@@ -22,7 +22,7 @@ class BpmnEventBasedGatewayConverter : EcosOmgConverter<BpmnEventBasedGatewayDef
         return BpmnEventBasedGatewayDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            number = element.otherAttributes[BPMN_PROP_NUMBER] ?: "",
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
@@ -37,10 +37,11 @@ class BpmnEventBasedGatewayConverter : EcosOmgConverter<BpmnEventBasedGatewayDef
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
-            otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, element.number)
 
             element.incoming.forEach { incoming.add(QName("", it)) }
             element.outgoing.forEach { outgoing.add(QName("", it)) }
+
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
         }
     }
 }

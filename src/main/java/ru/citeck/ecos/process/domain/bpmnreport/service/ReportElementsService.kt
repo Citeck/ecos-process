@@ -12,12 +12,14 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmnreport.model.*
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class ReportElementsService(
     private val statusService: StatusService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val recordsService: RecordsService
 ) {
 
     fun convertReportStatusElement(flowElement: BpmnFlowElementDef, ecosType: EntityRef): ReportStatusElement {
@@ -35,6 +37,27 @@ class ReportElementsService(
         return gatewayElement
     }
 
+    fun convertReportSubProcessElement(
+        flowElement: BpmnFlowElementDef,
+        elementType: ElementType
+    ): ReportSubProcessElement {
+        val subProcessElement = ReportSubProcessElement()
+        updateBaseElement(subProcessElement, flowElement, elementType)
+        return subProcessElement
+    }
+
+    fun convertReportCallActivityElement(
+        flowElement: BpmnFlowElementDef,
+        elementType: ElementType
+    ): ReportSubProcessElement {
+        val subProcessElement = ReportSubProcessElement()
+        updateBaseElement(subProcessElement, flowElement, elementType)
+
+        subProcessElement.subProcessName = getNameByEntity(flowElement.data["processRef"].asText())
+
+        return subProcessElement
+    }
+
     fun convertReportEventElement(flowElement: BpmnFlowElementDef, elementType: ElementType): ReportEventElement {
         val eventElement = ReportEventElement()
         updateBaseElement(eventElement, flowElement, elementType)
@@ -42,11 +65,10 @@ class ReportElementsService(
         when (flowElement.data["eventDefinition"]["type"].asText()) {
             "signalEvent" -> {
 
+                eventElement.type = "Signal ${eventElement.type}"
                 val cancelActivity = flowElement.data.get("cancelActivity", Boolean::class.java)
-                if (cancelActivity == null) {
-                    eventElement.type = "Signal ${eventElement.type}"
-                } else {
-                    if (!cancelActivity) eventElement.type = "${eventElement.type} (Non Interrupting)"
+                if (cancelActivity != null && !cancelActivity) {
+                    eventElement.type = "${eventElement.type} (Non Interrupting)"
                 }
 
                 val event = Json.mapper.convert(flowElement.data["eventDefinition"], BpmnSignalEventDef::class.java)
@@ -65,11 +87,10 @@ class ReportElementsService(
 
             "timerEvent" -> {
 
+                eventElement.type = "Timer ${eventElement.type}"
                 val cancelActivity = flowElement.data.get("cancelActivity", Boolean::class.java)
-                if (cancelActivity == null) {
-                    eventElement.type = "Timer ${eventElement.type}"
-                } else {
-                    if (!cancelActivity) eventElement.type = "${eventElement.type} (Non Interrupting)"
+                if (cancelActivity != null && !cancelActivity) {
+                    eventElement.type = "${eventElement.type} (Non Interrupting)"
                 }
 
                 val event = Json.mapper.convert(flowElement.data["eventDefinition"], BpmnTimerEventDef::class.java)
@@ -167,6 +188,10 @@ class ReportElementsService(
             convertReportSendTaskRecipientElement("bcc")
         }
 
+        if (elementType == ElementType.BUSINESS_RULE_TASK) {
+            taskElement.decisionName = getNameByEntity(flowElement.data["decisionRef"].asText())
+        }
+
         return taskElement
     }
 
@@ -179,6 +204,10 @@ class ReportElementsService(
         baseElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText()
         baseElement.documentation =
             Json.mapper.convert(flowElement.data["documentation"], MLText::class.java) ?: MLText()
+    }
+
+    private fun getNameByEntity(entityRefStr: String): String {
+        return recordsService.getAtt(entityRefStr, "name").asText()
     }
 }
 

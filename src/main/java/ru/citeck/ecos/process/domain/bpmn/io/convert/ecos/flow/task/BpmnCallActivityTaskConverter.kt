@@ -26,6 +26,7 @@ class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCal
         return BpmnCallActivityDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
@@ -76,6 +77,7 @@ class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCal
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
+            otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
             otherAttributes[BPMN_PROP_PROCESS_REF] = element.processRef.toString()
             otherAttributes.putIfNotBlank(BPMN_PROP_CALLED_ELEMENT, element.calledElement)
             otherAttributes[BPMN_PROP_PROCESS_BINDING] = element.binding.name
@@ -94,6 +96,7 @@ class BpmnCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, TCal
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
 
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
             element.multiInstanceConfig?.let {
                 loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
                 otherAttributes[BPMN_MULTI_INSTANCE_CONFIG] = Json.mapper.toString(it)

@@ -16,5 +16,9 @@ enum class ElementType(val flowElementType: String, val type: String) {
 
     USER_TASK("bpmn:BpmnUserTask", "User Task"),
     SCRIPT_TASK("bpmn:BpmnScriptTask", "Script Task"),
-    SEND_TASK("bpmn:BpmnSendTask", "Send Task")
+    SEND_TASK("bpmn:BpmnSendTask", "Send Task"),
+    BUSINESS_RULE_TASK("bpmn:BpmnBusinessRuleTask", "Business Rule Task"),
+
+    SUB_PROCESS("bpmn:BpmnSubProcess", "Sub Process"),
+    CALL_ACTIVITY("bpmn:BpmnCallActivity", "Call Activity")
 }
