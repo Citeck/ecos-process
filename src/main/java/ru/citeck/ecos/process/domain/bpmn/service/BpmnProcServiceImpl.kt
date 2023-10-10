@@ -1,8 +1,13 @@
 package ru.citeck.ecos.process.domain.bpmn.service
 
+import mu.KotlinLogging
+import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService
+import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
+import org.camunda.bpm.engine.history.HistoricProcessInstance
 import org.camunda.bpm.engine.repository.ProcessDefinition
+import org.camunda.bpm.engine.runtime.Incident
 import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
@@ -19,8 +24,14 @@ class BpmnProcServiceImpl(
     private val camundaRuntimeService: RuntimeService,
     private val camundaRepositoryService: RepositoryService,
     private val procDefService: ProcDefService,
-    private val bpmnEventEmitter: BpmnEventEmitter
+    private val bpmnEventEmitter: BpmnEventEmitter,
+    private val processInstanceRestService: ProcessInstanceRestService,
+    private val historyService: HistoryService
 ) : BpmnProcService {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     override fun startProcess(processKey: String, businessKey: String?, variables: Map<String, Any?>): ProcessInstance {
         val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, processKey))
@@ -49,14 +60,46 @@ class BpmnProcServiceImpl(
         camundaRuntimeService.setVariables(processInstanceId, variables)
     }
 
+    override fun getIncidentsByProcessInstanceId(processInstanceId: String): List<Incident> {
+        return camundaRuntimeService.createIncidentQuery()
+            .processInstanceId(processInstanceId)
+            .list()
+    }
+
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {
-        return camundaRuntimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult()
+        return camundaRuntimeService.createProcessInstanceQuery()
+            .processInstanceId(processInstanceId)
+            .singleResult()
     }
 
     override fun getProcessInstancesForBusinessKey(businessKey: String): List<ProcessInstance> {
         return camundaRuntimeService.createProcessInstanceQuery()
             .processInstanceBusinessKey(businessKey)
             .list()
+    }
+
+    override fun getProcessInstanceHistoricInstance(processInstanceId: String): HistoricProcessInstance? {
+        return historyService.createHistoricProcessInstanceQuery()
+            .processInstanceId(processInstanceId)
+            .singleResult()
+    }
+
+    override fun queryProcessInstancesMeta(query: ProcessInstanceQuery): List<ProcessInstanceMeta> {
+        val camundaQuery = query.toCamundaQuery()
+        val result = processInstanceRestService.queryProcessInstances(
+            query.toCamundaQuery(), camundaQuery.firstResult,
+            camundaQuery.maxResults
+        )
+            .map { it.toProcessInstanceMeta() }
+            .toList()
+
+        log.debug { "Query process instances: \n$query, \ncount: ${result.size} \nresult: $result" }
+
+        return result
+    }
+
+    override fun queryProcessInstancesCount(query: ProcessInstanceQuery): Long {
+        return processInstanceRestService.queryProcessInstancesCount(query.toCamundaQuery()).count
     }
 
     override fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition? {

@@ -1,0 +1,37 @@
+# Запрос на получение списка задеплоенных описаний процессов.
+#
+# В списке показываем ID Процесса (key, ссылка для перехода во view конерктного eproc/bpmn-def-engine в рамках админки),
+# описание процесса (ecosDef, кликабельная ссылка),
+# количество запущенных инстрансов процесса,
+# количество инцидентов и флажок состояиня - "Ок", "Не ок" в зависимости от наличия инцидентов.
+#
+# Можно подумать нужно ли показывать preview процесса, может быть переключения видов - список / плитка с preview.
+#
+# Должна быть пагинация, с возможностью выбора количества элементов на странице.
+# Поиск через окно поиска в шапке, поиск осуществляется по идентификатору процесса. см ProcessDefinitionsListFilter
+
+# @name ProcessDefinitionsEngineList
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-def-engine",
+        "query": {
+            "att": "onlyLatestVersion",
+            "t": "eq",
+            "val": true
+        },
+        "page": {
+            "maxItems": 10,
+            "skipCount": 0
+        }
+    },
+    "attributes": {
+        "key": "key",
+        "ecosDef": "ecosDefRev.processDefRef",
+        "overallStatistics": "overallStatistics{incidentCount:incidentsCount?num,instancesCount:instancesCount?num}"
+    }
+}
+

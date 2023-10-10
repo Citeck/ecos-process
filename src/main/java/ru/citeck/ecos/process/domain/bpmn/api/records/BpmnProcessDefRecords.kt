@@ -112,14 +112,14 @@ class BpmnProcessDefRecords(
                 QUERY_BATCH_SIZE * numberOfExecutedRequests++
             )
 
-            val checkedRecords: List<BpmnProcDefRecord>
+            val checkedRecords: List<BpmnProcessDefRecord>
             if (AuthContext.isRunAsSystem()) {
-                checkedRecords = unfilteredBatch.map { BpmnProcDefRecord(it) }
+                checkedRecords = unfilteredBatch.map { BpmnProcessDefRecord(it) }
                     .take(requiredAmount)
                 numberOfPermissionsCheck = checkedRecords.size
             } else {
                 checkedRecords = unfilteredBatch.asSequence()
-                    .map { BpmnProcDefRecord(it) }
+                    .map { BpmnProcessDefRecord(it) }
                     .filter {
                         numberOfPermissionsCheck++
                         it.getPermissions().hasReadPerms()
@@ -238,7 +238,7 @@ class BpmnProcessDefRecords(
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {
-            BpmnProcDefRecord(
+            BpmnProcessDefRecord(
                 ProcDefDto(
                     it.id,
                     it.name,
@@ -466,7 +466,7 @@ class BpmnProcessDefRecords(
         }
     }
 
-    inner class BpmnProcDefRecord(
+    inner class BpmnProcessDefRecord(
         private val procDef: ProcDefDto
     ) {
 

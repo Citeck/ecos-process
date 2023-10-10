@@ -71,3 +71,10 @@ ecos:
         username: process
         password: processpassword
         xa: true
+
+camunda:
+  bpm:
+    authorization:
+      enabled: false
+    webapp:
+      application-path: /camunda

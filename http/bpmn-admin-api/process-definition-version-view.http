@@ -1,0 +1,65 @@
+# Скрин просмотра определенной версии описания процесса.
+
+# Оnображаем пользователю:
+#
+# key - ID процесса
+# ecosDefRevVersion - номер текущей версии
+# modified - дата изменения
+# modifier - кто изменил
+# deploymentId - id деплоймента
+# Выпадающий список с выбором, переключение между версиями. Query для поиска см. ProcessDefinitionsQueryByKey
+# Для каждой версии и для текущей в списке отображаем визуально наличие инцидентов
+#
+#
+# definitionRef - ссылка на описание процесса, к которому привязана версия - открываем ecos дашборд
+#
+# Статистика:
+# allRunningInstancesCount - количество запущенных процессов по всем версиям
+# statistics.incidentCount - количество запущенных процессов по текущей версии
+# statistics.instancesCount - количество инцидентов по текущей версии
+#
+# Отображение схемы:
+# bpmnData - схема бп
+# activityStatistics - статистика по активити, для подстветки на схеме
+# "activityStatistics": [
+#         "activityStatistics": [
+#          {
+#            "activityId": "Activity_0igjr8g",
+#            "instances": 6,
+#            "incidentStatistics": []
+#          },
+#          {
+#            "activityId": "Activity_0im5rhn",
+#            "instances": 1,
+#            "incidentStatistics": [
+#              {
+#                "type": "failedExternalTask",
+#                "count": 1
+#              }
+#            ]
+#          }
+#        ]
+
+# @name ProcessDefinitionView
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "records": [
+        "eproc/bpmn-def-engine@a1795c90-5dd0-11ee-9787-62d3dfa44630"
+    ],
+    "attributes": {
+        "key": "key",
+        "ecosDefRevVersion": "ecosDefRev.version?num",
+        "modified": "ecosDefRev._modified",
+        "modifier": "ecosDefRev._modifier",
+        "deploymentId": "deploymentId",
+        "definitionRef": "ecosDefRev.processDefRef",
+        "allRunningInstancesCount": "overallStatistics.instancesCount?num",
+        "statistics": "statistics{incidentCount:incidentsCount?num,instancesCount:instancesCount?num}",
+        "activityStatistics": "activityStatistics[]?json",
+        "bpmnData": "ecosDefRev.definition"
+
+    }
+}
