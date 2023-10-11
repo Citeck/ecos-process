@@ -77,6 +77,7 @@ class BpmnProcessLatestRecords(
             .map {
                 it.toProcessLatestRecord()
             }
+            .sortByIds(recordIds)
     }
 
     private fun ProcessDefinition.toProcessLatestRecord() = ProcessLatestRecord(
@@ -104,7 +105,12 @@ class BpmnProcessLatestRecords(
         val definition: EntityRef = EntityRef.EMPTY,
         val version: Int,
         val name: String? = ""
-    )
+    ) : IdentifiableRecord {
+
+        override fun getIdentificator(): String {
+            return id
+        }
+    }
 
     data class ProcessLatestQuery(
         var definition: String = ""

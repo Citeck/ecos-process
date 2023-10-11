@@ -137,10 +137,10 @@ class BpmnProcessDefEngineRecords(
                     val entity = it as ProcessDefinitionEntity
                     ProcessDefinitionEngineRecord(entity)
                 }
+                .sortByIds(recordIds)
         }
 
         log.debug { "$ID get atts time: $attsTime, size: ${recordIds.size}" }
-
         return atts
     }
 
@@ -152,7 +152,7 @@ class BpmnProcessDefEngineRecords(
         val deploymentId: String = defEntity.deploymentId,
         val version: Int = defEntity.version,
         val name: String = defEntity.name ?: ""
-    ) {
+    ) : IdentifiableRecord {
 
         @AttName("ecosDefRev")
         fun getEcosDefRev(): EntityRef {
@@ -218,6 +218,10 @@ class BpmnProcessDefEngineRecords(
         @AttName(".disp")
         fun getDisp(): String {
             return key
+        }
+
+        override fun getIdentificator(): String {
+            return id
         }
     }
 }
