@@ -16,7 +16,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class BpmnProcessReportService(
-    val reportElementsService: ReportElementsService
+    private val reportElementsService: ReportElementsService
 ) {
 
     fun generateReportElementListForBpmnDefinition(bpmnDefinition: BpmnDefinitionDef): List<ReportElement> {
@@ -25,15 +25,15 @@ class BpmnProcessReportService(
         val artifacts = bpmnDefinition.process.first().artifacts
         val laneSets = bpmnDefinition.process.first().lanes
 
-        val listElements = ArrayList<ReportElement>()
+        val reportElements = ArrayList<ReportElement>()
 
-        listElements.addAll(convertBpmnFlowElementToReportElements(flowElements, ecosType))
-        addAnnotationsToReportElements(listElements, artifacts)
-        addLanesToReportElements(listElements, laneSets)
+        reportElements.addAll(convertBpmnFlowElementToReportElements(flowElements, ecosType))
+        addAnnotationsToReportElements(reportElements, artifacts)
+        addLanesToReportElements(reportElements, laneSets)
 
-        listElements.sortBy { it.number }
+        reportElements.sortBy { it.number }
 
-        return listElements
+        return reportElements
     }
 
     private fun addAnnotationsToReportElements(
@@ -43,7 +43,7 @@ class BpmnProcessReportService(
         artifacts.filter { it.type == "bpmn:BpmnTextAnnotation" }
             .forEach { annotation ->
                 val text = ReportAnnotationElement(
-                    Json.mapper.convert(annotation.data["text"], MLText::class.java) ?: MLText()
+                    Json.mapper.convert(annotation.data["text"], MLText::class.java) ?: MLText.EMPTY
                 )
 
                 val elementId = artifacts
@@ -126,7 +126,8 @@ class BpmnProcessReportService(
 
                 //Task
                 ElementType.USER_TASK, ElementType.SCRIPT_TASK,
-                ElementType.SEND_TASK, ElementType.BUSINESS_RULE_TASK -> {
+                ElementType.SEND_TASK, ElementType.BUSINESS_RULE_TASK,
+                ElementType.SERVICE_TASK -> {
                     reportElement.taskElement =
                         reportElementsService.convertReportTaskElement(flowElement, elementType, ecosType)
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
@@ -148,7 +149,7 @@ class BpmnProcessReportService(
                         elementsFromSubProcess.forEach {
                             it.subProcessElement = ReportSubProcessElement().apply {
                                 type = reportElement.subProcessElement?.type ?: ""
-                                name = reportElement.subProcessElement?.name ?: MLText()
+                                name = reportElement.subProcessElement?.name ?: MLText.EMPTY
                             }
                         }
 
@@ -187,48 +188,37 @@ class BpmnProcessReportService(
                 flowElements.find { it.type == "bpmn:BpmnSequenceFlow" && it.id == incomingSequenceId } ?: continue
 
             val sequence = Json.mapper.convert(incomingSequence.data, BpmnSequenceFlowDef::class.java)
-            if (sequence == null || sequence.name.getValues().isEmpty()) continue
+            if (sequence == null || sequence.name.getValues().isEmpty()) {
+                continue
+            }
 
             val reportSequenceElement = ReportSequenceElement()
             reportSequenceElement.name = sequence.name
 
             reportSequenceElement.type = when (sequence.condition.type) {
-                ConditionType.OUTCOME -> {
-
-                    val userTask = flowElements
-                        .find {
-                            it.type == ElementType.USER_TASK.flowElementType &&
-                                it.id == sequence.condition.config.outcome.taskDefinitionKey
-                        }
-
-                    val taskName = Json.mapper.convert(userTask?.data?.get("name"), MLText::class.java) ?: MLText()
-                    val taskOutcomes = userTask?.data?.get("outcomes")?.asList(TaskOutcome::class.java)
-                    val taskOutcome =
-                        taskOutcomes?.find { it.id == sequence.condition.config.outcome.value }?.name ?: MLText()
-
-                    val mergedMap = (taskName.getValues().entries + taskOutcome.getValues().entries)
-                        .groupBy({ it.key }, { it.value })
-                        .mapValues { (_, values) -> values.joinToString(" - ") }
-
-                    reportSequenceElement.outcome = MLText(mergedMap)
-
-                    MLText(
-                        LocaleUtils.toLocale("en") to "Outcome",
-                        LocaleUtils.toLocale("ru") to "Исходящий"
-                    )
-                }
-
-                ConditionType.SCRIPT -> MLText(
-                    LocaleUtils.toLocale("en") to "Script",
-                    LocaleUtils.toLocale("ru") to "Скрипт"
-                )
-
-                ConditionType.EXPRESSION -> MLText(
-                    LocaleUtils.toLocale("en") to "Expression",
-                    LocaleUtils.toLocale("ru") to "Выражение"
-                )
-
+                ConditionType.OUTCOME -> SequenceElementType.OUTCOME.nameType
+                ConditionType.SCRIPT -> SequenceElementType.SCRIPT.nameType
+                ConditionType.EXPRESSION -> SequenceElementType.EXPRESSION.nameType
                 else -> null
+            }
+
+            if (sequence.condition.type == ConditionType.OUTCOME) {
+                val userTask = flowElements
+                    .find {
+                        it.type == ElementType.USER_TASK.flowElementType &&
+                            it.id == sequence.condition.config.outcome.taskDefinitionKey
+                    }
+
+                val taskName = Json.mapper.convert(userTask?.data?.get("name"), MLText::class.java) ?: MLText.EMPTY
+                val taskOutcomes = userTask?.data?.get("outcomes")?.asList(TaskOutcome::class.java)
+                val taskOutcome =
+                    taskOutcomes?.find { it.id == sequence.condition.config.outcome.value }?.name ?: MLText.EMPTY
+
+                val mergedMap = (taskName.getValues().entries + taskOutcome.getValues().entries)
+                    .groupBy({ it.key }, { it.value })
+                    .mapValues { (_, values) -> values.joinToString(" - ") }
+
+                reportSequenceElement.outcome = MLText(mergedMap)
             }
 
             result.add(reportSequenceElement)
@@ -236,5 +226,25 @@ class BpmnProcessReportService(
 
         return result.takeIf { it.isNotEmpty() }
     }
+}
 
+enum class SequenceElementType(val nameType: MLText) {
+    OUTCOME(
+        MLText(
+            LocaleUtils.toLocale("en") to "Outcome",
+            LocaleUtils.toLocale("ru") to "Исходящий"
+        )
+    ),
+    SCRIPT(
+        MLText(
+            LocaleUtils.toLocale("en") to "Script",
+            LocaleUtils.toLocale("ru") to "Скрипт"
+        )
+    ),
+    EXPRESSION(
+        MLText(
+            LocaleUtils.toLocale("en") to "Expression",
+            LocaleUtils.toLocale("ru") to "Выражение"
+        )
+    )
 }

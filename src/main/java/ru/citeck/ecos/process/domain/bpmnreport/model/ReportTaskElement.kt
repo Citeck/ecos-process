@@ -5,4 +5,5 @@ data class ReportTaskElement(
     var assignees: ReportUserTaskAssigneeElement? = null,
     var recipients: ReportSendTaskRecipientsElement? = null,
     var decisionName: String? = null,
+    var service: ReportServiceTaskDefElement? = null
 ) : ReportBaseElement()

@@ -1,7 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmnreport.model
 
-import ru.citeck.ecos.commons.data.ObjectData
-
 data class ReportElement(
     val id: String,
     val number: Int?,

@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmnreport.model.*
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -21,13 +22,19 @@ class ReportElementsService(
     private val roleService: RoleService,
     private val recordsService: RecordsService
 ) {
+    companion object {
+        val MANUAL_MODE_NAME = MLText(
+            LocaleUtils.toLocale("en") to "Manual setting",
+            LocaleUtils.toLocale("ru") to "Ручная настройка"
+        )
+    }
 
     fun convertReportStatusElement(flowElement: BpmnFlowElementDef, ecosType: EntityRef): ReportStatusElement {
         val statusElement = ReportStatusElement()
-        statusElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText()
+        statusElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText.EMPTY
         statusElement.status =
             statusService.getStatusDefByType(ecosType, flowElement.data["ecosTaskDefinition"]["status"].asText())?.name
-                ?: MLText()
+                ?: MLText.EMPTY
         return statusElement
     }
 
@@ -71,13 +78,9 @@ class ReportElementsService(
                     eventElement.type = "${eventElement.type} (Non Interrupting)"
                 }
 
-                val event = Json.mapper.convert(flowElement.data["eventDefinition"], BpmnSignalEventDef::class.java)
-                if (event != null) {
+                Json.mapper.convert(flowElement.data["eventDefinition"], BpmnSignalEventDef::class.java)?.let { event ->
                     if (event.eventManualMode) {
-                        eventElement.eventType = MLText(
-                            LocaleUtils.toLocale("en") to "Manual setting",
-                            LocaleUtils.toLocale("ru") to "Ручная настройка"
-                        )
+                        eventElement.eventType = MANUAL_MODE_NAME
                         eventElement.value = event.manualSignalName
                     } else {
                         eventElement.eventType = EventType.values().find { it.name == event.eventType?.name }?.nameEvent
@@ -119,35 +122,6 @@ class ReportElementsService(
         val taskElement = ReportTaskElement()
         updateBaseElement(taskElement, flowElement, elementType)
 
-        if (elementType == ElementType.USER_TASK) {
-            for (outcome in flowElement.data["outcomes"]) {
-                if (taskElement.outcomes == null) taskElement.outcomes = ArrayList()
-                taskElement.outcomes?.add(
-                    ReportUserTaskOutcomeElement(
-                        Json.mapper.convert(outcome["name"], MLText::class.java) ?: MLText()
-                    )
-                )
-            }
-
-            val assignees = flowElement.data["assignees"]
-            for (assignee in assignees) {
-                if (taskElement.assignees == null) taskElement.assignees = ReportUserTaskAssigneeElement()
-                if (taskElement.assignees?.roles == null) taskElement.assignees?.roles = ArrayList()
-                taskElement.assignees?.roles?.add(
-                    ReportRoleElement(
-                        roleService.getRoleDef(ecosType, assignee["value"].asText()).name
-                    )
-                )
-            }
-
-            val manualRecipients = flowElement.data["manualRecipients"].asList(String::class.java)
-            if (manualRecipients.isNotEmpty()) {
-                if (taskElement.assignees == null) taskElement.assignees = ReportUserTaskAssigneeElement()
-                taskElement.assignees?.customAssignees = ArrayList(manualRecipients)
-            }
-
-        }
-
         fun convertReportSendTaskRecipientElement(
             field: String
         ) {
@@ -158,14 +132,14 @@ class ReportElementsService(
 
             recipients.forEach {
                 when (it["type"].asText()) {
-                    "ROLE" -> {
+                    RecipientType.ROLE.name -> {
                         if (recipientElement.roles == null) recipientElement.roles = ArrayList()
                         recipientElement.roles?.add(
                             ReportRoleElement(roleService.getRoleDef(ecosType, it["value"].asText()).name)
                         )
                     }
 
-                    "EXPRESSION" -> {
+                    RecipientType.EXPRESSION.name -> {
                         if (recipientElement.expressions == null) recipientElement.expressions = ArrayList()
                         recipientElement.expressions?.add(
                             it["value"].asText()
@@ -182,14 +156,64 @@ class ReportElementsService(
             }
         }
 
-        if (elementType == ElementType.SEND_TASK) {
-            convertReportSendTaskRecipientElement("to")
-            convertReportSendTaskRecipientElement("cc")
-            convertReportSendTaskRecipientElement("bcc")
-        }
+        when (elementType) {
+            ElementType.USER_TASK -> {
+                for (outcome in flowElement.data["outcomes"]) {
+                    if (taskElement.outcomes == null) {
+                        taskElement.outcomes = ArrayList()
+                    }
+                    taskElement.outcomes?.add(
+                        ReportUserTaskOutcomeElement(
+                            Json.mapper.convert(outcome["name"], MLText::class.java) ?: MLText.EMPTY
+                        )
+                    )
+                }
 
-        if (elementType == ElementType.BUSINESS_RULE_TASK) {
-            taskElement.decisionName = getNameByEntity(flowElement.data["decisionRef"].asText())
+                val assignees = flowElement.data["assignees"]
+                for (assignee in assignees) {
+                    if (taskElement.assignees == null) taskElement.assignees = ReportUserTaskAssigneeElement()
+                    if (taskElement.assignees?.roles == null) taskElement.assignees?.roles = ArrayList()
+                    taskElement.assignees?.roles?.add(
+                        ReportRoleElement(
+                            roleService.getRoleDef(ecosType, assignee["value"].asText()).name
+                        )
+                    )
+                }
+
+                val manualRecipients = flowElement.data["manualRecipients"].asList(String::class.java)
+                if (manualRecipients.isNotEmpty()) {
+                    if (taskElement.assignees == null) taskElement.assignees = ReportUserTaskAssigneeElement()
+                    taskElement.assignees?.customAssignees = ArrayList(manualRecipients)
+                }
+            }
+
+            ElementType.SEND_TASK -> {
+                convertReportSendTaskRecipientElement("to")
+                convertReportSendTaskRecipientElement("cc")
+                convertReportSendTaskRecipientElement("bcc")
+            }
+
+            ElementType.BUSINESS_RULE_TASK -> {
+                taskElement.decisionName = getNameByEntity(flowElement.data["decisionRef"].asText())
+            }
+
+            ElementType.SERVICE_TASK -> {
+                taskElement.service = ReportServiceTaskDefElement()
+                when (flowElement.data["type"].asText()) {
+                    ServiceTaskType.EXTERNAL.name -> {
+                        taskElement.service?.type = ServiceTaskType.EXTERNAL.nameServiceType
+                        taskElement.service?.topic = flowElement.data["externalTaskTopic"].asText()
+                    }
+
+                    ServiceTaskType.EXPRESSION.name -> {
+                        taskElement.service?.type = ServiceTaskType.EXPRESSION.nameServiceType
+                        taskElement.service?.expression = flowElement.data["expression"].asText()
+                    }
+                }
+
+            }
+
+            else -> {}
         }
 
         return taskElement
@@ -201,9 +225,9 @@ class ReportElementsService(
         elementType: ElementType
     ) {
         baseElement.type = elementType.type
-        baseElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText()
+        baseElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText.EMPTY
         baseElement.documentation =
-            Json.mapper.convert(flowElement.data["documentation"], MLText::class.java) ?: MLText()
+            Json.mapper.convert(flowElement.data["documentation"], MLText::class.java) ?: MLText.EMPTY
     }
 
     private fun getNameByEntity(entityRefStr: String): String {
@@ -270,6 +294,21 @@ enum class EventType(val nameEvent: MLText) {
         MLText(
             LocaleUtils.toLocale("en") to "Record deleted",
             LocaleUtils.toLocale("ru") to "Record удален"
+        )
+    )
+}
+
+enum class ServiceTaskType(val nameServiceType: MLText) {
+    EXTERNAL(
+        MLText(
+            LocaleUtils.toLocale("en") to "External task",
+            LocaleUtils.toLocale("ru") to "Внешняя задача"
+        )
+    ),
+    EXPRESSION(
+        MLText(
+            LocaleUtils.toLocale("en") to "Expression",
+            LocaleUtils.toLocale("ru") to "Выражение"
         )
     )
 }
