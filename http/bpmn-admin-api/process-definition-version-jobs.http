@@ -1,0 +1,42 @@
+# Скрин просмотра определенной версии процесса. Список фоновых задач.
+
+# В списке пользователю показываем:
+#
+# state (Состояние) - состояние фоновой задачи
+#
+# activityId (Элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+# По нажатию выделяем элемент в схеме процесса и перемещаемся к нему.
+#
+# type (Тип) - тип фоновой задачи
+#
+# configuration (Конфигурация) - конфигурация фоновой задачи
+#
+# Пагинация поддерживается.
+# Сортировку пока никакую не поддерживаем
+
+# @name ProcessDefinitionViewProcessIncidents
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-job-def",
+        "query": {
+            "att": "bpmnDefEngine",
+            "t": "eq",
+            "val": "eproc/bpmn-def-engine@sd-process:14:0a51a6c3-ff90-11ed-8018-ba1ccd4d7239"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        }
+    },
+    "attributes": {
+        "state": "state",
+        "activityId": "activityId",
+        "type": "type",
+        "configuration": "configuration"
+    }
+}
+
