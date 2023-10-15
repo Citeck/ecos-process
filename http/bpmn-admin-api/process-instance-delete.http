@@ -1,0 +1,22 @@
+# Удаление инстанса процесса.
+#
+#
+
+# @name ProcessInstanceDelete
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "records": [
+    {
+      "id": "eproc/bpmn-proc@e8e93a49-1644-11ee-a896-023e9870d2dd",
+      "attributes": {
+        "action": "DELETE",
+        "skipCustomListener": true,
+        "skipIoMapping": true
+      }
+    }
+  ]
+}
+

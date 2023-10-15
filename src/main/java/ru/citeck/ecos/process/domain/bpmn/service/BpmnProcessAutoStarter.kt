@@ -18,7 +18,7 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 class BpmnProcessAutoStarter(
     eventsService: EventsService,
     private val procDefService: ProcDefService,
-    private val bpmnProcService: BpmnProcService
+    private val bpmnProcessService: BpmnProcessService
 ) {
 
     companion object {
@@ -67,7 +67,7 @@ class BpmnProcessAutoStarter(
         )
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
-        bpmnProcService.startProcess(procDef.id, documentRef, processVariables)
+        bpmnProcessService.startProcess(procDef.id, documentRef, processVariables)
     }
 
     data class EventData(

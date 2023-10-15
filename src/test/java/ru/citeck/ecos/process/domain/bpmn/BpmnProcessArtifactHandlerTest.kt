@@ -13,7 +13,7 @@ import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
@@ -37,7 +37,7 @@ class BpmnProcessArtifactHandlerTest {
     private lateinit var localAppService: LocalAppService
 
     @Autowired
-    private lateinit var bpmnProcService: BpmnProcService
+    private lateinit var bpmnProcessService: BpmnProcessService
 
     @Autowired
     private lateinit var procDefService: ProcDefService
@@ -96,7 +96,7 @@ class BpmnProcessArtifactHandlerTest {
 
     @Test
     fun `loaded process from artifact should be deployed to engine`() {
-        val definitions = bpmnProcService.getProcessDefinitionsByKey(BPMN_TEST_PROCESS_ID)
+        val definitions = bpmnProcessService.getProcessDefinitionsByKey(BPMN_TEST_PROCESS_ID)
 
         assertEquals(1, definitions.size)
         assertEquals(BPMN_TEST_PROCESS_ID, definitions.first().key)

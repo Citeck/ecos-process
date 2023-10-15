@@ -9,13 +9,25 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
-interface BpmnProcService {
+interface BpmnProcessService {
 
     fun startProcess(processKey: String, businessKey: String? = null, variables: Map<String, Any?>): ProcessInstance
+
+    fun deleteProcessInstance(
+        processInstanceId: String,
+        skipCustomListener: Boolean = false,
+        skipIoMappings: Boolean = false
+    )
+
+    fun suspendProcess(processInstanceId: String)
+
+    fun activateProcess(processInstanceId: String)
 
     fun setVariables(processInstanceId: String, variables: Map<String, Any?>)
 
     fun getIncidentsByProcessInstanceId(processInstanceId: String): List<Incident>
+
+    fun getProcessInstanceActivityStatistics(processInstanceId: String): List<ActivityStatistics>
 
     fun getProcessInstance(processInstanceId: String): ProcessInstance?
 
@@ -56,5 +68,16 @@ enum class SuspensionState {
 
 data class IncidentStatistics(
     val type: String,
-    val count: Long
+    var count: Long
+)
+
+data class BpmnProcessStatistics(
+    val incidentsCount: Long,
+    val instancesCount: Long
+)
+
+data class ActivityStatistics(
+    val activityId: String,
+    var instances: Long,
+    var incidentStatistics: List<IncidentStatistics> = emptyList()
 )
