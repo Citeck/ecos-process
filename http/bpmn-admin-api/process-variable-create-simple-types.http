@@ -1,0 +1,36 @@
+# Создание переменной процесса (стандартного типа)
+#
+# name - имя переменной
+# executionId - id execution
+# type - тип переменной
+# value - значение переменной
+#
+# Поддерживые типы:
+# `string` - строка
+# `date` - дата
+# `integer` - целое число
+# `boolean` - булево значение
+# `double` - дробное число
+# `long` - длинное целое число
+# `null` - пустое значение, используется, если переменной нужно присвоить значение null
+#
+
+# @name ProcessVariableCreateSimpleTypes
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "records": [
+        {
+            "id": "eproc/bpmn-variable-instance@",
+            "attributes": {
+                "name": "newTestVariableDate",
+                "executionId": "bb4d473c-675c-11ee-96b1-fa02e06f9ec1",
+                "type": "date",
+                "value": "2023-10-19T13:03:00Z"
+            }
+        }
+    ]
+}
+

@@ -1,0 +1,13 @@
+# Удаление переменной процесса
+
+# @name ProcessVariableDelete
+POST http://localhost/gateway/api/records/delete
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "records": [
+        "eproc/bpmn-variable-instance@36174ed2-6c29-11ee-972c-9a250256bfc8"
+    ]
+}
+

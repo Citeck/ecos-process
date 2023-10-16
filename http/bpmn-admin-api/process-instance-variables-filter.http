@@ -22,9 +22,9 @@ Content-Type: application/json
                     "val": ""
                 },
                 {
-                    "att": "activityInstanceId",
+                    "att": "scope",
                     "t": "eq",
-                    "val": "Activity_0gj8byg:bc5e1b19-675c-11ee-96b1-fa02e06f9ec1"
+                    "val": "eproc/bpmn-historic-activity-instance@Activity_0gj8byg:bc5e1b19-675c-11ee-96b1-fa02e06f9ec1"
                 }
             ]
         },
@@ -39,7 +39,7 @@ Content-Type: application/json
         "value": "value",
         "typedValueInfo": "typedValueInfo?json",
         "serializableValue": "serializableValue?json",
-        "activityInstanceId": "activityInstanceId"
+        "scope": "scope"
     }
 }
 
