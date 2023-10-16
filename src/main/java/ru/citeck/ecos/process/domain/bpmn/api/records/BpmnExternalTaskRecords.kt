@@ -38,21 +38,26 @@ class BpmnExternalTaskRecords(
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
-        val externalTasks = externalTaskService.createExternalTaskQuery()
+        return externalTaskService.createExternalTaskQuery()
             .externalTaskIdIn(recordIds.toSet())
             .list()
-        return externalTasks.map { ExternalTaskRecord(it) }
+            .map { ExternalTaskRecord(it) }
+            .sortByIds(recordIds)
     }
 
     private inner class ExternalTaskRecord(
         private val externalTask: ExternalTask,
 
         val id: String = externalTask.id
-    ) {
+    ) : IdentifiableRecord {
 
         @AttName("stackTrace")
         fun getStackTrace(): String {
             return externalTaskService.getExternalTaskErrorDetails(externalTask.id) ?: ""
+        }
+
+        override fun getIdentificator(): String {
+            return id
         }
 
     }

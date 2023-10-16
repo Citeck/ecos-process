@@ -13,7 +13,7 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getConditionalEventSubscriptionsByProcessInstanceIds
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNamesLikeStart
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.convert.toDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
@@ -31,7 +31,7 @@ import kotlin.system.measureTimeMillis
  */
 @Component
 class CamundaEventSubscriptionFinder(
-    private val bpmnProcService: BpmnProcService,
+    private val bpmnProcessService: BpmnProcessService,
     private val camundaRuntimeService: RuntimeService,
     private val procDefService: ProcDefService,
     private val procDefRevRepo: ProcDefRevRepository,
@@ -133,7 +133,7 @@ class CamundaEventSubscriptionFinder(
 
         val result: List<CamundaConditionalEvent>
         val time = measureTimeMillis {
-            val processes = bpmnProcService.getProcessInstancesForBusinessKey(businessKey).map {
+            val processes = bpmnProcessService.getProcessInstancesForBusinessKey(businessKey).map {
                 it.processInstanceId
             }
 
@@ -169,9 +169,9 @@ class CamundaEventSubscriptionFinder(
                 if (defId.isNullOrBlank()) {
                     error("Cannot determine process definition id for event subscription: ${subscription.id}")
                 }
-                bpmnProcService.getProcessDefinition(defId)
+                bpmnProcessService.getProcessDefinition(defId)
             } else {
-                bpmnProcService.getProcessDefinitionByProcessInstanceId(subscription.processInstanceId)
+                bpmnProcessService.getProcessDefinitionByProcessInstanceId(subscription.processInstanceId)
             }
             definition?.deploymentId ?: ""
         }

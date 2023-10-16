@@ -14,7 +14,7 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
@@ -31,7 +31,7 @@ class BpmnProcessDefRecordsActionsTest {
     private lateinit var procDefService: ProcDefService
 
     @Autowired
-    private lateinit var bpmnProcService: BpmnProcService
+    private lateinit var bpmnProcessService: BpmnProcessService
 
     @Autowired
     private lateinit var camundaRepositoryService: RepositoryService
@@ -61,7 +61,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "regular-bpmn-process"
         saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
-        val processDefinitions = bpmnProcService.getProcessDefinitionsByKey(procId)
+        val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
         assertThat(processDefinitions).isEmpty()
     }
@@ -109,7 +109,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "regular-bpmn-process"
         saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
 
-        val processDefinitions = bpmnProcService.getProcessDefinitionsByKey(procId)
+        val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
         assertThat(processDefinitions).isEmpty()
     }
@@ -130,7 +130,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "regular-bpmn-process"
         saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DEPLOY)
 
-        val processDefinitions = bpmnProcService.getProcessDefinitionsByKey(procId)
+        val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
         assertThat(processDefinitions).hasSize(1)
         assertThat(processDefinitions.first().key).isEqualTo(procId)
@@ -152,7 +152,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "draft-bpmn-process"
         saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
-        val processDefinitions = bpmnProcService.getProcessDefinitionsByKey(procId)
+        val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
         assertThat(processDefinitions).isEmpty()
     }
@@ -173,7 +173,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "draft-bpmn-process"
         saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
 
-        val processDefinitions = bpmnProcService.getProcessDefinitionsByKey(procId)
+        val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
         assertThat(processDefinitions).isEmpty()
     }

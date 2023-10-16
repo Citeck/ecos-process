@@ -82,9 +82,11 @@ class BpmnProcessDefVersionRecords(
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
-        return procDefService.getProcessDefRevs(recordIds.map { UUID.fromString(it) }).map {
-            it.toVersionRecord()
-        }
+        return procDefService.getProcessDefRevs(recordIds.map { UUID.fromString(it) })
+            .map {
+                it.toVersionRecord()
+            }
+            .sortByIds(recordIds)
     }
 
     private fun ProcDefRevDto.toVersionRecord(): VersionRecord {
@@ -141,7 +143,7 @@ class BpmnProcessDefVersionRecords(
         val editLink: String = EDIT_BPMN_PROC_LINK.format(RecordRef.create(AppName.EPROC, ID, id)),
 
         private val dto: ProcDefRevDto
-    ) {
+    ) : IdentifiableRecord {
 
         @get:AttName(".disp")
         val disp: MLText
@@ -189,6 +191,10 @@ class BpmnProcessDefVersionRecords(
         @get:AttName("data")
         val data: ByteArray
             get() = dto.data
+
+        override fun getIdentificator(): String {
+            return id
+        }
     }
 }
 

@@ -11,7 +11,8 @@ import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.service.ProcessInstanceQuery
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
@@ -36,7 +37,7 @@ import java.util.*
 
 @Component
 class BpmnProcessRecords(
-    private val bpmnProcService: BpmnProcService,
+    private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService
 ) : AbstractRecordsDao(),
     RecordAttsDao,
@@ -47,6 +48,8 @@ class BpmnProcessRecords(
         const val ID = "bpmn-proc"
 
         private const val BPMN_PROC_MUTATE_ACTION_FLAG = "action"
+        private const val ATT_ON_DELETE_SKIP_CUSTOM_LISTENER = "skipCustomListener"
+        private const val ATT_ON_DELETE_SKIP_IO_MAPPING = "skipIoMapping"
 
         private val log = KotlinLogging.logger {}
     }
@@ -61,12 +64,12 @@ class BpmnProcessRecords(
 
         val procQuery = recsQuery.toProcessInstanceQuery()
 
-        val totalCount = bpmnProcService.queryProcessInstancesCount(procQuery)
+        val totalCount = bpmnProcessService.queryProcessInstancesCount(procQuery)
         if (totalCount == 0L) {
             return RecsQueryRes()
         }
 
-        val instances = bpmnProcService.queryProcessInstancesMeta(procQuery)
+        val instances = bpmnProcessService.queryProcessInstancesMeta(procQuery)
             .map { EntityRef.create(AppName.EPROC, ID, it.id) }
 
         log.debug {
@@ -134,6 +137,21 @@ class BpmnProcessRecords(
                 updateVariables(record)
                 record.id
             }
+
+            MutateAction.DELETE -> {
+                delete(record)
+                record.id
+            }
+
+            MutateAction.SUSPEND -> {
+                bpmnProcessService.suspendProcess(record.id)
+                record.id
+            }
+
+            MutateAction.ACTIVATE -> {
+                bpmnProcessService.activateProcess(record.id)
+                record.id
+            }
         }
     }
 
@@ -167,7 +185,7 @@ class BpmnProcessRecords(
 
         log.debug { "Starting process ${record.id}, businessKey: $businessKey with variables: \n$processVariables" }
 
-        return bpmnProcService.startProcess(
+        return bpmnProcessService.startProcess(
             record.id,
             businessKey,
             processVariables.toMap()
@@ -175,7 +193,7 @@ class BpmnProcessRecords(
     }
 
     private fun updateVariables(record: LocalRecordAtts) {
-        val processInstance = bpmnProcService.getProcessInstance(record.id)
+        val processInstance = bpmnProcessService.getProcessInstance(record.id)
             ?: throw IllegalArgumentException("Process instance not found: ${record.id}")
 
         val processVariables = mutableMapOf<String, Any?>()
@@ -191,7 +209,18 @@ class BpmnProcessRecords(
         log.debug {
             "Updating process instance ${processInstance.id} with variables: \n$processVariables"
         }
-        bpmnProcService.setVariables(processInstance.id, processVariables)
+        bpmnProcessService.setVariables(processInstance.id, processVariables)
+    }
+
+    private fun delete(record: LocalRecordAtts) {
+        val skipCustomListener = record.getAtt(ATT_ON_DELETE_SKIP_CUSTOM_LISTENER).asBoolean()
+        val skipIoMapping = record.getAtt(ATT_ON_DELETE_SKIP_IO_MAPPING).asBoolean()
+
+        bpmnProcessService.deleteProcessInstance(
+            record.id,
+            skipCustomListener,
+            skipIoMapping
+        )
     }
 
     inner class ProcRecord(
@@ -203,7 +232,7 @@ class BpmnProcessRecords(
                 return@lazy null
             }
 
-            bpmnProcService.getProcessDefinitionByProcessInstanceId(id)
+            bpmnProcessService.getProcessDefinitionByProcessInstanceId(id)
         }
 
         private val processInstance: ProcessInstance? by lazy {
@@ -211,7 +240,7 @@ class BpmnProcessRecords(
                 return@lazy null
             }
 
-            bpmnProcService.getProcessInstance(id)
+            bpmnProcessService.getProcessInstance(id)
         }
 
         private val historicInstance: HistoricProcessInstance? by lazy {
@@ -219,7 +248,7 @@ class BpmnProcessRecords(
                 return@lazy null
             }
 
-            bpmnProcService.getProcessInstanceHistoricInstance(id)
+            bpmnProcessService.getProcessInstanceHistoricInstance(id)
         }
 
         @AttName("ecosDefRev")
@@ -265,7 +294,7 @@ class BpmnProcessRecords(
 
         @AttName("incidents")
         fun getIncidents(): List<EntityRef> {
-            return bpmnProcService.getIncidentsByProcessInstanceId(id).map {
+            return bpmnProcessService.getIncidentsByProcessInstanceId(id).map {
                 EntityRef.create(AppName.EPROC, BpmnIncidentRecords.ID, it.id)
             }
         }
@@ -273,6 +302,11 @@ class BpmnProcessRecords(
         @AttName("isSuspended")
         fun isSuspended(): Boolean {
             return processInstance?.isSuspended ?: false
+        }
+
+        @AttName("activityStatistics")
+        fun getActivityStatistics(): List<ActivityStatistics> {
+            return bpmnProcessService.getProcessInstanceActivityStatistics(id)
         }
     }
 
@@ -283,7 +317,10 @@ class BpmnProcessRecords(
 
     private enum class MutateAction {
         START,
-        UPDATE;
+        UPDATE,
+        DELETE,
+        SUSPEND,
+        ACTIVATE;
 
         companion object {
             fun getFromAtts(record: LocalRecordAtts): MutateAction {

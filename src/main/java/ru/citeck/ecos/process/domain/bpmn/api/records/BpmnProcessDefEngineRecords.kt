@@ -7,6 +7,9 @@ import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.repository.ProcessDefinitionQuery
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessStatistics
+import ru.citeck.ecos.process.domain.bpmn.service.IncidentStatistics
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -137,10 +140,10 @@ class BpmnProcessDefEngineRecords(
                     val entity = it as ProcessDefinitionEntity
                     ProcessDefinitionEngineRecord(entity)
                 }
+                .sortByIds(recordIds)
         }
 
         log.debug { "$ID get atts time: $attsTime, size: ${recordIds.size}" }
-
         return atts
     }
 
@@ -152,7 +155,7 @@ class BpmnProcessDefEngineRecords(
         val deploymentId: String = defEntity.deploymentId,
         val version: Int = defEntity.version,
         val name: String = defEntity.name ?: ""
-    ) {
+    ) : IdentifiableRecord {
 
         @AttName("ecosDefRev")
         fun getEcosDefRev(): EntityRef {
@@ -219,27 +222,14 @@ class BpmnProcessDefEngineRecords(
         fun getDisp(): String {
             return key
         }
+
+        override fun getIdentificator(): String {
+            return id
+        }
     }
 }
 
 data class EngineDefQuery(
     var onlyLatestVersion: Boolean = true,
     var key: String = ""
-)
-
-
-data class BpmnProcessStatistics(
-    val incidentsCount: Long,
-    val instancesCount: Long
-)
-
-data class ActivityStatistics(
-    val activityId: String,
-    val instances: Long,
-    val incidentStatistics: List<IncidentStatistics> = emptyList()
-)
-
-data class IncidentStatistics(
-    val type: String,
-    val count: Long
 )

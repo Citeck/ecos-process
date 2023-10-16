@@ -35,6 +35,10 @@
 #              {
 #                "type": "failedExternalTask",
 #                "count": 1
+#              },
+#              {
+#                "type": "failedJob",
+#                "count": 3
 #              }
 #            ]
 #          }
@@ -47,7 +51,7 @@ Content-Type: application/json
 
 {
     "records": [
-        "eproc/bpmn-def-engine@a1795c90-5dd0-11ee-9787-62d3dfa44630"
+        "eproc/bpmn-def-engine@test-admin-process:6:f147c04f-6b79-11ee-981d-c62ae4282f77"
     ],
     "attributes": {
         "key": "key",

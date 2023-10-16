@@ -1,0 +1,45 @@
+# Скрин просмотра определенного инстанса процесса. Список переменных c фильрацией.
+
+# @name ProcessInstanceViewProcessVariablesFilter
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-variable-instance",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "att": "processInstance",
+                    "t": "eq",
+                    "val": "eproc/bpmn-proc@bb4d473c-675c-11ee-96b1-fa02e06f9ec1"
+                },
+                {
+                    "att": "name",
+                    "t": "like",
+                    "val": ""
+                },
+                {
+                    "att": "activityInstanceId",
+                    "t": "eq",
+                    "val": "Activity_0gj8byg:bc5e1b19-675c-11ee-96b1-fa02e06f9ec1"
+                }
+            ]
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        }
+    },
+    "attributes": {
+        "name": "name",
+        "type": "type",
+        "value": "value",
+        "typedValueInfo": "typedValueInfo?json",
+        "serializableValue": "serializableValue?json",
+        "activityInstanceId": "activityInstanceId"
+    }
+}
+

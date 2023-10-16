@@ -52,14 +52,14 @@ class DmnSectionTest {
         )
 
         val recordRef = recordsService.create(REPO_DATA_SOURCE_ID, testSection)
-        assertEquals(recordRef.toString(), "eproc/dmn-section-repo@testSection1")
+        assertEquals("eproc/dmn-section-repo@testSection1", recordRef.toString())
 
         val atts = recordsService.getAtts(recordRef, listOf("name"))
-        assertEquals(atts.getId().id, "testSection1")
-        assertEquals(atts.getAtts()["name"].asText(), "testSectionName1")
+        assertEquals("testSection1", atts.getId().id)
+        assertEquals("testSectionName1", atts.getAtts()["name"].asText())
 
         val recordRef2 = recordsService.create(REPO_DATA_SOURCE_ID, testSubSection)
-        assertEquals(recordRef2.toString(), "eproc/dmn-section-repo@testSubSection1")
+        assertEquals("eproc/dmn-section-repo@testSubSection1", recordRef2.toString())
 
         assertEquals(recordsService.delete(recordRef), DelStatus.OK)
         assertEquals(recordsService.delete(recordRef2), DelStatus.OK)
@@ -117,8 +117,8 @@ class DmnSectionTest {
 
         recordsService.create(PROXY_DATA_SOURCE_ID, testSection)
         val atts = recordsService.getAtts("$PROXY_DATA_SOURCE_ID@testSection3", listOf("name"))
-        assertEquals(atts.getId().toString(), "dmn-section@testSection3")
-        assertEquals(atts.getAtts()["name"].asText(), "testSectionName3")
+        assertEquals("eproc/dmn-section@testSection3", atts.getId().toString())
+        assertEquals("testSectionName3", atts.getAtts()["name"].asText())
 
         recordsService.delete("dmn-section@testSection3")
         assertEquals(queryAll().getRecords().size, recordsBefore)
@@ -141,8 +141,8 @@ class DmnSectionTest {
         recordsService.mutate("$PROXY_DATA_SOURCE_ID@testSection4", changeNameAtt)
 
         val atts = recordsService.getAtts("$PROXY_DATA_SOURCE_ID@testSection4", listOf("name"))
-        assertEquals(atts.getId().toString(), "dmn-section@testSection4")
-        assertEquals(atts.getAtts()["name"].asText(), "Renamed")
+        assertEquals("eproc/dmn-section@testSection4", atts.getId().toString())
+        assertEquals("Renamed", atts.getAtts()["name"].asText())
 
         recordsService.delete("dmn-section@testSection4")
         assertEquals(queryAll().getRecords().size, recordsBefore)
