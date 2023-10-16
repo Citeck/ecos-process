@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOC
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NUMBER
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneSetDef
@@ -22,6 +23,7 @@ class BpmnLaneConverter : EcosOmgConverter<BpmnLaneDef, TLane> {
         return BpmnLaneDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             flowRefs = element.flowNodeRef.map { flowElement ->
                 val tBase = flowElement.value as? TBaseElement
@@ -60,6 +62,8 @@ class BpmnLaneConverter : EcosOmgConverter<BpmnLaneDef, TLane> {
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
 
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
+
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
         }
     }
 }

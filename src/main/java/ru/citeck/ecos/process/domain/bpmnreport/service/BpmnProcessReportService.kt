@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.sequence.BpmnSequenceFlowDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneSetDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnParticipantDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.bpmnreport.model.*
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -21,19 +22,36 @@ class BpmnProcessReportService(
 
     fun generateReportElementListForBpmnDefinition(bpmnDefinition: BpmnDefinitionDef): List<ReportElement> {
         val ecosType = bpmnDefinition.ecosType
-        val flowElements = bpmnDefinition.process.first().flowElements
-        val artifacts = bpmnDefinition.process.first().artifacts
-        val laneSets = bpmnDefinition.process.first().lanes
 
         val reportElements = ArrayList<ReportElement>()
 
-        reportElements.addAll(convertBpmnFlowElementToReportElements(flowElements, ecosType))
-        addAnnotationsToReportElements(reportElements, artifacts)
-        addLanesToReportElements(reportElements, laneSets)
+        bpmnDefinition.process.forEach { process ->
+            val reportProcess = ReportProcessElement(process.id)
+            reportProcess.participant = bpmnDefinition.collaboration?.participants?.let {
+                getReportParticipantElementByProcessId(process.id, it)
+            }
 
-        reportElements.sortBy { it.number }
+            reportElements.addAll(convertBpmnFlowElementToReportElements(process.flowElements, reportProcess, ecosType))
+            addAnnotationsToReportElements(reportElements, process.artifacts)
+            addLanesToReportElements(reportElements, process.lanes)
+        }
+
+        reportElements.sortWith(compareBy({ it.process.participant?.number }, { it.process.id }, { it.number }))
 
         return reportElements
+    }
+
+    private fun getReportParticipantElementByProcessId(
+        id: String,
+        participants: List<BpmnParticipantDef>
+    ): ReportParticipantElement? {
+        return participants.find { it.processRef == id }?.let {
+            ReportParticipantElement(
+                name = it.name,
+                number = it.number,
+                documentation = it.documentation
+            )
+        }
     }
 
     private fun addAnnotationsToReportElements(
@@ -66,7 +84,7 @@ class BpmnProcessReportService(
     ) {
         for (laneSet in laneSets) {
             for (lane in laneSet.lanes) {
-                val laneElement = ReportLaneElement(lane.name, lane.documentation)
+                val laneElement = ReportLaneElement(lane.name, lane.number, lane.documentation)
 
                 fun addLaneToElements(elementNames: List<String>) {
                     elementNames.forEach { elementId ->
@@ -86,6 +104,7 @@ class BpmnProcessReportService(
 
     private fun convertBpmnFlowElementToReportElements(
         flowElements: List<BpmnFlowElementDef>,
+        reportProcessElement: ReportProcessElement,
         ecosType: EntityRef?
     ): List<ReportElement> {
         val elements = ArrayList<ReportElement>()
@@ -96,7 +115,8 @@ class BpmnProcessReportService(
 
             val reportElement = ReportElement(
                 flowElement.id,
-                flowElement.data["number"].takeIf { it.isNotNull() }?.asInt()
+                flowElement.data["number"].takeIf { it.isNotNull() }?.asInt(),
+                reportProcessElement
             )
 
             when (elementType) {
@@ -141,7 +161,8 @@ class BpmnProcessReportService(
                     val subProcessElements = flowElement.data["flowElements"].asList(BpmnFlowElementDef::class.java)
                     val subProcessArtifacts = flowElement.data["artifacts"].asList(BpmnArtifactDef::class.java)
 
-                    val elementsFromSubProcess = convertBpmnFlowElementToReportElements(subProcessElements, ecosType)
+                    val elementsFromSubProcess =
+                        convertBpmnFlowElementToReportElements(subProcessElements, reportProcessElement, ecosType)
                     if (elementsFromSubProcess.isNotEmpty()) {
                         addAnnotationsToReportElements(elementsFromSubProcess, subProcessArtifacts)
                         reportElement.subProcessElement?.elements = elementsFromSubProcess.map { it.id }

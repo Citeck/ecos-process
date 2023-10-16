@@ -6,6 +6,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DOC
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NUMBER
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnParticipantDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TParticipant
@@ -23,6 +24,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
         return BpmnParticipantDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             processRef = element.processRef.localPart,
             ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE])
@@ -39,6 +41,8 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
 
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
+
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
         }
     }
 }
