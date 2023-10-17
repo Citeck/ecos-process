@@ -69,11 +69,11 @@ class BpmnJobDefRecords(
         return managementService.createJobDefinitionQuery()
             .jobDefinitionId(recordId)
             .singleResult()?.let {
-                BpmnJobRecord(it)
+                BpmnJobDefRecord(it)
             }
     }
 
-    private inner class BpmnJobRecord(
+    private inner class BpmnJobDefRecord(
         private val jobDefinition: JobDefinition,
 
         val id: String = jobDefinition.id

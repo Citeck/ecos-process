@@ -160,7 +160,13 @@ class BpmnIncidentRecords(
 
         @AttName("message")
         fun getMessage(): String {
-            return incident.incidentMessage ?: ""
+            return if (id == incident.rootCauseIncidentId) {
+                incident.incidentMessage ?: ""
+            } else {
+                recordsService.getAtt(
+                    getRootCauseIncident(), "message"
+                ).asText()
+            }
         }
 
         @AttName(ATT_PROCESS_INSTANCE)
@@ -189,8 +195,32 @@ class BpmnIncidentRecords(
             return IncidentTypeRecord(type)
         }
 
+        @AttName("rootCauseIncident")
+        fun getRootCauseIncident(): EntityRef {
+            if (incident.rootCauseIncidentId.isBlank()) {
+                error("Root cause incident id is blank: $incident")
+            }
+
+            return EntityRef.create(AppName.EPROC, ID, incident.rootCauseIncidentId)
+        }
+
         @AttName("causeRef")
         fun getCauseRef(): EntityRef {
+            val causeProducer: String = if (id == incident.rootCauseIncidentId) {
+                incident.configuration ?: ""
+            } else {
+                val causeRef = recordsService.getAtt(
+                    getRootCauseIncident(), "causeRef?id"
+                ).asText()
+
+                return EntityRef.valueOf(causeRef)
+            }
+
+            if (causeProducer.isBlank()) {
+                log.warn { "Cause producer is blank in incident: $id" }
+                return EntityRef.EMPTY
+            }
+
             val type = BpmnIncidentType.getById(incident.incidentType)
 
             return when (type) {
@@ -198,7 +228,7 @@ class BpmnIncidentRecords(
                     EntityRef.create(
                         AppName.EPROC,
                         BpmnExternalTaskRecords.ID,
-                        incident.configuration
+                        causeProducer
                     )
                 }
 
@@ -206,7 +236,7 @@ class BpmnIncidentRecords(
                     EntityRef.create(
                         AppName.EPROC,
                         BpmnJobRecords.ID,
-                        incident.configuration
+                        causeProducer
                     )
                 }
 
