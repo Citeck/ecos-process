@@ -26,7 +26,7 @@ class BpmnBoundaryEventConverter : EcosOmgConverter<BpmnBoundaryEventDef, TBound
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             attachedToRef = element.attachedToRef.localPart,
             cancelActivity = element.isCancelActivity,
-            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() }?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },

@@ -24,7 +24,7 @@ class BpmnSubProcessConverter : EcosOmgConverter<BpmnSubProcessDef, TSubProcess>
         return BpmnSubProcessDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            number = element.otherAttributes[BPMN_PROP_NUMBER]?.toInt(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() }?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
