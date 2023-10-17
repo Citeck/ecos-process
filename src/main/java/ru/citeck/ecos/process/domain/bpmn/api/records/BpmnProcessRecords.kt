@@ -85,7 +85,7 @@ class BpmnProcessRecords(
 
     private fun RecordsQuery.toProcessInstanceQuery(): ProcessInstanceQuery {
         val predicate = getQuery(Predicate::class.java)
-        val bpmnQuery = PredicateUtils.convertToDto(predicate, BpmnProcessRecords.BpmnProcQuery::class.java)
+        val bpmnQuery = PredicateUtils.convertToDto(predicate, BpmnProcQuery::class.java)
 
         return ProcessInstanceQuery(
             businessKey = bpmnQuery.document.toString(),

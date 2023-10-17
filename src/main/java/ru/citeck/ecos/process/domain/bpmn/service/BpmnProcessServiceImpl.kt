@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.service
 
 import mu.KotlinLogging
+import org.camunda.bpm.cockpit.impl.plugin.base.dto.query.CalledProcessInstanceQueryDto
 import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RepositoryService
@@ -179,6 +180,12 @@ class BpmnProcessServiceImpl(
         log.debug { "Query process instances: \n$query, \ncount: ${result.size} \nresult: $result" }
 
         return result
+    }
+
+    override fun getCalledProcessInstancesMeta(processInstanceId: String): List<CalledProcessInstanceMeta> {
+        return processInstanceRestService.getProcessInstance(processInstanceId)
+            .queryCalledProcessInstances(CalledProcessInstanceQueryDto())
+            .map { it.toCalledProcessInstanceMeta() }
     }
 
     override fun queryProcessInstancesCount(query: ProcessInstanceQuery): Long {

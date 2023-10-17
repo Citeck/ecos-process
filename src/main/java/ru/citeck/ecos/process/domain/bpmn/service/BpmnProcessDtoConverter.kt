@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.service
 
+import org.camunda.bpm.cockpit.impl.plugin.base.dto.CalledProcessInstanceDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.IncidentStatisticsDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.ProcessInstanceDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.query.ProcessInstanceQueryDto
@@ -53,6 +54,21 @@ fun ProcessInstanceDto.toProcessInstanceMeta(): ProcessInstanceMeta {
         startTime = startTime.toInstant(),
         suspensionState = if (isSuspended) SuspensionState.SUSPENDED else SuspensionState.ACTIVE,
         incidentStatistics = incidents.map { it.toEcosIncidentStatistics() }
+    )
+}
+
+fun CalledProcessInstanceDto.toCalledProcessInstanceMeta(): CalledProcessInstanceMeta {
+    return CalledProcessInstanceMeta(
+        id = id,
+        businessKey = businessKey ?: "",
+        startTime = startTime?.toInstant(),
+        suspensionState = if (isSuspended) SuspensionState.SUSPENDED else SuspensionState.ACTIVE,
+        incidentStatistics = incidents.map { it.toEcosIncidentStatistics() },
+        processDefinitionId = processDefinitionId ?: "",
+        processDefinitionKey = processDefinitionKey ?: "",
+        processDefinitionName = processDefinitionName ?: "",
+        callActivityInstanceId = callActivityInstanceId ?: "",
+        callActivityId = callActivityId ?: ""
     )
 }
 

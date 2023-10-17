@@ -60,7 +60,7 @@ class BpmnIncidentRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val query = PredicateUtils.convertToDto(predicate, BpmnIncidentQuery::class.java)
-        if (query.bpmnDefEngine.isEmpty()) {
+        if (query.bpmnDefEngine.getLocalId().isBlank() && query.bpmnProcess.getLocalId().isBlank()) {
             return RecsQueryRes()
         }
 
@@ -104,8 +104,11 @@ class BpmnIncidentRecords(
             }
 
             val bpmnDefId = bpmnIncidentQuery.bpmnDefEngine.getLocalId()
+            val bpmnProcId = bpmnIncidentQuery.bpmnProcess.getLocalId()
             if (bpmnDefId.isNotBlank()) {
                 processDefinitionId(bpmnDefId)
+            } else if (bpmnProcId.isNotBlank()) {
+                processInstanceId(bpmnProcId)
             }
         }
     }
@@ -236,6 +239,7 @@ class BpmnIncidentRecords(
 
 data class BpmnIncidentQuery(
     var bpmnDefEngine: EntityRef = EntityRef.EMPTY,
+    var bpmnProcess: EntityRef = EntityRef.EMPTY,
     var message: String = ""
 )
 

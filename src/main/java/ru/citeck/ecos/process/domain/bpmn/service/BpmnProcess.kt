@@ -37,6 +37,8 @@ interface BpmnProcessService {
 
     fun queryProcessInstancesMeta(query: ProcessInstanceQuery): List<ProcessInstanceMeta>
 
+    fun getCalledProcessInstancesMeta(processInstanceId: String): List<CalledProcessInstanceMeta>
+
     fun queryProcessInstancesCount(query: ProcessInstanceQuery): Long
 
     fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition?
@@ -60,6 +62,19 @@ data class ProcessInstanceMeta(
     val startTime: Instant,
     val suspensionState: SuspensionState,
     val incidentStatistics: List<IncidentStatistics>
+)
+
+data class CalledProcessInstanceMeta(
+    val id: String,
+    val businessKey: String = "",
+    val startTime: Instant? = null,
+    val suspensionState: SuspensionState,
+    val incidentStatistics: List<IncidentStatistics>,
+    val processDefinitionId: String = "",
+    val processDefinitionKey: String = "",
+    val processDefinitionName: String = "",
+    val callActivityInstanceId: String = "",
+    val callActivityId: String = ""
 )
 
 enum class SuspensionState {

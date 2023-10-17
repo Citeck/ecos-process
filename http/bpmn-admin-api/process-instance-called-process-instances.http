@@ -1,0 +1,45 @@
+# Скрин просмотра определенного инстанса процесса. Список вызываемых процессов.
+
+# В списке пользователю показываем:
+#
+# Статус - какая-то иконка, Ок / Не ок. В зависимости от наличия инцидентов.
+# Если isSuspended = true, то рисуем иконку "пауза"
+#
+# calledProcess (Вызываемвый экземпляр процесса) - ссылка, по нажатию провалдиваемся в просмотр инстанса в рамках админки.
+# Пользователю отображаем id инстанса, например 5bde4da9-5d26-11ee-a087-22e5aeaa8a65
+#
+# bpmnDefEngine (Описание процесса) - ссылка, по нажатию проваливаемся в просмотр определенной версии описания процесса.
+# Пользователю показываем ?disp.
+#
+# callActivityId (Элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+# По нажатию выделяем элемент в схеме процесса и перемещаемся к нему.
+#
+# Пагинация НЕ поддерживается. Выводим полынй список.
+
+# @name ProcessInstanceViewCalledProcessInstances
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-called-process-instance",
+        "query": {
+            "att": "bpmnProcess",
+            "t": "eq",
+            "val": "eproc/bpmn-proc@ea6c7e1c-6cd0-11ee-a491-16c23221ebc0"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        }
+    },
+    "attributes": {
+        "isSuspended": "isSuspended?bool",
+        "incidents": "incidents[]{?id}",
+        "calledProcess": "calledProcess?id",
+        "bpmnDefEngine": "bpmnDefEngine{?disp,id}",
+        "callActivityId": "callActivityId"
+    }
+}
+

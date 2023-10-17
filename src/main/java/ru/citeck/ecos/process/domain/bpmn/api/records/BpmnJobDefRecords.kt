@@ -2,9 +2,8 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.management.JobDefinition
+import org.camunda.bpm.engine.management.JobDefinitionQuery
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -29,20 +28,19 @@ class BpmnJobDefRecords(
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
-        val jobQuery = PredicateUtils.convertToDto(predicate, BpmnJobQuery::class.java)
-        if (jobQuery.bpmnDefEngine.isEmpty()) {
+        val jobQuery = PredicateUtils.convertToDto(predicate, BpmnJobDefinitionQuery::class.java)
+        if (jobQuery.bpmnDefEngine.getLocalId().isBlank() && jobQuery.bpmnProcess.getLocalId().isBlank()) {
             return RecsQueryRes()
         }
 
-        val jobId = jobQuery.bpmnDefEngine.getLocalId()
-
         val totalCount = managementService.createJobDefinitionQuery()
-            .processDefinitionId(jobId)
+            .applyPredicate(predicate)
             .count()
 
         val jobs = managementService.createJobDefinitionQuery()
-            .processDefinitionId(jobId)
-            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
+            .applyPredicate(predicate)
+            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
+            .map {
                 EntityRef.create(AppName.EPROC, ID, it.id)
             }
 
@@ -53,6 +51,18 @@ class BpmnJobDefRecords(
         result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return result
+    }
+
+
+    private fun JobDefinitionQuery.applyPredicate(pred: Predicate): JobDefinitionQuery {
+        val bpmnJobDefinitionQuery = PredicateUtils.convertToDto(pred, BpmnJobDefinitionQuery::class.java)
+
+        return this.apply {
+            val bpmnDefId = bpmnJobDefinitionQuery.bpmnDefEngine.getLocalId()
+            if (bpmnDefId.isNotBlank()) {
+                processDefinitionId(bpmnDefId)
+            }
+        }
     }
 
     override fun getRecordAtts(recordId: String): Any? {
@@ -96,39 +106,8 @@ class BpmnJobDefRecords(
         }
     }
 
-    data class BpmnJobQuery(
-        var bpmnDefEngine: EntityRef = EntityRef.EMPTY
+    data class BpmnJobDefinitionQuery(
+        var bpmnDefEngine: EntityRef = EntityRef.EMPTY,
+        var bpmnProcess: EntityRef = EntityRef.EMPTY
     )
-
-    private class JobStateRecord(
-        private val state: BpmnJobState
-    ) {
-
-        @AttName("suspended")
-        fun getIsSuspended(): Boolean {
-            return state == BpmnJobState.SUSPENDED
-        }
-
-        @AttName(".disp")
-        fun getDisp(): MLText {
-            return state.disp
-        }
-    }
-}
-
-enum class BpmnJobState(
-    val disp: MLText
-) {
-    ACTIVE(
-        MLText(
-            I18nContext.ENGLISH to "Active",
-            I18nContext.RUSSIAN to "Активно"
-        )
-    ),
-    SUSPENDED(
-        MLText(
-            I18nContext.ENGLISH to "Suspended",
-            I18nContext.RUSSIAN to "Приостановлено"
-        )
-    );
 }
