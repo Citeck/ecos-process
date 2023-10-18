@@ -191,8 +191,11 @@ class BpmnIncidentRecords(
 
         @AttName(ATT_INCIDENT_TYPE)
         fun getIncidentType(): IncidentTypeRecord? {
-            val type = BpmnIncidentType.getById(incident.incidentType) ?: return null
-            return IncidentTypeRecord(type)
+            if (incident.incidentType == null || incident.incidentType.isBlank()) {
+                return null
+            }
+
+            return IncidentTypeRecord(incident.incidentType)
         }
 
         @AttName("rootCauseIncident")
@@ -252,17 +255,19 @@ class BpmnIncidentRecords(
     }
 
     private class IncidentTypeRecord(
-        private val type: BpmnIncidentType
+        private val rawType: String,
+
+        private val type: BpmnIncidentType? = BpmnIncidentType.getById(rawType)
     ) {
 
         @AttName(".disp")
         fun getDisp(): MLText {
-            return type.disp
+            return type?.disp ?: MLText(rawType)
         }
 
         @AttName("type")
         fun getType(): String {
-            return type.id
+            return type?.id ?: rawType
         }
     }
 }

@@ -1,0 +1,36 @@
+# Пример перемещения токенов в процессе
+#
+# Исходный токен = type = "cancenl"
+# Целевой токен = type = "startBeforeActivity"
+#
+
+# @name ProcessInstanceModify
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "records": [
+    {
+      "id": "eproc/bpmn-proc@2db7c07a-6b65-11ee-a2f7-2e8b990a4443",
+      "attributes": {
+        "action": "MODIFY",
+        "data": {
+          "skipCustomListeners": true,
+          "skipIoMappings": true,
+          "instructions": [
+            {
+              "type": "cancel",
+              "activityId": "Activity_0lqviz0"
+            },
+            {
+              "type": "startBeforeActivity",
+              "activityId": "Activity_0eoy1rn"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+

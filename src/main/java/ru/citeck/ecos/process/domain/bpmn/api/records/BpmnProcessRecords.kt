@@ -1,8 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import mu.KotlinLogging
 import org.camunda.bpm.engine.history.HistoricProcessInstance
 import org.camunda.bpm.engine.repository.ProcessDefinition
+import org.camunda.bpm.engine.rest.ProcessInstanceRestService
+import org.camunda.bpm.engine.rest.dto.runtime.modification.ProcessInstanceModificationDto
 import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
@@ -38,7 +41,8 @@ import java.util.*
 @Component
 class BpmnProcessRecords(
     private val bpmnProcessService: BpmnProcessService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val camundaProcessInstanceRestService: ProcessInstanceRestService
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordsQueryDao,
@@ -50,6 +54,10 @@ class BpmnProcessRecords(
         private const val BPMN_PROC_MUTATE_ACTION_FLAG = "action"
         private const val ATT_ON_DELETE_SKIP_CUSTOM_LISTENER = "skipCustomListener"
         private const val ATT_ON_DELETE_SKIP_IO_MAPPING = "skipIoMapping"
+        private const val ATT_DATA = "data"
+
+        // We can't use our Json.mapper for convert ProcessInstanceModificationDto
+        private val standardMapper = ObjectMapper()
 
         private val log = KotlinLogging.logger {}
     }
@@ -152,6 +160,11 @@ class BpmnProcessRecords(
                 bpmnProcessService.activateProcess(record.id)
                 record.id
             }
+
+            MutateAction.MODIFY -> {
+                modify(record)
+                record.id
+            }
         }
     }
 
@@ -221,6 +234,20 @@ class BpmnProcessRecords(
             skipCustomListener,
             skipIoMapping
         )
+    }
+
+    private fun modify(record: LocalRecordAtts) {
+        val id = record.id
+        val modifyInstruction = record.getAtt(ATT_DATA).toString()
+        if (modifyInstruction.isBlank()) {
+            throw IllegalArgumentException("Modify instruction is empty")
+        }
+
+        val dto = standardMapper.readValue(
+            modifyInstruction, ProcessInstanceModificationDto::class.java
+        )
+
+        camundaProcessInstanceRestService.getProcessInstance(id).modifyProcessInstance(dto)
     }
 
     inner class ProcRecord(
@@ -320,7 +347,8 @@ class BpmnProcessRecords(
         UPDATE,
         DELETE,
         SUSPEND,
-        ACTIVATE;
+        ACTIVATE,
+        MODIFY;
 
         companion object {
             fun getFromAtts(record: LocalRecordAtts): MutateAction {
