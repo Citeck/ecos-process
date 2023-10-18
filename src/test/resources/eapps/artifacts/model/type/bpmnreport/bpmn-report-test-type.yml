@@ -1,0 +1,38 @@
+---
+id: bpmn-report-test-type
+
+name:
+  ru: bpmn-report-test-type
+  en: bpmn-report-test-type
+
+parentRef: emodel/type@base
+
+model:
+  roles:
+    - id: initiator-test
+      name:
+        ru: Инициатор
+        en: Initiator
+      attributes:
+        - initiator
+    - id: accountant-test
+      name:
+        ru: Бухгалтер
+        en: Accountant
+      assignees:
+        - GROUP_accountant_test
+  statuses:
+    - id: new-test
+      name:
+        ru: Новый
+        en: New
+    - id: completed-test
+      name:
+        ru: Завершен
+        en: Completed
+  attributes:
+    - id: initiator
+      name:
+        en: Initiator
+        ru: Инициатор
+      type: PERSON

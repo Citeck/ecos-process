@@ -171,8 +171,12 @@ class ReportElementsService(
 
                 val assignees = flowElement.data["assignees"]
                 for (assignee in assignees) {
-                    if (taskElement.assignees == null) taskElement.assignees = ReportUserTaskAssigneeElement()
-                    if (taskElement.assignees?.roles == null) taskElement.assignees?.roles = ArrayList()
+                    if (taskElement.assignees == null) {
+                        taskElement.assignees = ReportUserTaskAssigneeElement()
+                    }
+                    if (taskElement.assignees?.roles == null) {
+                        taskElement.assignees?.roles = ArrayList()
+                    }
                     taskElement.assignees?.roles?.add(
                         ReportRoleElement(
                             roleService.getRoleDef(ecosType, assignee["value"].asText()).name
