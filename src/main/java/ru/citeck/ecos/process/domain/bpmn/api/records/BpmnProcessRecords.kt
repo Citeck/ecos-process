@@ -133,9 +133,7 @@ class BpmnProcessRecords(
             return res.id
         }
 
-        val action = MutateAction.getFromAtts(record)
-
-        return when (action) {
+        return when (record.toActionEnum(MutateAction::class.java)) {
             MutateAction.START -> {
                 val processInstance = startProcess(record)
                 processInstance.id
@@ -165,6 +163,8 @@ class BpmnProcessRecords(
                 modify(record)
                 record.id
             }
+
+            null -> error("Action is not specified for record: $record")
         }
     }
 
@@ -243,7 +243,7 @@ class BpmnProcessRecords(
             throw IllegalArgumentException("Modify instruction is empty")
         }
 
-        val dto = standardMapper.readValue(
+        val dto: ProcessInstanceModificationDto = standardMapper.readValue(
             modifyInstruction, ProcessInstanceModificationDto::class.java
         )
 
@@ -348,19 +348,7 @@ class BpmnProcessRecords(
         DELETE,
         SUSPEND,
         ACTIVATE,
-        MODIFY;
-
-        companion object {
-            fun getFromAtts(record: LocalRecordAtts): MutateAction {
-                record.attributes[BPMN_PROC_MUTATE_ACTION_FLAG].let {
-                    return if (it.isNotEmpty()) {
-                        valueOf(it.asText().uppercase(Locale.getDefault()))
-                    } else {
-                        START
-                    }
-                }
-            }
-        }
+        MODIFY
     }
 
     private fun isAlfProcessDef(recordId: String): Boolean {

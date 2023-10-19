@@ -35,7 +35,7 @@ class BpmnJobRecords(
         private const val ATT_DUE_DATE = "dueDate"
         private const val ATT_JOB_ID = "id"
 
-        private const val BPMN_PROC_MUTATE_ACTION_FLAG = "action"
+        private const val MUTATE_ACTION_FLAG = "action"
     }
 
     override fun getId() = ID
@@ -119,8 +119,7 @@ class BpmnJobRecords(
             error("Job id is blank: $record")
         }
 
-        val action = MutateAction.getFromAtts(record)
-        when (action) {
+        when (record.toActionEnum(MutateAction::class.java)) {
             MutateAction.SUSPEND -> {
                 log.debug { "Suspend job ${record.id}" }
                 managementService.suspendJobById(record.id)
@@ -211,19 +210,7 @@ class BpmnJobRecords(
 
     private enum class MutateAction {
         SUSPEND,
-        ACTIVATE;
-
-        companion object {
-            fun getFromAtts(record: LocalRecordAtts): MutateAction? {
-                record.attributes[BPMN_PROC_MUTATE_ACTION_FLAG].let {
-                    return if (it.isNotEmpty()) {
-                        valueOf(it.asText().uppercase(Locale.getDefault()))
-                    } else {
-                        null
-                    }
-                }
-            }
-        }
+        ACTIVATE
     }
 
     data class BpmnJobQuery(
