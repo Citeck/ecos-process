@@ -11,7 +11,6 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmnreport.model.*
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
 import kotlin.test.assertEquals
@@ -19,10 +18,6 @@ import kotlin.test.assertEquals
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 class BpmnProcessReportServiceTest {
-
-    companion object {
-        private val TEST_PROCESS_REF = EntityRef.create("eproc", "bpmn-def", "bpmn-report-test-process")
-    }
 
     @Autowired
     lateinit var processReportService: BpmnProcessReportService
@@ -342,9 +337,9 @@ class BpmnProcessReportServiceTest {
             )
         )
 
-        val fileDefinition =
-            ResourceUtils.getFile("classpath:eapps/artifacts/process/bpmn/bpmn-report-test-process.bpmn.xml")
-                .readText(StandardCharsets.UTF_8)
+        val fileDefinition = ResourceUtils.getFile(
+            "classpath:test/bpmn/report/bpmn-report-test-process.bpmn.xml"
+        ).readText(StandardCharsets.UTF_8)
         val bpmnDefinitionDef = BpmnIO.importEcosBpmn(fileDefinition)
 
         val actualList = processReportService.generateReportElementListForBpmnDefinition(bpmnDefinitionDef)

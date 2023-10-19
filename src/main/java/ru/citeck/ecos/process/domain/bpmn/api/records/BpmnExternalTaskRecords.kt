@@ -59,6 +59,5 @@ class BpmnExternalTaskRecords(
         override fun getIdentificator(): String {
             return id
         }
-
     }
 }

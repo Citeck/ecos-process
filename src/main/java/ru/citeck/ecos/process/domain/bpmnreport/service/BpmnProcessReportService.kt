@@ -119,14 +119,14 @@ class BpmnProcessReportService(
             )
 
             when (elementType) {
-                //Status
+                // Status
                 ElementType.STATUS -> {
                     reportElement.statusElement =
                         reportElementsService.convertReportStatusElement(flowElement, ecosType!!)
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 
-                //Gateway
+                // Gateway
                 ElementType.EXCLUSIVE_GATEWAY, ElementType.PARALLEL_GATEWAY,
                 ElementType.INCLUSIVE_GATEWAY, ElementType.EVENT_BASED_GATEWAY -> {
                     reportElement.gatewayElement =
@@ -134,7 +134,7 @@ class BpmnProcessReportService(
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 
-                //Event
+                // Event
                 ElementType.START_EVENT, ElementType.END_EVENT,
                 ElementType.INTERMEDIATE_CATCH_EVENT, ElementType.INTERMEDIATE_THROW_EVENT,
                 ElementType.BOUNDARY_EVENT -> {
@@ -143,7 +143,7 @@ class BpmnProcessReportService(
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 
-                //Task
+                // Task
                 ElementType.USER_TASK, ElementType.SCRIPT_TASK,
                 ElementType.SEND_TASK, ElementType.BUSINESS_RULE_TASK,
                 ElementType.SERVICE_TASK -> {
@@ -152,7 +152,7 @@ class BpmnProcessReportService(
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 
-                //SubProcess
+                // SubProcess
                 ElementType.SUB_PROCESS -> {
                     reportElement.subProcessElement =
                         reportElementsService.convertReportSubProcessElement(flowElement, elementType)
@@ -179,7 +179,7 @@ class BpmnProcessReportService(
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 
-                //CallActivity
+                // CallActivity
                 ElementType.CALL_ACTIVITY -> {
                     reportElement.subProcessElement =
                         reportElementsService.convertReportCallActivityElement(flowElement, elementType)

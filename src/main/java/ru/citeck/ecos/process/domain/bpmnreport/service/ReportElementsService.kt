@@ -209,7 +209,6 @@ class ReportElementsService(
                         taskElement.service?.expression = flowElement.data["expression"].asText()
                     }
                 }
-
             }
 
             else -> {}

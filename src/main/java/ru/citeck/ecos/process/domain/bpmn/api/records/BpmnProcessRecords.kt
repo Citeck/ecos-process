@@ -73,7 +73,7 @@ class BpmnProcessRecords(
             .map { EntityRef.create(AppName.EPROC, ID, it.id) }
 
         log.debug {
-            "Found <$totalCount> process instances for query: \n$recsQuery. \nInstances: ${instances}"
+            "Found <$totalCount> process instances for query: \n$recsQuery. \nInstances: $instances"
         }
 
         val result = RecsQueryRes<EntityRef>()

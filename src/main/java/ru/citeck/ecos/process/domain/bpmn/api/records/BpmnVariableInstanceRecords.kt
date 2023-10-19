@@ -183,9 +183,7 @@ class BpmnVariableInstanceRecords(
                 serialized = typedValue.valueSerialized,
                 deserialized = typedValue.value?.toString() ?: ""
             )
-
         }
-
     }
 
     private data class TypedValueInfo(

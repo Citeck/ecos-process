@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 
 @Component
-class BpmnJobRecords: AbstractRecordsDao() {
+class BpmnJobRecords : AbstractRecordsDao() {
 
     companion object {
         const val ID = "bpmn-job"

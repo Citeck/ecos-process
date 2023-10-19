@@ -215,7 +215,6 @@ class BpmnIncidentRecords(
         fun getNote(): String {
             return incident.annotation ?: ""
         }
-
     }
 
     private class IncidentTypeRecord(
@@ -244,13 +243,15 @@ enum class BpmnIncidentType(
     val disp: MLText
 ) {
     FAILED_JOB(
-        "failedJob", MLText(
+        "failedJob",
+        MLText(
             I18nContext.ENGLISH to "Job failed",
             I18nContext.RUSSIAN to "Ошибка фоновой задачи"
         )
     ),
     FAILED_EXTERNAL_TASK(
-        "failedExternalTask", MLText(
+        "failedExternalTask",
+        MLText(
             I18nContext.ENGLISH to "External task failed",
             I18nContext.RUSSIAN to "Ошибка внешней задачи"
         )
@@ -262,4 +263,3 @@ enum class BpmnIncidentType(
         }
     }
 }
-

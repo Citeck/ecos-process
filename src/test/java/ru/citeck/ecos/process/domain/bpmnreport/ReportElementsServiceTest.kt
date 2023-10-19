@@ -15,7 +15,6 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import kotlin.test.assertEquals
 
-
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 class ReportElementsServiceTest {
@@ -274,7 +273,5 @@ class ReportElementsServiceTest {
             reportElementsService.convertReportTaskElement(flowElementDef, ElementType.USER_TASK, TEST_TYPE)
 
         assertEquals(expectedElement, actualElement, "Tasks are different!")
-
     }
-
 }

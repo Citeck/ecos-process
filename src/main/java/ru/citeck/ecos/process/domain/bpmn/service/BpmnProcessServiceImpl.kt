@@ -104,8 +104,8 @@ class BpmnProcessServiceImpl(
         val rootInstance = camundaRuntimeService.getActivityInstance(processInstanceId) ?: return emptyList()
 
         fun extractStatFromActivity(activityInstance: ActivityInstance) {
-            if (activityInstance.activityType != "processDefinition"
-                && activityInstance.activityType != "multiInstanceBody"
+            if (activityInstance.activityType != "processDefinition" &&
+                activityInstance.activityType != "multiInstanceBody"
             ) {
                 val currentActivityStat = activitiesStats.computeIfAbsent(activityInstance.activityId) {
                     ActivityStatistics(
@@ -170,7 +170,8 @@ class BpmnProcessServiceImpl(
     override fun queryProcessInstancesMeta(query: ProcessInstanceQuery): List<ProcessInstanceMeta> {
         val camundaQuery = query.toCamundaQuery()
         val result = processInstanceRestService.queryProcessInstances(
-            query.toCamundaQuery(), camundaQuery.firstResult,
+            query.toCamundaQuery(),
+            camundaQuery.firstResult,
             camundaQuery.maxResults
         )
             .map { it.toProcessInstanceMeta() }

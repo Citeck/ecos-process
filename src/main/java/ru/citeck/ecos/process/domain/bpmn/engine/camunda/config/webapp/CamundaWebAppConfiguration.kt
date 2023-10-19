@@ -26,18 +26,23 @@ class CamundaWebAppConfiguration {
     @Bean
     fun camundaCsrfOverwrite(): ServletContextInitializer {
         return ServletContextInitializer { servletContext: ServletContext ->
-            servletContext.addFilter(CSRF_PREVENTION_FILTER, (object : Filter {
-                override fun doFilter(
-                    request: ServletRequest,
-                    response: ServletResponse,
-                    chain: FilterChain
-                ) {
-                    chain.doFilter(request, response)
-                }
+            servletContext.addFilter(
+                CSRF_PREVENTION_FILTER,
+                (
+                    object : Filter {
+                        override fun doFilter(
+                            request: ServletRequest,
+                            response: ServletResponse,
+                            chain: FilterChain
+                        ) {
+                            chain.doFilter(request, response)
+                        }
 
-                override fun init(filterConfig: FilterConfig) {}
-                override fun destroy() {}
-            }))
+                        override fun init(filterConfig: FilterConfig) {}
+                        override fun destroy() {}
+                    }
+                    )
+            )
         }
     }
 
@@ -55,7 +60,6 @@ class CamundaWebAppConfiguration {
         filterRegistration.addUrlPatterns("/camunda/app/*", "/camunda/api/*", "/camunda/lib/*")
         return filterRegistration
     }
-
 }
 
 class EcosContainerBasedAuthenticationFilter : ContainerBasedAuthenticationFilter() {

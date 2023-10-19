@@ -13,5 +13,4 @@ class CamundaCockpitRestServicesInjectConfiguration {
     fun camundaCockpitProcessInstanceRestService(): ProcessInstanceRestService {
         return ProcessInstanceRestService(DEFAULT_ENGINE_NAME)
     }
-
 }
