@@ -47,9 +47,9 @@ class BpmnProcessReportService(
     ): ReportParticipantElement? {
         return participants.find { it.processRef == id }?.let {
             ReportParticipantElement(
-                name = it.name,
                 number = it.number,
-                documentation = it.documentation
+                name = it.name.takeIf { name -> !MLText.isEmpty(name) },
+                documentation = it.documentation.takeIf { documentation -> !MLText.isEmpty(documentation) }
             )
         }
     }
@@ -68,10 +68,9 @@ class BpmnProcessReportService(
                     .find { it.type == "bpmn:BpmnAssociation" && it.data["targetRef"].asText() == annotation.id }
                     ?.data?.get("sourceRef")?.asText()
 
-                if (elementId != null) {
-                    val element = elements.find { it.id == elementId }
-                    if (element != null) {
-                        if (element.annotations == null) element.annotations = ArrayList()
+                elementId?.let {
+                    elements.find { it.id == elementId }?.let { element ->
+                        element.annotations = element.annotations ?: ArrayList()
                         element.annotations?.add(text)
                     }
                 }
@@ -252,20 +251,20 @@ class BpmnProcessReportService(
 enum class SequenceElementType(val nameType: MLText) {
     OUTCOME(
         MLText(
-            LocaleUtils.toLocale("en") to "Outcome",
-            LocaleUtils.toLocale("ru") to "Исходящий"
+            LocaleUtils.toLocale("ru") to "Исходящий",
+            LocaleUtils.toLocale("en") to "Outcome"
         )
     ),
     SCRIPT(
         MLText(
-            LocaleUtils.toLocale("en") to "Script",
-            LocaleUtils.toLocale("ru") to "Скрипт"
+            LocaleUtils.toLocale("ru") to "Скрипт",
+            LocaleUtils.toLocale("en") to "Script"
         )
     ),
     EXPRESSION(
         MLText(
-            LocaleUtils.toLocale("en") to "Expression",
-            LocaleUtils.toLocale("ru") to "Выражение"
+            LocaleUtils.toLocale("ru") to "Выражение",
+            LocaleUtils.toLocale("en") to "Expression"
         )
     )
 }

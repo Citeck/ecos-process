@@ -23,7 +23,7 @@ class ReportElementsService(
     private val recordsService: RecordsService
 ) {
     companion object {
-        val MANUAL_MODE_NAME = MLText(
+        private val MANUAL_MODE_NAME = MLText(
             LocaleUtils.toLocale("en") to "Manual setting",
             LocaleUtils.toLocale("ru") to "Ручная настройка"
         )
@@ -31,10 +31,9 @@ class ReportElementsService(
 
     fun convertReportStatusElement(flowElement: BpmnFlowElementDef, ecosType: EntityRef): ReportStatusElement {
         val statusElement = ReportStatusElement()
-        statusElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText.EMPTY
+        statusElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java)
         statusElement.status =
             statusService.getStatusDefByType(ecosType, flowElement.data["ecosTaskDefinition"]["status"].asText())?.name
-                ?: MLText.EMPTY
         return statusElement
     }
 
@@ -97,7 +96,7 @@ class ReportElementsService(
                 }
 
                 val event = Json.mapper.convert(flowElement.data["eventDefinition"], BpmnTimerEventDef::class.java)
-                if (event != null) {
+                event?.let {
                     eventElement.eventType = EventType.values().find { it.name == event.value.type.name }?.nameEvent
                     eventElement.value = event.value.value
                 }
@@ -106,7 +105,7 @@ class ReportElementsService(
             "errorEvent" -> {
                 eventElement.type = "Error ${eventElement.type}"
                 val event = Json.mapper.convert(flowElement.data["eventDefinition"], BpmnErrorEventDef::class.java)
-                if (event != null) {
+                event?.let {
                     eventElement.value = event.errorName
                 }
             }
@@ -126,21 +125,23 @@ class ReportElementsService(
             field: String
         ) {
             val recipients = flowElement.data[field].asList(DataValue::class.java)
-            if (recipients.isEmpty()) return
+            if (recipients.isEmpty()) {
+                return
+            }
 
             val recipientElement = ReportSendTaskRecipientElement()
 
             recipients.forEach {
                 when (it["type"].asText()) {
                     RecipientType.ROLE.name -> {
-                        if (recipientElement.roles == null) recipientElement.roles = ArrayList()
+                        recipientElement.roles = recipientElement.roles ?: ArrayList()
                         recipientElement.roles?.add(
                             ReportRoleElement(roleService.getRoleDef(ecosType, it["value"].asText()).name)
                         )
                     }
 
                     RecipientType.EXPRESSION.name -> {
-                        if (recipientElement.expressions == null) recipientElement.expressions = ArrayList()
+                        recipientElement.expressions = recipientElement.expressions ?: ArrayList()
                         recipientElement.expressions?.add(
                             it["value"].asText()
                         )
@@ -148,7 +149,7 @@ class ReportElementsService(
                 }
             }
 
-            if (taskElement.recipients == null) taskElement.recipients = ReportSendTaskRecipientsElement()
+            taskElement.recipients = taskElement.recipients ?: ReportSendTaskRecipientsElement()
             when (field) {
                 "to" -> taskElement.recipients!!.to = recipientElement
                 "cc" -> taskElement.recipients!!.cc = recipientElement
@@ -159,9 +160,7 @@ class ReportElementsService(
         when (elementType) {
             ElementType.USER_TASK -> {
                 for (outcome in flowElement.data["outcomes"]) {
-                    if (taskElement.outcomes == null) {
-                        taskElement.outcomes = ArrayList()
-                    }
+                    taskElement.outcomes = taskElement.outcomes ?: ArrayList()
                     taskElement.outcomes?.add(
                         ReportUserTaskOutcomeElement(
                             Json.mapper.convert(outcome["name"], MLText::class.java) ?: MLText.EMPTY
@@ -171,12 +170,8 @@ class ReportElementsService(
 
                 val assignees = flowElement.data["assignees"]
                 for (assignee in assignees) {
-                    if (taskElement.assignees == null) {
-                        taskElement.assignees = ReportUserTaskAssigneeElement()
-                    }
-                    if (taskElement.assignees?.roles == null) {
-                        taskElement.assignees?.roles = ArrayList()
-                    }
+                    taskElement.assignees = taskElement.assignees ?: ReportUserTaskAssigneeElement()
+                    taskElement.assignees?.roles = taskElement.assignees?.roles ?: ArrayList()
                     taskElement.assignees?.roles?.add(
                         ReportRoleElement(
                             roleService.getRoleDef(ecosType, assignee["value"].asText()).name
@@ -186,7 +181,7 @@ class ReportElementsService(
 
                 val manualRecipients = flowElement.data["manualRecipients"].asList(String::class.java)
                 if (manualRecipients.isNotEmpty()) {
-                    if (taskElement.assignees == null) taskElement.assignees = ReportUserTaskAssigneeElement()
+                    taskElement.assignees = taskElement.assignees ?: ReportUserTaskAssigneeElement()
                     taskElement.assignees?.customAssignees = ArrayList(manualRecipients)
                 }
             }
@@ -229,75 +224,77 @@ class ReportElementsService(
         elementType: ElementType
     ) {
         baseElement.type = elementType.type
-        baseElement.name = Json.mapper.convert(flowElement.data["name"], MLText::class.java) ?: MLText.EMPTY
+        baseElement.name =
+            Json.mapper.convert(flowElement.data["name"], MLText::class.java)?.takeIf { !MLText.isEmpty(it) }
         baseElement.documentation =
-            Json.mapper.convert(flowElement.data["documentation"], MLText::class.java) ?: MLText.EMPTY
+            Json.mapper.convert(flowElement.data["documentation"], MLText::class.java)?.takeIf { !MLText.isEmpty(it) }
     }
 
     private fun getNameByEntity(entityRefStr: String): String {
-        return recordsService.getAtt(entityRefStr, "name").asText()
+        return recordsService.getAtt(entityRefStr, "name").asText().takeIf { it.isNotEmpty() }
+            ?: EntityRef.valueOf(entityRefStr).getLocalId()
     }
 }
 
 enum class EventType(val nameEvent: MLText) {
     DATE(
         MLText(
-            LocaleUtils.toLocale("en") to "Date",
-            LocaleUtils.toLocale("ru") to "Дата"
+            LocaleUtils.toLocale("ru") to "Дата",
+            LocaleUtils.toLocale("en") to "Date"
         )
     ),
     DURATION(
         MLText(
-            LocaleUtils.toLocale("en") to "Duration",
-            LocaleUtils.toLocale("ru") to "Продолжительность"
+            LocaleUtils.toLocale("ru") to "Продолжительность",
+            LocaleUtils.toLocale("en") to "Duration"
         )
     ),
     CYCLE(
         MLText(
-            LocaleUtils.toLocale("en") to "Cycle",
-            LocaleUtils.toLocale("ru") to "Цикл"
+            LocaleUtils.toLocale("ru") to "Цикл",
+            LocaleUtils.toLocale("en") to "Cycle"
         )
     ),
     COMMENT_CREATE(
         MLText(
-            LocaleUtils.toLocale("en") to "Comment create",
-            LocaleUtils.toLocale("ru") to "Комментарий создан"
+            LocaleUtils.toLocale("ru") to "Комментарий создан",
+            LocaleUtils.toLocale("en") to "Comment create"
         )
     ),
     COMMENT_UPDATE(
         MLText(
-            LocaleUtils.toLocale("en") to "Comment update",
-            LocaleUtils.toLocale("ru") to "Комментарий обновлен"
+            LocaleUtils.toLocale("ru") to "Комментарий обновлен",
+            LocaleUtils.toLocale("en") to "Comment update"
         )
     ),
     COMMENT_DELETE(
         MLText(
-            LocaleUtils.toLocale("en") to "Comment delete",
-            LocaleUtils.toLocale("ru") to "Комментарий удален"
+            LocaleUtils.toLocale("ru") to "Комментарий удален",
+            LocaleUtils.toLocale("en") to "Comment delete"
         )
     ),
     RECORD_STATUS_CHANGED(
         MLText(
-            LocaleUtils.toLocale("en") to "Status changed",
-            LocaleUtils.toLocale("ru") to "Статус изменен"
+            LocaleUtils.toLocale("ru") to "Статус изменен",
+            LocaleUtils.toLocale("en") to "Status changed"
         )
     ),
     RECORD_CHANGED(
         MLText(
-            LocaleUtils.toLocale("en") to "Record changed",
-            LocaleUtils.toLocale("ru") to "Record обновлен"
+            LocaleUtils.toLocale("ru") to "Record обновлен",
+            LocaleUtils.toLocale("en") to "Record changed"
         )
     ),
     RECORD_CREATED(
         MLText(
-            LocaleUtils.toLocale("en") to "Record created",
-            LocaleUtils.toLocale("ru") to "Record создан"
+            LocaleUtils.toLocale("ru") to "Record создан",
+            LocaleUtils.toLocale("en") to "Record created"
         )
     ),
     RECORD_DELETED(
         MLText(
-            LocaleUtils.toLocale("en") to "Record deleted",
-            LocaleUtils.toLocale("ru") to "Record удален"
+            LocaleUtils.toLocale("ru") to "Record удален",
+            LocaleUtils.toLocale("en") to "Record deleted"
         )
     )
 }

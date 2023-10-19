@@ -3,9 +3,9 @@ package ru.citeck.ecos.process.domain.bpmnreport.model
 import ru.citeck.ecos.commons.data.MLText
 
 open class ReportBaseElement(
-    var type: String = "",
-    var name: MLText? = null,
-    var documentation: MLText? = null
+    open var type: String = "",
+    open var name: MLText? = null,
+    open var documentation: MLText? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
