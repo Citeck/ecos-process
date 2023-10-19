@@ -27,6 +27,7 @@ class BpmnBusinessRuleTaskConverter : EcosOmgConverter<BpmnBusinessRuleTaskDef, 
         return BpmnBusinessRuleTaskDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() }?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
@@ -68,6 +69,8 @@ class BpmnBusinessRuleTaskConverter : EcosOmgConverter<BpmnBusinessRuleTaskDef, 
 
             otherAttributes[BPMN_PROP_DMN_DECISION_REF] = element.decisionRef.toString()
             otherAttributes[BPMN_PROP_DMN_DECISION_BINDING] = element.binding.name
+
+            otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
             otherAttributes.putIfNotBlank(BPMN_PROP_DMN_DECISION_VERSION, element.version?.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_DMN_DECISION_VERSION_TAG, element.versionTag)
 
@@ -77,6 +80,7 @@ class BpmnBusinessRuleTaskConverter : EcosOmgConverter<BpmnBusinessRuleTaskDef, 
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))
 
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
             element.multiInstanceConfig?.let {
                 loopCharacteristics = context.converters.convertToJaxb(it.toTLoopCharacteristics(context))
                 otherAttributes[BPMN_MULTI_INSTANCE_CONFIG] = Json.mapper.toString(it)

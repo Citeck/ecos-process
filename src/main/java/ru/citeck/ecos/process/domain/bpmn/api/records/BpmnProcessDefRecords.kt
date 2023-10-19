@@ -20,6 +20,8 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
+import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -61,7 +63,8 @@ class BpmnProcessDefRecords(
     private val camundaRepoService: RepositoryService,
     private val remoteWebAppsApi: EcosRemoteWebAppsApi,
     private val procDefEventEmitter: ProcDefEventEmitter,
-    private val bpmnEventSubscriptionService: BpmnEventSubscriptionService
+    private val bpmnEventSubscriptionService: BpmnEventSubscriptionService,
+    private val bpmnProcessReportService: BpmnProcessReportService
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -560,6 +563,12 @@ class BpmnProcessDefRecords(
 
         fun getPreview(): EprocBpmnPreviewValue {
             return EprocBpmnPreviewValue(procDef.id, procDef.modified.toEpochMilli())
+        }
+
+        @AttName("bpmn-report")
+        fun getBpmnReport(): List<ReportElement>? {
+            val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it) }
+            return def?.let { bpmnProcessReportService.generateReportElementListForBpmnDefinition(it) }
         }
     }
 

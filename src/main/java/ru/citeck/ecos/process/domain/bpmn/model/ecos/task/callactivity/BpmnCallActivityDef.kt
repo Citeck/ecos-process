@@ -12,6 +12,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 data class BpmnCallActivityDef(
     val id: String,
     val name: MLText,
+    val number: Int?,
     val documentation: MLText,
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),

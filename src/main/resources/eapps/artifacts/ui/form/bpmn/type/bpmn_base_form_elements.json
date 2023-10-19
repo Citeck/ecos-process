@@ -32,6 +32,25 @@
       },
       {
         "label": {
+          "ru": "Номер элемента",
+          "en": "Element number"
+        },
+        "key": "number",
+        "validate": {
+          "integer": false
+        },
+        "isBigNumber": false,
+        "delimiterValue": " ",
+        "decimalValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "decimalLimit": 0,
+        "defaultValue": "",
+        "type": "number",
+        "input": true
+      },
+      {
+        "label": {
           "ru": "Имя",
           "en": "Name"
         },

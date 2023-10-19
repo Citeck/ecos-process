@@ -309,7 +309,6 @@ class BpmnVariableInstanceRecords(
                 deserialized = typedValue.value?.toString() ?: ""
             )
         }
-
     }
 
     private data class MutateValueData(

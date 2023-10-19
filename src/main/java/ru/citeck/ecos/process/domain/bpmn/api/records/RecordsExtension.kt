@@ -6,7 +6,6 @@ import java.util.*
 interface IdentifiableRecord {
 
     fun getIdentificator(): String
-
 }
 
 fun <T : IdentifiableRecord> List<T>.sortByIds(ids: List<String>): List<T> {

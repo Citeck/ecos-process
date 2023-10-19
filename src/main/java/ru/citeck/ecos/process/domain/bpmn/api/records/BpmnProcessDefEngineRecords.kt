@@ -81,7 +81,6 @@ class BpmnProcessDefEngineRecords(
         return result
     }
 
-
     private fun ProcessDefinitionQuery.applyPredicate(pred: Predicate): ProcessDefinitionQuery {
         val engineQuery = PredicateUtils.convertToDto(pred, EngineDefQuery::class.java)
 

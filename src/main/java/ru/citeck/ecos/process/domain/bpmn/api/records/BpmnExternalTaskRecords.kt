@@ -184,7 +184,6 @@ class BpmnExternalTaskRecords(
         override fun getIdentificator(): String {
             return id
         }
-
     }
 
     data class BpmnExternalTaskQuery(
