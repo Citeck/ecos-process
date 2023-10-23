@@ -17,8 +17,13 @@ fun <T : Enum<T>> LocalRecordAtts.toActionEnum(type: Class<T>): T? {
     this.attributes["action"].let {
         return if (it.isNotEmpty()) {
             type.enumConstants.find { enum -> enum.name == it.asText().uppercase(Locale.getDefault()) }
+                ?: error("Unknown action: $it")
         } else {
             null
         }
     }
+}
+
+fun <T : Enum<T>> LocalRecordAtts.toActionEnumOrDefault(type: Class<T>, default: T): T {
+    return toActionEnum(type) ?: default
 }

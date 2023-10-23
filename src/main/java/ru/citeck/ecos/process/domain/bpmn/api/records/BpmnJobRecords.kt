@@ -34,8 +34,6 @@ class BpmnJobRecords(
         private const val ATT_RETRIES = "retries"
         private const val ATT_DUE_DATE = "dueDate"
         private const val ATT_JOB_ID = "id"
-
-        private const val MUTATE_ACTION_FLAG = "action"
     }
 
     override fun getId() = ID

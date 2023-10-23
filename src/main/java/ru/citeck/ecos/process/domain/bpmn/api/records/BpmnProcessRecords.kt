@@ -36,7 +36,6 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.time.Instant
-import java.util.*
 
 @Component
 class BpmnProcessRecords(
@@ -133,7 +132,9 @@ class BpmnProcessRecords(
             return res.id
         }
 
-        return when (record.toActionEnum(MutateAction::class.java)) {
+        val action = record.toActionEnumOrDefault(MutateAction::class.java, MutateAction.START)
+
+        return when (action) {
             MutateAction.START -> {
                 val processInstance = startProcess(record)
                 processInstance.id
@@ -163,8 +164,6 @@ class BpmnProcessRecords(
                 modify(record)
                 record.id
             }
-
-            null -> error("Action is not specified for record: $record")
         }
     }
 
