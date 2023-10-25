@@ -1,0 +1,26 @@
+---
+id: add-variable-bpmn-instance
+name:
+  ru: Добавить переменную в экземпляр процесса
+  en: Add variable to process instance
+confirm:
+  title:
+    ru: Добавить переменную в экземпляр процесса
+    en: Add variable to process instance
+  message: {}
+  formRef: uiserv/form@bpmn-add-variable-to-process
+  formAttributes: {}
+  attributesMapping:
+    record.attributes.name: name
+    record.attributes.type: type
+    record.attributes.value: hiddenValue
+    record.attributes.objectTypeName: typedValueInfo.objectTypeName
+type: mutate
+config:
+  record:
+    id: eproc/bpmn-variable-instance@
+    attributes:
+      name: name
+      executionId: '${id}'
+      type: type
+      value: hiddenValue

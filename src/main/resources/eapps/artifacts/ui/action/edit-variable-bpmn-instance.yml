@@ -1,0 +1,25 @@
+---
+id: edit-variable-bpmn-instance
+name:
+  ru: Редактировать переменную экземпляра процесса
+  en: Edit process instance's variable
+confirm:
+  title:
+    ru: Редактировать переменную экземпляра процесса
+    en: Edit process instance's variable
+  message: {}
+  formRef: uiserv/form@bpmn-add-variable-to-process
+  formAttributes: {}
+  attributesMapping:
+    record.attributes.name: name
+    record.attributes.type: type
+    record.attributes.value: hiddenValue
+    record.attributes.objectTypeName: objectTypeName
+type: mutate
+config:
+  record:
+    id: ${?id}
+    attributes:
+      name: name
+      type: type
+      value: hiddenValue
