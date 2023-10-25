@@ -1,8 +1,0 @@
-id: bpmn-process-def-report-view
-name:
-  ru: Просмотр отчета
-  en: Report view
-
-appliesToTypes:
-  - emodel/type@bpmn-process-def
-  - emodel/type@bpmn-section

@@ -1,7 +1,0 @@
-id: bpmn-section-create-process-def
-name:
-  ru: Создание процессов
-  en: Process creation
-
-appliesToTypes:
-  - emodel/type@bpmn-section

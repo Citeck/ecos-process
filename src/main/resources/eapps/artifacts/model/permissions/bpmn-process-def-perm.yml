@@ -1,0 +1,34 @@
+id: "7e43218b-b639-45e5-a5c9-7061931e7cf5"
+typeRef: "emodel/type@bpmn-process-def"
+
+permissions:
+
+  matrix:
+    bp-administrator:
+      ANY: WRITE
+    bp-manager:
+      ANY: WRITE
+    bp-developer:
+      ANY: WRITE
+    bp-viewer:
+      ANY: READ
+  rules:
+    - roles:
+        - bp-administrator
+      permissions:
+        - deploy
+        - viewReports
+        - runInstance
+        - editInstance
+        - ecosBpMigrationInstance
+    - roles:
+        - bp-manager
+      permissions:
+        - viewReports
+    - roles:
+        - bp-developer
+      permissions:
+        - deploy
+        - runInstance
+        - viewReports
+        - ecosBpMigrationInstance

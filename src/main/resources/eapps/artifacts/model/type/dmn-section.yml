@@ -8,12 +8,6 @@ name:
 system: true
 sourceId: eproc/dmn-section
 
-assignablePerms:
-  - emodel/permission-def@dmn-def-deploy
-  - emodel/permission-def@dmn-instance-edit
-  - emodel/permission-def@dmn-section-create-dmn-def
-  - emodel/permission-def@dmn-section-edit-dmn-def
-
 model:
   attributes:
     - id: name

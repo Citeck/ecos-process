@@ -17,14 +17,6 @@ actions:
   - uiserv/action@go-to-bpmn-designer
   - uiserv/action@download-xlsx-ecos-bpmn-def-template
 
-assignablePerms:
-  - emodel/permission-def@bpmn-process-def-deploy
-  - emodel/permission-def@bpmn-process-def-edit
-  - emodel/permission-def@bpmn-process-def-report-view
-  - emodel/permission-def@bpmn-process-instance-edit
-  - emodel/permission-def@bpmn-process-instance-migrate
-  - emodel/permission-def@bpmn-process-instance-run
-
 defaultCreateVariant: false
 
 createVariants:

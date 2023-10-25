@@ -1,0 +1,24 @@
+id: "7e43212b-b639-45e2-a5c9-7061931e7cf1"
+typeRef: "emodel/type@dmn-def"
+
+permissions:
+
+  matrix:
+    bp-administrator:
+      ANY: WRITE
+    bp-manager:
+      ANY: WRITE
+    bp-developer:
+      ANY: WRITE
+    bp-viewer:
+      ANY: READ
+  rules:
+    - roles:
+        - bp-administrator
+      permissions:
+        - deploy
+        - editInstance
+    - roles:
+        - bp-developer
+      permissions:
+        - deploy
