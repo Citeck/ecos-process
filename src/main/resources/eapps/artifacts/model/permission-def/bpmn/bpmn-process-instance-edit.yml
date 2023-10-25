@@ -1,0 +1,9 @@
+id: bpmn-process-instance-edit
+name:
+  ru: Редактирование инстанса процесса
+  en: Process instance edit
+
+appliesToTypes:
+  - emodel/type@bpmn-process-def
+  - emodel/type@bpmn-section
+

@@ -1,0 +1,8 @@
+id: dmn-def-deploy
+name:
+  ru: Деплой
+  en: Deploy
+
+appliesToTypes:
+  - emodel/type@dmn-def
+  - emodel/type@dmn-section
