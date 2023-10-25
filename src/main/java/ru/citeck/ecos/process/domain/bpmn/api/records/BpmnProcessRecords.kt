@@ -299,6 +299,13 @@ class BpmnProcessRecords(
             return processDefinition?.key ?: ""
         }
 
+        @AttName("bpmnDefEngine")
+        fun getBpmnDefEngine(): EntityRef {
+            return processDefinition?.id?.takeIf { it.isNotBlank() }
+                ?.let { EntityRef.create(AppName.EPROC, BpmnProcessDefEngineRecords.ID, it) }
+                ?: EntityRef.EMPTY
+        }
+
         @AttName(".disp")
         fun getDisp(): MLText {
             return MLText(getKey())

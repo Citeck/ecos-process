@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.databind.JavaType
 import mu.KotlinLogging
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.impl.persistence.entity.VariableInstanceEntity
+import org.camunda.bpm.engine.runtime.VariableInstance
 import org.camunda.bpm.engine.runtime.VariableInstanceQuery
 import org.camunda.bpm.engine.variable.value.SerializableValue
 import org.springframework.stereotype.Component
@@ -76,26 +77,33 @@ class BpmnVariableInstanceRecords(
 
     private fun LocalRecordAtts.toMutateData(): MutateValueData {
         val id = this.id
-
-        val (executionId: String, name: String) = if (id.isNotBlank()) {
-            val variable = camundaRuntimeService.createVariableInstanceQuery()
+        val currentVariable: VariableInstance? = if (id.isNotBlank()) {
+            camundaRuntimeService.createVariableInstanceQuery()
                 .variableId(id)
                 .singleResult() ?: error("Variable with id '$id' not found")
-            variable.executionId to variable.name
+        } else {
+            null
+        }
+
+        val type: String? = if (this.hasAtt(ATT_TYPE)) {
+            this.getAtt(ATT_TYPE).asText()
+        } else {
+            currentVariable?.typeName
+        }
+
+        val (executionId: String, name: String) = if (currentVariable != null) {
+            currentVariable.executionId to currentVariable.name
         } else {
             this.getAtt(ATT_EXECUTION_ID).asText() to this.getAtt(ATT_NAME).asText()
         }
 
-        if (this.id.isBlank() && executionId.isBlank()) {
-            error("You must specify either 'id' or 'executionId' attribute: $this")
+        require(this.id.isNotBlank() || executionId.isNotBlank()) {
+            "You must specify either 'id' or 'executionId' attribute: $this"
         }
-
         require(name.isNotBlank()) { "Variable name can't be blank: $this" }
         require(executionId.isNotBlank()) { "Execution id can't be blank: $this" }
 
-        val objectTypeName = this.getAtt(ATT_OBJECT_TYPE_NAME).asText()
-
-        val type: String? = when (this.getAtt(ATT_TYPE).asText().lowercase()) {
+        val objectType: String? = when (type?.lowercase()) {
             TYPE_STRING -> String::class.java.typeName
             TYPE_DATE -> Date::class.java.typeName
             TYPE_INTEGER -> Int::class.java.typeName
@@ -103,9 +111,13 @@ class BpmnVariableInstanceRecords(
             TYPE_DOUBLE -> Double::class.java.typeName
             TYPE_LONG -> Long::class.java.typeName
             TYPE_OBJECT -> {
-                if (objectTypeName.isBlank()) {
-                    error("Object type name can't be blank for type 'Object': $this")
+                val objectTypeName = if (this.hasAtt(ATT_OBJECT_TYPE_NAME)) {
+                    this.getAtt(ATT_OBJECT_TYPE_NAME).asText()
+                } else {
+                    (currentVariable as VariableInstanceEntity).toTypedValueInfo().objectTypeName
                 }
+                require(objectTypeName.isNotBlank()) { "Object type name can't be blank for type 'Object': $this" }
+
                 objectTypeName
             }
 
@@ -114,8 +126,8 @@ class BpmnVariableInstanceRecords(
             else -> error("Unknown variable type: $this")
         }
 
-        val valueToMutate: Any? = if (type != null) {
-            val explicitType: JavaType = Json.mapper.getTypeFactory().constructFromCanonical(type)
+        val valueToMutate: Any? = if (objectType != null) {
+            val explicitType: JavaType = Json.mapper.getTypeFactory().constructFromCanonical(objectType)
                 ?: error("Type not constructed from canonical: $this")
             val rawValue = this.getAtt(ATT_VALUE).asJavaObj() ?: error("Value is null: $this")
 
@@ -218,6 +230,20 @@ class BpmnVariableInstanceRecords(
             }
     }
 
+    private fun VariableInstanceEntity.toTypedValueInfo(): TypedValueInfo {
+        return typedValue?.let {
+            val typedInfo = it.type.getValueInfo(it)
+            TypedValueInfo(
+                objectTypeName = typedInfo["objectTypeName"] as String? ?: "",
+                serializationDataFormat = typedInfo["serializationDataFormat"] as String? ?: "",
+            )
+        } ?: TypedValueInfo(
+            objectTypeName = textValue2 ?: "",
+            serializationDataFormat = serializerName ?: "",
+            errorMsg = errorMessage ?: ""
+        )
+    }
+
     private inner class BpmnVariableInstanceRecord(
         private val variableInstance: VariableInstanceEntity,
 
@@ -225,17 +251,7 @@ class BpmnVariableInstanceRecords(
     ) {
 
         private val _typedValueInfo: TypedValueInfo by lazy {
-            variableInstance.typedValue?.let {
-                val typedInfo = it.type.getValueInfo(it)
-                TypedValueInfo(
-                    objectTypeName = typedInfo["objectTypeName"] as String? ?: "",
-                    serializationDataFormat = typedInfo["serializationDataFormat"] as String? ?: "",
-                )
-            } ?: TypedValueInfo(
-                objectTypeName = variableInstance.textValue2 ?: "",
-                serializationDataFormat = variableInstance.serializerName ?: "",
-                errorMsg = variableInstance.errorMessage ?: ""
-            )
+            variableInstance.toTypedValueInfo()
         }
 
         @AttName("typedValueInfo")
