@@ -3,11 +3,11 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.rest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.rest.MigrationRestService
 import org.camunda.bpm.engine.rest.impl.MigrationRestServiceImpl
-import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService as CockpitProcessInstanceRestService
-import org.camunda.bpm.engine.rest.ProcessInstanceRestService as EngineProcessInstanceRestService
 import org.camunda.bpm.engine.rest.impl.ProcessInstanceRestServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService as CockpitProcessInstanceRestService
+import org.camunda.bpm.engine.rest.ProcessInstanceRestService as EngineProcessInstanceRestService
 
 private const val DEFAULT_ENGINE_NAME = "default"
 

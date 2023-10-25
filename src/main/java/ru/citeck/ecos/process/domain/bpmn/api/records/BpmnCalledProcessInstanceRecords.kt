@@ -75,7 +75,6 @@ class BpmnCalledProcessInstanceRecords(
         fun isSuspended(): Boolean {
             return instanceMeta.suspensionState == SuspensionState.SUSPENDED
         }
-
     }
 
     data class BpmnCalledProcessInstanceQuery(

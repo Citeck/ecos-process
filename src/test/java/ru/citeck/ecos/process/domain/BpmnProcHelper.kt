@@ -49,6 +49,7 @@ fun getBpmnProcessDefDto(resource: String, id: String): NewProcessDefDto {
         "{http://www.citeck.ru/model/content/idocs/1.0}type",
         typeRef,
         EntityRef.EMPTY,
+        EntityRef.EMPTY,
         ResourceUtils.getFile("classpath:$resource")
             .readText(StandardCharsets.UTF_8)
             .toByteArray(StandardCharsets.UTF_8),
@@ -76,6 +77,27 @@ fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActio
         action?.let {
             this["action"] = it.name
         }
+    }
+
+    helper.recordsService.mutate(recordAtts)
+}
+
+fun uploadNewVersion(resource: String, id: String, comment: String, replace: Pair<String, String>) {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)).apply {
+        // Does not matter, we check field is not empty and increase major version
+        this["version:version"] = "someVersion"
+        this["version:comment"] = comment
+        this["_content"] = ResourceUtils.getFile("classpath:$resource")
+            .readText(StandardCharsets.UTF_8)
+            .replace(replace.first, replace.second)
+    }
+
+    helper.recordsService.mutate(recordAtts)
+}
+
+fun copyBpmnModule(id: String, moduleId: String) {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)).apply {
+        this["moduleId"] = moduleId
     }
 
     helper.recordsService.mutate(recordAtts)

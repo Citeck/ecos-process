@@ -27,6 +27,7 @@ class ProcDefEntity {
     var extId: String? = null
     var ecosTypeRef: String? = null
     var formRef: String? = null
+    var workingCopySourceRef: String? = null
     var alfType: String? = null
     var created: Instant? = null
     var modified: Instant? = null

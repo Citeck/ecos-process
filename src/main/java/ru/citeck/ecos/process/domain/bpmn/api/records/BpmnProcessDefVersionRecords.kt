@@ -102,6 +102,7 @@ class BpmnProcessDefVersionRecords(
             downloadUrl = "/gateway/${AppName.EPROC}/api/proc-def/version/data?ref=${getRef()}",
             fileName = "${procDefId}_v$externalVersion.bpmn.xml",
             name = MLText.EMPTY,
+            comment = comment,
             modifier = if (createdBy.isNullOrBlank()) {
                 RecordRef.EMPTY
             } else {

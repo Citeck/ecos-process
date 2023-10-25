@@ -64,7 +64,6 @@ class BpmnJobRecords(
         result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return result
-
     }
 
     private fun JobQuery.applyPredicate(pred: Predicate): JobQuery {
@@ -203,7 +202,6 @@ class BpmnJobRecords(
         fun getStackTrace(): String {
             return managementService.getJobExceptionStacktrace(id) ?: ""
         }
-
     }
 
     private enum class MutateAction {

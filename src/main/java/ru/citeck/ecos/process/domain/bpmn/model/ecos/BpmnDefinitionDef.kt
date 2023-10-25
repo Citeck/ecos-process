@@ -23,6 +23,7 @@ data class BpmnDefinitionDef(
     val ecosType: EntityRef,
     val formRef: EntityRef,
     val sectionRef: EntityRef,
+    val workingCopySourceRef: EntityRef,
 
     val process: List<BpmnProcessDef>,
     val collaboration: BpmnCollaborationDef?,

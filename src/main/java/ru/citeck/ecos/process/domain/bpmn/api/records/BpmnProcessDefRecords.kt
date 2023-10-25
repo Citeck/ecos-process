@@ -10,7 +10,6 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
@@ -50,6 +49,7 @@ import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import ru.citeck.ecos.webapp.lib.spring.context.content.EcosContentService
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
@@ -64,7 +64,8 @@ class BpmnProcessDefRecords(
     private val remoteWebAppsApi: EcosRemoteWebAppsApi,
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val bpmnEventSubscriptionService: BpmnEventSubscriptionService,
-    private val bpmnProcessReportService: BpmnProcessReportService
+    private val bpmnProcessReportService: BpmnProcessReportService,
+    private val ecosContentService: EcosContentService
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -252,6 +253,7 @@ class BpmnProcessDefRecords(
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
+                    it.workingCopySourceRef,
                     it.enabled,
                     it.autoStartEnabled,
                     it.sectionRef,
@@ -270,6 +272,7 @@ class BpmnProcessDefRecords(
                 MLText(),
                 RecordRef.EMPTY,
                 RecordRef.EMPTY,
+                EntityRef.EMPTY,
                 null,
                 false,
                 "",
@@ -281,17 +284,19 @@ class BpmnProcessDefRecords(
             val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
             BpmnMutateRecord(
-                recordId,
-                recordId,
-                procDef.name ?: MLText(),
-                procDef.ecosTypeRef,
-                procDef.formRef,
-                null,
-                procDef.enabled,
-                "",
-                procDef.autoStartEnabled,
-                procDef.sectionRef,
-                procDef.image
+                id = recordId,
+                processDefId = recordId,
+                name = procDef.name ?: MLText(),
+                ecosType = procDef.ecosTypeRef,
+                formRef = procDef.formRef,
+                workingCopySourceRef = procDef.workingCopySourceRef,
+                definition = null,
+                enabled = procDef.enabled,
+                action = "",
+                autoStartEnabled = procDef.autoStartEnabled,
+                sectionRef = procDef.sectionRef,
+                imageBytes = procDef.image,
+                moduleId = recordId
             )
         }
     }
@@ -328,6 +333,7 @@ class BpmnProcessDefRecords(
                     ).toByteArray(),
                     ecosTypeRef = ecosType,
                     formRef = formRef,
+                    workingCopySourceRef = workingCopySourceRef,
                     format = BPMN_FORMAT,
                     procType = BPMN_PROC_TYPE,
                     sectionRef = sectionRef,
@@ -343,6 +349,7 @@ class BpmnProcessDefRecords(
                 // update existing process definition
                 currentProc.ecosTypeRef = ecosType
                 currentProc.formRef = formRef
+                currentProc.workingCopySourceRef = workingCopySourceRef
                 currentProc.name = name
                 currentProc.enabled = enabled
                 currentProc.autoStartEnabled = autoStartEnabled
@@ -361,6 +368,7 @@ class BpmnProcessDefRecords(
                         procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(name)
                         procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
                         procDef.otherAttributes[BPMN_PROP_FORM_REF] = formRef.toString()
+                        procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = workingCopySourceRef.toString()
                         procDef.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
                         procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
                         procDef.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
@@ -370,9 +378,9 @@ class BpmnProcessDefRecords(
                 }
 
                 procDefResult = if (saveAsDraft) {
-                    procDefService.uploadNewDraftRev(currentProc)
+                    procDefService.uploadNewDraftRev(currentProc, record.comment, record.forceMajorVersion)
                 } else {
-                    procDefService.uploadNewRev(currentProc)
+                    procDefService.uploadNewRev(currentProc, record.comment)
                 }
             }
 
@@ -500,8 +508,8 @@ class BpmnProcessDefRecords(
         }
 
         @AttName("?disp")
-        fun getDisplayName(): String {
-            return MLText.getClosestValue(getName(), I18nContext.getLocale())
+        fun getDisplayName(): MLText {
+            return getName()
         }
 
         fun getEnabled(): Boolean {
@@ -547,6 +555,11 @@ class BpmnProcessDefRecords(
             return procDef.formRef
         }
 
+        @AttName("workingCopySourceRef")
+        fun getWorkingCopySourceRef(): EntityRef {
+            return procDef.workingCopySourceRef
+        }
+
         @AttName(RecordConstants.ATT_CREATED)
         fun getCreated(): Instant {
             return procDef.created
@@ -580,46 +593,80 @@ class BpmnProcessDefRecords(
         }
     }
 
-    class BpmnMutateRecord(
+    inner class BpmnMutateRecord(
         var id: String,
         var processDefId: String,
         var name: MLText,
         var ecosType: EntityRef,
         var formRef: EntityRef,
+        var workingCopySourceRef: EntityRef?,
         var definition: String? = null,
         var enabled: Boolean,
         var action: String = "",
         var autoStartEnabled: Boolean,
         var sectionRef: EntityRef,
         var imageBytes: ByteArray?,
-        var createdFromVersion: EntityRef = EntityRef.EMPTY
+        var createdFromVersion: EntityRef = EntityRef.EMPTY,
+        var moduleId: String? = null,
+        var forceMajorVersion: Boolean = false,
+        var comment: String = ""
     ) {
+
+        @JsonProperty("version:version")
+        fun setForceMajorVersion(version: String) {
+            if (version.isNotBlank()) {
+                forceMajorVersion = true
+            }
+        }
+
+        @JsonProperty("version:comment")
+        fun setVersionComment(comment: String) {
+            this.comment = comment
+        }
 
         fun setImage(imageUrl: String) {
             imageBytes = DataUriUtil.parseData(imageUrl).data
         }
 
         @JsonProperty("_content")
-        fun setContent(contentList: List<ObjectData>) {
-
-            val base64Content = contentList[0].get("url", "")
-            val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
-            val dataMatch = contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
-
-            val format = dataMatch.groupValues[1]
-            val contentText = String(Base64.getDecoder().decode(dataMatch.groupValues[2]))
-
-            definition = when (format) {
-                "text/xml" -> {
-                    contentText
+        fun setContent(content: Any) {
+            definition = when (content) {
+                is String -> {
+                    if (content.trim().startsWith("<?xml")) {
+                        content
+                    } else {
+                        ecosContentService.getContent(EntityRef.valueOf(content))?.readContentAsText()
+                            ?: error("Content is not found: $content")
+                    }
                 }
 
-                "application/json" -> {
-                    error("Json is not supported")
+                is List<*> -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val contentList = content as List<ObjectData>
+
+                    val base64Content = contentList[0].get("url", "")
+                    val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
+                    val dataMatch =
+                        contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
+
+                    val format = dataMatch.groupValues[1]
+                    when (format) {
+                        "text/xml" -> {
+                            String(Base64.getDecoder().decode(dataMatch.groupValues[2]))
+                        }
+
+                        "application/json" -> {
+                            error("Json is not supported")
+                        }
+
+                        else -> {
+                            error("Unknown format: $format")
+                        }
+                    }
                 }
 
                 else -> {
-                    error("Unknown format: $format")
+                    error("Unknown content type: ${content::class.java}")
                 }
             }
         }

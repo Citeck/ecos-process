@@ -164,7 +164,8 @@ class BpmnIncidentRecords(
                 incident.incidentMessage ?: ""
             } else {
                 recordsService.getAtt(
-                    getRootCauseIncident(), "message"
+                    getRootCauseIncident(),
+                    "message"
                 ).asText()
             }
         }
@@ -213,7 +214,8 @@ class BpmnIncidentRecords(
                 incident.configuration ?: ""
             } else {
                 val causeRef = recordsService.getAtt(
-                    getRootCauseIncident(), "causeRef?id"
+                    getRootCauseIncident(),
+                    "causeRef?id"
                 ).asText()
 
                 return EntityRef.valueOf(causeRef)

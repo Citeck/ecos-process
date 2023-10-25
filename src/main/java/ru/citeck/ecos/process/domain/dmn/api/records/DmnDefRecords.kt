@@ -299,6 +299,7 @@ class DmnDefRecords(
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
+                    it.workingCopySourceRef,
                     it.enabled,
                     it.autoStartEnabled,
                     it.sectionRef,

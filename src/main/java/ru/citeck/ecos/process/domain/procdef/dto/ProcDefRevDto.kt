@@ -39,6 +39,8 @@ data class ProcDefRevDto(
 
     var procDefId: String,
 
+    var comment: String = "",
+
     var created: Instant,
     var createdBy: String? = null,
     var deploymentId: String? = null,

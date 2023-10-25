@@ -24,7 +24,8 @@ private const val ARTIFACT_TYPE = "process/bpmn"
 @Component
 class BpmnProcessArtifactHandler(
     private val recordsService: RecordsService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords
 ) : EcosArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String) {
@@ -64,12 +65,13 @@ class BpmnProcessArtifactHandler(
         val definition = BpmnXmlUtils.readFromString(stringDef)
         val isRAW = definition.otherAttributes[BPMN_PROP_DEF_STATE] == ProcDefRevDataState.RAW.name
 
-        val bpmnMutateRecord = BpmnProcessDefRecords.BpmnMutateRecord(
+        val bpmnMutateRecord = bpmnProcessDefRecords.BpmnMutateRecord(
             id = "",
             processDefId = "",
             name = MLText.EMPTY,
             ecosType = EntityRef.EMPTY,
             formRef = EntityRef.EMPTY,
+            workingCopySourceRef = EntityRef.EMPTY,
             definition = stringDef,
             enabled = false,
             autoStartEnabled = false,

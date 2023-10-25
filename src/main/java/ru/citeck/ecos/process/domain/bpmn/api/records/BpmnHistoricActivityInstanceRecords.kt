@@ -42,6 +42,5 @@ class BpmnHistoricActivityInstanceRecords(
         fun getActivityId(): String {
             return historicActivityInstance.activityId
         }
-
     }
 }

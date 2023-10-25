@@ -44,6 +44,7 @@ val BPMN_PROP_NOTIFICATION_ADDITIONAL_META = QName(NS_ECOS_BPMN, "notificationAd
 
 val BPMN_PROP_ASSIGNEES = QName(NS_ECOS_BPMN, "assignees")
 val BPMN_PROP_FORM_REF = QName(NS_ECOS_BPMN, "formRef")
+val BPMN_PROP_WORKING_COPY_SOURCE_REF = QName(NS_ECOS_BPMN, "workingCopySourceRef")
 val BPMN_PROP_OUTCOMES = QName(NS_ECOS_BPMN, "outcomes")
 val BPMN_PROP_PRIORITY = QName(NS_ECOS_BPMN, "priority")
 val BPMN_PROP_PRIORITY_EXPRESSION = QName(NS_ECOS_BPMN, "priorityExpression")

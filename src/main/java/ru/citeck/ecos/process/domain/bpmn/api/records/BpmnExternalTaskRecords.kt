@@ -115,7 +115,6 @@ class BpmnExternalTaskRecords(
         }
     }
 
-
     override fun mutate(record: LocalRecordAtts): String {
         if (record.id.isBlank()) {
             error("External task id is blank: $record")

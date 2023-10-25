@@ -53,7 +53,6 @@ class BpmnJobDefRecords(
         return result
     }
 
-
     private fun JobDefinitionQuery.applyPredicate(pred: Predicate): JobDefinitionQuery {
         val bpmnJobDefinitionQuery = PredicateUtils.convertToDto(pred, BpmnJobDefinitionQuery::class.java)
 

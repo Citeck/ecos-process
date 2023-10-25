@@ -71,7 +71,11 @@ class ProcDefServiceImpl(
         return procDefDto
     }
 
-    private fun uploadProcDefImpl(processDef: NewProcessDefDto, isRaw: Boolean = false): ProcDefDto {
+    private fun uploadProcDefImpl(
+        processDef: NewProcessDefDto,
+        isRaw: Boolean = false,
+        comment: String = ""
+    ): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
         val now = Instant.now()
@@ -96,6 +100,7 @@ class ProcDefServiceImpl(
         newRevision.format = processDef.format
         newRevision.createdBy = AuthContext.getCurrentUser()
         newRevision.dataState = dataState.name
+        newRevision.comment = comment
 
         val sendProcDefEvent: () -> Unit
 
@@ -106,6 +111,7 @@ class ProcDefServiceImpl(
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
             currentProcDef.formRef = processDef.formRef.toString()
+            currentProcDef.workingCopySourceRef = processDef.workingCopySourceRef.toString()
             currentProcDef.extId = processDef.id
             currentProcDef.procType = processDef.procType
             currentProcDef.name = mapper.toString(processDef.name)
@@ -134,6 +140,7 @@ class ProcDefServiceImpl(
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
             currentProcDef.formRef = processDef.formRef.toString()
+            currentProcDef.workingCopySourceRef = processDef.workingCopySourceRef.toString()
             currentProcDef.name = mapper.toString(processDef.name)
             currentProcDef.modified = now
             currentProcDef.enabled = processDef.enabled
@@ -254,7 +261,7 @@ class ProcDefServiceImpl(
         return procDefRepo.count(predicateToQuery(predicate))
     }
 
-    override fun uploadNewRev(dto: ProcDefWithDataDto): ProcDefDto {
+    override fun uploadNewRev(dto: ProcDefWithDataDto, comment: String): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
         val id = dto.id
@@ -267,19 +274,20 @@ class ProcDefServiceImpl(
         val newProcessDefDto = dto.toNewProcessDefDto()
 
         if (procDefEntity == null) {
-            result = uploadProcDefImpl(newProcessDefDto)
+            result = uploadProcDefImpl(newProcessDefDto, comment = comment)
         } else {
 
             val currentData = procDefEntity.lastRev!!.data
             val definitionDataIsChanged = !Arrays.equals(currentData, dto.data)
 
             if (definitionDataIsChanged) {
-                result = uploadProcDefImpl(newProcessDefDto)
+                result = uploadProcDefImpl(newProcessDefDto, comment = comment)
             } else {
 
                 procDefEntity.alfType = dto.alfType
                 procDefEntity.ecosTypeRef = dto.ecosTypeRef.toString()
                 procDefEntity.formRef = dto.formRef.toString()
+                procDefEntity.workingCopySourceRef = dto.workingCopySourceRef.toString()
                 procDefEntity.name = mapper.toString(dto.name)
                 procDefEntity.enabled = dto.enabled
                 procDefEntity.autoStartEnabled = dto.autoStartEnabled
@@ -304,6 +312,7 @@ class ProcDefServiceImpl(
             alfType = alfType,
             ecosTypeRef = ecosTypeRef,
             formRef = formRef,
+            workingCopySourceRef = workingCopySourceRef,
             format = format,
             procType = procType,
             enabled = enabled,
@@ -313,7 +322,7 @@ class ProcDefServiceImpl(
         )
     }
 
-    override fun uploadNewDraftRev(dto: ProcDefWithDataDto): ProcDefDto {
+    override fun uploadNewDraftRev(dto: ProcDefWithDataDto, comment: String, forceMajorVersion: Boolean): ProcDefDto {
         with(dto) {
 
             val currentTenant = tenantService.getCurrent()
@@ -330,6 +339,7 @@ class ProcDefServiceImpl(
                 currentProcDef.alfType = alfType
                 currentProcDef.ecosTypeRef = ecosTypeRef.toString()
                 currentProcDef.formRef = formRef.toString()
+                currentProcDef.workingCopySourceRef = workingCopySourceRef.toString()
                 currentProcDef.name = mapper.toString(name)
                 currentProcDef.modified = now
                 currentProcDef.enabled = enabled
@@ -341,7 +351,9 @@ class ProcDefServiceImpl(
 
             if (definitionDataIsChanged) {
 
-                if (currentRev.dataState == ProcDefRevDataState.RAW.name && currentUser == currentRev.createdBy) {
+                if (!forceMajorVersion && currentRev.dataState == ProcDefRevDataState.RAW.name &&
+                    currentUser == currentRev.createdBy
+                ) {
                     // update existing revision
 
                     currentRev.data = data
@@ -369,6 +381,7 @@ class ProcDefServiceImpl(
                     newRevision.format = format
                     newRevision.createdBy = currentUser
                     newRevision.dataState = ProcDefRevDataState.RAW.name
+                    newRevision.comment = comment
 
                     updateCurrentProcDefFromDto()
 

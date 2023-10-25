@@ -93,5 +93,4 @@ class BpmnHistoricBatchRecords(
             return batchDto.removalTime?.toInstant()
         }
     }
-
 }

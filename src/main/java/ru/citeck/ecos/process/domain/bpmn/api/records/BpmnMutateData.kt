@@ -4,14 +4,21 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
+import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.*
 
 @Component
-class BpmnMutateDataProcessor {
+class BpmnMutateDataProcessor(
+    private val procDefService: ProcDefService
+) {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -19,17 +26,44 @@ class BpmnMutateDataProcessor {
 
     fun getCompletedMutateData(mutateRecord: BpmnProcessDefRecords.BpmnMutateRecord): BpmnMutateData {
 
-        val (statedInitialDefinition, saveAsDraft) = mutateRecord.getStatedDefinition()
+        var (statedInitialDefinition, saveAsDraft) = mutateRecord.getStatedDefinition()
 
         var recordId = mutateRecord.id
+        var processDefId = mutateRecord.processDefId
+        var name = mutateRecord.name
+        var workingCopySourceRef = EntityRef.EMPTY
+        var autoStartEnabled = mutateRecord.autoStartEnabled
+        var enabled = mutateRecord.enabled
+
+        if (mutateRecord.isModuleCopy()) {
+            recordId = mutateRecord.moduleId ?: error("moduleId is missing")
+            processDefId = recordId
+
+            val procDef = BpmnXmlUtils.readFromString(statedInitialDefinition)
+
+            procDef.otherAttributes[BPMN_PROP_ENABLED] = false.toString()
+            procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = false.toString()
+            procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
+
+            val lastRevisionId: UUID = getLastRevisionId(mutateRecord.id)
+            workingCopySourceRef = EntityRef.create(
+                AppName.EPROC,
+                BpmnProcessDefVersionRecords.ID,
+                lastRevisionId.toString()
+            )
+
+            procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = workingCopySourceRef.toString()
+
+            statedInitialDefinition = BpmnXmlUtils.writeToString(procDef)
+            autoStartEnabled = false
+            enabled = false
+        }
+
+        var newEcosDefinition = ""
         var ecosType = mutateRecord.ecosType
         var formRef = mutateRecord.formRef
         var sectionRef = mutateRecord.sectionRef
-        var name = mutateRecord.name
-        var processDefId = mutateRecord.processDefId
-        var enabled = mutateRecord.enabled
-        var autoStartEnabled = mutateRecord.autoStartEnabled
-        var newEcosDefinition = ""
+
         var newCamundaDefinitionStr = ""
 
         if (statedInitialDefinition.isNotBlank()) {
@@ -85,6 +119,7 @@ class BpmnMutateDataProcessor {
             name = name,
             ecosType = ecosType,
             formRef = formRef,
+            workingCopySourceRef = workingCopySourceRef,
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
             sectionRef = sectionRef,
@@ -100,8 +135,25 @@ class BpmnMutateDataProcessor {
         )
     }
 
+    private fun BpmnProcessDefRecords.BpmnMutateRecord.isModuleCopy(): Boolean {
+        return !moduleId.isNullOrBlank() && id != moduleId
+    }
+
+    private fun getLastRevisionId(id: String): UUID {
+        val ref = ProcDefRef.create(BPMN_PROC_TYPE, id)
+        val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
+        return currentProc.revisionId
+    }
+
     private fun BpmnProcessDefRecords.BpmnMutateRecord.getStatedDefinition(): Pair<String, Boolean> {
-        val initialDefinition = definition
+        val initialDefinition = if (isModuleCopy()) {
+            val ref = ProcDefRef.create(BPMN_PROC_TYPE, processDefId)
+            val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
+
+            String(currentProc.data)
+        } else {
+            definition
+        }
 
         return if (initialDefinition.isNullOrBlank()) {
             "" to false
@@ -153,6 +205,7 @@ data class BpmnMutateData(
     val name: MLText,
     val ecosType: EntityRef,
     val formRef: EntityRef,
+    val workingCopySourceRef: EntityRef = EntityRef.EMPTY,
     val enabled: Boolean,
     val autoStartEnabled: Boolean,
     val sectionRef: EntityRef,

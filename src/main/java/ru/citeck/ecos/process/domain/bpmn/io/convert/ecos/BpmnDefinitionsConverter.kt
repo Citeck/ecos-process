@@ -42,6 +42,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),
             formRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
+            workingCopySourceRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF]),
             sectionRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_SECTION_REF]),
             diagrams = element.bpmnDiagram.map {
                 context.converters.import(it, BpmnDiagramDef::class.java, context).data
@@ -107,6 +108,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
             otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = element.id
             otherAttributes[BPMN_PROP_FORM_REF] = element.formRef.toString()
+            otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = element.workingCopySourceRef.toString()
             otherAttributes[BPMN_PROP_SECTION_REF] = element.sectionRef.toString()
             otherAttributes[BPMN_PROP_DEF_STATE] = ProcDefRevDataState.CONVERTED.name
         }

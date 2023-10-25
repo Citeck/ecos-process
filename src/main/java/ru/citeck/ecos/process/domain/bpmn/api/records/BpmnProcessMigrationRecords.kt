@@ -18,7 +18,8 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
-class BpmnProcessMigrationRecords(private val camundaMigrationRestService: MigrationRestService) : AbstractRecordsDao(),
+class BpmnProcessMigrationRecords(private val camundaMigrationRestService: MigrationRestService) :
+    AbstractRecordsDao(),
     RecordsQueryDao,
     RecordMutateDao {
 
@@ -46,7 +47,6 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
         return ProcessMigrationRecord(plan)
     }
 
-
     override fun mutate(record: LocalRecordAtts): String {
         return when (record.toActionEnum(MutateAction::class.java)) {
             MutateAction.MIGRATE -> migrateProcess(record).toString()
@@ -66,7 +66,8 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
         }
 
         val migrationExecution: MigrationExecutionDto = standardMapper.readValue(
-            migrationData, MigrationExecutionDto::class.java
+            migrationData,
+            MigrationExecutionDto::class.java
         )
         val isAsync = record.getAtt(ATT_ASYNC).asBoolean()
 

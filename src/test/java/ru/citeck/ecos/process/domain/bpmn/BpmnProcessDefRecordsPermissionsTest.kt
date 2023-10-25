@@ -139,6 +139,7 @@ class BpmnProcessDefRecordsPermissionsTest {
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 ModelUtils.getTypeRef("type1"),
                 RecordRef.EMPTY,
+                RecordRef.EMPTY,
                 BpmnProcHelperJava.buildProcDefXml(id),
                 null,
                 true,

@@ -24,7 +24,8 @@ import java.util.concurrent.Callable
 class BpmnRedeployExistingProcessDefinitionsPatch(
     private val camundaRepoService: RepositoryService,
     private val procDefService: ProcDefService,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords
 ) : Callable<Any> {
 
     companion object {
@@ -50,12 +51,13 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
 
                 val stringDef = String(it.data)
 
-                val bpmnMutateRecord = BpmnProcessDefRecords.BpmnMutateRecord(
+                val bpmnMutateRecord = bpmnProcessDefRecords.BpmnMutateRecord(
                     id = "",
                     processDefId = "",
                     name = MLText.EMPTY,
                     ecosType = EntityRef.EMPTY,
                     formRef = EntityRef.EMPTY,
+                    workingCopySourceRef = EntityRef.EMPTY,
                     definition = stringDef,
                     enabled = false,
                     autoStartEnabled = false,

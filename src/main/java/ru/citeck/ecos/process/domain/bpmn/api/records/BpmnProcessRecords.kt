@@ -243,7 +243,8 @@ class BpmnProcessRecords(
         }
 
         val dto: ProcessInstanceModificationDto = standardMapper.readValue(
-            modifyInstruction, ProcessInstanceModificationDto::class.java
+            modifyInstruction,
+            ProcessInstanceModificationDto::class.java
         )
 
         camundaProcessInstanceRestService.getProcessInstance(id).modifyProcessInstance(dto)

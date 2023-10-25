@@ -15,9 +15,9 @@ interface ProcDefService {
 
     fun uploadProcDefDraft(processDef: NewProcessDefDto): ProcDefDto
 
-    fun uploadNewRev(dto: ProcDefWithDataDto): ProcDefDto
+    fun uploadNewRev(dto: ProcDefWithDataDto, comment: String = ""): ProcDefDto
 
-    fun uploadNewDraftRev(dto: ProcDefWithDataDto): ProcDefDto
+    fun uploadNewDraftRev(dto: ProcDefWithDataDto, comment: String = "", forceMajorVersion: Boolean = false): ProcDefDto
 
     fun findAllWithData(predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto>
 
