@@ -1,0 +1,7 @@
+id: bpmn-section-edit-process-def
+name:
+  ru: Редактирование процессов в разделе
+  en: Process editing in section
+
+appliesToTypes:
+  - emodel/type@bpmn-section

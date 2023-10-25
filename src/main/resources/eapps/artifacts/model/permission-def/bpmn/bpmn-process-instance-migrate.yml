@@ -1,0 +1,8 @@
+id: bpmn-process-instance-migrate
+name:
+  ru: Миграция инстанса процесса
+  en: Process instance migration
+
+appliesToTypes:
+  - emodel/type@bpmn-process-def
+  - emodel/type@bpmn-section

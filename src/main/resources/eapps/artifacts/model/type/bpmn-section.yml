@@ -8,6 +8,16 @@ name:
 system: true
 sourceId: eproc/bpmn-section
 
+assignablePerms:
+  - emodel/permission-def@bpmn-process-def-deploy
+  - emodel/permission-def@bpmn-process-def-edit
+  - emodel/permission-def@bpmn-process-def-report-view
+  - emodel/permission-def@bpmn-process-instance-edit
+  - emodel/permission-def@bpmn-process-instance-migrate
+  - emodel/permission-def@bpmn-process-instance-run
+  - emodel/permission-def@bpmn-section-create-process-def
+  - emodel/permission-def@bpmn-section-edit-process-def
+
 model:
   attributes:
     - id: name

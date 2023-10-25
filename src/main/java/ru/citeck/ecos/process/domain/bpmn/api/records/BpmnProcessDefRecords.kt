@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
@@ -22,6 +23,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -49,6 +51,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -77,6 +80,8 @@ class BpmnProcessDefRecords(
         private const val QUERY_BATCH_SIZE = 100
         private const val LIMIT_REQUESTS_COUNT = 100000
         private const val DEFAULT_MAX_ITEMS = 10000000
+
+        private val DEFAULT_SECTION_REF = SectionType.BPMN.getRef("DEFAULT")
 
         private val log = KotlinLogging.logger {}
     }
@@ -201,7 +206,7 @@ class BpmnProcessDefRecords(
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {
-        return ProcDefPermsValue(this)
+        return ProcDefPermsValue(this, SectionType.BPMN)
     }
 
     private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
@@ -300,8 +305,24 @@ class BpmnProcessDefRecords(
         val procDefRef = record.id.toProcDefRef()
         val perms = procDefRef.getPerms()
 
-        if (!perms.hasWritePerms()) {
-            error("Permissions denied for mutate: $procDefRef")
+        if (record.sectionRef.getLocalId() == "ROOT") {
+            error("You can't create processes in ROOT category")
+        }
+        if (record.sectionRef.isEmpty()) {
+            record.sectionRef = DEFAULT_SECTION_REF
+        }
+
+        if (AuthContext.isNotRunAsSystemOrAdmin()
+                && (record.isNewRecord || record.sectionRef != record.sectionRefBefore)) {
+
+            val hasPermissionToCreateDefinitions = recordsService.getAtt(
+                record.sectionRef,
+                BpmnPermission.SECTION_CREATE_PROC_DEF.getAttribute()
+            ).asBoolean()
+
+            if (!hasPermissionToCreateDefinitions) {
+                error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+            }
         }
 
         val mutateData = bpmnMutateDataProcessor.getCompletedMutateData(record)
@@ -473,10 +494,15 @@ class BpmnProcessDefRecords(
         private val procDef: ProcDefDto
     ) {
 
-        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef()) }
+        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef(), SectionType.BPMN) }
+
+        @AttName("_permissions")
+        fun getPermissionsSysAtt(): ProcDefPermsValue {
+            return permsValue
+        }
 
         fun getPermissions(): ProcDefPermsValue {
-            return permsValue
+            return getPermissionsSysAtt()
         }
 
         fun getEcosType(): EntityRef {
@@ -594,6 +620,8 @@ class BpmnProcessDefRecords(
         var imageBytes: ByteArray?,
         var createdFromVersion: EntityRef = EntityRef.EMPTY
     ) {
+        val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
+        val isNewRecord = id.isBlank()
 
         fun setImage(imageUrl: String) {
             imageBytes = DataUriUtil.parseData(imageUrl).data
