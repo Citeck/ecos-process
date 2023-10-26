@@ -1,0 +1,8 @@
+id: dmn-instance-edit
+name:
+  ru: Редактирование инстанса
+  en: Instance edit
+
+appliesToTypes:
+  - emodel/type@dmn-def
+  - emodel/type@dmn-section

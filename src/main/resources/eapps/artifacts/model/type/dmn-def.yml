@@ -15,6 +15,10 @@ actions:
   - uiserv/action@download-base64-data-dmn-xml
   - uiserv/action@go-to-dmn-designer
 
+assignablePerms:
+  - emodel/permission-def@dmn-def-deploy
+  - emodel/permission-def@dmn-instance-edit
+
 defaultCreateVariant: false
 
 createVariants:
