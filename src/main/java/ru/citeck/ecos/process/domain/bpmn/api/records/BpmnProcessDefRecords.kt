@@ -609,13 +609,16 @@ class BpmnProcessDefRecords(
         var createdFromVersion: EntityRef = EntityRef.EMPTY,
         var moduleId: String? = null,
         var forceMajorVersion: Boolean = false,
-        var comment: String = ""
+        var comment: String = "",
+        var isUploadNewVersion: Boolean = false
     ) {
 
         @JsonProperty("version:version")
-        fun setForceMajorVersion(version: String) {
+        fun applyUploadNewVersionState(version: String) {
             if (version.isNotBlank()) {
                 forceMajorVersion = true
+
+                isUploadNewVersion = id.isNotBlank()
             }
         }
 

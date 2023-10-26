@@ -82,13 +82,18 @@ fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActio
     helper.recordsService.mutate(recordAtts)
 }
 
-fun uploadNewVersion(resource: String, id: String, comment: String, replace: Pair<String, String>) {
+fun uploadNewVersionFromResource(resource: String, id: String, comment: String, replace: Pair<String, String>) {
+    val content = ResourceUtils.getFile("classpath:$resource")
+        .readText(StandardCharsets.UTF_8)
+    uploadNewVersion(content, id, comment, replace)
+}
+
+fun uploadNewVersion(content: String, id: String, comment: String, replace: Pair<String, String>) {
     val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)).apply {
         // Does not matter, we check field is not empty and increase major version
         this["version:version"] = "someVersion"
         this["version:comment"] = comment
-        this["_content"] = ResourceUtils.getFile("classpath:$resource")
-            .readText(StandardCharsets.UTF_8)
+        this["_content"] = content
             .replace(replace.first, replace.second)
     }
 

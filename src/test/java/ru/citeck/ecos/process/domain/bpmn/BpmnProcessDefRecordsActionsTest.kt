@@ -15,6 +15,8 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefVersionRecords
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_DEF_ID
+import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -374,7 +376,7 @@ class BpmnProcessDefRecordsActionsTest {
         assertThat(revisions).hasSize(1)
         assertThat(revisions[0].version).isEqualTo(0)
 
-        uploadNewVersion(
+        uploadNewVersionFromResource(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             comment,
@@ -386,5 +388,39 @@ class BpmnProcessDefRecordsActionsTest {
         assertThat(newRevisions[0].version).isEqualTo(1)
         assertThat(newRevisions[0].comment).isEqualTo(comment)
         assertThat(newRevisions[1].version).isEqualTo(0)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["test-new-version", "test-new-version-draft"])
+    fun `copied bpmn process, modify and upload as new version to root process`(procId: String) {
+        val copiedId = "$procId-copy"
+
+        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        copyBpmnModule(procId, copiedId)
+
+        val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+            ?: error("Copied definition not found")
+
+        uploadNewVersion(
+            String(copiedDef.data),
+            procId,
+            "Upload to root process",
+            "some documentation" to "new documentation"
+        )
+
+        val rootProcessRevisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        assertThat(rootProcessRevisions).hasSize(2)
+
+        val modifiedNewVersionContent = String(rootProcessRevisions[0].data)
+        assertThat(modifiedNewVersionContent).contains("new documentation")
+
+        val procDef = BpmnXmlUtils.readFromString(modifiedNewVersionContent)
+        val modifiedNewVersionContentProcDefIdFromXml = procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID].toString()
+        // We loaded [copiedId] as new version to [procId].
+        // [BPMN_PROP_PROCESS_DEF_ID] should be changed to [procId]
+        assertThat(modifiedNewVersionContentProcDefIdFromXml).isEqualTo(procId)
+
+        val rootProcessContent = String(rootProcessRevisions[1].data)
+        assertThat(rootProcessContent).contains("some documentation")
     }
 }

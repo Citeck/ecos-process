@@ -146,13 +146,28 @@ class BpmnMutateDataProcessor(
     }
 
     private fun BpmnProcessDefRecords.BpmnMutateRecord.getStatedDefinition(): Pair<String, Boolean> {
-        val initialDefinition = if (isModuleCopy()) {
-            val ref = ProcDefRef.create(BPMN_PROC_TYPE, processDefId)
-            val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
+        val initialDefinition: String? = when (true) {
+            isModuleCopy() -> {
+                val ref = ProcDefRef.create(BPMN_PROC_TYPE, processDefId)
+                val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
 
-            String(currentProc.data)
-        } else {
-            definition
+                String(currentProc.data)
+            }
+
+            (isUploadNewVersion && !definition.isNullOrBlank()) -> {
+                val procDef = BpmnXmlUtils.readFromString(definition!!)
+                val procDefIdFromXml = procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID].toString()
+
+                if (procDefIdFromXml == id) {
+                    definition
+                }
+
+                procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = id
+
+                BpmnXmlUtils.writeToString(procDef)
+            }
+
+            else -> definition
         }
 
         return if (initialDefinition.isNullOrBlank()) {
