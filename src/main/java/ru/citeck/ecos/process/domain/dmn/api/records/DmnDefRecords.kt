@@ -169,8 +169,9 @@ class DmnDefRecords(
             record.sectionRef = DEFAULT_SECTION_REF
         }
 
-        if (AuthContext.isNotRunAsSystemOrAdmin()
-            && (record.isNewRecord || record.sectionRef != record.sectionRefBefore)) {
+        if (AuthContext.isNotRunAsSystemOrAdmin() &&
+            (record.isNewRecord || record.sectionRef != record.sectionRefBefore)
+        ) {
 
             val hasPermissionToCreateDefinitions = recordsService.getAtt(
                 record.sectionRef,

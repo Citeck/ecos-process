@@ -317,16 +317,21 @@ class BpmnProcessDefRecords(
             record.sectionRef = DEFAULT_SECTION_REF
         }
 
-        if (AuthContext.isNotRunAsSystemOrAdmin()
-                && (record.isNewRecord || record.sectionRef != record.sectionRefBefore)) {
+        if (AuthContext.isNotRunAsSystemOrAdmin()) {
 
-            val hasPermissionToCreateDefinitions = recordsService.getAtt(
-                record.sectionRef,
-                BpmnPermission.SECTION_CREATE_PROC_DEF.getAttribute()
-            ).asBoolean()
+            if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-            if (!hasPermissionToCreateDefinitions) {
-                error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                val hasPermissionToCreateDefinitions = recordsService.getAtt(
+                    record.sectionRef,
+                    BpmnPermission.SECTION_CREATE_PROC_DEF.getAttribute()
+                ).asBoolean()
+
+                if (!hasPermissionToCreateDefinitions) {
+                    error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                }
+            }
+            if (!record.isNewRecord && !perms.hasWritePerms()) {
+                error("Permissions denied. You can't edit process definition: $procDefRef")
             }
         }
 
