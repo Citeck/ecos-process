@@ -13,6 +13,11 @@ sections:
       type: BPM
 
     - name:
+        en: BP Administration
+        ru: Администрирование БП
+      type: bpmn-admin
+
+    - name:
         en: DMN models
         ru: Модели DMN
       type: DMN
