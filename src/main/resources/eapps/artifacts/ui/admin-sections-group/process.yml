@@ -15,7 +15,7 @@ sections:
     - name:
         en: BP Administration
         ru: Администрирование БП
-      type: bpmn-admin
+      type: BPMN_ADMIN
 
     - name:
         en: DMN models
