@@ -16,6 +16,7 @@ assignablePerms:
   - emodel/permission-def@bpmn-process-instance-migrate
   - emodel/permission-def@bpmn-process-instance-run
   - emodel/permission-def@bpmn-section-create-process-def
+  - emodel/permission-def@bpmn-section-create-subsection
   - emodel/permission-def@bpmn-section-edit-process-def
 
 model:

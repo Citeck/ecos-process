@@ -7,6 +7,7 @@ enum class DmnPermission(val id: String) {
     DMN_DEF_DEPLOY("dmn-def-deploy"),
     DMN_INSTANCE_EDIT("dmn-instance-edit"),
     SECTION_CREATE_DMN_DEF("dmn-section-create-dmn-def"),
+    SECTION_CREATE_SUBSECTION("dmn-section-create-subsection"),
     SECTION_EDIT_DMN_DEF("dmn-section-edit-dmn-def");
 
     fun getAll(): Set<String> {

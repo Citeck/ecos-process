@@ -8,16 +8,15 @@ import ru.citeck.ecos.data.sql.records.DbRecordsDaoConfig
 import ru.citeck.ecos.data.sql.records.perms.DbPermsComponent
 import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
 import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
 import ru.citeck.ecos.process.common.section.records.SectionParentMixin
-import ru.citeck.ecos.process.domain.dmnsection.eapps.DMN_SECTION_TYPE
+import ru.citeck.ecos.process.common.section.records.SectionsProxyDao
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.webapp.lib.perms.EcosPermissionsService
 import ru.citeck.ecos.webapp.lib.perms.component.custom.CustomRecordPermsComponent
 import ru.citeck.ecos.webapp.lib.spring.context.data.DbPermsCalculatorComponent
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
-
-const val DMN_SECTION_REPO_SOURCE_ID = "dmn-section-repo"
 
 @Configuration
 class DmnSectionConfig(
@@ -26,6 +25,17 @@ class DmnSectionConfig(
     private val customRecordPermsComponent: CustomRecordPermsComponent
 ) {
 
+    companion object {
+        const val TYPE_ID = "dmn-section"
+        const val SOURCE_ID = "dmn-section"
+        const val REPO_SOURCE_ID = "$SOURCE_ID-repo"
+    }
+
+    @Bean
+    fun dmnSectionDao(): RecordsDao {
+        return SectionsProxyDao(SOURCE_ID, REPO_SOURCE_ID, SectionType.DMN)
+    }
+
     @Bean
     fun dmnSectionRepoDao(dataSourceManager: EcosDataSourceManager): RecordsDao {
 
@@ -33,8 +43,8 @@ class DmnSectionConfig(
             DbDomainConfig.create()
                 .withRecordsDao(
                     DbRecordsDaoConfig.create {
-                        withId(DMN_SECTION_REPO_SOURCE_ID)
-                        withTypeRef(ModelUtils.getTypeRef(DMN_SECTION_TYPE))
+                        withId(REPO_SOURCE_ID)
+                        withTypeRef(ModelUtils.getTypeRef(TYPE_ID))
                     }
                 )
                 .withDataService(
@@ -48,7 +58,7 @@ class DmnSectionConfig(
             .withPermsComponent(createPermsComponent())
             .build()
 
-        recordsDao.addAttributesMixin(SectionParentMixin(DMN_SECTIONS_RECORDS_ID))
+        recordsDao.addAttributesMixin(SectionParentMixin(SOURCE_ID))
 
         return recordsDao
     }
