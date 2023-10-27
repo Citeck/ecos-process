@@ -7,8 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.dmnsection.config.DMN_SECTIONS_RECORDS_ID
-import ru.citeck.ecos.process.domain.dmnsection.config.DMN_SECTION_REPO_SOURCE_ID
+import ru.citeck.ecos.process.domain.dmnsection.config.DmnSectionConfig
 import ru.citeck.ecos.process.domain.dmnsection.eapps.DmnSectionArtifactHandler
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -25,8 +24,8 @@ import kotlin.test.assertEquals
 class DmnSectionTest {
 
     companion object {
-        private const val REPO_DATA_SOURCE_ID = AppName.EPROC + "/" + DMN_SECTION_REPO_SOURCE_ID
-        private const val PROXY_DATA_SOURCE_ID = AppName.EPROC + "/" + DMN_SECTIONS_RECORDS_ID
+        private const val REPO_DATA_SOURCE_ID = AppName.EPROC + "/" + DmnSectionConfig.REPO_SOURCE_ID
+        private const val PROXY_DATA_SOURCE_ID = AppName.EPROC + "/" + DmnSectionConfig.SOURCE_ID
     }
 
     @Autowired
