@@ -677,10 +677,10 @@ class BpmnProcessDefRecords(
                 }
 
                 is List<*> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val contentList = content as List<ObjectData>
+                    val firsElement: Any? = content[0]
 
-                    val base64Content = contentList[0].get("url", "")
+                    val contentData = ObjectData.create(firsElement)
+                    val base64Content = contentData.get("url", "")
                     val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
                     val dataMatch =
                         contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
