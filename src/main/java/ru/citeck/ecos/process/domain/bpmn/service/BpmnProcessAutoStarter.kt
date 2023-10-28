@@ -9,10 +9,13 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class BpmnProcessAutoStarter(
@@ -23,6 +26,8 @@ class BpmnProcessAutoStarter(
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        private val TYPE_CASE = EntityRef.create(AppName.EMODEL, "type", "case")
     }
 
     // TODO: narrow the scope of create record events
@@ -32,7 +37,7 @@ class BpmnProcessAutoStarter(
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
-            withAction { startProcessIfRequired(it) }
+            withAction { handleStartProcessEvent(it) }
             withFilter(Predicates.eq("record._isDraft?bool!", false))
         }
         // React on record draft state changed to false
@@ -40,41 +45,60 @@ class BpmnProcessAutoStarter(
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
-            withAction { startProcessIfRequired(it) }
+            withAction { handleStartProcessEvent(it) }
             withFilter(Predicates.eq("after?bool", false))
         }
     }
 
-    private fun startProcessIfRequired(eventData: EventData) {
-        log.debug { "Received event for start process: $eventData" }
-
-        val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, eventData.typeRef, emptyList()) ?: return
-        val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procRev.procDefId)) ?: return
-        if (!procDef.autoStartEnabled) {
-            log.debug { "Auto start process disabled for ${procDef.id}" }
-            return
-        }
+    private fun handleStartProcessEvent(eventData: EventData) {
+        log.debug { "Received event: $eventData" }
 
         if (eventData.eventRef == RecordRef.EMPTY) {
             log.warn { "Cannot auto start process for empty eventRef: $eventData" }
             return
         }
 
-        val documentRef = eventData.eventRef.toString()
+        if (eventData.typeRef == RecordRef.EMPTY) {
+            log.warn { "Cannot auto start process for empty typeRef: $eventData" }
+            return
+        }
+
+        startProcessIfRequired(eventData.eventRef, eventData.typeRef)
+    }
+
+    private fun startProcessIfRequired(record: EntityRef, type: EntityRef) {
+        log.debug { "Processing record: $record, type: $type for auto start process" }
+
+        val procDef = resolveFirstEnabledProcessDefByTypeHierarchy(type)
+        if (procDef == null) {
+            log.debug { "Process definition not found for $type" }
+            return
+        }
+
+        if (!procDef.autoStartEnabled) {
+            log.debug { "Auto start process disabled for ${procDef.id}" }
+            return
+        }
+
         val processVariables = mapOf(
-            BPMN_DOCUMENT_REF to documentRef,
-            BPMN_DOCUMENT_TYPE to eventData.typeRef.getLocalId()
+            BPMN_DOCUMENT_REF to record.toString(),
+            BPMN_DOCUMENT_TYPE to type.getLocalId()
         )
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
-        bpmnProcessService.startProcess(procDef.id, documentRef, processVariables)
+        bpmnProcessService.startProcess(procDef.id, record.toString(), processVariables)
+    }
+
+    private fun resolveFirstEnabledProcessDefByTypeHierarchy(type: EntityRef): ProcDefWithDataDto? {
+        val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, type, emptyList()) ?: return null
+        return procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procRev.procDefId))
     }
 
     data class EventData(
         @AttName("record?id")
-        var eventRef: RecordRef = RecordRef.EMPTY,
+        var eventRef: EntityRef = RecordRef.EMPTY,
 
         @AttName("record._type?id")
-        var typeRef: RecordRef = RecordRef.EMPTY
+        var typeRef: EntityRef = RecordRef.EMPTY
     )
 }

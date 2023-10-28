@@ -484,12 +484,12 @@ class ProcDefServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto? {
+    override fun findProcDef(procType: String, ecosTypeRef: EntityRef?, alfTypes: List<String>?): ProcDefRevDto? {
 
         val currentTenant = tenantService.getCurrent()
         var processDef: ProcDefEntity? = null
 
-        if (RecordRef.isNotEmpty(ecosTypeRef)) {
+        if (EntityRef.isNotEmpty(ecosTypeRef)) {
 
             val ecosType = ecosTypeRef.toString()
             processDef = procDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(

@@ -39,7 +39,12 @@ interface ProcDefService {
 
     fun getProcessDefRevByDeploymentId(deploymentId: String): ProcDefRevDto?
 
-    fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto?
+    fun getProcessDefRevByDeploymentIds(deploymentIds: List<String>): List<ProcDefRevDto>
+
+    /**
+     * return first enabled process definition by ecosTypeRef hierarchy
+     */
+    fun findProcDef(procType: String, ecosTypeRef: EntityRef?, alfTypes: List<String>?): ProcDefRevDto?
 
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?
 
