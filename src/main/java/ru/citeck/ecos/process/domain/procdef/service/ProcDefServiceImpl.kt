@@ -464,6 +464,10 @@ class ProcDefServiceImpl(
         return procDefRevRepo.findByDeploymentId(deploymentId)?.toDto()
     }
 
+    override fun getProcessDefRevByDeploymentIds(deploymentIds: List<String>): List<ProcDefRevDto> {
+        return procDefRevRepo.findByDeploymentIdIsIn(deploymentIds).map { it.toDto() }
+    }
+
     override fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto? {
         val currentTenant = tenantService.getCurrent()
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, id.type, id.id)
