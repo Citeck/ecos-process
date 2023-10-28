@@ -5,8 +5,8 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 interface ProcDefService {
