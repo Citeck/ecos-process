@@ -101,7 +101,8 @@ class BpmnProcessDefEngineRecords(
                 .applyPredicate(predicate)
                 .applySort(recsQuery)
                 .unlimitedList()
-                .filterByPermissions()
+                .checkPermissionsAndReplaceToEmptyRecord()
+                .filterIsInstance<ProcessDefinitionEntity>()
                 .map {
                     EntityRef.create(AppName.EPROC, ID, it.id)
                 }
@@ -172,7 +173,12 @@ class BpmnProcessDefEngineRecords(
         }
     }
 
-    private fun MutableList<ProcessDefinition>.filterByPermissions(): MutableList<ProcessDefinition> {
+    private fun MutableList<ProcessDefinition>.checkPermissionsAndReplaceToEmptyRecord():
+        MutableList<Any> {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return this.toMutableList()
+        }
+
         val deploymentIds = map { it.deploymentId }.toList()
         val ecosProcDefsWithDeploymentIds = procDefService.getProcessDefRevByDeploymentIds(deploymentIds)
         val ecosProcDefRefs = ecosProcDefsWithDeploymentIds.map {
@@ -183,8 +189,12 @@ class BpmnProcessDefEngineRecords(
             .filter { it.hasReadPerms && it.deploymentId.isNotBlank() }
             .map { it.deploymentId }
 
-        return filter { procDef ->
-            deploymentsWithReadPerms.contains(procDef.deploymentId)
+        return map { procDef ->
+            if (deploymentsWithReadPerms.contains(procDef.deploymentId)) {
+                procDef
+            } else {
+                ProcessDefinitionEmptyEngineRecord(procDef.id)
+            }
         }.toMutableList()
     }
 
@@ -196,21 +206,41 @@ class BpmnProcessDefEngineRecords(
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
-        val atts: List<ProcessDefinitionEngineRecord>
+        val atts: List<IdentifiableRecord>
         val attsTime = measureTimeMillis {
             atts = camundaRepositoryService
                 .createProcessDefinitionQuery()
                 .processDefinitionIdIn(*recordIds.toTypedArray())
                 .list()
+                .checkPermissionsAndReplaceToEmptyRecord()
                 .map {
-                    val entity = it as ProcessDefinitionEntity
-                    ProcessDefinitionEngineRecord(entity)
+                    when (it) {
+                        is ProcessDefinitionEntity -> {
+                            ProcessDefinitionEngineRecord(it)
+                        }
+
+                        is ProcessDefinitionEmptyEngineRecord -> {
+                            it
+                        }
+
+                        else -> {
+                            error("Unknown record type: ${it.javaClass}")
+                        }
+                    }
                 }
                 .sortByIds(recordIds)
         }
 
         log.debug { "$ID get atts time: $attsTime, size: ${recordIds.size}" }
         return atts
+    }
+
+    private inner class ProcessDefinitionEmptyEngineRecord(
+        val id: String
+    ) : IdentifiableRecord {
+        override fun getIdentificator(): String {
+            return id
+        }
     }
 
     private inner class ProcessDefinitionEngineRecord(

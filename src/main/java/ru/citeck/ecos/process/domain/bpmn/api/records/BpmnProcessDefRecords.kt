@@ -22,6 +22,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
+import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
@@ -49,7 +50,6 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -71,7 +71,8 @@ class BpmnProcessDefRecords(
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val bpmnEventSubscriptionService: BpmnEventSubscriptionService,
     private val bpmnProcessReportService: BpmnProcessReportService,
-    private val ecosContentService: EcosContentService
+    private val ecosContentService: EcosContentService,
+    private val bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -334,7 +335,11 @@ class BpmnProcessDefRecords(
 
     override fun saveMutatedRec(record: BpmnMutateRecord): String {
         val procDefRef = record.id.toProcDefRef()
-        val perms = procDefRef.getPerms()
+        val perms = if (record.isNewRecord) {
+            ProcDefPermsValue(record, SectionType.BPMN)
+        } else {
+            procDefRef.getPerms()
+        }
 
         if (record.sectionRef.getLocalId() == "ROOT") {
             error("You can't create processes in ROOT category")
@@ -347,10 +352,10 @@ class BpmnProcessDefRecords(
 
             if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-                val hasPermissionToCreateDefinitions = recordsService.getAtt(
+                val hasPermissionToCreateDefinitions = bpmnSectionPermissionsProvider.hasPermissions(
                     record.sectionRef,
-                    BpmnPermission.SECTION_CREATE_PROC_DEF.getAttribute()
-                ).asBoolean()
+                    BpmnPermission.SECTION_CREATE_PROC_DEF
+                )
 
                 if (!hasPermissionToCreateDefinitions) {
                     error("Permission denied. You can't create process instances in section ${record.sectionRef}")
@@ -679,6 +684,11 @@ class BpmnProcessDefRecords(
     ) {
         val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
         val isNewRecord = id.isBlank()
+
+        @AttName("_type")
+        fun getType(): EntityRef {
+            return EntityRef.create("emodel", "type", "bpmn-process-def")
+        }
 
         @JsonProperty("version:version")
         fun applyUploadNewVersionState(version: String) {

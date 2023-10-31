@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain
 import org.springframework.stereotype.Component
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
@@ -135,9 +134,7 @@ fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
         this["action"] = BpmnProcessDefActions.DEPLOY.toString()
     }
 
-    AuthContext.runAsSystem {
-        helper.recordsService.mutate(recordAtts)
-    }
+    helper.recordsService.mutate(recordAtts)
 }
 
 fun saveAndDeployDmnFromResource(resource: String, id: String) {
