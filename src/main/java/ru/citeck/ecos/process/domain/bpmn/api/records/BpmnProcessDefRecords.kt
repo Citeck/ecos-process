@@ -2,13 +2,13 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 import mu.KotlinLogging
+import org.apache.commons.lang3.StringUtils
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.DataUriUtil
-import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
@@ -26,6 +26,7 @@ import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.perms.ProcDefPermsValue
@@ -38,6 +39,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -47,6 +49,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -241,6 +244,29 @@ class BpmnProcessDefRecords(
 
         if (recordId.startsWith("flowable$") || recordId.startsWith("activiti$")) {
             return RecordRef.create("alfresco", "workflow", "def_$recordId")
+        }
+
+        // TODO: remove atts hack after fix in perms request (should run as sys)
+        val atts = AttContext.getInnerAttsMap().values
+        val allowRead = if (AuthContext.isRunAsSystem()) {
+            true
+        } else if (atts.size == 1 && StringUtils.startsWithAny(
+                atts.first(),
+                "?id",
+                "permissions",
+                "_permissions",
+                "_type",
+                "_status",
+                "sectionRef"
+            )
+        ) {
+            true
+        } else {
+            recordId.toProcDefRef().getPerms().hasReadPerms()
+        }
+
+        if (!allowRead) {
+            return null
         }
 
         val ref = ProcDefRef.create(BPMN_PROC_TYPE, recordId)
@@ -508,6 +534,9 @@ class BpmnProcessDefRecords(
     ) {
 
         private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef(), SectionType.BPMN) }
+        private val revision: ProcDefRevDto? by lazy {
+            procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId)
+        }
 
         @AttName("_permissions")
         fun getPermissionsSysAtt(): ProcDefPermsValue {
@@ -562,8 +591,13 @@ class BpmnProcessDefRecords(
         fun getProcessDefId() = procDef.id
 
         fun getDefinition(): String? {
-            val rev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId) ?: return null
-            return String(rev.data, StandardCharsets.UTF_8)
+            return revision?.let {
+                String(it.data, StandardCharsets.UTF_8)
+            }
+        }
+
+        fun getDeploymentId(): String {
+            return revision?.deploymentId ?: ""
         }
 
         @AttName("?json")

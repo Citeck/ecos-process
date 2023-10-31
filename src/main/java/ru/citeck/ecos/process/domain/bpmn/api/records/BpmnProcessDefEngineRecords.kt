@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
+import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.repository.ProcessDefinitionQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
@@ -48,41 +49,37 @@ class BpmnProcessDefEngineRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
 
-        val totalCount: Long
-        val totalCountTime = measureTimeMillis {
-            totalCount = camundaRepositoryService
-                .createProcessDefinitionQuery()
-                .applyPredicate(predicate)
-                .count()
-        }
-        if (totalCount == 0L) {
-            return RecsQueryRes()
-        }
-
         val defs: List<EntityRef>
         val defsTime = measureTimeMillis {
             defs = camundaRepositoryService
                 .createProcessDefinitionQuery()
                 .applyPredicate(predicate)
                 .applySort(recsQuery)
-                .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
+                .unlimitedList()
+                .filterByPermissions()
+                .map {
                     EntityRef.create(AppName.EPROC, ID, it.id)
                 }
         }
 
-        log.debug { "$ID total count time: $totalCountTime, defs time: $defsTime" }
+        log.debug { "$ID query count: ${defs.size}, defs time: $defsTime" }
 
         val result = RecsQueryRes<EntityRef>()
 
-        result.setRecords(defs)
-        result.setTotalCount(totalCount)
-        result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
+        result.setRecords(defs.drop(recsQuery.page.skipCount).take(recsQuery.page.maxItems))
+        result.setTotalCount(defs.size.toLong())
+        result.setHasMore(defs.size > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return result
     }
 
     private fun ProcessDefinitionQuery.applyPredicate(pred: Predicate): ProcessDefinitionQuery {
         val engineQuery = PredicateUtils.convertToDto(pred, EngineDefQuery::class.java)
+        val keyValue = engineQuery.key.replace("%", "").trim()
+
+        check(engineQuery.onlyLatestVersion || keyValue.isNotBlank()) {
+            "All version query supported only with key attribute"
+        }
 
         val keyPredicate: ValuePredicate? = PredicateUtils.mapValuePredicates(pred) { valuePred ->
             if (valuePred.getAttribute() == KEY_ATT) {
@@ -97,11 +94,13 @@ class BpmnProcessDefEngineRecords(
                 latestVersion()
             }
 
-            if (engineQuery.key.isNotBlank() && keyPredicate != null) {
-                if (keyPredicate.getType() == ValuePredicate.Type.EQ) {
-                    processDefinitionKey(keyPredicate.getValue().asText())
-                } else if (keyPredicate.getType() == ValuePredicate.Type.LIKE) {
-                    processDefinitionKeyLike("%${keyPredicate.getValue().asText()}%")
+            keyPredicate?.let {
+                if (keyValue.isNotBlank()) {
+                    if (keyPredicate.getType() == ValuePredicate.Type.EQ) {
+                        processDefinitionKey(keyValue)
+                    } else if (keyPredicate.getType() == ValuePredicate.Type.LIKE) {
+                        processDefinitionKeyLike("%$keyValue%")
+                    }
                 }
             }
         }
@@ -126,6 +125,29 @@ class BpmnProcessDefEngineRecords(
                 }
             }
         }
+    }
+
+    private fun MutableList<ProcessDefinition>.filterByPermissions(): MutableList<ProcessDefinition> {
+        val deploymentIds = map { it.deploymentId }.toList()
+        val ecosProcDefsWithDeploymentIds = procDefService.getProcessDefRevByDeploymentIds(deploymentIds)
+        val ecosProcDefRefs = ecosProcDefsWithDeploymentIds.map {
+            EntityRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, it.procDefId)
+        }
+
+        val deploymentsWithReadPerms = recordsService.getAtts(ecosProcDefRefs, HasReadPerms::class.java)
+            .filter { it.hasReadPerms && it.deploymentId.isNotBlank() }
+            .map { it.deploymentId }
+
+        return filter { procDef ->
+            deploymentsWithReadPerms.contains(procDef.deploymentId)
+        }.toMutableList()
+    }
+
+    private class HasReadPerms {
+        var deploymentId: String = ""
+
+        @AttName("permissions._has.read?bool!")
+        var hasReadPerms: Boolean = false
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {

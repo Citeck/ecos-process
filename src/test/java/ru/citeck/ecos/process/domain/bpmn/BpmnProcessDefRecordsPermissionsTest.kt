@@ -1,7 +1,10 @@
 package ru.citeck.ecos.process.domain.bpmn
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.commons.data.MLText
@@ -65,6 +68,10 @@ class BpmnProcessDefRecordsPermissionsTest {
     companion object {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
         private const val COUNT_OF_PROC_DEF_TO_GENERATE = 250L
+        private const val USER_WITH_READ_PERMS = "userRead"
+        private const val USER_WITH_WRITE_PERMS = "userWrite"
+        private const val USER_WITHOUT_PERMS = "userWithoutPerms"
+
         private val queryAllProcDefs = RecordsQuery.create {
             withSourceId(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID)
             withLanguage(PredicateService.LANGUAGE_PREDICATE)
@@ -87,13 +94,16 @@ class BpmnProcessDefRecordsPermissionsTest {
                         .withRoles(
                             listOf(
                                 RoleDef.create()
-                                    .withId("admin")
+                                    .withId("roleWrite")
                                     .withAssignees(
-                                        listOf("GROUP_ECOS_ADMINISTRATORS")
+                                        listOf(USER_WITH_WRITE_PERMS)
                                     )
                                     .build(),
                                 RoleDef.create()
-                                    .withId("EVERYONE")
+                                    .withId("roleRead")
+                                    .withAssignees(
+                                        listOf(USER_WITH_READ_PERMS)
+                                    )
                                     .build()
                             )
                         )
@@ -111,10 +121,10 @@ class BpmnProcessDefRecordsPermissionsTest {
                     PermissionsDef.create {
                         withMatrix(
                             mapOf(
-                                "admin" to mapOf(
+                                "roleWrite" to mapOf(
                                     "ANY" to PermissionLevel.WRITE
                                 ),
-                                "EVERYONE" to mapOf(
+                                "roleRead" to mapOf(
                                     "ANY" to PermissionLevel.READ
                                 )
                             )
@@ -138,8 +148,8 @@ class BpmnProcessDefRecordsPermissionsTest {
                 RecordRef.EMPTY,
                 BpmnProcHelperJava.buildProcDefXml(id),
                 null,
-                true,
-                false
+                enabled = true,
+                autoStartEnabled = false
             )
         }
 
@@ -153,17 +163,65 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
-    fun queryWithoutPermissions() {
+    fun `get att as system should allow`() {
+        AuthContext.runAsSystem {
+            val def = recordsService.getAtt(
+                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                "definition"
+            ).asText()
+
+            assertThat(def).startsWith("<?xml version")
+        }
+    }
+
+    @Test
+    fun `get att without auth should deny`() {
+        AuthContext.runAs(EmptyAuth) {
+            val def = recordsService.getAtt(
+                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                "definition"
+            ).asText()
+
+            assertThat(def).isEmpty()
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_WITH_READ_PERMS, USER_WITH_WRITE_PERMS])
+    fun `get att with read perms user should allow`(user: String) {
+        AuthContext.runAs(user = USER_WITH_READ_PERMS) {
+            val def = recordsService.getAtt(
+                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                "definition"
+            ).asText()
+
+            assertThat(def).startsWith("<?xml version")
+        }
+    }
+
+    @Test
+    fun `get att as user without read perms should deny`() {
+        AuthContext.runAs(user = USER_WITHOUT_PERMS) {
+            val def = recordsService.getAtt(
+                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                "definition"
+            ).asText()
+
+            assertThat(def).isEmpty()
+        }
+    }
+
+    @Test
+    fun `query without auth should not return defs`() {
         val result = AuthContext.runAs(EmptyAuth) {
             bpmnProcessDefRecords.queryRecords(queryAllProcDefs)
                 as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
         }
-        assertEquals(250, result.getRecords().size)
-        assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE, result.getTotalCount())
+        assertEquals(0, result.getRecords().size)
     }
 
     @Test
-    fun queryAsSystem() {
+    fun `query as system should return all defs`() {
         AuthContext.runAsSystem {
             val result = bpmnProcessDefRecords.queryRecords(queryAllProcDefs)
                 as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
@@ -172,8 +230,8 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
-    fun queryAsUser() {
-        AuthContext.runAs(user = "fet") {
+    fun `query as user with read permissions`() {
+        AuthContext.runAs(user = USER_WITH_READ_PERMS) {
             val result = bpmnProcessDefRecords.queryRecords(queryAllProcDefs)
                 as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
             assertEquals(250, result.getRecords().size)
@@ -187,10 +245,8 @@ class BpmnProcessDefRecordsPermissionsTest {
             .withMaxItems(50)
             .build()
 
-        val result = AuthContext.runAs(user = "fet") {
-            bpmnProcessDefRecords.queryRecords(querySkip100Max50)
-                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
-        }
+        val result = bpmnProcessDefRecords.queryRecords(querySkip100Max50)
+            as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
 
         assertEquals(50, result.getRecords().size)
         assertEquals(true, result.getHasMore())
@@ -205,10 +261,8 @@ class BpmnProcessDefRecordsPermissionsTest {
             .withMaxItems(30)
             .build()
 
-        val result = AuthContext.runAs(user = "fet") {
-            bpmnProcessDefRecords.queryRecords(querySkip20Max30)
-                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
-        }
+        val result = bpmnProcessDefRecords.queryRecords(querySkip20Max30)
+            as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
 
         assertEquals(30, result.getRecords().size)
         assertEquals(true, result.getHasMore())
@@ -223,10 +277,8 @@ class BpmnProcessDefRecordsPermissionsTest {
             .withMaxItems(30)
             .build()
 
-        val result = AuthContext.runAs(user = "fet") {
-            bpmnProcessDefRecords.queryRecords(querySkip120Max30)
-                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
-        }
+        val result = bpmnProcessDefRecords.queryRecords(querySkip120Max30)
+            as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
 
         assertEquals(30, result.getRecords().size)
         assertEquals(true, result.getHasMore())
@@ -241,10 +293,8 @@ class BpmnProcessDefRecordsPermissionsTest {
             .withMaxItems(101)
             .build()
 
-        val result = AuthContext.runAs(user = "fet") {
-            bpmnProcessDefRecords.queryRecords(querySkip249Max101)
-                as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
-        }
+        val result = bpmnProcessDefRecords.queryRecords(querySkip249Max101)
+            as RecsQueryRes<BpmnProcessDefRecords.BpmnProcessDefRecord>
 
         assertEquals(1, result.getRecords().size)
         assertEquals(false, result.getHasMore())
@@ -253,7 +303,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
-    fun deleteWithoutPermissions() {
+    fun `delete as empty auth should deny`() {
         AuthContext.runAs(EmptyAuth) {
             val result = bpmnProcessDefRecords.delete("def-3")
             assertEquals(DelStatus.PROTECTED, result)
@@ -261,9 +311,17 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
-    fun deleteAsUser() {
-        val result = AuthContext.runAs(user = "fet") {
+    fun `delete as user without permissions should deny`() {
+        val result = AuthContext.runAs(user = USER_WITHOUT_PERMS) {
             bpmnProcessDefRecords.delete("def-2")
+        }
+        assertEquals(DelStatus.PROTECTED, result)
+    }
+
+    @Test
+    fun `delete as user with read should deny`() {
+        val result = AuthContext.runAs(user = USER_WITH_READ_PERMS) {
+            bpmnProcessDefRecords.delete("def-4")
         }
         assertEquals(DelStatus.PROTECTED, result)
     }
@@ -282,7 +340,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
-    fun mutateAsUser() {
+    fun `mutate as user without permission should deny`() {
         val recToMutate = bpmnProcessDefRecords.getRecToMutate("def-250")
         recToMutate.enabled = false
 
@@ -294,11 +352,11 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
-    fun mutateAsAdmin() {
+    fun `mutate as user with write perms should allow`() {
         val recToMutate = bpmnProcessDefRecords.getRecToMutate("def-250")
         recToMutate.enabled = false
 
-        val result = AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ECOS_ADMINISTRATORS")) {
+        val result = AuthContext.runAs(user = USER_WITH_WRITE_PERMS) {
             bpmnProcessDefRecords.saveMutatedRec(recToMutate)
         }
         assertEquals("def-250", result)
@@ -306,8 +364,8 @@ class BpmnProcessDefRecordsPermissionsTest {
 
     @Test
     @Order(Order.DEFAULT + 1000)
-    fun deleteAsAdmin() {
-        AuthContext.runAs(user = "admin", authorities = listOf("GROUP_ECOS_ADMINISTRATORS")) {
+    fun `delete as user with write perms should allow`() {
+        AuthContext.runAs(user = USER_WITH_WRITE_PERMS) {
             val result = bpmnProcessDefRecords.delete("def-250")
             assertEquals(DelStatus.OK, result)
             assertEquals(COUNT_OF_PROC_DEF_TO_GENERATE - 1, procDefService.getCount())
