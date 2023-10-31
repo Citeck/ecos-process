@@ -7,11 +7,14 @@ import ru.citeck.ecos.data.sql.domain.DbDomainFactory
 import ru.citeck.ecos.data.sql.records.DbRecordsDaoConfig
 import ru.citeck.ecos.data.sql.records.perms.DbPermsComponent
 import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
+import ru.citeck.ecos.process.common.section.records.SectionChildrenPermsUpdater
 import ru.citeck.ecos.process.common.section.records.SectionParentMixin
 import ru.citeck.ecos.process.common.section.records.SectionsProxyDao
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.webapp.lib.perms.EcosPermissionsService
 import ru.citeck.ecos.webapp.lib.perms.component.custom.CustomRecordPermsComponent
@@ -29,6 +32,14 @@ class DmnSectionConfig(
         const val TYPE_ID = "dmn-section"
         const val SOURCE_ID = "dmn-section"
         const val REPO_SOURCE_ID = "$SOURCE_ID-repo"
+    }
+
+    @Bean
+    fun dmnSectionChildrenPermsUpdater(
+        eventsService: EventsService,
+        recordsService: RecordsService
+    ): SectionChildrenPermsUpdater {
+        return SectionChildrenPermsUpdater(eventsService, recordsService, SectionType.DMN)
     }
 
     @Bean

@@ -9,7 +9,10 @@ class RootSectionPermsComponent : RecordPermsComponent {
 
     override fun getRecordPerms(context: RecordPermsContext): RecordPermsData? {
         if (context.getRecord().getRef().getLocalId() == "ROOT") {
-            return RootPerms(context.getAuthorities().contains(AuthRole.ADMIN))
+            return RootPerms(
+                context.getAuthorities().contains(AuthRole.ADMIN),
+                context.getAssignableAdditionalPerms()
+            )
         }
         return null
     }
@@ -18,10 +21,10 @@ class RootSectionPermsComponent : RecordPermsComponent {
         return -10_000f
     }
 
-    private class RootPerms(val isAdmin: Boolean) : RecordPermsData {
+    private class RootPerms(val isAdmin: Boolean, private val additionalPerms: Set<String>) : RecordPermsData {
 
         override fun getAdditionalPerms(): Set<String> {
-            return emptySet()
+            return additionalPerms
         }
 
         override fun getAuthoritiesWithReadPermission(): Set<String> {

@@ -4,13 +4,16 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionType
 import ru.citeck.ecos.process.common.section.SectionType
+import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import ru.citeck.ecos.webapp.lib.model.perms.ModelRecordPermsComponent
 import ru.citeck.ecos.webapp.lib.perms.EcosPermissionsService
 import ru.citeck.ecos.webapp.lib.perms.RecordPerms
+import ru.citeck.ecos.webapp.lib.perms.component.custom.CustomRecordPermsComponent
 import javax.annotation.PostConstruct
 
 private const val PERMS_READ = "read"
@@ -20,9 +23,18 @@ private const val ATT_SECTION_REF_ID = "sectionRef?id"
 
 @Component
 class ProcDefPermsServiceProvider(
-    val ecosPermissionsService: EcosPermissionsService,
-    val recordsService: RecordsService
+    ecosPermissionsService: EcosPermissionsService,
+    val recordsService: RecordsService,
+    customRecordPermsComponent: CustomRecordPermsComponent,
+    modelRecordPermsComponent: ModelRecordPermsComponent
 ) {
+    val permsCalculator = ecosPermissionsService.createCalculator()
+        .withoutDefaultComponents()
+        .addComponent(RootSectionPermsComponent())
+        .addComponent(modelRecordPermsComponent)
+        .addComponent(customRecordPermsComponent)
+        .allowAllForAdmins()
+        .build()
 
     @PostConstruct
     private fun init() {
@@ -38,7 +50,7 @@ class ProcDefPermsValue(
 ) : AttValue {
 
     private val recordPerms: RecordPerms by lazy {
-        srv.ecosPermissionsService.getPermissions(record)
+        srv.permsCalculator.getPermissions(record)
     }
 
     private val sectionPerms: RecordPerms by lazy {
@@ -46,7 +58,7 @@ class ProcDefPermsValue(
         if (EntityRef.isEmpty(sectionRef)) {
             sectionRef = EntityRef.create(AppName.EPROC, sectionType.sourceId, "DEFAULT")
         }
-        srv.ecosPermissionsService.getPermissions(sectionRef)
+        srv.permsCalculator.getPermissions(sectionRef)
     }
 
     override fun has(name: String): Boolean {
