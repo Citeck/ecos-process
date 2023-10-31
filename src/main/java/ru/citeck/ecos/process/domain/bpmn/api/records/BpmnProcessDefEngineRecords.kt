@@ -8,6 +8,7 @@ import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.repository.ProcessDefinitionQuery
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessStatistics
 import ru.citeck.ecos.process.domain.bpmn.service.IncidentStatistics
@@ -47,6 +48,50 @@ class BpmnProcessDefEngineRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
+        return if (AuthContext.isRunAsSystemOrAdmin()) {
+            queryAsSuperUser(recsQuery)
+        } else {
+            queryAsRegularUser(recsQuery)
+        }
+    }
+
+    private fun queryAsSuperUser(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
+        val predicate = recsQuery.getQuery(Predicate::class.java)
+
+        val totalCount: Long
+        val totalCountTime = measureTimeMillis {
+            totalCount = camundaRepositoryService
+                .createProcessDefinitionQuery()
+                .applyPredicate(predicate)
+                .count()
+        }
+        if (totalCount == 0L) {
+            return RecsQueryRes()
+        }
+
+        val defs: List<EntityRef>
+        val defsTime = measureTimeMillis {
+            defs = camundaRepositoryService
+                .createProcessDefinitionQuery()
+                .applyPredicate(predicate)
+                .applySort(recsQuery)
+                .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
+                    EntityRef.create(AppName.EPROC, ID, it.id)
+                }
+        }
+
+        log.debug { "$ID super user, total count time: $totalCountTime, defs time: $defsTime" }
+
+        val result = RecsQueryRes<EntityRef>()
+
+        result.setRecords(defs)
+        result.setTotalCount(totalCount)
+        result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
+
+        return result
+    }
+
+    private fun queryAsRegularUser(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
 
         val defs: List<EntityRef>
@@ -62,7 +107,7 @@ class BpmnProcessDefEngineRecords(
                 }
         }
 
-        log.debug { "$ID query count: ${defs.size}, defs time: $defsTime" }
+        log.debug { "$ID regular user, query count: ${defs.size}, defs time: $defsTime" }
 
         val result = RecsQueryRes<EntityRef>()
 
