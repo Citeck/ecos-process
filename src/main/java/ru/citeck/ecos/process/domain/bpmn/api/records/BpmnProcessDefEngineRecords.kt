@@ -188,7 +188,7 @@ class BpmnProcessDefEngineRecords(
             }
 
             val deploymentsWithReadPerms = recordsService.getAtts(ecosProcDefRefs, HasReadPerms::class.java)
-                .filter { it.hasReadPerms && !it.deploymentId.isNullOrBlank() }
+                .filter { it.hasReadInstancePerms && !it.deploymentId.isNullOrBlank() }
                 .map { it.deploymentId }
 
             result = map { procDef ->
@@ -208,8 +208,8 @@ class BpmnProcessDefEngineRecords(
     private class HasReadPerms {
         var deploymentId: String? = ""
 
-        @AttName("permissions._has.read?bool!")
-        var hasReadPerms: Boolean = false
+        @AttName("permissions._has.bpmn-process-instance-view?bool!")
+        var hasReadInstancePerms: Boolean = false
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {

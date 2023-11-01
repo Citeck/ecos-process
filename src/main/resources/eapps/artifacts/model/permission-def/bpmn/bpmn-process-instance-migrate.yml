@@ -1,6 +1,6 @@
 id: bpmn-process-instance-migrate
 name:
-  ru: Миграция инстанса процесса
+  ru: Миграция экземпляра процесса
   en: Process instance migration
 
 appliesToTypes:

@@ -1,0 +1,9 @@
+id: bpmn-process-instance-view
+name:
+  ru: Просмотр экземпляра процесса
+  en: Process instance view
+
+appliesToTypes:
+  - emodel/type@bpmn-process-def
+  - emodel/type@bpmn-section
+

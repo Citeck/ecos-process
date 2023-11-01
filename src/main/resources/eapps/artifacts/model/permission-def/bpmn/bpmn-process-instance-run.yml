@@ -1,6 +1,6 @@
 id: bpmn-process-instance-run
 name:
-  ru: Ручной запуск инстанса БП
+  ru: Ручной запуск экземпляра БП
   en: Manual start of BP instance
 
 appliesToTypes:

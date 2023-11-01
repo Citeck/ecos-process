@@ -1,6 +1,6 @@
 id: dmn-instance-edit
 name:
-  ru: Редактирование инстанса
+  ru: Редактирование экземпляра
   en: Instance edit
 
 appliesToTypes:

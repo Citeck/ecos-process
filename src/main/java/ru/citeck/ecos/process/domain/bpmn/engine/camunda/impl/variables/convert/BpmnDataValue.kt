@@ -16,6 +16,7 @@ import java.util.function.BiConsumer
     "Class was moved to lib",
     ReplaceWith("BpmnDataValue", imports = ["ru.citeck.ecos.bpmn.commons.values.BpmnDataValue"])
 )
+@Suppress("DEPRECATION")
 class BpmnDataValue private constructor(
     private val data: DataValue = DataValue.createObj()
 ) {

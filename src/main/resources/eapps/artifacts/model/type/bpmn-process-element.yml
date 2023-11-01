@@ -44,7 +44,7 @@ model:
         en: Process definition version
     - id: procInstanceId
       name:
-        ru: Инстанс процесса
+        ru: Экземпляр процесса
         en: Process instance
     - id: elementDefId
       name:

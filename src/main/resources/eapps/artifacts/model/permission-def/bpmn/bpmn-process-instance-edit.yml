@@ -1,6 +1,6 @@
 id: bpmn-process-instance-edit
 name:
-  ru: Редактирование инстанса процесса
+  ru: Редактирование экземпляра процесса
   en: Process instance edit
 
 appliesToTypes:

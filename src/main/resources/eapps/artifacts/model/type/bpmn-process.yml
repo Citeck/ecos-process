@@ -1,9 +1,14 @@
 ---
 id: bpmn-process
-
 name:
   en: ECOS BPMN Process
   ru: ECOS BPMN процесс
-
 system: true
 sourceId: eproc/bpmn-proc
+inheritActions: false
+actions:
+  - uiserv/action@suspend-bpmn-instance
+  - uiserv/action@activate-bpmn-instance
+  - uiserv/action@delete-bpmn-instance
+  - uiserv/action@add-variable-bpmn-instance
+defaultCreateVariant: true

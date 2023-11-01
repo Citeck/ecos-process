@@ -72,6 +72,7 @@ class ScriptObjectMirrorJsonDeserializerNull : JsonDeserializer<ScriptObjectMirr
     }
 }
 
+@Suppress("DEPRECATION")
 class BpmnDataValueBackwardCompatibilityJsonSerializer : JsonSerializer<BpmnDataValueDeprecated>() {
 
     override fun serialize(value: BpmnDataValueDeprecated, gen: JsonGenerator, serializers: SerializerProvider) {
@@ -79,6 +80,7 @@ class BpmnDataValueBackwardCompatibilityJsonSerializer : JsonSerializer<BpmnData
     }
 }
 
+@Suppress("DEPRECATION")
 class BpmnDataValueBackwardCompatibilityJsonDeserializer : JsonDeserializer<BpmnDataValueDeprecated>() {
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): BpmnDataValueDeprecated {
