@@ -23,3 +23,7 @@ config:
       name: name
       type: type
       value: hiddenValue
+predicate:
+  t: eq
+  att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-edit?bool!
+  val: true

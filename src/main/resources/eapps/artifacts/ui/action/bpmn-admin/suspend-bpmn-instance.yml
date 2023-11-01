@@ -18,6 +18,13 @@ config:
     attributes:
       action: SUSPEND
 predicate:
-  t: eq
-  att: isSuspended
-  val: false
+  t: and
+  val:
+    - t: and
+      val:
+        - t: eq
+          att: isSuspended?bool!
+          val: false
+        - t: eq
+          att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-edit?bool!
+          val: true
