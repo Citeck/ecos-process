@@ -10,6 +10,7 @@ import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
@@ -334,6 +335,11 @@ class BpmnProcessRecords(
             bpmnProcessService.getProcessInstanceHistoricInstance(id)
         }
 
+        @AttName(RecordConstants.ATT_TYPE)
+        fun getType(): EntityRef {
+            return EntityRef.create("emodel", "type", "bpmn-process")
+        }
+
         @AttName("ecosDefRev")
         fun getDefinitionVersionRef(): EntityRef {
             val deploymentId = getDeploymentId()
@@ -364,7 +370,10 @@ class BpmnProcessRecords(
 
         @AttName(".disp")
         fun getDisp(): MLText {
-            return MLText(getKey())
+            return MLText(
+                I18nContext.ENGLISH to "Process instance: $id",
+                I18nContext.RUSSIAN to "Экземпляр процесса: $id"
+            )
         }
 
         @AttName("businessKey")

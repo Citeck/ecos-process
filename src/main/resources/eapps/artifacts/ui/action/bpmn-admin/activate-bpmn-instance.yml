@@ -19,5 +19,5 @@ config:
       action: ACTIVATE
 predicate:
   t: eq
-  att: suspended
-  val: false
+  att: isSuspended
+  val: true
