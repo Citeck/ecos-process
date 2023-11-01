@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefEngineRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnVariableInstanceRecords
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -190,6 +191,23 @@ fun queryLatestProcessDefEngineRecords(forUser: String): List<EntityRef> {
                 withQuery(
                     Predicates.and(
                         Predicates.eq("onlyLatestVersion", true)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
+}
+
+fun queryBpmnVariableInstances(forUser: String, processInstanceId: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnVariableInstanceRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("processInstance", processInstanceId)
                     )
                 )
                 withPage(QueryPage(10_000, 0, null))

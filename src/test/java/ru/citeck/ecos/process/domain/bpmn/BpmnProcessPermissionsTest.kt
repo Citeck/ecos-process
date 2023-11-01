@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn
 
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.RuntimeService
+import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
@@ -22,19 +23,18 @@ import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnVariableInstanceRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.cleanDeployments
-import ru.citeck.ecos.process.domain.queryLatestProcessDefEngineRecords
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -48,7 +48,7 @@ import java.util.*
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
-class BpmnProcessRecordsPermissionsTest {
+class BpmnProcessPermissionsTest {
 
     @Autowired
     private lateinit var recordsService: RecordsService
@@ -69,6 +69,9 @@ class BpmnProcessRecordsPermissionsTest {
     private var permsDefBefore: TypePermsDef? = null
     private var permsDefId: String = UUID.randomUUID().toString()
 
+    private lateinit var ivanProcessInstanceRef: EntityRef
+    private lateinit var katyaProcessInstanceRef: EntityRef
+
     companion object {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
 
@@ -77,6 +80,8 @@ class BpmnProcessRecordsPermissionsTest {
         private const val USER_IVAN = "userIvan"
         private const val USER_KATYA = "userKatya"
         private const val USER_WITHOUT_PERMS = "userWithoutPerms"
+
+        private const val TEST_ATT_STR = "testStr"
 
         private const val IVAN_PROCESS_ID = "test-bpmn-process-perms-user-ivan"
         private const val KATYA_PROCESS_ID = "test-bpmn-process-perms-user-katya"
@@ -150,25 +155,38 @@ class BpmnProcessRecordsPermissionsTest {
             }
         )
 
-        fun deployBpmnAndStartProcess(procId: String, user: String) {
+        fun deployBpmnAndStartProcess(procId: String, user: String): ProcessInstance {
             saveBpmnWithAction(
                 "test/bpmn/$procId.bpmn.xml",
                 procId,
                 BpmnProcessDefActions.DEPLOY
             )
 
-            bpmnProcessService.startProcess(
+            return bpmnProcessService.startProcess(
                 procId,
                 procId,
                 mapOf(
                     "user" to user,
-                    "process" to procId
+                    "process" to procId,
+                    TEST_ATT_STR to "testStrValue"
                 )
             )
         }
 
-        deployBpmnAndStartProcess(IVAN_PROCESS_ID, USER_IVAN)
-        deployBpmnAndStartProcess(KATYA_PROCESS_ID, USER_KATYA)
+        val ivanProcessInstanceId = deployBpmnAndStartProcess(IVAN_PROCESS_ID, USER_IVAN).processInstanceId
+        val katyaProcessInstanceId = deployBpmnAndStartProcess(KATYA_PROCESS_ID, USER_KATYA).processInstanceId
+
+        ivanProcessInstanceRef = EntityRef.create(
+            AppName.EPROC,
+            BpmnProcessRecords.ID,
+            ivanProcessInstanceId
+        )
+
+        katyaProcessInstanceRef = EntityRef.create(
+            AppName.EPROC,
+            BpmnProcessRecords.ID,
+            katyaProcessInstanceId
+        )
     }
 
     @Test
@@ -293,11 +311,8 @@ class BpmnProcessRecordsPermissionsTest {
     @ParameterizedTest
     @ValueSource(strings = [USER_IVAN, "system"])
     fun `user with edit instance permission should allow update variables`(user: String) {
-        val ivanProcDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN)[0]
-        val ivanProcessInstance = queryProcessInstances(ivanProcDefEngine, USER_IVAN)[0]
-
         val mutateAtts = RecordAtts(
-            ivanProcessInstance,
+            ivanProcessInstanceRef,
         ).apply {
             this["action"] = BpmnProcessRecords.MutateAction.UPDATE.name
             this["foo"] = "bar"
@@ -307,7 +322,7 @@ class BpmnProcessRecordsPermissionsTest {
             recordsService.mutate(mutateAtts)
         }
 
-        val fooAtt = camundaRuntimeService.getVariable(ivanProcessInstance.getLocalId(), "foo")
+        val fooAtt = camundaRuntimeService.getVariable(ivanProcessInstanceRef.getLocalId(), "foo")
 
         assertThat(fooAtt).isEqualTo("bar")
     }
@@ -315,11 +330,8 @@ class BpmnProcessRecordsPermissionsTest {
     @ParameterizedTest
     @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
     fun `user without edit instance permission should not allow update variables`(user: String) {
-        val katyaProcDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN)[0]
-        val katyaProcessInstance = queryProcessInstances(katyaProcDefEngine, USER_IVAN)[0]
-
         val mutateAtts = RecordAtts(
-            katyaProcessInstance,
+            ivanProcessInstanceRef,
         ).apply {
             this["action"] = BpmnProcessRecords.MutateAction.UPDATE.name
             this["foo"] = "bar"
@@ -560,9 +572,182 @@ class BpmnProcessRecordsPermissionsTest {
         }
     }
 
+    @Test
+    fun `query variables instances without process instance id should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryBpmnVariableInstances("system", "")
+        }
+    }
+
+    @Test
+    fun `user should see variable instances only with his permissions`() {
+        val ivanRequestHisVariables = queryBpmnVariableInstances(USER_IVAN, ivanProcessInstanceRef.getLocalId())
+        val ivanRequestKatyaVariables = queryBpmnVariableInstances(USER_IVAN, katyaProcessInstanceRef.getLocalId())
+
+        assertThat(ivanRequestHisVariables).isNotEmpty
+        assertThat(ivanRequestKatyaVariables).isEmpty()
+
+        val katyaRequestHerVariables = queryBpmnVariableInstances(USER_KATYA, katyaProcessInstanceRef.getLocalId())
+        val katyaRequestIvanVariables = queryBpmnVariableInstances(USER_KATYA, ivanProcessInstanceRef.getLocalId())
+
+        assertThat(katyaRequestHerVariables).isNotEmpty
+        assertThat(katyaRequestIvanVariables).isEmpty()
+    }
+
+    @Test
+    fun `user with without read process instance permission should not see variable instances`() {
+        val ivanVariables = queryBpmnVariableInstances(USER_WITHOUT_PERMS, ivanProcessInstanceRef.getLocalId())
+        val katyaVariables = queryBpmnVariableInstances(USER_WITHOUT_PERMS, katyaProcessInstanceRef.getLocalId())
+
+        assertThat(ivanVariables).isEmpty()
+        assertThat(katyaVariables).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all variable instances`() {
+        val ivanVariables = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId())
+        val katyaVariables = queryBpmnVariableInstances("system", katyaProcessInstanceRef.getLocalId())
+
+        assertThat(ivanVariables).isNotEmpty
+        assertThat(katyaVariables).isNotEmpty
+    }
+
+    @Test
+    fun `user should see attributes of variables instances only with his permissions`() {
+        val ivanVariables = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId())
+        val katyaVariables = queryBpmnVariableInstances("system", katyaProcessInstanceRef.getLocalId())
+
+        val ivanGetHisAtts = AuthContext.runAs(USER_IVAN) {
+            getNamesFromVariableInstances(ivanVariables)
+        }
+        val ivanGetKatyaAtts = AuthContext.runAs(USER_IVAN) {
+            getNamesFromVariableInstances(katyaVariables)
+        }
+        assertThat(ivanGetHisAtts.filter { it.isNotBlank() }).isNotEmpty
+        assertThat(ivanGetKatyaAtts.filter { it.isNotBlank() }).isEmpty()
+
+        val katyaGetHerAtts = AuthContext.runAs(USER_KATYA) {
+            getNamesFromVariableInstances(katyaVariables)
+        }
+        val katyaGetIvanAtts = AuthContext.runAs(USER_KATYA) {
+            getNamesFromVariableInstances(ivanVariables)
+        }
+        assertThat(katyaGetHerAtts.filter { it.isNotBlank() }).isNotEmpty
+        assertThat(katyaGetIvanAtts.filter { it.isNotBlank() }).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all attributes of variables instances`() {
+        val ivanVariables = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId())
+        val katyaVariables = queryBpmnVariableInstances("system", katyaProcessInstanceRef.getLocalId())
+
+        val ivanAtts = AuthContext.runAs("system") {
+            getNamesFromVariableInstances(ivanVariables)
+        }
+        val katyaAtts = AuthContext.runAs("system") {
+            getNamesFromVariableInstances(katyaVariables)
+        }
+        assertThat(ivanAtts.filter { it.isNotBlank() }).isNotEmpty
+        assertThat(katyaAtts.filter { it.isNotBlank() }).isNotEmpty
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with edit instance permission should allow delete variable instance`(user: String) {
+        val ivanVariable = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId()).first()
+
+        val delStatus = AuthContext.runAs(user) {
+            recordsService.delete(ivanVariable)
+        }
+
+        assertThat(delStatus).isEqualTo(DelStatus.OK)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
+    fun `user without edit instance permission should not allow delete variable instance`(user: String) {
+        val ivanVariable = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId()).first()
+
+        val delStatus = AuthContext.runAs(user) {
+            recordsService.delete(ivanVariable)
+        }
+
+        assertThat(delStatus).isEqualTo(DelStatus.PROTECTED)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with edit instance permission should allow update variable instance`(user: String) {
+        val ivanVariable = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId())
+            .firstNotNullOf {
+                val attName = recordsService.getAtts(it, listOf("name"))
+                if (attName.getAtt("name").asText() == "testStr") {
+                    it
+                } else {
+                    null
+                }
+            }
+
+        val newValue = UUID.randomUUID().toString()
+
+        queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId())
+            .forEach {
+                val value = recordsService.getAtts(it, listOf("type", "value", "name"))
+                println("============= value = $value")
+            }
+
+        val updateAtts = RecordAtts(
+            EntityRef.create(
+                AppName.EPROC,
+                BpmnVariableInstanceRecords.ID,
+                ivanVariable.getLocalId()
+            ),
+        ).apply {
+            this["type"] = "string"
+            this["value"] = newValue
+        }
+
+        AuthContext.runAs(user) {
+            recordsService.mutate(updateAtts)
+        }
+
+        val updatedValue = camundaRuntimeService.getVariable(
+            ivanProcessInstanceRef.getLocalId(),
+            TEST_ATT_STR
+        )
+        assertThat(updatedValue).isEqualTo(newValue)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
+    fun `user without edit instance permission should not allow update variable instance`(user: String) {
+        val ivanVariable = queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId()).first()
+
+        val newValue = UUID.randomUUID().toString()
+
+        val updateAtts = RecordAtts(
+            ivanVariable,
+        ).apply {
+            this["type"] = "string"
+            this["value"] = newValue
+        }
+
+        assertThrows<IllegalStateException> {
+            AuthContext.runAs(user) {
+                recordsService.mutate(updateAtts)
+            }
+        }
+    }
+
     private fun getKeysFromProcInstances(procInstances: List<EntityRef>): List<String> {
         return procInstances.map {
             recordsService.getAtt(it, "key").asText()
+        }
+    }
+
+    private fun getNamesFromVariableInstances(variableInstances: List<EntityRef>): List<String> {
+        return variableInstances.map {
+            recordsService.getAtt(it, "name").asText()
         }
     }
 

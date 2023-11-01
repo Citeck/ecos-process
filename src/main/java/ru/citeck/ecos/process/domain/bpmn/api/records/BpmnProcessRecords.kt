@@ -15,10 +15,7 @@ import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
-import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessDefFinder
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
-import ru.citeck.ecos.process.domain.bpmn.service.ProcessInstanceQuery
+import ru.citeck.ecos.process.domain.bpmn.service.*
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
@@ -45,7 +42,8 @@ class BpmnProcessRecords(
     private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService,
     private val camundaProcessInstanceRestService: ProcessInstanceRestService,
-    private val bpmnProcessDefFinder: BpmnProcessDefFinder
+    private val bpmnProcessDefFinder: BpmnProcessDefFinder,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordsQueryDao,
@@ -72,8 +70,7 @@ class BpmnProcessRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val procQuery = recsQuery.toProcessInstanceQuery()
 
-        val processDefRef = bpmnProcessDefFinder.getByBpmnDefEngine(procQuery.bpmnDefEngine)
-        if (!isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_READ)) {
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(procQuery.bpmnDefEngine)) {
             return RecsQueryRes()
         }
 
@@ -94,17 +91,6 @@ class BpmnProcessRecords(
         result.setTotalCount(totalCount)
         result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
         return result
-    }
-
-    private fun isAllow(bpmnProcessDef: EntityRef, bpmnPermission: BpmnPermission): Boolean {
-        if (AuthContext.isRunAsSystemOrAdmin()) {
-            return true
-        }
-
-        return recordsService.getAtt(
-            bpmnProcessDef,
-            "permissions._has.${bpmnPermission.id}?bool!"
-        ).asBoolean()
     }
 
     private fun RecordsQuery.toProcessInstanceQuery(): ProcessInstanceQuery {
@@ -141,8 +127,7 @@ class BpmnProcessRecords(
             return ref
         }
 
-        val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(recordId)
-        if (!isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_READ)) {
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(recordId)) {
             return null
         }
 
@@ -162,8 +147,7 @@ class BpmnProcessRecords(
 
         return when (action) {
             MutateAction.START -> {
-                val processDefRef = bpmnProcessDefFinder.getByProcessKey(record.id)
-                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_RUN)) {
+                check(BpmnPermission.PROC_INSTANCE_RUN.isAllowForProcessKey(record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to start process instance: ${record.id}"
                 }
 
@@ -172,8 +156,7 @@ class BpmnProcessRecords(
             }
 
             MutateAction.UPDATE -> {
-                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
-                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to update process instance: ${record.id}"
                 }
 
@@ -182,8 +165,7 @@ class BpmnProcessRecords(
             }
 
             MutateAction.DELETE -> {
-                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
-                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to delete process instance: ${record.id}"
                 }
 
@@ -192,8 +174,7 @@ class BpmnProcessRecords(
             }
 
             MutateAction.SUSPEND -> {
-                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
-                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to suspend process instance: ${record.id}"
                 }
 
@@ -202,8 +183,7 @@ class BpmnProcessRecords(
             }
 
             MutateAction.ACTIVATE -> {
-                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
-                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to activate process instance: ${record.id}"
                 }
 
@@ -212,8 +192,7 @@ class BpmnProcessRecords(
             }
 
             MutateAction.MODIFY -> {
-                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
-                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_MIGRATE)) {
+                check(BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForProcessInstanceId(record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to move token of process instance: " +
                         record.id
                 }

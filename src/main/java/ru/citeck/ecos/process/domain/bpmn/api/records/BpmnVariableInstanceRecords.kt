@@ -9,6 +9,9 @@ import org.camunda.bpm.engine.runtime.VariableInstanceQuery
 import org.camunda.bpm.engine.variable.value.SerializableValue
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -25,8 +28,6 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
 import java.util.*
-
-// TODO: permissions and tests
 
 @Component
 class BpmnVariableInstanceRecords(
@@ -63,6 +64,10 @@ class BpmnVariableInstanceRecords(
 
         log.debug {
             "Mutate bpmn variable: \n${Json.mapper.toPrettyString(mutateData)}"
+        }
+
+        check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(mutateData.executionId)) {
+            "User has no permission to edit process instance: ${mutateData.executionId}"
         }
 
         camundaRuntimeService.setVariableLocal(mutateData.executionId, mutateData.name, mutateData.value)
@@ -149,6 +154,15 @@ class BpmnVariableInstanceRecords(
             .variableId(recordId)
             .singleResult() ?: error("Variable with id '$recordId' not found")
 
+        if (AuthContext.isNotRunAsSystemOrAdmin()) {
+            val allowDelete = BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(
+                variableInstance.processInstanceId
+            )
+            if (!allowDelete) {
+                return DelStatus.PROTECTED
+            }
+        }
+
         camundaRuntimeService.removeVariable(variableInstance.executionId, variableInstance.name)
 
         return DelStatus.OK
@@ -157,7 +171,11 @@ class BpmnVariableInstanceRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val query = PredicateUtils.convertToDto(predicate, BpmnVariableInstanceQuery::class.java)
-        if (query.processInstance.isEmpty()) {
+        check(query.processInstance.isNotEmpty() && query.processInstance.getLocalId().isNotBlank()) {
+            "Process instance must be specified"
+        }
+
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(query.processInstance.getLocalId())) {
             return RecsQueryRes()
         }
 
@@ -225,11 +243,20 @@ class BpmnVariableInstanceRecords(
     }
 
     override fun getRecordAtts(recordId: String): Any? {
-        return camundaRuntimeService.createVariableInstanceQuery()
+        val variable = camundaRuntimeService.createVariableInstanceQuery()
             .variableId(recordId)
             .singleResult()?.let {
                 BpmnVariableInstanceRecord(it as VariableInstanceEntity)
             }
+
+        if (variable != null && AuthContext.isNotRunAsSystemOrAdmin()) {
+            val allowRead = BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(variable.processInstanceId())
+            if (!allowRead) {
+                return null
+            }
+        }
+
+        return variable
     }
 
     private fun VariableInstanceEntity.toTypedValueInfo(): TypedValueInfo {
@@ -259,6 +286,11 @@ class BpmnVariableInstanceRecords(
         @AttName("typedValueInfo")
         fun getTypedValueInfo(): TypedValueInfo {
             return _typedValueInfo
+        }
+
+        @AttName("processInstanceId")
+        fun processInstanceId(): String {
+            return variableInstance.processInstanceId ?: ""
         }
 
         @AttName(ATT_NAME)
