@@ -326,7 +326,7 @@
               "doubleValue",
               "longValue"
             ],
-            "calculateValue": "switch (data.type) {\n  case 'object':\n    value = JSON.stringify(_.get(data, 'serializableValue.deserialized'));\n    break;\n  case 'boolean':\n    value = _.get(data, 'booleanValue');\n    break;\n  case 'date':\n    value = _.get(data, 'dateValue');\n    break;\n  case 'string':\n    value = _.get(data, 'stringValue');\n    break;\n  case 'integer':\n    value = _.get(data, 'integerValue', '').replace(/ /g, '');\n    break;\n  case 'double':\n    value = _.get(data, 'doubleValue', '').replace(/ /g, '');\n    break;\n  case 'long':\n    value = _.get(data, 'longValue', '').replace(/ /g, '');\n    break;\n  default:\n    value = '';\n}",
+            "calculateValue": "switch (data.type) {\n  case 'object':\n    value = JSON.stringify(_.get(data, 'serializableValue.deserialized'));\n    break;\n  case 'boolean':\n    value = _.get(data, 'booleanValue');\n    break;\n  case 'date':\n    value = _.get(data, 'dateValue');\n    break;\n  case 'string':\n    value = _.get(data, 'stringValue');\n    break;\n  case 'integer':\n    value = String(_.get(data, 'integerValue', '')).replace(/ /g, '');\n    break;\n  case 'double':\n    value = String(_.get(data, 'doubleValue', '')).replace(/ /g, '');\n    break;\n  case 'long':\n    value = String(_.get(data, 'longValue', '')).replace(/ /g, '');\n    break;\n  default:\n    value = '';\n}",
             "optionalWhenDisabled": false,
             "type": "hidden",
             "input": true

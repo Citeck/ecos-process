@@ -7,9 +7,9 @@ confirm:
   title:
     ru: Удалить экземпляр процесса
     en: Delete process instance
-  message: {}
+  message: { }
   formRef: uiserv/form@confirm-instance-delete
-  formAttributes: {}
+  formAttributes: { }
   attributesMapping:
     record.attributes.skipCustomListener: skipCustomListener
     record.attributes.skipIoMapping: skipIoMapping
@@ -21,3 +21,7 @@ config:
       skipCustomListener: skipCustomListener
       skipIoMapping: skipIoMapping
       action: DELETE
+predicate:
+  t: eq
+  att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-edit?bool!
+  val: true
