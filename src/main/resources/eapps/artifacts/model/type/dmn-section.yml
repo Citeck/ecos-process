@@ -22,6 +22,10 @@ model:
         ru: Имя
         en: Name
       type: MLTEXT
+    - id: sectionCode
+      name:
+        ru: Код
+        en: Code
     - id: parentRef
       name:
         ru: Родительская категория
