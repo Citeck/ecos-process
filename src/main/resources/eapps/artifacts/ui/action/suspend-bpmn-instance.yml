@@ -1,0 +1,23 @@
+---
+id: suspend-bpmn-instance
+name:
+  ru: Приостановить экземпляр процесса
+  en: Suspend process instance
+confirm:
+  title:
+    ru: Приостановить экземпляр процесса
+    en: Suspend process instance
+  message: {}
+  formRef: uiserv/form@bpmn-admin-suspend-instance
+  formAttributes: {}
+  attributesMapping: {}
+type: mutate
+config:
+  record:
+    id: '${recordRef}'
+    attributes:
+      action: SUSPEND
+predicate:
+  t: eq
+  att: suspended
+  val: true

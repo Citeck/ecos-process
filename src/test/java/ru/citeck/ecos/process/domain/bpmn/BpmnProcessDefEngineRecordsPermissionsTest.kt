@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionLevel
+import ru.citeck.ecos.model.lib.permissions.dto.PermissionRule
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionsDef
 import ru.citeck.ecos.model.lib.role.dto.ComputedRoleType
 import ru.citeck.ecos.model.lib.role.dto.RoleComputedDef
@@ -17,6 +18,7 @@ import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.cleanDefinitions
 import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.queryLatestProcessDefEngineRecords
@@ -104,6 +106,16 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
                                 ROLE_READ to mapOf(
                                     "ANY" to PermissionLevel.READ
                                 )
+                            )
+                        )
+                        withRules(
+                            listOf(
+                                PermissionRule(
+                                    roles = setOf(ROLE_READ),
+                                    permissions = setOf(
+                                        BpmnPermission.PROC_INSTANCE_READ.id
+                                    )
+                                ),
                             )
                         )
                     }

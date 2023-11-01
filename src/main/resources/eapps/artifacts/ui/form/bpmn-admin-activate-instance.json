@@ -1,0 +1,145 @@
+{
+  "id": "bpmn-admin-activate-instance",
+  "formKey": "bpmn-admin-activate-instance",
+  "title": {
+    "en": "bpmn-admin-activate-instance"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": false,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "HTML"
+        },
+        "key": "html2",
+        "tag": "div",
+        "className": "text-bold",
+        "content": {
+          "en": "<p>\nActivating a process instance means that the execution is running, so the token state will change.\n</p>\n<p>\nTasks belonging to this process instance will also be activated.\n</p>\n<p>\nIf a process instance is in the state active, the engine will also execute jobs associated with this process instance.\n</p>\nIf this process instance have a process instance hierarchy, activating this process instance from the hierarchy will not activate other process instances from that hierarchy.\n</p>\n<p>\nDo you really want to activate this process instance?\n</p>\n",
+          "ru": "<p>\nАктивация экземпляра процесса означает, что выполнение запущено, поэтому состояние токена изменится.\n</p>\n<p>\nЗадачи, принадлежащие этому экземпляру процесса, также будут активированы.\n</p>\n<p>\nЕсли экземпляр процесса находится в активном состоянии, механизм также будет выполнять задания, связанные с этим экземпляром процесса.</p>\n</p>\nЕсли этот экземпляр процесса имеет иерархию экземпляров процесса, активация этого экземпляра процесса из иерархии не приведет к активации других экземпляров процесса из этой иерархии.</p>\n</p>\n<p>\nВы действительно хотите возобновить данный экземпляр процесса?\n</p>\n"
+        },
+        "refreshOnChange": false,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "htmlelement",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "HTML"
+        },
+        "key": "html",
+        "className": "ecos-info-text ecos-info-text_no-indents ecos-info-text_align-right",
+        "refreshOnChange": false,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "htmlelement",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "Columns"
+        },
+        "key": "columns2",
+        "columns": [
+          {
+            "components": [
+              {
+                "label": "Cancel",
+                "action": "event",
+                "state": "",
+                "showValidations": false,
+                "event": "cancel",
+                "block": true,
+                "type": "button",
+                "input": true,
+                "key": "submit2",
+                "conditional": {
+                  "show": null,
+                  "when": null
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "md": 3,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 0
+          },
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 1,
+            "md": 3
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 2
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "index": 3,
+            "components": [
+              {
+                "label": {
+                  "en": "Activate",
+                  "ru": "Возобновить"
+                },
+                "key": "submit",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true,
+                "headers": [
+                  {}
+                ]
+              }
+            ]
+          }
+        ],
+        "oneColumnInViewMode": false,
+        "type": "columns",
+        "input": false
+      }
+    ],
+    "formId": "bpmn-admin-activate-instance"
+  },
+  "attributes": {},
+  "notExists": false
+}
