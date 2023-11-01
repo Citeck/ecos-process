@@ -1,4 +1,4 @@
-id: bpmn-process-instance-view
+id: bpmn-process-instance-read
 name:
   ru: Просмотр экземпляра процесса
   en: Process instance view

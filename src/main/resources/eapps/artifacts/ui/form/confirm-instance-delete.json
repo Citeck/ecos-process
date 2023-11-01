@@ -1,0 +1,162 @@
+{
+  "id": "confirm-instance-delete",
+  "formKey": "confirm-instance-delete",
+  "title": {
+    "en": "confirm-instance-delete"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": false,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "en": "Skip custom listeners",
+          "ru": "Пропустить пользовательские события"
+        },
+        "key": "skipCustomListener",
+        "tooltip": {
+          "en": "If the value is enabled, only built-in listeners will be notified with the end event.",
+          "ru": "Будут уведомлены только встроенные слушатели событий"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
+        "input": true
+      },
+      {
+        "label": {
+          "en": "Skip IO mapping",
+          "ru": "Пропустить IO Mapping"
+        },
+        "key": "skipIoMapping",
+        "tooltip": {
+          "en": "If the value is enabled IO mappings will be skipped during process deletion.",
+          "ru": "IO Mapping будет пропущен при удалении"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "HTML"
+        },
+        "key": "html",
+        "className": "text-bold",
+        "content": {
+          "ru": "Вы действительно хотите удалить экземпляр процесса?",
+          "en": "Do you really want to delete this process instance?"
+        },
+        "refreshOnChange": false,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "htmlelement",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "Columns"
+        },
+        "key": "columns2",
+        "columns": [
+          {
+            "components": [
+              {
+                "label": "Cancel",
+                "action": "event",
+                "state": "",
+                "showValidations": false,
+                "event": "cancel",
+                "block": true,
+                "type": "button",
+                "input": true,
+                "key": "submit2",
+                "conditional": {
+                  "show": null,
+                  "when": null
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "md": 3,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 0
+          },
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 1,
+            "md": 3
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 2
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "index": 3,
+            "components": [
+              {
+                "label": {
+                  "ru": "Удалить",
+                  "en": "Delete"
+                },
+                "key": "submit",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true,
+                "headers": [
+                  {}
+                ]
+              }
+            ]
+          }
+        ],
+        "oneColumnInViewMode": false,
+        "type": "columns",
+        "input": false
+      }
+    ],
+    "formId": "confirm-instance-delete"
+  },
+  "attributes": {},
+  "notExists": false
+}

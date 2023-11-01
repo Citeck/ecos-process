@@ -72,7 +72,7 @@ class BpmnProcessRecords(
         val procQuery = recsQuery.toProcessInstanceQuery()
 
         val processDefRef = bpmnProcessDefFinder.getByBpmnDefEngine(procQuery.bpmnDefEngine)
-        if (!isAllow(processDefRef, BpmnPermission.READ)) {
+        if (!isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_READ)) {
             return RecsQueryRes()
         }
 
@@ -141,7 +141,7 @@ class BpmnProcessRecords(
         }
 
         val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(recordId)
-        if (!isAllow(processDefRef, BpmnPermission.READ)) {
+        if (!isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_READ)) {
             return null
         }
 

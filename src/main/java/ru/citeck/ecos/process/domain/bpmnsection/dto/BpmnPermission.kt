@@ -11,7 +11,7 @@ enum class BpmnPermission(val id: String) {
     SECTION_CREATE_SUBSECTION("bpmn-section-create-subsection"),
     SECTION_EDIT_PROC_DEF("bpmn-section-edit-process-def"),
 
-    PROC_INSTANCE_VIEW("bpmn-process-instance-view"),
+    PROC_INSTANCE_READ("bpmn-process-instance-read"),
     PROC_INSTANCE_EDIT("bpmn-process-instance-edit"),
     PROC_INSTANCE_MIGRATE("bpmn-process-instance-migrate"),
     PROC_INSTANCE_RUN("bpmn-process-instance-run");

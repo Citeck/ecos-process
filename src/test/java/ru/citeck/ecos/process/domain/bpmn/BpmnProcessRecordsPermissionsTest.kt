@@ -139,7 +139,7 @@ class BpmnProcessRecordsPermissionsTest {
                                     permissions = setOf(
                                         BpmnPermission.PROC_INSTANCE_RUN.id,
                                         BpmnPermission.PROC_INSTANCE_EDIT.id,
-                                        BpmnPermission.PROC_INSTANCE_VIEW.id,
+                                        BpmnPermission.PROC_INSTANCE_READ.id,
                                         BpmnPermission.PROC_INSTANCE_MIGRATE.id
                                     )
                                 )

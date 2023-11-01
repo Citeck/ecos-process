@@ -208,7 +208,7 @@ class BpmnProcessDefEngineRecords(
     private class HasReadPerms {
         var deploymentId: String? = ""
 
-        @AttName("permissions._has.bpmn-process-instance-view?bool!")
+        @AttName("permissions._has.bpmn-process-instance-read?bool!")
         var hasReadInstancePerms: Boolean = false
     }
 
