@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.assertj.core.api.Assertions.assertThat
-import org.camunda.bpm.engine.RepositoryService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -36,16 +35,10 @@ class BpmnProcessDefRecordsActionsTest {
     @Autowired
     private lateinit var bpmnProcessService: BpmnProcessService
 
-    @Autowired
-    private lateinit var camundaRepositoryService: RepositoryService
-
     @AfterEach
     fun tearDown() {
-        deleteAllProcDefinitions()
-
-        camundaRepositoryService.createDeploymentQuery().list().forEach {
-            camundaRepositoryService.deleteDeployment(it.id, true)
-        }
+        cleanDefinitions()
+        cleanDeployments()
     }
 
     @Test

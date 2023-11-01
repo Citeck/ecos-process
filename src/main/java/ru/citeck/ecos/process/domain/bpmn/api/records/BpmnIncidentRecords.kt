@@ -23,6 +23,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import kotlin.system.measureTimeMillis
 
+// TODO: permissions and tests
 @Component
 class BpmnIncidentRecords(
     private val camundaRuntimeService: RuntimeService

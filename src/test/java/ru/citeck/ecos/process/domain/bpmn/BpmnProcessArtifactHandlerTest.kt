@@ -1,9 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.apache.commons.lang3.LocaleUtils
-import org.camunda.bpm.engine.RepositoryService
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -14,7 +13,8 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
-import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
+import ru.citeck.ecos.process.domain.cleanDefinitions
+import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -42,23 +42,17 @@ class BpmnProcessArtifactHandlerTest {
     @Autowired
     private lateinit var procDefService: ProcDefService
 
-    @Autowired
-    private lateinit var camundaRepositoryService: RepositoryService
-
-    @BeforeEach
+    @BeforeAll
     fun setUp() {
         AuthContext.runAsSystem {
             localAppService.deployLocalArtifacts()
         }
     }
 
-    @AfterEach
+    @AfterAll
     fun tearDown() {
-        deleteAllProcDefinitions()
-
-        camundaRepositoryService.createDeploymentQuery().list().forEach {
-            camundaRepositoryService.deleteDeployment(it.id, true)
-        }
+        cleanDefinitions()
+        cleanDeployments()
     }
 
     @Test

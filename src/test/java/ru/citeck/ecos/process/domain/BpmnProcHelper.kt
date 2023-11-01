@@ -1,20 +1,27 @@
 package ru.citeck.ecos.process.domain
 
+import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefEngineRecords
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
@@ -30,6 +37,7 @@ class BpmnProcHelper(
     val recordsService: RecordsService,
     val procDefRepo: ProcDefRepository,
     val procDefRevRepo: ProcDefRevRepository,
+    val camundaRepositoryService: RepositoryService
 ) {
     @PostConstruct
     private fun init() {
@@ -162,7 +170,30 @@ fun saveAndDeployBpmn(elementFolder: String, id: String) {
     )
 }
 
-fun deleteAllProcDefinitions() {
+fun cleanDefinitions() {
     helper.procDefRevRepo.deleteAll()
     helper.procDefRepo.deleteAll()
+}
+
+fun cleanDeployments() {
+    helper.camundaRepositoryService.createDeploymentQuery().list().forEach {
+        helper.camundaRepositoryService.deleteDeployment(it.id, true)
+    }
+}
+
+fun queryLatestProcessDefEngineRecords(forUser: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnProcessDefEngineRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("onlyLatestVersion", true)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
 }

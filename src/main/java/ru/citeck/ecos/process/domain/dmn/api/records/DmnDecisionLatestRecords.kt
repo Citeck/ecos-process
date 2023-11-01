@@ -28,8 +28,6 @@ class DmnDecisionLatestRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val processDefs = camundaRepositoryService.createProcessDefinitionQuery().latestVersion().list()
-
         val count = camundaRepositoryService
             .createDecisionDefinitionQuery()
             .latestVersion()

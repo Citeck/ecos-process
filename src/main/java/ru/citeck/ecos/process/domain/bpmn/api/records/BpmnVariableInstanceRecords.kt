@@ -26,6 +26,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
 import java.util.*
 
+// TODO: permissions and tests
+
 @Component
 class BpmnVariableInstanceRecords(
     private val camundaRuntimeService: RuntimeService

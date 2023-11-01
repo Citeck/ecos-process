@@ -11,7 +11,7 @@ import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
-import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
+import ru.citeck.ecos.process.domain.cleanDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -31,7 +31,7 @@ class CamundaEventSubscriptionFinderTest {
 
     @AfterEach
     fun clearSubscriptions() {
-        deleteAllProcDefinitions()
+        cleanDefinitions()
     }
 
     @Test

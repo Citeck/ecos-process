@@ -26,6 +26,7 @@ private const val DEPLOYED_TAG = "deployed"
 private const val DRAFT_TAG = "draft"
 private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 
+// TODO: permissions and tests
 @Component
 class BpmnProcessDefVersionRecords(
     private val procDefService: ProcDefService,

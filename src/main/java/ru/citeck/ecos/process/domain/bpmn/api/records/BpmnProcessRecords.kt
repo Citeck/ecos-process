@@ -15,8 +15,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessDefFinder
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.service.ProcessInstanceQuery
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -41,7 +43,8 @@ import java.time.Instant
 class BpmnProcessRecords(
     private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService,
-    private val camundaProcessInstanceRestService: ProcessInstanceRestService
+    private val camundaProcessInstanceRestService: ProcessInstanceRestService,
+    private val bpmnProcessDefFinder: BpmnProcessDefFinder
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordsQueryDao,
@@ -66,10 +69,12 @@ class BpmnProcessRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
-        // TODO: allow query only if bpmnDefEngine is not empty? Because we need to know camunda process definition id
-        // for permission check
-
         val procQuery = recsQuery.toProcessInstanceQuery()
+
+        val processDefRef = bpmnProcessDefFinder.getByBpmnDefEngine(procQuery.bpmnDefEngine)
+        if (!isAllow(processDefRef, BpmnPermission.READ)) {
+            return RecsQueryRes()
+        }
 
         val totalCount = bpmnProcessService.queryProcessInstancesCount(procQuery)
         if (totalCount == 0L) {
@@ -90,9 +95,24 @@ class BpmnProcessRecords(
         return result
     }
 
+    private fun isAllow(bpmnProcessDef: EntityRef, bpmnPermission: BpmnPermission): Boolean {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return true
+        }
+
+        return recordsService.getAtt(
+            bpmnProcessDef,
+            "permissions._has.${bpmnPermission.id}?bool!"
+        ).asBoolean()
+    }
+
     private fun RecordsQuery.toProcessInstanceQuery(): ProcessInstanceQuery {
         val predicate = getQuery(Predicate::class.java)
         val bpmnQuery = PredicateUtils.convertToDto(predicate, BpmnProcQuery::class.java)
+
+        check(bpmnQuery.bpmnDefEngine.isNotEmpty() && bpmnQuery.bpmnDefEngine.getLocalId().isNotBlank()) {
+            "Bpmn definition engine is mandatory for query process instances"
+        }
 
         return ProcessInstanceQuery(
             businessKey = bpmnQuery.document.toString(),
@@ -120,6 +140,11 @@ class BpmnProcessRecords(
             return ref
         }
 
+        val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(recordId)
+        if (!isAllow(processDefRef, BpmnPermission.READ)) {
+            return null
+        }
+
         return ProcRecord(
             recordId
         )
@@ -136,31 +161,62 @@ class BpmnProcessRecords(
 
         return when (action) {
             MutateAction.START -> {
+                val processDefRef = bpmnProcessDefFinder.getByProcessKey(record.id)
+                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_RUN)) {
+                    "User ${AuthContext.getCurrentUser()} has no permission to start process instance: ${record.id}"
+                }
+
                 val processInstance = startProcess(record)
                 processInstance.id
             }
 
             MutateAction.UPDATE -> {
+                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
+                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                    "User ${AuthContext.getCurrentUser()} has no permission to update process instance: ${record.id}"
+                }
+
                 updateVariables(record)
                 record.id
             }
 
             MutateAction.DELETE -> {
+                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
+                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                    "User ${AuthContext.getCurrentUser()} has no permission to delete process instance: ${record.id}"
+                }
+
                 delete(record)
                 record.id
             }
 
             MutateAction.SUSPEND -> {
+                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
+                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                    "User ${AuthContext.getCurrentUser()} has no permission to suspend process instance: ${record.id}"
+                }
+
                 bpmnProcessService.suspendProcess(record.id)
                 record.id
             }
 
             MutateAction.ACTIVATE -> {
+                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
+                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_EDIT)) {
+                    "User ${AuthContext.getCurrentUser()} has no permission to activate process instance: ${record.id}"
+                }
+
                 bpmnProcessService.activateProcess(record.id)
                 record.id
             }
 
             MutateAction.MODIFY -> {
+                val processDefRef = bpmnProcessDefFinder.getByProcessInstanceId(record.id)
+                check(isAllow(processDefRef, BpmnPermission.PROC_INSTANCE_MIGRATE)) {
+                    "User ${AuthContext.getCurrentUser()} has no permission to move token of process instance: " +
+                        record.id
+                }
+
                 modify(record)
                 record.id
             }
@@ -349,7 +405,7 @@ class BpmnProcessRecords(
         var bpmnDefEngine: EntityRef = EntityRef.EMPTY
     )
 
-    private enum class MutateAction {
+    enum class MutateAction {
         START,
         UPDATE,
         DELETE,

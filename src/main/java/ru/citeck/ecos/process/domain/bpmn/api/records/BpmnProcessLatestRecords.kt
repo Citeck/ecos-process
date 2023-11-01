@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
+// TODO: permissions and tests
 /**
  * Used for BPMN editor, select called process in DMN element.
  * return id as process key is important for BPMN editor.

@@ -14,6 +14,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
+// TODO: permissions and tests
 @Component
 class BpmnCalledProcessInstanceRecords(
     private val bpmnProcessService: BpmnProcessService

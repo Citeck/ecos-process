@@ -179,23 +179,30 @@ class BpmnProcessDefEngineRecords(
             return this.toMutableList()
         }
 
-        val deploymentIds = map { it.deploymentId }.toList()
-        val ecosProcDefsWithDeploymentIds = procDefService.getProcessDefRevByDeploymentIds(deploymentIds)
-        val ecosProcDefRefs = ecosProcDefsWithDeploymentIds.map {
-            EntityRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, it.procDefId)
+        val result: MutableList<Any>
+        val checkPermissionTime = measureTimeMillis {
+            val deploymentIds = map { it.deploymentId }.toList()
+            val ecosProcDefsWithDeploymentIds = procDefService.getProcessDefRevByDeploymentIds(deploymentIds)
+            val ecosProcDefRefs = ecosProcDefsWithDeploymentIds.map {
+                EntityRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, it.procDefId)
+            }
+
+            val deploymentsWithReadPerms = recordsService.getAtts(ecosProcDefRefs, HasReadPerms::class.java)
+                .filter { it.hasReadPerms && !it.deploymentId.isNullOrBlank() }
+                .map { it.deploymentId }
+
+            result = map { procDef ->
+                if (deploymentsWithReadPerms.contains(procDef.deploymentId)) {
+                    procDef
+                } else {
+                    ProcessDefinitionEmptyEngineRecord(procDef.id)
+                }
+            }.toMutableList()
         }
 
-        val deploymentsWithReadPerms = recordsService.getAtts(ecosProcDefRefs, HasReadPerms::class.java)
-            .filter { it.hasReadPerms && !it.deploymentId.isNullOrBlank() }
-            .map { it.deploymentId }
+        log.debug { "$ID check permissions time: $checkPermissionTime" }
 
-        return map { procDef ->
-            if (deploymentsWithReadPerms.contains(procDef.deploymentId)) {
-                procDef
-            } else {
-                ProcessDefinitionEmptyEngineRecord(procDef.id)
-            }
-        }.toMutableList()
+        return result
     }
 
     private class HasReadPerms {

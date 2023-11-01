@@ -230,7 +230,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @AfterEach
     fun clearSubscriptions() {
-        deleteAllProcDefinitions()
+        cleanDefinitions()
         camundaMyBatisExtension.deleteAllEventSubscriptions()
     }
 

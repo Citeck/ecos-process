@@ -6,6 +6,7 @@ import org.camunda.bpm.engine.rest.impl.MigrationRestServiceImpl
 import org.camunda.bpm.engine.rest.impl.ProcessInstanceRestServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService as CockpitProcessInstanceRestService
 import org.camunda.bpm.engine.rest.ProcessInstanceRestService as EngineProcessInstanceRestService
 
@@ -19,6 +20,7 @@ class CamundaRestServicesInjectConfiguration {
     }
 
     @Bean
+    @Profile("!test")
     fun camundaCockpitProcessInstanceRestService(): CockpitProcessInstanceRestService {
         return CockpitProcessInstanceRestService(DEFAULT_ENGINE_NAME)
     }

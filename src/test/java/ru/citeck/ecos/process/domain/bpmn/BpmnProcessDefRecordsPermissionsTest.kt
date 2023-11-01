@@ -25,7 +25,8 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_S
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
-import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
+import ru.citeck.ecos.process.domain.cleanDefinitions
+import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -408,6 +409,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
+    @Order(Order.DEFAULT + 1000)
     fun `deploy as system should allow`() {
         val procId = "definition-test-bpmn-process"
 
@@ -439,6 +441,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     }
 
     @Test
+    @Order(Order.DEFAULT + 1000)
     fun `deploy as user with deploy perms should allow`() {
         `when`(
             bpmnSectionPermissionsProvider.hasPermissions(
@@ -464,7 +467,8 @@ class BpmnProcessDefRecordsPermissionsTest {
     @AfterAll
     fun afterAll() {
 
-        deleteAllProcDefinitions()
+        cleanDefinitions()
+        cleanDeployments()
 
         val bpmnTypeBefore = bpmnTypeBefore
         if (bpmnTypeBefore == null) {
