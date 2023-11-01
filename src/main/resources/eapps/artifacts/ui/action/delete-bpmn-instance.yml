@@ -1,0 +1,23 @@
+---
+id: delete-bpmn-instance
+name:
+  ru: Удалить экземпляр процесса
+  en: Delete process instance
+confirm:
+  title:
+    ru: Удалить экземпляр процесса
+    en: Delete process instance
+  message: {}
+  formRef: uiserv/form@confirm-instance-delete
+  formAttributes: {}
+  attributesMapping:
+    record.attributes.skipCustomListener: skipCustomListener
+    record.attributes.skipIoMapping: skipIoMapping
+type: mutate
+config:
+  record:
+    id: '${recordRef}'
+    attributes:
+      skipCustomListener: skipCustomListener
+      skipIoMapping: skipIoMapping
+      action: DELETE
