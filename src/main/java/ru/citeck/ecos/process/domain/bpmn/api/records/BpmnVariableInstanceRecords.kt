@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -299,8 +300,13 @@ class BpmnVariableInstanceRecords(
         }
 
         @AttName(ATT_TYPE)
-        fun getType(): String {
+        fun getInstanceType(): String {
             return variableInstance.typeName
+        }
+
+        @AttName(RecordConstants.ATT_TYPE)
+        fun getType(): EntityRef {
+            return EntityRef.create("emodel", "type", "bpmn-variable-instance")
         }
 
         @AttName("scope")
