@@ -16,6 +16,7 @@ import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -29,6 +30,7 @@ import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDtoDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -317,9 +319,9 @@ class CmmnProcDefRecords(
             return mapper.read(rev.data, CmmnProcessDef::class.java)
         }
 
-        @AttName("_type")
+        @AttName(RecordConstants.ATT_TYPE)
         fun getType(): RecordRef {
-            return RecordRef.create("emodel", "type", "cmmn-process-def")
+            return RecordRef.create(AppName.EMODEL, "type", "cmmn-process-def")
         }
     }
 

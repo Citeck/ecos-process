@@ -316,7 +316,7 @@ class BpmnProcessRecords(
 
         @AttName(RecordConstants.ATT_TYPE)
         fun getType(): EntityRef {
-            return EntityRef.create("emodel", "type", "bpmn-process")
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-process")
         }
 
         @AttName("ecosDefRev")

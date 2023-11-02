@@ -610,9 +610,9 @@ class BpmnProcessDefRecords(
             error("Json representation is not supported")
         }
 
-        @AttName("_type")
+        @AttName(RecordConstants.ATT_TYPE)
         fun getType(): EntityRef {
-            return EntityRef.create("emodel", "type", "bpmn-process-def")
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-process-def")
         }
 
         @AttName("startFormRef")
@@ -685,9 +685,9 @@ class BpmnProcessDefRecords(
         val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
         val isNewRecord = id.isBlank()
 
-        @AttName("_type")
+        @AttName(RecordConstants.ATT_TYPE)
         fun getType(): EntityRef {
-            return EntityRef.create("emodel", "type", "bpmn-process-def")
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-process-def")
         }
 
         @JsonProperty("version:version")

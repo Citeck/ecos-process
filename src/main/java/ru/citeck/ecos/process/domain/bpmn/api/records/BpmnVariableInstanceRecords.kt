@@ -306,7 +306,7 @@ class BpmnVariableInstanceRecords(
 
         @AttName(RecordConstants.ATT_TYPE)
         fun getType(): EntityRef {
-            return EntityRef.create("emodel", "type", "bpmn-variable-instance")
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-variable-instance")
         }
 
         @AttName("scope")

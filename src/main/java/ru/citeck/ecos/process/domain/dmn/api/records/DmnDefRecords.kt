@@ -403,7 +403,7 @@ class DmnDefRecords(
 
         @AttName("_type")
         fun getType(): EntityRef {
-            return EntityRef.create("emodel", "type", "dmn-def")
+            return EntityRef.create(AppName.EMODEL, "type", "dmn-def")
         }
 
         @AttName(RecordConstants.ATT_CREATED)

@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmnreport.model.*
 import ru.citeck.ecos.process.domain.bpmnreport.service.ReportElementsService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import kotlin.test.assertEquals
@@ -20,7 +21,7 @@ import kotlin.test.assertEquals
 class ReportElementsServiceTest {
 
     companion object {
-        private val TEST_TYPE = EntityRef.create("emodel", "type", "bpmn-report-test-type")
+        private val TEST_TYPE = EntityRef.create(AppName.EMODEL, "type", "bpmn-report-test-type")
     }
 
     @Autowired

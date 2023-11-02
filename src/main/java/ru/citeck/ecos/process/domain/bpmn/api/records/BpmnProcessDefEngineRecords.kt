@@ -13,6 +13,7 @@ import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessStatistics
 import ru.citeck.ecos.process.domain.bpmn.service.IncidentStatistics
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
@@ -324,6 +325,11 @@ class BpmnProcessDefEngineRecords(
         @AttName(".disp")
         fun getDisp(): String {
             return key
+        }
+
+        @AttName(RecordConstants.ATT_TYPE)
+        fun getType(): EntityRef {
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-def-engine")
         }
 
         override fun getIdentificator(): String {

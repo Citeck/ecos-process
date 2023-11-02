@@ -1,0 +1,9 @@
+---
+id: bpmn-def-engine
+name:
+  en: ECOS BPMN Def engine
+  ru: ECOS BPMN Def engine
+system: true
+sourceId: eproc/bpmn-def-engine
+inheritActions: false
+defaultCreateVariant: true
