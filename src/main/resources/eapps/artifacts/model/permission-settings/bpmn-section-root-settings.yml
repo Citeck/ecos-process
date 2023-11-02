@@ -14,6 +14,7 @@ settings:
       - emodel/permission-def@bpmn-process-def-report-view
       - emodel/permission-def@bpmn-process-instance-run
       - emodel/permission-def@bpmn-process-instance-edit
+      - emodel/permission-def@bpmn-process-instance-read
       - emodel/permission-def@bpmn-process-instance-migrate
       - emodel/permission-def@bpmn-section-edit-process-def
 
