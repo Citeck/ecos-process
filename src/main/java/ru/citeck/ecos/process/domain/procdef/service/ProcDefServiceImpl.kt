@@ -13,7 +13,7 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
-import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
@@ -183,7 +183,7 @@ class ProcDefServiceImpl(
     ): ProcDefEvent {
         return ProcDefEvent(
             procDefRef = when (procType) {
-                BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)
+                BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)
                 DMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, id)
                 CmmnProcDefRecords.CMMN_PROC_TYPE -> {
                     RecordRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)

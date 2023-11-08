@@ -9,6 +9,8 @@ import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanDto
 import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanGenerationDto
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForBpmnDefEngine
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
@@ -17,7 +19,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-// TODO: permissions and tests
 @Component
 class BpmnProcessMigrationRecords(private val camundaMigrationRestService: MigrationRestService) :
     AbstractRecordsDao(),
@@ -41,7 +42,23 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
         val migrationPlanGeneration = recsQuery.getQuery(
             BpmnProcessMigrationQuery::class.java
-        ).migrationPlanGeneration ?: return null
+        ).migrationPlanGeneration ?: error("Migration plan generation is required")
+
+        check(
+            migrationPlanGeneration.sourceProcessDefinitionId.isNotBlank() &&
+                migrationPlanGeneration.targetProcessDefinitionId.isNotBlank()
+        ) {
+            "Source and target process definition ids are required"
+        }
+
+        if (!BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+                BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.sourceProcessDefinitionId)
+            ) || !BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+                    BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.targetProcessDefinitionId)
+                )
+        ) {
+            return emptyList<EntityRef>()
+        }
 
         val plan = camundaMigrationRestService.generateMigrationPlan(migrationPlanGeneration)
 
@@ -70,6 +87,20 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
             migrationData,
             MigrationExecutionDto::class.java
         )
+
+        val sourceDefEngine = migrationExecution.migrationPlan.sourceProcessDefinitionId
+        val targetDefEngine = migrationExecution.migrationPlan.targetProcessDefinitionId
+        check(
+            BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+                BpmnProcessDefEngineRecords.createRef(sourceDefEngine)
+            ) &&
+                BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+                    BpmnProcessDefEngineRecords.createRef(targetDefEngine)
+                )
+        ) {
+            "User has no permissions to migrate process instance: $sourceDefEngine to $targetDefEngine"
+        }
+
         val isAsync = record.getAtt(ATT_ASYNC).asBoolean()
 
         val batchResult = if (isAsync) {
@@ -85,12 +116,12 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
         return batchResult
     }
 
-    private enum class MutateAction {
+    enum class MutateAction {
         MIGRATE;
     }
 
-    private inner class ProcessMigrationRecord(
-        val migrationPlan: MigrationPlanDto? = null
+    data class ProcessMigrationRecord(
+        var migrationPlan: MigrationPlanDto? = null
     )
 
     data class BpmnProcessMigrationQuery(

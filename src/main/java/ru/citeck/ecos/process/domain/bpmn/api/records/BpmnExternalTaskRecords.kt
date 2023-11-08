@@ -5,6 +5,9 @@ import org.camunda.bpm.engine.ExternalTaskService
 import org.camunda.bpm.engine.externaltask.ExternalTask
 import org.camunda.bpm.engine.externaltask.ExternalTaskQuery
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -19,7 +22,6 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
-// TODO: permissions and tests
 @Component
 class BpmnExternalTaskRecords(
     private val externalTaskService: ExternalTaskService
@@ -27,10 +29,10 @@ class BpmnExternalTaskRecords(
 
     companion object {
         const val ID = "bpmn-external-task"
+        const val ATT_RETRIES = "retries"
 
         private val log = KotlinLogging.logger {}
 
-        private const val ATT_RETRIES = "retries"
         private const val ATT_ID = "id"
         private const val ATT_PRIORITY = "priority"
     }
@@ -39,8 +41,13 @@ class BpmnExternalTaskRecords(
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
-        val jobQuery = PredicateUtils.convertToDto(predicate, BpmnExternalTaskQuery::class.java)
-        if (jobQuery.bpmnProcess.getLocalId().isBlank()) {
+        val query = PredicateUtils.convertToDto(predicate, BpmnExternalTaskQuery::class.java)
+        val processId = query.bpmnProcess.getLocalId()
+        check(processId.isNotBlank()) {
+            "Process id must be specified"
+        }
+
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processId)) {
             return RecsQueryRes()
         }
 
@@ -121,6 +128,14 @@ class BpmnExternalTaskRecords(
             error("External task id is blank: $record")
         }
 
+        val externalTask = externalTaskService.createExternalTaskQuery()
+            .externalTaskId(record.id)
+            .singleResult()
+        val processInstance = externalTask.processInstanceId
+        if (!BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(processInstance)) {
+            error("User has no permissions to edit process instance: $processInstance")
+        }
+
         if (record.hasAtt(ATT_RETRIES)) {
             val retriesAtt = record.getAtt(ATT_RETRIES)
             if (retriesAtt.isIntegralNumber()) {
@@ -136,8 +151,30 @@ class BpmnExternalTaskRecords(
         return externalTaskService.createExternalTaskQuery()
             .externalTaskIdIn(recordIds.toSet())
             .list()
-            .map { ExternalTaskRecord(it) }
+            .checkPermissionAndReplaceToEmptyRecord()
+            .map {
+                when (it) {
+                    is ExternalTask -> ExternalTaskRecord(it)
+                    is EmptyIdentifiableRecord -> it
+                    else -> error("Unknown record type: $it")
+                }
+            }
             .sortByIds(recordIds)
+    }
+
+    private fun MutableList<ExternalTask>.checkPermissionAndReplaceToEmptyRecord(): MutableList<Any> {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return this.toMutableList()
+        }
+
+        return map {
+            val processInstanceId = it.processInstanceId
+            if (BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processInstanceId)) {
+                it
+            } else {
+                EmptyIdentifiableRecord(it.id)
+            }
+        }.toMutableList()
     }
 
     private inner class ExternalTaskRecord(

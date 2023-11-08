@@ -5,6 +5,9 @@ import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.runtime.Job
 import org.camunda.bpm.engine.runtime.JobQuery
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -19,9 +22,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
-import java.util.*
 
-// TODO: permissions and tests
 @Component
 class BpmnJobRecords(
     private val managementService: ManagementService
@@ -29,6 +30,7 @@ class BpmnJobRecords(
 
     companion object {
         const val ID = "bpmn-job"
+        const val ATT_JOB_DEFINITION = "jobDefinition"
 
         private val log = KotlinLogging.logger {}
 
@@ -42,7 +44,11 @@ class BpmnJobRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val jobQuery = PredicateUtils.convertToDto(predicate, BpmnJobQuery::class.java)
-        if (jobQuery.bpmnProcess.getLocalId().isBlank()) {
+        check(jobQuery.bpmnProcess.getLocalId().isNotBlank()) {
+            "Process id must be specified"
+        }
+
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(jobQuery.bpmnProcess.getLocalId())) {
             return RecsQueryRes()
         }
 
@@ -108,13 +114,45 @@ class BpmnJobRecords(
             .createJobQuery()
             .jobIds(recordIds.toSet())
             .list()
-            .map { BpmnJobRecord(it) }
+            .checkPermissionAndReplaceToEmptyRecord()
+            .map {
+                when (it) {
+                    is Job -> BpmnJobRecord(it)
+                    is EmptyIdentifiableRecord -> it
+                    else -> error("Unknown record type: $it")
+                }
+            }
             .sortByIds(recordIds)
+    }
+
+    private fun MutableList<Job>.checkPermissionAndReplaceToEmptyRecord(): MutableList<Any> {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return this.toMutableList()
+        }
+
+        return map {
+            val processInstanceId = it.processInstanceId
+            if (BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processInstanceId)) {
+                it
+            } else {
+                EmptyIdentifiableRecord(it.id)
+            }
+        }.toMutableList()
     }
 
     override fun mutate(record: LocalRecordAtts): String {
         if (record.id.isBlank()) {
             error("Job id is blank: $record")
+        }
+
+        val job = managementService.createJobQuery()
+            .jobId(record.id)
+            .singleResult()
+        check(job != null) {
+            "Job with id ${record.id} not found"
+        }
+        check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(job.processInstanceId)) {
+            "User has no permissions to edit process instance: ${job.processInstanceId}"
         }
 
         when (record.toActionEnum(MutateAction::class.java)) {
@@ -185,7 +223,7 @@ class BpmnJobRecords(
             return job.failedActivityId ?: ""
         }
 
-        @AttName("jobDefinition")
+        @AttName(ATT_JOB_DEFINITION)
         fun getJobDefinition(): EntityRef {
             return EntityRef.create(
                 AppName.EPROC,
@@ -205,7 +243,7 @@ class BpmnJobRecords(
         }
     }
 
-    private enum class MutateAction {
+    enum class MutateAction {
         SUSPEND,
         ACTIVATE
     }

@@ -42,6 +42,10 @@ class BpmnProcessDefEngineRecords(
 
         private const val KEY_ATT = "key"
         private const val VERSION_ATT = "version"
+
+        fun createRef(id: String): EntityRef {
+            return EntityRef.create(AppName.EPROC, ID, id)
+        }
     }
 
     override fun getId(): String {
@@ -185,7 +189,7 @@ class BpmnProcessDefEngineRecords(
             val deploymentIds = map { it.deploymentId }.toList()
             val ecosProcDefsWithDeploymentIds = procDefService.getProcessDefRevByDeploymentIds(deploymentIds)
             val ecosProcDefRefs = ecosProcDefsWithDeploymentIds.map {
-                EntityRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, it.procDefId)
+                EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, it.procDefId)
             }
 
             val deploymentsWithReadPerms = recordsService.getAtts(ecosProcDefRefs, HasReadPerms::class.java)
@@ -196,7 +200,7 @@ class BpmnProcessDefEngineRecords(
                 if (deploymentsWithReadPerms.contains(procDef.deploymentId)) {
                     procDef
                 } else {
-                    ProcessDefinitionEmptyEngineRecord(procDef.id)
+                    EmptyIdentifiableRecord(procDef.id)
                 }
             }.toMutableList()
         }
@@ -207,10 +211,17 @@ class BpmnProcessDefEngineRecords(
     }
 
     private class HasReadPerms {
+        var id: String? = ""
+
+        @AttName("deploymentId")
         var deploymentId: String? = ""
 
         @AttName("permissions._has.bpmn-process-instance-read?bool!")
         var hasReadInstancePerms: Boolean = false
+
+        override fun toString(): String {
+            return "HasReadPerms(id=$id, deploymentId=$deploymentId, hasReadInstancePerms=$hasReadInstancePerms)"
+        }
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
@@ -223,17 +234,9 @@ class BpmnProcessDefEngineRecords(
                 .checkPermissionsAndReplaceToEmptyRecord()
                 .map {
                     when (it) {
-                        is ProcessDefinitionEntity -> {
-                            ProcessDefinitionEngineRecord(it)
-                        }
-
-                        is ProcessDefinitionEmptyEngineRecord -> {
-                            it
-                        }
-
-                        else -> {
-                            error("Unknown record type: ${it.javaClass}")
-                        }
+                        is ProcessDefinitionEntity -> ProcessDefinitionEngineRecord(it)
+                        is EmptyIdentifiableRecord -> it
+                        else -> error("Unknown record type: ${it.javaClass}")
                     }
                 }
                 .sortByIds(recordIds)
@@ -241,14 +244,6 @@ class BpmnProcessDefEngineRecords(
 
         log.debug { "$ID get atts time: $attsTime, size: ${recordIds.size}" }
         return atts
-    }
-
-    private inner class ProcessDefinitionEmptyEngineRecord(
-        val id: String
-    ) : IdentifiableRecord {
-        override fun getIdentificator(): String {
-            return id
-        }
     }
 
     private inner class ProcessDefinitionEngineRecord(

@@ -4,6 +4,8 @@ import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.management.JobDefinition
 import org.camunda.bpm.engine.management.JobDefinitionQuery
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForBpmnDefEngine
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -15,7 +17,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-// TODO: permissions and tests
 @Component
 class BpmnJobDefRecords(
     private val managementService: ManagementService
@@ -23,6 +24,8 @@ class BpmnJobDefRecords(
 
     companion object {
         const val ID = "bpmn-job-def"
+        const val ATT_ACTIVITY_ID = "activityId"
+        const val ATT_CONFIGURATION = "configuration"
     }
 
     override fun getId() = ID
@@ -30,7 +33,11 @@ class BpmnJobDefRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val jobQuery = PredicateUtils.convertToDto(predicate, BpmnJobDefinitionQuery::class.java)
-        if (jobQuery.bpmnDefEngine.getLocalId().isBlank() && jobQuery.bpmnProcess.getLocalId().isBlank()) {
+        check(jobQuery.bpmnDefEngine.getLocalId().isNotBlank()) {
+            "Process bpmn def engine id must be specified"
+        }
+
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(jobQuery.bpmnDefEngine)) {
             return RecsQueryRes()
         }
 
@@ -69,7 +76,14 @@ class BpmnJobDefRecords(
         return managementService.createJobDefinitionQuery()
             .jobDefinitionId(recordId)
             .singleResult()?.let {
-                BpmnJobDefRecord(it)
+                if (BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(
+                        BpmnProcessDefEngineRecords.createRef(it.processDefinitionId)
+                    )
+                ) {
+                    return@let BpmnJobDefRecord(it)
+                } else {
+                    return@let null
+                }
             }
     }
 
@@ -90,7 +104,7 @@ class BpmnJobDefRecords(
             )
         }
 
-        @AttName("activityId")
+        @AttName(ATT_ACTIVITY_ID)
         fun getActivityId(): String {
             return jobDefinition.activityId ?: ""
         }
@@ -100,14 +114,13 @@ class BpmnJobDefRecords(
             return jobDefinition.jobType ?: ""
         }
 
-        @AttName("configuration")
+        @AttName(ATT_CONFIGURATION)
         fun getConfiguration(): String {
             return jobDefinition.jobConfiguration ?: ""
         }
     }
 
     data class BpmnJobDefinitionQuery(
-        var bpmnDefEngine: EntityRef = EntityRef.EMPTY,
-        var bpmnProcess: EntityRef = EntityRef.EMPTY
+        var bpmnDefEngine: EntityRef = EntityRef.EMPTY
     )
 }

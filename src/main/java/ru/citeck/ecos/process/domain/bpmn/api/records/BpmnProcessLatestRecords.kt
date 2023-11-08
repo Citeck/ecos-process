@@ -93,7 +93,7 @@ class BpmnProcessLatestRecords(
 
             EntityRef.create(
                 AppName.EPROC,
-                BPMN_PROCESS_DEF_RECORDS_SOURCE_ID,
+                BpmnProcessDefRecords.ID,
                 procDefId
             )
         },

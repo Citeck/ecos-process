@@ -1,16 +1,14 @@
 package ru.citeck.ecos.process.domain
 
 import org.camunda.bpm.engine.RepositoryService
+import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanGenerationDto
 import org.springframework.stereotype.Component
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefEngineRecords
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnVariableInstanceRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.*
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -77,7 +75,7 @@ fun saveAndDeployBpmnFromResource(resource: String, id: String) {
 }
 
 fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActions?) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = ResourceUtils.getFile("classpath:$resource")
             .readText(StandardCharsets.UTF_8)
@@ -97,7 +95,7 @@ fun uploadNewVersionFromResource(resource: String, id: String, comment: String, 
 }
 
 fun uploadNewVersion(content: String, id: String, comment: String, replace: Pair<String, String>) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)).apply {
         // Does not matter, we check field is not empty and increase major version
         this["version:version"] = "someVersion"
         this["version:comment"] = comment
@@ -109,7 +107,7 @@ fun uploadNewVersion(content: String, id: String, comment: String, replace: Pair
 }
 
 fun copyBpmnModule(id: String, moduleId: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)).apply {
         this["moduleId"] = moduleId
     }
 
@@ -122,7 +120,7 @@ fun saveBpmnWithActionAndReplaceDefinition(
     action: BpmnProcessDefActions?,
     replace: Pair<String, String>
 ) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = ResourceUtils.getFile("classpath:$resource")
             .readText(StandardCharsets.UTF_8)
@@ -137,7 +135,7 @@ fun saveBpmnWithActionAndReplaceDefinition(
 }
 
 fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "")).apply {
+    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = bpmnData
         this["action"] = BpmnProcessDefActions.DEPLOY.toString()
@@ -212,6 +210,136 @@ fun queryBpmnVariableInstances(forUser: String, processInstanceId: String): List
                 )
                 withPage(QueryPage(10_000, 0, null))
             }
+        ).getRecords()
+    }
+}
+
+fun queryCalledProcessInstancesKeys(forUser: String, processInstanceId: String): List<String> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnCalledProcessInstanceRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("bpmnProcess", processInstanceId)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            },
+            mapOf("key" to "calledProcess.key")
+        )
+            .getRecords()
+            .map {
+                it["key"].asText()
+            }
+    }
+}
+
+fun queryExternalTasks(forUser: String, processInstanceId: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnExternalTaskRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("bpmnProcess", processInstanceId)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
+}
+
+fun queryIncidentsForProcessInstance(forUser: String, processInstanceId: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnIncidentRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("bpmnProcess", processInstanceId)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
+}
+
+fun queryIncidentsForBpmnDefEngine(forUser: String, processDefEngineId: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnIncidentRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("bpmnDefEngine", processDefEngineId)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
+}
+
+fun queryBpmnJobs(forUser: String, processInstanceId: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnJobRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("bpmnProcess", processInstanceId)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
+}
+
+fun queryBpmnJobDefs(forUser: String, processDefEngineId: String): List<EntityRef> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnJobDefRecords.ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("bpmnDefEngine", processDefEngineId)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            }
+        ).getRecords()
+    }
+}
+
+fun queryMigrationPlan(
+    forUser: String,
+    sourceProcessDefinitionId: String,
+    targetProcessDefinitionId: String
+): List<BpmnProcessMigrationRecords.ProcessMigrationRecord> {
+    return AuthContext.runAs(forUser) {
+        helper.recordsService.query(
+            RecordsQuery.create {
+                withSourceId(BpmnProcessMigrationRecords.ID)
+                withQuery(
+                    BpmnProcessMigrationRecords.BpmnProcessMigrationQuery(
+                        MigrationPlanGenerationDto().apply {
+                            this.sourceProcessDefinitionId = sourceProcessDefinitionId
+                            this.targetProcessDefinitionId = targetProcessDefinitionId
+                        }
+                    )
+                )
+            },
+            BpmnProcessMigrationRecords.ProcessMigrationRecord::class.java
         ).getRecords()
     }
 }

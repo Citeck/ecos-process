@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.apache.commons.lang3.LocaleUtils
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -86,6 +87,16 @@ class BpmnProcessArtifactHandlerTest {
         val revision = revisions.first()
 
         assertEquals(ProcDefRevDataState.CONVERTED, revision.dataState)
+    }
+
+    @Test
+    fun `loaded process should save revision with deployment id`() {
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+
+        val revision = revisions.first()
+
+        assertNotNull(revision.deploymentId)
+        assertThat(revision.deploymentId).isNotBlank()
     }
 
     @Test

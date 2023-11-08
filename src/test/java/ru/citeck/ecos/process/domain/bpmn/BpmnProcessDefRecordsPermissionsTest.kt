@@ -21,7 +21,6 @@ import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelperJava
-import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
@@ -89,7 +88,7 @@ class BpmnProcessDefRecordsPermissionsTest {
         private const val USER_WITHOUT_PERMS = "userWithoutPerms"
 
         private val queryAllProcDefs = RecordsQuery.create {
-            withSourceId(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID)
+            withSourceId(BpmnProcessDefRecords.ID)
             withLanguage(PredicateService.LANGUAGE_PREDICATE)
             withQuery(Predicates.alwaysTrue())
         }
@@ -294,7 +293,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     fun `get att as system should allow`() {
         AuthContext.runAsSystem {
             val def = recordsService.getAtt(
-                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                EntityRef.create(BpmnProcessDefRecords.ID, "def-1"),
                 "definition"
             ).asText()
 
@@ -306,7 +305,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     fun `get att without auth should deny`() {
         AuthContext.runAs(EmptyAuth) {
             val def = recordsService.getAtt(
-                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                EntityRef.create(BpmnProcessDefRecords.ID, "def-1"),
                 "definition"
             ).asText()
 
@@ -319,7 +318,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     fun `get att with read perms user should allow`(user: String) {
         AuthContext.runAs(user = USER_WITH_READ_PERMS) {
             val def = recordsService.getAtt(
-                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                EntityRef.create(BpmnProcessDefRecords.ID, "def-1"),
                 "definition"
             ).asText()
 
@@ -331,7 +330,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     fun `get att as user without read perms should deny`() {
         AuthContext.runAs(user = USER_WITHOUT_PERMS) {
             val def = recordsService.getAtt(
-                EntityRef.create(BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, "def-1"),
+                EntityRef.create(BpmnProcessDefRecords.ID, "def-1"),
                 "definition"
             ).asText()
 

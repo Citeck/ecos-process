@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.service.CalledProcessInstanceMeta
 import ru.citeck.ecos.process.domain.bpmn.service.SuspensionState
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -14,7 +16,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-// TODO: permissions and tests
 @Component
 class BpmnCalledProcessInstanceRecords(
     private val bpmnProcessService: BpmnProcessService
@@ -30,8 +31,12 @@ class BpmnCalledProcessInstanceRecords(
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val query = PredicateUtils.convertToDto(predicate, BpmnCalledProcessInstanceQuery::class.java)
         val processId = query.bpmnProcess.getLocalId()
-        if (processId.isBlank()) {
-            return RecsQueryRes<CalledProcessInstanceRecord>()
+        check(processId.isNotBlank()) {
+            "Process id must be specified"
+        }
+
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processId)) {
+            return RecsQueryRes<Any>()
         }
 
         val instances = bpmnProcessService.getCalledProcessInstancesMeta(processId)
@@ -64,7 +69,7 @@ class BpmnCalledProcessInstanceRecords(
 
         @AttName("bpmnDefEngine")
         fun getBpmnDefEngine(): EntityRef {
-            return EntityRef.create(AppName.EPROC, BpmnProcessDefEngineRecords.ID, instanceMeta.processDefinitionId)
+            return BpmnProcessDefEngineRecords.createRef(instanceMeta.processDefinitionId)
         }
 
         @AttName("callActivityId")

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_egVtHSQ" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:workingCopySourceRef="" ecos:name_ml="{}" ecos:formRef="uiserv/form@test-start-process-form" ecos:sectionRef="eproc/bpmn-section@DEFAULT" ecos:enabled="true" ecos:autoStartEnabled="false" ecos:defState="CONVERTED" ecos:processDefId="test-process-perms-katya" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="test-process-perms-katya">
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_test" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_1fnq13m</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:endEvent name="" id="Event_end" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_1xeimwk</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_test" targetRef="Activity_called_root_katya" name="" id="Flow_1fnq13m" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_called_root_katya" targetRef="Event_end" name="" id="Flow_1xeimwk" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:callActivity name="" id="Activity_called_root_katya" ecos:documentation="{}" ecos:outVariablePropagation="{&quot;propagateAllVariable&quot;:false,&quot;local&quot;:false,&quot;variables&quot;:[]}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:processRef="" ecos:calledElement="test-process-perms-katya-1" ecos:processBinding="LATEST" ecos:inVariablePropagation="{&quot;propagateAllVariable&quot;:false,&quot;local&quot;:false,&quot;variables&quot;:[]}">
+            <bpmn:incoming >Flow_1fnq13m</bpmn:incoming>
+            <bpmn:outgoing >Flow_1xeimwk</bpmn:outgoing>
+        </bpmn:callActivity>
+    </bpmn:process>
+    <bpmn:process isExecutable="true" id="test-process-perms-katya-1">
+        <bpmn:startEvent isInterrupting="true" name="" id="Event_1flgu2u" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_1mibcgb</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:parallelGateway name="" id="Gateway_1jjjyxb" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_1mibcgb</bpmn:incoming>
+            <bpmn:outgoing >Flow_1kh4098</bpmn:outgoing>
+            <bpmn:outgoing >Flow_1fwlx48</bpmn:outgoing>
+            <bpmn:outgoing >Flow_0t2vesf</bpmn:outgoing>
+            <bpmn:outgoing >Flow_1ody8o9</bpmn:outgoing>
+        </bpmn:parallelGateway>
+        <bpmn:endEvent name="" id="Event_17wl87m" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_0tyihmm</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:parallelGateway name="" id="Gateway_test2" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_13x2vc8</bpmn:incoming>
+            <bpmn:incoming >Flow_0klo0dz</bpmn:incoming>
+            <bpmn:incoming >Flow_0nqy2zn</bpmn:incoming>
+            <bpmn:incoming >Flow_0kb7u6a</bpmn:incoming>
+            <bpmn:outgoing >Flow_0tyihmm</bpmn:outgoing>
+        </bpmn:parallelGateway>
+        <bpmn:scriptTask scriptFormat="javascript" name="" id="Activity_12y8bwa" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="throw new Error(&quot;error from script 1&quot;);">
+            <bpmn:incoming >Flow_1m7e8w8</bpmn:incoming>
+            <bpmn:outgoing >Flow_0klo0dz</bpmn:outgoing>
+            <bpmn:script>throw new Error("error from script 1");</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:sequenceFlow sourceRef="Event_1flgu2u" targetRef="Gateway_1jjjyxb" name="" id="Flow_1mibcgb" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Gateway_1jjjyxb" targetRef="Activity_katya_external_task" name="" id="Flow_1kh4098" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Gateway_1jjjyxb" targetRef="Event_job_1_katya" name="" id="Flow_1fwlx48" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Gateway_test2" targetRef="Event_17wl87m" name="" id="Flow_0tyihmm" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_katya_external_task" targetRef="Gateway_test2" name="" id="Flow_13x2vc8" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_12y8bwa" targetRef="Gateway_test2" name="" id="Flow_0klo0dz" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Event_job_1_katya" targetRef="Activity_12y8bwa" name="" id="Flow_1m7e8w8" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:intermediateCatchEvent name="" id="Event_job_1_katya" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:timeConfig="{&quot;type&quot;:&quot;DURATION&quot;,&quot;value&quot;:&quot;PT7S&quot;}">
+            <bpmn:incoming >Flow_1fwlx48</bpmn:incoming>
+            <bpmn:outgoing >Flow_1m7e8w8</bpmn:outgoing>
+            <bpmn:timerEventDefinition id="TimerEventDefinition_0pguuak">
+                <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT7S</bpmn:timeDuration>
+            </bpmn:timerEventDefinition>
+        </bpmn:intermediateCatchEvent>
+        <bpmn:sequenceFlow sourceRef="Gateway_1jjjyxb" targetRef="Activity_0ke3krz" name="" id="Flow_0t2vesf" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_0ke3krz" targetRef="Gateway_test2" name="" id="Flow_0nqy2zn" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Gateway_1jjjyxb" targetRef="Activity_179hkgg" name="" id="Flow_1ody8o9" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_179hkgg" targetRef="Gateway_test2" name="" id="Flow_0kb7u6a" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:serviceTask name="" id="Activity_katya_external_task" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:externalTaskTopic="test-admin-error-task" ecos:serviceTaskType="EXTERNAL">
+            <bpmn:incoming >Flow_1kh4098</bpmn:incoming>
+            <bpmn:outgoing >Flow_13x2vc8</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:callActivity name="" id="Activity_0ke3krz" ecos:documentation="{}" ecos:outVariablePropagation="{&quot;propagateAllVariable&quot;:false,&quot;local&quot;:false,&quot;variables&quot;:[]}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:processRef="" ecos:calledElement="test-process-perms-katya-2" ecos:processBinding="LATEST" ecos:inVariablePropagation="{&quot;propagateAllVariable&quot;:false,&quot;local&quot;:false,&quot;variables&quot;:[]}">
+            <bpmn:incoming >Flow_0t2vesf</bpmn:incoming>
+            <bpmn:outgoing >Flow_0nqy2zn</bpmn:outgoing>
+        </bpmn:callActivity>
+        <bpmn:scriptTask scriptFormat="javascript" name="" id="Activity_179hkgg" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="execution.getProcessEngineServices().getRuntimeService().createIncident(&quot;testType&quot;, execution.getId(), &quot;&quot;, &quot;Test inc from script&quot;);">
+            <bpmn:incoming >Flow_1ody8o9</bpmn:incoming>
+            <bpmn:outgoing >Flow_0kb7u6a</bpmn:outgoing>
+            <bpmn:script>execution.getProcessEngineServices().getRuntimeService().createIncident("testType", execution.getId(), "", "Test inc from script");</bpmn:script>
+        </bpmn:scriptTask>
+    </bpmn:process>
+    <bpmn:process isExecutable="true" id="test-process-perms-katya-2">
+        <bpmn:startEvent isInterrupting="true" name="" id="Event_1xgk7ra" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_1fk2n7p</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:endEvent name="" id="Event_0mdhviw" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_0bqb2ib</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:scriptTask scriptFormat="javascript" name="" id="Activity_11bkdvk" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="throw new Error(&quot;error from script 3 lvl&quot;);">
+            <bpmn:incoming >Flow_10v6wtq</bpmn:incoming>
+            <bpmn:outgoing >Flow_0bqb2ib</bpmn:outgoing>
+            <bpmn:script>throw new Error("error from script 3 lvl");</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:intermediateCatchEvent name="" id="Event_job_2_katya" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:timeConfig="{&quot;type&quot;:&quot;DATE&quot;,&quot;value&quot;:&quot;PT7S&quot;}">
+            <bpmn:incoming >Flow_1fk2n7p</bpmn:incoming>
+            <bpmn:outgoing >Flow_10v6wtq</bpmn:outgoing>
+            <bpmn:timerEventDefinition id="TimerEventDefinition_15mmtp3">
+                <bpmn:timeDate xsi:type="bpmn:tFormalExpression">PT7S</bpmn:timeDate>
+            </bpmn:timerEventDefinition>
+        </bpmn:intermediateCatchEvent>
+        <bpmn:sequenceFlow sourceRef="Event_1xgk7ra" targetRef="Event_job_2_katya" name="" id="Flow_1fk2n7p" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_11bkdvk" targetRef="Event_0mdhviw" name="" id="Flow_0bqb2ib" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Event_job_2_katya" targetRef="Activity_11bkdvk" name="" id="Flow_10v6wtq" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+    </bpmn:process>
+    <bpmn:collaboration id="Collaboration_02i3uuw">
+        <bpmn:participant  name="" processRef="test-process-perms-katya" id="Participant_08e2bbq" ecos:documentation="{}" ecos:name_ml="{}" ecos:ecosType=""/>
+        <bpmn:participant  name="" processRef="test-process-perms-katya-1" id="Participant_1w1wps3" ecos:documentation="{}" ecos:name_ml="{}" ecos:ecosType=""/>
+        <bpmn:participant  name="" processRef="test-process-perms-katya-2" id="Participant_07i92wb" ecos:documentation="{}" ecos:name_ml="{}" ecos:ecosType=""/>
+    </bpmn:collaboration>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="Collaboration_02i3uuw" id="BPMNPlane_1">
+            <bpmndi:BPMNShape bpmnElement="Participant_08e2bbq" isExpanded="true" id="Participant_08e2bbq_di">
+                <dc:Bounds x="102.0" y="39.0" width="610.0" height="250.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="StartEvent_test" isExpanded="true" id="StartEvent_test_di">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_end" isExpanded="true" id="Event_end_di">
+                <dc:Bounds x="652.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_called_root_katya" isExpanded="true" id="Activity_called_root_katya_di">
+                <dc:Bounds x="380.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1fnq13m" id="Flow_1fnq13m_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="380.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1xeimwk" id="Flow_1xeimwk_di">
+                <di:waypoint x="480.0" y="99.0"/>
+                <di:waypoint x="652.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="Participant_1w1wps3" isExpanded="true" id="Participant_1w1wps3_di">
+                <dc:Bounds x="110.0" y="390.0" width="658.0" height="910.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_1flgu2u" isExpanded="true" id="Event_1flgu2u_di">
+                <dc:Bounds x="200.0" y="832.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Gateway_1jjjyxb" isExpanded="true" id="Gateway_0y16502_di">
+                <dc:Bounds x="283.0" y="825.0" width="50.0" height="50.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_17wl87m" isExpanded="true" id="Event_17wl87m_di">
+                <dc:Bounds x="640.0" y="832.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Gateway_test2" isExpanded="true" id="Gateway_test2_di">
+                <dc:Bounds x="553.0" y="825.0" width="50.0" height="50.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_12y8bwa" isExpanded="true" id="Activity_1wuhd9q_di">
+                <dc:Bounds x="398.0" y="680.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_job_1_katya" isExpanded="true" id="Event_0wl4wv6_di">
+                <dc:Bounds x="332.0" y="702.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_katya_external_task" isExpanded="true" id="Activity_1qaw6zs_di">
+                <dc:Bounds x="398.0" y="810.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_0ke3krz" isExpanded="true" id="Activity_0rb15xo_di">
+                <dc:Bounds x="398.0" y="940.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_179hkgg" isExpanded="true" id="Activity_0ypl8go_di">
+                <dc:Bounds x="398.0" y="1070.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1mibcgb" id="Flow_1mibcgb_di">
+                <di:waypoint x="236.0" y="850.0"/>
+                <di:waypoint x="283.0" y="850.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1kh4098" id="Flow_1kh4098_di">
+                <di:waypoint x="333.0" y="850.0"/>
+                <di:waypoint x="398.0" y="850.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1fwlx48" id="Flow_1fwlx48_di">
+                <di:waypoint x="308.0" y="825.0"/>
+                <di:waypoint x="308.0" y="720.0"/>
+                <di:waypoint x="332.0" y="720.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0tyihmm" id="Flow_0tyihmm_di">
+                <di:waypoint x="603.0" y="850.0"/>
+                <di:waypoint x="640.0" y="850.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_13x2vc8" id="Flow_13x2vc8_di">
+                <di:waypoint x="498.0" y="850.0"/>
+                <di:waypoint x="553.0" y="850.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0klo0dz" id="Flow_0klo0dz_di">
+                <di:waypoint x="498.0" y="720.0"/>
+                <di:waypoint x="578.0" y="720.0"/>
+                <di:waypoint x="578.0" y="825.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1m7e8w8" id="Flow_1m7e8w8_di">
+                <di:waypoint x="368.0" y="720.0"/>
+                <di:waypoint x="398.0" y="720.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0t2vesf" id="Flow_0t2vesf_di">
+                <di:waypoint x="308.0" y="875.0"/>
+                <di:waypoint x="308.0" y="980.0"/>
+                <di:waypoint x="398.0" y="980.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0nqy2zn" id="Flow_0nqy2zn_di">
+                <di:waypoint x="498.0" y="980.0"/>
+                <di:waypoint x="578.0" y="980.0"/>
+                <di:waypoint x="578.0" y="875.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1ody8o9" id="Flow_1ody8o9_di">
+                <di:waypoint x="308.0" y="875.0"/>
+                <di:waypoint x="308.0" y="1110.0"/>
+                <di:waypoint x="398.0" y="1110.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0kb7u6a" id="Flow_0kb7u6a_di">
+                <di:waypoint x="498.0" y="1110.0"/>
+                <di:waypoint x="578.0" y="1110.0"/>
+                <di:waypoint x="578.0" y="875.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="Participant_07i92wb" isExpanded="true" id="Participant_07i92wb_di">
+                <dc:Bounds x="110.0" y="1420.0" width="600.0" height="250.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_1xgk7ra" isExpanded="true" id="Event_1xgk7ra_di">
+                <dc:Bounds x="202.0" y="1512.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0mdhviw" isExpanded="true" id="Event_0mdhviw_di">
+                <dc:Bounds x="642.0" y="1512.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_11bkdvk" isExpanded="true" id="Activity_1g2y0ef_di">
+                <dc:Bounds x="430.0" y="1490.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_job_2_katya" isExpanded="true" id="Event_0siw5z3_di">
+                <dc:Bounds x="322.0" y="1512.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1fk2n7p" id="Flow_1fk2n7p_di">
+                <di:waypoint x="238.0" y="1530.0"/>
+                <di:waypoint x="322.0" y="1530.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0bqb2ib" id="Flow_0bqb2ib_di">
+                <di:waypoint x="530.0" y="1530.0"/>
+                <di:waypoint x="642.0" y="1530.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_10v6wtq" id="Flow_10v6wtq_di">
+                <di:waypoint x="358.0" y="1530.0"/>
+                <di:waypoint x="430.0" y="1530.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>
