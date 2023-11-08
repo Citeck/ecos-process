@@ -27,6 +27,27 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "disabled",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "const formMode = _.get(instance, 'options.formMode');\nresult = formMode === 'EDIT';"
+                },
+                "actions": [
+                  {
+                    "name": "disabled",
+                    "type": "property",
+                    "property": {
+                      "label": "Disabled",
+                      "value": "disabled",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
             "type": "textfield",
             "input": true,
             "inputMasks": [
