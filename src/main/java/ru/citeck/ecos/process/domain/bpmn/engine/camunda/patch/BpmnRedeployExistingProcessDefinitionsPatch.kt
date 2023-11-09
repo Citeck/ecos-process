@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -66,7 +65,7 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
                     imageBytes = null
                 )
 
-                recordsService.mutate("${AppName.EPROC}/$BPMN_PROCESS_DEF_RECORDS_SOURCE_ID@", bpmnMutateRecord)
+                recordsService.mutate("${AppName.EPROC}/${BpmnProcessDefRecords.ID}@", bpmnMutateRecord)
             }
 
         return "Redeployed ${defs.size} process definitions"

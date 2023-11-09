@@ -6,7 +6,11 @@ import org.camunda.bpm.engine.runtime.Incident
 import org.camunda.bpm.engine.runtime.IncidentQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForBpmnDefEngine
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -23,7 +27,6 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import kotlin.system.measureTimeMillis
 
-// TODO: permissions and tests
 @Component
 class BpmnIncidentRecords(
     private val camundaRuntimeService: RuntimeService
@@ -36,11 +39,11 @@ class BpmnIncidentRecords(
         private val log = KotlinLogging.logger {}
 
         const val ID = "bpmn-incident"
+        const val ATT_NOTE = "note"
 
         private const val ATT_PROCESS_INSTANCE = "processInstance"
         private const val ATT_ACTIVITY_ID = "activityId"
         private const val ATT_INCIDENT_TYPE = "incidentType"
-        private const val ATT_NOTE = "note"
     }
 
     override fun getId() = ID
@@ -48,6 +51,16 @@ class BpmnIncidentRecords(
     override fun mutate(record: LocalRecordAtts): String {
         if (record.id.isBlank()) {
             error("Incident id is blank: $record")
+        }
+
+        val incident = camundaRuntimeService.createIncidentQuery()
+            .incidentId(record.id)
+            .singleResult()
+        check(incident != null) {
+            "Incident with id ${record.id} not found"
+        }
+        check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(incident.processInstanceId)) {
+            "User has no permission to edit process instance ${incident.processInstanceId}"
         }
 
         if (record.hasAtt(ATT_NOTE)) {
@@ -61,7 +74,23 @@ class BpmnIncidentRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val query = PredicateUtils.convertToDto(predicate, BpmnIncidentQuery::class.java)
-        if (query.bpmnDefEngine.getLocalId().isBlank() && query.bpmnProcess.getLocalId().isBlank()) {
+        check(query.bpmnDefEngine.getLocalId().isNotBlank() || query.bpmnProcess.getLocalId().isNotBlank()) {
+            "Process id or definition id must be specified"
+        }
+
+        val hasReadPerms = let {
+            if (AuthContext.isRunAsSystemOrAdmin()) {
+                return@let true
+            }
+
+            val procId = query.bpmnProcess.getLocalId()
+            if (procId.isNotBlank()) {
+                BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(procId)
+            } else {
+                BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(query.bpmnDefEngine)
+            }
+        }
+        if (!hasReadPerms) {
             return RecsQueryRes()
         }
 
@@ -144,6 +173,10 @@ class BpmnIncidentRecords(
         val incident = camundaRuntimeService.createIncidentQuery()
             .incidentId(recordId)
             .singleResult()
+
+        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(incident.processInstanceId)) {
+            return null
+        }
 
         return incident?.let { IncidentRecord(it) }
     }

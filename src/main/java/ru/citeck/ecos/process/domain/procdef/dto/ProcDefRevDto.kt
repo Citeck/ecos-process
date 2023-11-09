@@ -58,7 +58,7 @@ data class ProcDefRevDto(
     val data: ByteArray by lazy { initialData ?: dataProvider.getData(this) }
 
     override fun toString(): String {
-        return "ProcDefRevDto(id=$id, format=$format, image=${image?.contentToString()}, procDefId=$procDefId, " +
+        return "ProcDefRevDto(id=$id, format=$format, procDefId=$procDefId, " +
             "created=$created, createdBy=$createdBy, deploymentId=$deploymentId, version=$version)"
     }
 }

@@ -60,8 +60,6 @@ import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
 
-const val BPMN_PROCESS_DEF_RECORDS_SOURCE_ID = "bpmn-def"
-
 @Component
 class BpmnProcessDefRecords(
     private val bpmnMutateDataProcessor: BpmnMutateDataProcessor,
@@ -80,6 +78,7 @@ class BpmnProcessDefRecords(
     RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
+        const val ID = "bpmn-def"
 
         private const val APP_NAME = AppName.EPROC
         private const val QUERY_BATCH_SIZE = 100
@@ -91,7 +90,7 @@ class BpmnProcessDefRecords(
         private val log = KotlinLogging.logger {}
     }
 
-    override fun getId() = BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+    override fun getId() = ID
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
 
@@ -207,7 +206,7 @@ class BpmnProcessDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return EntityRef.create(APP_NAME, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, this)
+        return EntityRef.create(APP_NAME, BpmnProcessDefRecords.ID, this)
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {
@@ -601,6 +600,12 @@ class BpmnProcessDefRecords(
             }
         }
 
+        @AttName("revisionId")
+        fun revisionId(): String {
+            return procDef.revisionId.toString()
+        }
+
+        @AttName("deploymentId")
         fun getDeploymentId(): String {
             return revision?.deploymentId ?: ""
         }
@@ -658,7 +663,7 @@ class BpmnProcessDefRecords(
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(EprocApp.NAME, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id).toString()
+            val ref = EntityRef.create(EprocApp.NAME, BpmnProcessDefRecords.ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }

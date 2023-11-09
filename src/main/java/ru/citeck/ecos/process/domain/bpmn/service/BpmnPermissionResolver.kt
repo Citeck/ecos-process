@@ -17,7 +17,6 @@ class BpmnPermissionResolver(
     private fun init() {
         bpmnPermissionResolver = this
     }
-
 }
 
 private lateinit var bpmnPermissionResolver: BpmnPermissionResolver

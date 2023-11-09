@@ -41,9 +41,7 @@ import java.time.Instant
 class BpmnProcessRecords(
     private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService,
-    private val camundaProcessInstanceRestService: ProcessInstanceRestService,
-    private val bpmnProcessDefFinder: BpmnProcessDefFinder,
-    private val bpmnPermissionResolver: BpmnPermissionResolver
+    private val camundaProcessInstanceRestService: ProcessInstanceRestService
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordsQueryDao,
@@ -343,7 +341,7 @@ class BpmnProcessRecords(
         @AttName("bpmnDefEngine")
         fun getBpmnDefEngine(): EntityRef {
             return processDefinition?.id?.takeIf { it.isNotBlank() }
-                ?.let { EntityRef.create(AppName.EPROC, BpmnProcessDefEngineRecords.ID, it) }
+                ?.let { BpmnProcessDefEngineRecords.createRef(it) }
                 ?: EntityRef.EMPTY
         }
 

@@ -4,6 +4,8 @@ import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.history.HistoricActivityInstance
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -23,6 +25,10 @@ class BpmnHistoricActivityInstanceRecords(
         val activityInstance: HistoricActivityInstance = camundaHistoryService.createHistoricActivityInstanceQuery()
             .activityInstanceId(recordId)
             .singleResult() ?: error("Activity instance with id $recordId not found")
+
+        check(BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(activityInstance.processInstanceId)) {
+            "User has no permission to read process instance ${activityInstance.processInstanceId}"
+        }
 
         return ActivityInstanceRecord(activityInstance)
     }

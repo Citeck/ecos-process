@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn
 
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.RuntimeService
+import org.camunda.bpm.engine.rest.dto.migration.MigrationExecutionDto
 import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
@@ -24,9 +25,7 @@ import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnVariableInstanceRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
@@ -83,8 +82,11 @@ class BpmnProcessPermissionsTest {
 
         private const val TEST_ATT_STR = "testStr"
 
-        private const val IVAN_PROCESS_ID = "test-bpmn-process-perms-user-ivan"
-        private const val KATYA_PROCESS_ID = "test-bpmn-process-perms-user-katya"
+        private const val IVAN_PROCESS_ID = "test-process-perms-ivan"
+        private const val KATYA_PROCESS_ID = "test-process-perms-katya"
+
+        private const val IVAN_JOBS_DEFINITION = "PT5S"
+        private const val KATYA_JOBS_DEFINITION = "PT7S"
     }
 
     @BeforeEach
@@ -189,6 +191,8 @@ class BpmnProcessPermissionsTest {
         )
     }
 
+    // --- PROCESS INSTANCES ---
+
     @Test
     fun `allow query process instance only with bpmn def engine`() {
         assertThrows<IllegalStateException> {
@@ -229,7 +233,7 @@ class BpmnProcessPermissionsTest {
             queryProcessInstances(procDefEngineRef, "system")
         }
 
-        assertThat(allProcesses).hasSize(2)
+        assertThat(allProcesses).hasSize(6)
     }
 
     @Test
@@ -242,11 +246,11 @@ class BpmnProcessPermissionsTest {
         val requestedKeysByIvan = AuthContext.runAs(USER_IVAN) {
             getKeysFromProcInstances(allProcesses)
         }
-        assertThat(requestedKeysByIvan).hasSize(2)
+        assertThat(requestedKeysByIvan).hasSize(6)
         val ivanNotEmptyKeys = requestedKeysByIvan.filter {
             it.isNotBlank()
         }
-        assertThat(ivanNotEmptyKeys).hasSize(1)
+        assertThat(ivanNotEmptyKeys).hasSize(3)
         assertThat(ivanNotEmptyKeys).allMatch {
             it.contains("ivan")
         }
@@ -254,11 +258,11 @@ class BpmnProcessPermissionsTest {
         val requestedKeysByKatya = AuthContext.runAs(USER_KATYA) {
             getKeysFromProcInstances(allProcesses)
         }
-        assertThat(requestedKeysByKatya).hasSize(2)
+        assertThat(requestedKeysByKatya).hasSize(6)
         val katyaNotEmptyKeys = requestedKeysByKatya.filter {
             it.isNotBlank()
         }
-        assertThat(katyaNotEmptyKeys).hasSize(1)
+        assertThat(katyaNotEmptyKeys).hasSize(3)
         assertThat(katyaNotEmptyKeys).allMatch {
             it.contains("katya")
         }
@@ -266,7 +270,7 @@ class BpmnProcessPermissionsTest {
         val requestedKeysByWithoutPerms = AuthContext.runAs(USER_WITHOUT_PERMS) {
             getKeysFromProcInstances(allProcesses)
         }
-        assertThat(requestedKeysByWithoutPerms).hasSize(2)
+        assertThat(requestedKeysByWithoutPerms).hasSize(6)
         assertThat(requestedKeysByWithoutPerms).allMatch {
             it.isBlank()
         }
@@ -511,11 +515,11 @@ class BpmnProcessPermissionsTest {
                       "instructions": [
                         {
                           "type": "cancel",
-                          "activityId": "Activity_user_task"
+                          "activityId": "Activity_called_root_ivan"
                         },
                         {
                           "type": "startBeforeActivity",
-                          "activityId": "Event_end_process"
+                          "activityId": "Event_end"
                         }
                       ]
                     }
@@ -553,11 +557,11 @@ class BpmnProcessPermissionsTest {
                       "instructions": [
                         {
                           "type": "cancel",
-                          "activityId": "Activity_user_task"
+                          "activityId": "Activity_called_root_katya"
                         },
                         {
                           "type": "startBeforeActivity",
-                          "activityId": "Event_end_process"
+                          "activityId": "Event_end"
                         }
                       ]
                     }
@@ -572,6 +576,7 @@ class BpmnProcessPermissionsTest {
         }
     }
 
+    // --- BPMN VARIABLE INSTANCE ---
     @Test
     fun `query variables instances without process instance id should throw exception`() {
         assertThrows<IllegalStateException> {
@@ -690,12 +695,6 @@ class BpmnProcessPermissionsTest {
 
         val newValue = UUID.randomUUID().toString()
 
-        queryBpmnVariableInstances("system", ivanProcessInstanceRef.getLocalId())
-            .forEach {
-                val value = recordsService.getAtts(it, listOf("type", "value", "name"))
-                println("============= value = $value")
-            }
-
         val updateAtts = RecordAtts(
             EntityRef.create(
                 AppName.EPROC,
@@ -739,6 +738,630 @@ class BpmnProcessPermissionsTest {
         }
     }
 
+    // --- BPMN CALLED PROCESS INSTANCE ---
+    @Test
+    fun `query called process instances without process instance id should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryCalledProcessInstancesKeys("system", "")
+        }
+    }
+
+    @Test
+    fun `user should see called process instances only with his permissions`() {
+        val ivanCalledProcessesKeys = queryCalledProcessInstancesKeys(USER_IVAN, ivanProcessInstanceRef.getLocalId())
+        assertThat(ivanCalledProcessesKeys).hasSize(1)
+        assertThat(ivanCalledProcessesKeys[0]).isEqualTo("test-process-perms-ivan-1")
+
+        val katyaCalledProcessesKeys = queryCalledProcessInstancesKeys(USER_KATYA, katyaProcessInstanceRef.getLocalId())
+        assertThat(katyaCalledProcessesKeys).hasSize(1)
+        assertThat(katyaCalledProcessesKeys[0]).isEqualTo("test-process-perms-katya-1")
+    }
+
+    @Test
+    fun `user without perms should not see called process instances`() {
+        val withoutPermsIvanCalledProcessesKeys = queryCalledProcessInstancesKeys(
+            USER_WITHOUT_PERMS,
+            ivanProcessInstanceRef.getLocalId()
+        )
+        assertThat(withoutPermsIvanCalledProcessesKeys).isEmpty()
+
+        val withoutPermsKatyaCalledProcessesKeys = queryCalledProcessInstancesKeys(
+            USER_WITHOUT_PERMS,
+            katyaProcessInstanceRef.getLocalId()
+        )
+        assertThat(withoutPermsKatyaCalledProcessesKeys).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all called process instances`() {
+        val systemIvanCalledProcessesKeys = queryCalledProcessInstancesKeys(
+            "system",
+            ivanProcessInstanceRef.getLocalId()
+        )
+        assertThat(systemIvanCalledProcessesKeys).hasSize(1)
+        assertThat(systemIvanCalledProcessesKeys[0]).isEqualTo("test-process-perms-ivan-1")
+
+        val systemKatyaCalledProcessesKeys =
+            queryCalledProcessInstancesKeys(
+                "system",
+                katyaProcessInstanceRef.getLocalId()
+            )
+        assertThat(systemKatyaCalledProcessesKeys).hasSize(1)
+        assertThat(systemKatyaCalledProcessesKeys[0]).isEqualTo("test-process-perms-katya-1")
+    }
+
+    // --- BPMN EXTERNAL TASK ---
+    @Test
+    fun `query external task without process instance id should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryExternalTasks("system", "")
+        }
+    }
+
+    @Test
+    fun `user should see external tasks only with his permissions`() {
+        val allIvanExternalTasks = queryAllExternalTaskForUser(USER_IVAN)
+
+        assertThat(allIvanExternalTasks).hasSize(1)
+        val ivanExternalTaskActivityId = recordsService.getAtt(allIvanExternalTasks[0], "activityId").asText()
+        assertThat(ivanExternalTaskActivityId).isEqualTo("Activity_ivan_external_task")
+
+        val allKatyaExternalTasks = queryAllExternalTaskForUser(USER_KATYA)
+
+        assertThat(allKatyaExternalTasks).hasSize(1)
+        val katyaExternalTaskActivityId = recordsService.getAtt(allKatyaExternalTasks[0], "activityId").asText()
+        assertThat(katyaExternalTaskActivityId).isEqualTo("Activity_katya_external_task")
+    }
+
+    @Test
+    fun `user without perms should not see external tasks`() {
+        val allWithoutPermsExternalTasks = queryAllExternalTaskForUser(USER_WITHOUT_PERMS)
+        assertThat(allWithoutPermsExternalTasks).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all external tasks`() {
+        val allSystemExternalTasks = queryAllExternalTaskForUser("system")
+        assertThat(allSystemExternalTasks).hasSize(2)
+    }
+
+    @Test
+    fun `user should see attributes of external tasks only with his permissions`() {
+        val allIvanExternalTasks = queryAllExternalTaskForUser(USER_IVAN)
+        val allKatyaExternalTasks = queryAllExternalTaskForUser(USER_KATYA)
+
+        val ivanExternalTaskActivityIds = AuthContext.runAs(USER_IVAN) {
+            getActivityIdsFromExternalTasks(allIvanExternalTasks)
+        }
+        assertThat(ivanExternalTaskActivityIds.filter { it.isNotBlank() }).hasSize(1)
+
+        val katyaExternalTaskActivityIds = AuthContext.runAs(USER_KATYA) {
+            getActivityIdsFromExternalTasks(allKatyaExternalTasks)
+        }
+        assertThat(katyaExternalTaskActivityIds.filter { it.isNotBlank() }).hasSize(1)
+
+        val ivanRequestKatyaExternalTaskActivityIds = AuthContext.runAs(USER_IVAN) {
+            getActivityIdsFromExternalTasks(allKatyaExternalTasks)
+        }
+        assertThat(ivanRequestKatyaExternalTaskActivityIds.filter { it.isNotBlank() }).isEmpty()
+
+        val katyaRequestIvanExternalTaskActivityIds = AuthContext.runAs(USER_KATYA) {
+            getActivityIdsFromExternalTasks(allIvanExternalTasks)
+        }
+        assertThat(katyaRequestIvanExternalTaskActivityIds.filter { it.isNotBlank() }).isEmpty()
+    }
+
+    @Test
+    fun `user without perms should not see attributes of external tasks`() {
+        val allWithoutPermsExternalTasks = queryAllExternalTaskForUser(USER_WITHOUT_PERMS)
+        assertThat(allWithoutPermsExternalTasks).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all attributes of external tasks`() {
+        val allSystemExternalTasks = queryAllExternalTaskForUser("system")
+        assertThat(allSystemExternalTasks).hasSize(2)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with edit instance permission should allow edit retries external task`(user: String) {
+        val ivanExternalTask = queryAllExternalTaskForUser(USER_IVAN).first()
+
+        val updateAtts = RecordAtts(
+            ivanExternalTask,
+        ).apply {
+            this[BpmnExternalTaskRecords.ATT_RETRIES] = 1
+        }
+
+        assertDoesNotThrow {
+            AuthContext.runAs(user) {
+                recordsService.mutate(updateAtts)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
+    fun `user without edit instance permission should not allow edit retries external task`(user: String) {
+        val ivanExternalTask = queryAllExternalTaskForUser(USER_IVAN).first()
+
+        val updateAtts = RecordAtts(
+            ivanExternalTask,
+        ).apply {
+            this[BpmnExternalTaskRecords.ATT_RETRIES] = 1
+        }
+
+        assertThrows<IllegalStateException> {
+            AuthContext.runAs(user) {
+                recordsService.mutate(updateAtts)
+            }
+        }
+    }
+
+    // --- BPMN INCIDENT ---
+    @Test
+    fun `query incidents without process instance should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryIncidentsForProcessInstance("system", "")
+        }
+    }
+
+    @Test
+    fun `query incidents without bpmn def engine should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryIncidentsForProcessInstance("system", "")
+        }
+    }
+
+    @Test
+    fun `user should see incidents only with his permissions query process instance`() {
+        val ivanIncidents = queryIncidentsForProcessInstance(USER_IVAN, ivanProcessInstanceRef.toString())
+        assertThat(ivanIncidents).isNotEmpty
+        val ivanIncidentFailedActivityIds = getFailedActivityIdsFromIncidents(ivanIncidents)
+        assertThat(ivanIncidentFailedActivityIds).allMatch {
+            it == "Activity_called_root_ivan"
+        }
+
+        val katyaIncidents = queryIncidentsForProcessInstance(USER_KATYA, katyaProcessInstanceRef.toString())
+        assertThat(katyaIncidents).isNotEmpty
+        val katyaIncidentFailedActivityIds = getFailedActivityIdsFromIncidents(katyaIncidents)
+        assertThat(katyaIncidentFailedActivityIds).allMatch {
+            it == "Activity_called_root_katya"
+        }
+    }
+
+    @Test
+    fun `user should see incidents only with his permissions query bpmn def engine`() {
+        val ivanBpmnDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN).first()
+        val ivanIncidents = queryIncidentsForBpmnDefEngine(USER_IVAN, ivanBpmnDefEngine.toString())
+        assertThat(ivanIncidents).isNotEmpty
+        val ivanIncidentFailedActivityIds = getFailedActivityIdsFromIncidents(ivanIncidents)
+        assertThat(ivanIncidentFailedActivityIds).allMatch {
+            it == "Activity_called_root_ivan"
+        }
+
+        val katyaBpmnDefEngine = queryLatestProcessDefEngineRecords(USER_KATYA).first()
+        val katyaIncidents = queryIncidentsForBpmnDefEngine(USER_KATYA, katyaBpmnDefEngine.toString())
+        assertThat(katyaIncidents).isNotEmpty
+        val katyaIncidentFailedActivityIds = getFailedActivityIdsFromIncidents(katyaIncidents)
+        assertThat(katyaIncidentFailedActivityIds).allMatch {
+            it == "Activity_called_root_katya"
+        }
+    }
+
+    @Test
+    fun `user without perms should not see incidents query for process instance`() {
+        val withoutPermsIvanIncidents = queryIncidentsForProcessInstance(
+            USER_WITHOUT_PERMS,
+            ivanProcessInstanceRef.toString()
+        )
+        assertThat(withoutPermsIvanIncidents).isEmpty()
+
+        val withoutPermsKatyaIncidents = queryIncidentsForProcessInstance(
+            USER_WITHOUT_PERMS,
+            katyaProcessInstanceRef.toString()
+        )
+        assertThat(withoutPermsKatyaIncidents).isEmpty()
+    }
+
+    @Test
+    fun `user without perms should not see incidents query for bpmn def engine`() {
+        val ivanBpmnDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN).first()
+        val withoutPermsIvanIncidents = queryIncidentsForBpmnDefEngine(
+            USER_WITHOUT_PERMS,
+            ivanBpmnDefEngine.toString()
+        )
+        assertThat(withoutPermsIvanIncidents).isEmpty()
+
+        val katyaBpmnDefEngine = queryLatestProcessDefEngineRecords(USER_KATYA).first()
+        val withoutPermsKatyaIncidents = queryIncidentsForBpmnDefEngine(
+            USER_WITHOUT_PERMS,
+            katyaBpmnDefEngine.toString()
+        )
+        assertThat(withoutPermsKatyaIncidents).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all incidents`() {
+        val systemIvanIncidents = queryIncidentsForProcessInstance("system", ivanProcessInstanceRef.toString())
+        assertThat(systemIvanIncidents).isNotEmpty
+        val systemIvanIncidentFailedActivityIds = getFailedActivityIdsFromIncidents(systemIvanIncidents)
+        assertThat(systemIvanIncidentFailedActivityIds).allMatch {
+            it == "Activity_called_root_ivan"
+        }
+
+        val systemKatyaIncidents = queryIncidentsForProcessInstance("system", katyaProcessInstanceRef.toString())
+        assertThat(systemKatyaIncidents).isNotEmpty
+        val systemKatyaIncidentFailedActivityIds = getFailedActivityIdsFromIncidents(systemKatyaIncidents)
+        assertThat(systemKatyaIncidentFailedActivityIds).allMatch {
+            it == "Activity_called_root_katya"
+        }
+    }
+
+    @Test
+    fun `user should see attributes of incidents only with his permissions`() {
+        val ivanIncidents = queryIncidentsForProcessInstance(USER_IVAN, ivanProcessInstanceRef.toString())
+        val ivanIncidentFailedActivityIds = AuthContext.runAs(USER_IVAN) {
+            getFailedActivityIdsFromIncidents(ivanIncidents)
+        }
+        assertThat(ivanIncidentFailedActivityIds.filter { it.isNotBlank() }).allMatch {
+            it == "Activity_called_root_ivan"
+        }
+
+        val katyaIncidents = queryIncidentsForProcessInstance(USER_KATYA, katyaProcessInstanceRef.toString())
+        val katyaIncidentFailedActivityIds = AuthContext.runAs(USER_KATYA) {
+            getFailedActivityIdsFromIncidents(katyaIncidents)
+        }
+        assertThat(katyaIncidentFailedActivityIds.filter { it.isNotBlank() }).allMatch {
+            it == "Activity_called_root_katya"
+        }
+
+        val ivanRequestKatyaIncidentFailedActivityIds = AuthContext.runAs(USER_IVAN) {
+            getFailedActivityIdsFromIncidents(katyaIncidents)
+        }
+        assertThat(ivanRequestKatyaIncidentFailedActivityIds.filter { it.isNotBlank() }).isEmpty()
+
+        val katyaRequestIvanIncidentFailedActivityIds = AuthContext.runAs(USER_KATYA) {
+            getFailedActivityIdsFromIncidents(ivanIncidents)
+        }
+        assertThat(katyaRequestIvanIncidentFailedActivityIds.filter { it.isNotBlank() }).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all attributes of incidents`() {
+        val ivanIncidents = queryIncidentsForProcessInstance("system", ivanProcessInstanceRef.toString())
+        val ivanIncidentFailedActivityIds = AuthContext.runAs("system") {
+            getFailedActivityIdsFromIncidents(ivanIncidents)
+        }
+        assertThat(ivanIncidentFailedActivityIds.filter { it.isNotBlank() }).allMatch {
+            it == "Activity_called_root_ivan"
+        }
+
+        val katyaIncidents = queryIncidentsForProcessInstance("system", katyaProcessInstanceRef.toString())
+        val katyaIncidentFailedActivityIds = AuthContext.runAs("system") {
+            getFailedActivityIdsFromIncidents(katyaIncidents)
+        }
+        assertThat(katyaIncidentFailedActivityIds.filter { it.isNotBlank() }).allMatch {
+            it == "Activity_called_root_katya"
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with edit instance permission should allow edit note of incident`(user: String) {
+        val ivanIncidents = queryIncidentsForProcessInstance(USER_IVAN, ivanProcessInstanceRef.toString())
+        val ivanIncident = ivanIncidents.first()
+
+        val newNote = UUID.randomUUID().toString()
+
+        val updateAtts = RecordAtts(
+            ivanIncident,
+        ).apply {
+            this[BpmnIncidentRecords.ATT_NOTE] = newNote
+        }
+
+        AuthContext.runAs(user) {
+            recordsService.mutate(updateAtts)
+        }
+
+        val updatedNote = recordsService.getAtt(ivanIncident, BpmnIncidentRecords.ATT_NOTE).asText()
+        assertThat(updatedNote).isEqualTo(newNote)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
+    fun `user without edit instance permission should not allow edit note of incident`(user: String) {
+        val ivanIncidents = queryIncidentsForProcessInstance(USER_IVAN, ivanProcessInstanceRef.toString())
+        val ivanIncident = ivanIncidents.first()
+
+        val updateAtts = RecordAtts(
+            ivanIncident,
+        ).apply {
+            this[BpmnIncidentRecords.ATT_NOTE] = "some note"
+        }
+
+        assertThrows<IllegalStateException> {
+            AuthContext.runAs(user) {
+                recordsService.mutate(updateAtts)
+            }
+        }
+    }
+
+    // --- BPMN JOB ---
+    @Test
+    fun `query bpmn job without process instance should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryBpmnJobs("system", "")
+        }
+    }
+
+    @Test
+    fun `user should see bpmn jobs only with his permissions`() {
+        val ivanBpmnJobs = queryAllJobForUser(USER_IVAN)
+        assertThat(ivanBpmnJobs).hasSize(2)
+        val ivanBpmnJobDefinitions = getActivityIdsForJobs(ivanBpmnJobs)
+        assertThat(ivanBpmnJobDefinitions).allMatch {
+            it.contains("ivan")
+        }
+
+        val katyaBpmnJobs = queryAllJobForUser(USER_KATYA)
+        assertThat(katyaBpmnJobs).hasSize(2)
+        val katyaBpmnJobDefinitions = getActivityIdsForJobs(katyaBpmnJobs)
+        assertThat(katyaBpmnJobDefinitions).allMatch {
+            it.contains("katya")
+        }
+    }
+
+    @Test
+    fun `user without perms should not see bpmn jobs`() {
+        val withoutPermsIvanBpmnJobs = queryAllJobForUser(USER_WITHOUT_PERMS)
+        assertThat(withoutPermsIvanBpmnJobs).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all bpmn jobs`() {
+        val systemIvanBpmnJobs = queryAllJobForUser("system")
+        assertThat(systemIvanBpmnJobs).hasSize(4)
+    }
+
+    @Test
+    fun `user should see attributes of bpmn jobs only with his permissions`() {
+        val allJobs = queryAllJobForUser("system")
+
+        val ivanBpmnJobDefinitions = AuthContext.runAs(USER_IVAN) {
+            getJobDefinitionsForJobs(allJobs)
+        }
+        assertThat(ivanBpmnJobDefinitions.filter { it.isNotBlank() }).allMatch {
+            it.contains(IVAN_JOBS_DEFINITION)
+        }
+
+        val katyaBpmnJobDefinitions = AuthContext.runAs(USER_KATYA) {
+            getJobDefinitionsForJobs(allJobs)
+        }
+        assertThat(katyaBpmnJobDefinitions.filter { it.isNotBlank() }).allMatch {
+            it.contains(KATYA_JOBS_DEFINITION)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with edit instance permission should allow suspend job`(user: String) {
+        val ivanBpmnJobs = queryAllJobForUser(USER_IVAN)
+        val ivanBpmnJob = ivanBpmnJobs.first()
+
+        val updateAtts = RecordAtts(
+            ivanBpmnJob,
+        ).apply {
+            this["action"] = BpmnJobRecords.MutateAction.SUSPEND.toString()
+        }
+
+        assertDoesNotThrow {
+            AuthContext.runAs(user) {
+                recordsService.mutate(updateAtts)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
+    fun `user without edit instance permission should not allow suspend job`(user: String) {
+        val ivanBpmnJobs = queryAllJobForUser(USER_IVAN)
+        val ivanBpmnJob = ivanBpmnJobs.first()
+
+        val updateAtts = RecordAtts(
+            ivanBpmnJob,
+        ).apply {
+            this["action"] = BpmnJobRecords.MutateAction.SUSPEND.toString()
+        }
+
+        assertThrows<IllegalStateException> {
+            AuthContext.runAs(user) {
+                recordsService.mutate(updateAtts)
+            }
+        }
+    }
+
+    // --- BPMN JOB DEFINITION ---
+    @Test
+    fun `query bpmn job def without bpmn def engine should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryBpmnJobDefs("system", "")
+        }
+    }
+
+    @Test
+    fun `user should see bpmn job defs only with his permissions`() {
+        val ivanBpmnJobs = queryAllJobDefsForUser(USER_IVAN)
+        assertThat(ivanBpmnJobs).hasSize(2)
+        val ivanBpmnJobDefinitions = getActivityIdsForJobDefs(ivanBpmnJobs)
+        assertThat(ivanBpmnJobDefinitions).allMatch {
+            it.contains("ivan")
+        }
+
+        val katyaBpmnJobs = queryAllJobDefsForUser(USER_KATYA)
+        assertThat(katyaBpmnJobs).hasSize(2)
+        val katyaBpmnJobDefinitions = getActivityIdsForJobDefs(katyaBpmnJobs)
+        assertThat(katyaBpmnJobDefinitions).allMatch {
+            it.contains("katya")
+        }
+    }
+
+    @Test
+    fun `user without perms should not see bpmn job defs`() {
+        val withoutPermsIvanBpmnJobs = queryAllJobDefsForUser(USER_WITHOUT_PERMS)
+        assertThat(withoutPermsIvanBpmnJobs).isEmpty()
+    }
+
+    @Test
+    fun `system user should see all bpmn job defs`() {
+        val systemIvanBpmnJobs = queryAllJobDefsForUser("system")
+        assertThat(systemIvanBpmnJobs).hasSize(4)
+    }
+
+    @Test
+    fun `user should see attributes of bpmn job defs only with his permissions`() {
+        val allJobs = queryAllJobDefsForUser("system")
+
+        val ivanBpmnJobDefinitions = AuthContext.runAs(USER_IVAN) {
+            getActivityIdsForJobDefs(allJobs)
+        }
+        assertThat(ivanBpmnJobDefinitions.filter { it.isNotBlank() }).allMatch {
+            it.contains("ivan")
+        }
+
+        val katyaBpmnJobDefinitions = AuthContext.runAs(USER_KATYA) {
+            getActivityIdsForJobDefs(allJobs)
+        }
+        assertThat(katyaBpmnJobDefinitions.filter { it.isNotBlank() }).allMatch {
+            it.contains("katya")
+        }
+    }
+
+    // --- BPMN MIGRATION ---
+    @Test
+    fun `query migration plan without source process definition id should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryMigrationPlan("system", "", "someDefId")
+        }
+    }
+
+    @Test
+    fun `query migration plan without target process definition id should throw exception`() {
+        assertThrows<IllegalStateException> {
+            queryMigrationPlan("system", "someDefId", "")
+        }
+    }
+
+    @Test
+    fun `user should see migration plan only with his permissions`() {
+        val ivanProcessDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN)[0]
+        val ivanMigrationPlan = queryMigrationPlan(
+            USER_IVAN,
+            ivanProcessDefEngine.getLocalId(),
+            ivanProcessDefEngine.getLocalId()
+        )
+        assertThat(ivanMigrationPlan).isNotEmpty
+
+        val katyaProcessDefEngine = queryLatestProcessDefEngineRecords(USER_KATYA)[0]
+        val katyaMigrationPlan = queryMigrationPlan(
+            USER_KATYA,
+            katyaProcessDefEngine.getLocalId(),
+            katyaProcessDefEngine.getLocalId()
+        )
+        assertThat(katyaMigrationPlan).isNotEmpty
+
+        val ivanRequestKatyaPlan = queryMigrationPlan(
+            USER_IVAN,
+            katyaProcessDefEngine.getLocalId(),
+            katyaProcessDefEngine.getLocalId()
+        )
+        assertThat(ivanRequestKatyaPlan).isEmpty()
+
+        val ivanRequestMixedPlan = queryMigrationPlan(
+            USER_IVAN,
+            katyaProcessDefEngine.getLocalId(),
+            ivanProcessDefEngine.getLocalId()
+        )
+        assertThat(ivanRequestMixedPlan).isEmpty()
+
+        val katyaRequestIvanPlan = queryMigrationPlan(
+            USER_KATYA,
+            ivanProcessDefEngine.getLocalId(),
+            ivanProcessDefEngine.getLocalId()
+        )
+        assertThat(katyaRequestIvanPlan).isEmpty()
+
+        val katyaRequestMixedPlan = queryMigrationPlan(
+            USER_KATYA,
+            ivanProcessDefEngine.getLocalId(),
+            katyaProcessDefEngine.getLocalId()
+        )
+        assertThat(katyaRequestMixedPlan).isEmpty()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with migrate permission should allow migrate processes`(user: String) {
+        val ivanProcessDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN)[0]
+        val processInstances = queryProcessInstances(ivanProcessDefEngine, "system")
+
+        val ivanMigrationPlan = queryMigrationPlan(
+            USER_IVAN,
+            ivanProcessDefEngine.getLocalId(),
+            ivanProcessDefEngine.getLocalId()
+        )
+        assertThat(ivanMigrationPlan).isNotEmpty
+
+        val migrationAtts = RecordAtts(
+            "${BpmnProcessMigrationRecords.ID}@",
+        ).apply {
+            this["action"] = BpmnProcessMigrationRecords.MutateAction.MIGRATE.toString()
+            this["async"] = false
+            this["migrationExecution"] = MigrationExecutionDto().apply {
+                this.migrationPlan = ivanMigrationPlan.first().migrationPlan
+                this.processInstanceIds = processInstances.map { it.getLocalId() }
+            }
+        }
+
+        assertDoesNotThrow {
+            AuthContext.runAs(user) {
+                recordsService.mutate(migrationAtts)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_KATYA, USER_WITHOUT_PERMS])
+    fun `user without migrate permission should not allow migrate processes`(user: String) {
+        val ivanProcessDefEngine = queryLatestProcessDefEngineRecords(USER_IVAN)[0]
+        val processInstances = queryProcessInstances(ivanProcessDefEngine, "system")
+
+        val ivanMigrationPlan = queryMigrationPlan(
+            USER_IVAN,
+            ivanProcessDefEngine.getLocalId(),
+            ivanProcessDefEngine.getLocalId()
+        )
+        assertThat(ivanMigrationPlan).isNotEmpty
+
+        val migrationAtts = RecordAtts(
+            "${BpmnProcessMigrationRecords.ID}@",
+        ).apply {
+            this["action"] = BpmnProcessMigrationRecords.MutateAction.MIGRATE.toString()
+            this["async"] = false
+            this["migrationExecution"] = MigrationExecutionDto().apply {
+                this.migrationPlan = ivanMigrationPlan.first().migrationPlan
+                this.processInstanceIds = processInstances.map { it.getLocalId() }
+            }
+        }
+
+        assertThrows<IllegalStateException> {
+            AuthContext.runAs(user) {
+                recordsService.mutate(migrationAtts)
+            }
+        }
+    }
+
     private fun getKeysFromProcInstances(procInstances: List<EntityRef>): List<String> {
         return procInstances.map {
             recordsService.getAtt(it, "key").asText()
@@ -748,6 +1371,42 @@ class BpmnProcessPermissionsTest {
     private fun getNamesFromVariableInstances(variableInstances: List<EntityRef>): List<String> {
         return variableInstances.map {
             recordsService.getAtt(it, "name").asText()
+        }
+    }
+
+    private fun getActivityIdsFromExternalTasks(externalTasks: List<EntityRef>): List<String> {
+        return externalTasks.map {
+            recordsService.getAtt(it, "activityId").asText()
+        }
+    }
+
+    private fun getActivityIdsForJobDefs(jobDefs: List<EntityRef>): List<String> {
+        return jobDefs.map {
+            recordsService.getAtt(it, BpmnJobDefRecords.ATT_ACTIVITY_ID).asText()
+        }
+    }
+
+    private fun getFailedActivityIdsFromIncidents(incidents: List<EntityRef>): List<String> {
+        return incidents.map {
+            recordsService.getAtt(it, "failedActivityId").asText()
+        }
+    }
+
+    private fun getJobDefinitionsForJobs(jobs: List<EntityRef>): List<String> {
+        return jobs.map {
+            recordsService.getAtt(
+                it,
+                "${BpmnJobRecords.ATT_JOB_DEFINITION}.${BpmnJobDefRecords.ATT_CONFIGURATION}"
+            ).asText()
+        }
+    }
+
+    private fun getActivityIdsForJobs(jobs: List<EntityRef>): List<String> {
+        return jobs.map {
+            recordsService.getAtt(
+                it,
+                "${BpmnJobRecords.ATT_JOB_DEFINITION}.${BpmnJobDefRecords.ATT_ACTIVITY_ID}"
+            ).asText()
         }
     }
 
@@ -765,6 +1424,30 @@ class BpmnProcessPermissionsTest {
                     withPage(QueryPage(10_000, 0, null))
                 }
             ).getRecords()
+        }
+    }
+
+    private fun queryAllExternalTaskForUser(user: String): List<EntityRef> {
+        return queryLatestProcessDefEngineRecords("system").flatMap { procDefEngine ->
+            queryProcessInstances(procDefEngine, "system")
+                .flatMap { procInstance ->
+                    queryExternalTasks(user, procInstance.toString())
+                }
+        }
+    }
+
+    private fun queryAllJobForUser(user: String): List<EntityRef> {
+        return queryLatestProcessDefEngineRecords("system").flatMap { procDefEngine ->
+            queryProcessInstances(procDefEngine, "system")
+                .flatMap { procInstance ->
+                    queryBpmnJobs(user, procInstance.toString())
+                }
+        }
+    }
+
+    private fun queryAllJobDefsForUser(user: String): List<EntityRef> {
+        return queryLatestProcessDefEngineRecords("system").flatMap { procDefEngine ->
+            queryBpmnJobDefs(user, procDefEngine.toString())
         }
     }
 
