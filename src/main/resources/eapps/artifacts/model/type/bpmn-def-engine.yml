@@ -5,5 +5,7 @@ name:
   ru: ECOS BPMN Def engine
 system: true
 sourceId: eproc/bpmn-def-engine
+actions:
+  - uiserv/action@version-migration
 inheritActions: false
 defaultCreateVariant: true

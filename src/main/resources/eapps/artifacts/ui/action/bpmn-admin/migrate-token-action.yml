@@ -1,0 +1,14 @@
+---
+id: migrate-token-action
+name:
+  ru: Миграция токенов
+  en: Token's migration
+type: customUiAction
+config:
+  actionId: migration
+  record:
+    id: ${?id}
+predicate:
+  t: eq
+  att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-edit?bool!
+  val: true

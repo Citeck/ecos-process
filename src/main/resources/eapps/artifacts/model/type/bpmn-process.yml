@@ -11,4 +11,5 @@ actions:
   - uiserv/action@activate-bpmn-instance
   - uiserv/action@delete-bpmn-instance
   - uiserv/action@add-variable-bpmn-instance
+  - uiserv/action@migrate-token-action
 defaultCreateVariant: true
