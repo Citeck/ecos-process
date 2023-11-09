@@ -68,7 +68,6 @@ data class CalledProcessInstanceMeta(
     val id: String,
     val businessKey: String = "",
     val startTime: Instant? = null,
-    val suspensionState: SuspensionState,
     val incidentStatistics: List<IncidentStatistics>,
     val processDefinitionId: String = "",
     val processDefinitionKey: String = "",

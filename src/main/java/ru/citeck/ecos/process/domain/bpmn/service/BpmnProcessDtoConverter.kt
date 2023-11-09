@@ -62,7 +62,6 @@ fun CalledProcessInstanceDto.toCalledProcessInstanceMeta(): CalledProcessInstanc
         id = id,
         businessKey = businessKey ?: "",
         startTime = startTime?.toInstant(),
-        suspensionState = if (isSuspended) SuspensionState.SUSPENDED else SuspensionState.ACTIVE,
         incidentStatistics = incidents.map { it.toEcosIncidentStatistics() },
         processDefinitionId = processDefinitionId ?: "",
         processDefinitionKey = processDefinitionKey ?: "",

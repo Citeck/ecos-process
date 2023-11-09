@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.service.CalledProcessInstanceMeta
-import ru.citeck.ecos.process.domain.bpmn.service.SuspensionState
 import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -79,7 +78,8 @@ class BpmnCalledProcessInstanceRecords(
 
         @AttName("isSuspended")
         fun isSuspended(): Boolean {
-            return instanceMeta.suspensionState == SuspensionState.SUSPENDED
+            val instance = bpmnProcessService.getProcessInstance(id)
+            return instance?.isSuspended ?: false
         }
     }
 
