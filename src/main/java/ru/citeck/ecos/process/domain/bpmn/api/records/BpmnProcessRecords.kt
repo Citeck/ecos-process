@@ -59,6 +59,10 @@ class BpmnProcessRecords(
         private val standardMapper = ObjectMapper()
 
         private val log = KotlinLogging.logger {}
+
+        fun createRef(id: String): EntityRef {
+            return EntityRef.create(AppName.EPROC, ID, id)
+        }
     }
 
     override fun getId(): String {

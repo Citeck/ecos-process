@@ -251,7 +251,7 @@ class BpmnVariableInstanceRecords(
             }
 
         if (variable != null && AuthContext.isNotRunAsSystemOrAdmin()) {
-            val allowRead = BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(variable.processInstanceId())
+            val allowRead = BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(variable.getProcessInstanceId())
             if (!allowRead) {
                 return null
             }
@@ -290,8 +290,14 @@ class BpmnVariableInstanceRecords(
         }
 
         @AttName("processInstanceId")
-        fun processInstanceId(): String {
+        fun getProcessInstanceId(): String {
             return variableInstance.processInstanceId ?: ""
+        }
+
+        @AttName("bpmnProcess")
+        fun getProcessInstance(): EntityRef {
+            val id = getProcessInstanceId().ifBlank { return EntityRef.EMPTY }
+            return BpmnProcessRecords.createRef(id)
         }
 
         @AttName(ATT_NAME)
