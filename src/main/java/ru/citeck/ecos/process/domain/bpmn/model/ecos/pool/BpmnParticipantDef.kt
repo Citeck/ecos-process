@@ -6,7 +6,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 data class BpmnParticipantDef(
     val id: String,
     val name: MLText,
-    val number: Int?,
+    val number: String?,
     val documentation: MLText,
     val processRef: String,
     val ecosType: EntityRef
