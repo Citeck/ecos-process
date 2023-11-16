@@ -659,11 +659,11 @@ class BpmnProcessDefRecords(
         }
 
         fun getSectionPath(): List<SectionPathPart> {
-            return getSectionPath(procDef.sectionRef, null)
+            return getSectionPath(procDef.sectionRef)
         }
     }
 
-    fun getSectionPath(sectionRef: EntityRef, section: SectionPathPart?): List<SectionPathPart> {
+    fun getSectionPath(sectionRef: EntityRef): List<SectionPathPart> {
 
         val getAtts: (EntityRef) -> SectionDto = {
             recordsService.getAtts(it, SectionDto::class.java)
