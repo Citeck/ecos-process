@@ -653,14 +653,12 @@ class BpmnProcessDefRecords(
             return EprocBpmnPreviewValue(procDef.id, procDef.modified.toEpochMilli())
         }
 
-        @AttName("bpmnReport")
         fun getBpmnReport(): List<ReportElement>? {
             val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it) }
             return def?.let { bpmnProcessReportService.generateReportElementListForBpmnDefinition(it) }
         }
 
-        @AttName("sectionPath")
-        fun getAttSectionPath(): List<SectionPathPart> {
+        fun getSectionPath(): List<SectionPathPart> {
             return getSectionPath(procDef.sectionRef, null)
         }
     }
