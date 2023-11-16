@@ -28,7 +28,7 @@ class BpmnProcessReportServiceTest {
         val mainReportProcessElement = ReportProcessElement(
             id = "bpmn-report-test-process",
             participant = ReportParticipantElement(
-                number = 1,
+                number = "1",
                 name = MLText(
                     LocaleUtils.toLocale("ru") to "Основной процесс",
                     LocaleUtils.toLocale("en") to "Main process"
@@ -43,7 +43,7 @@ class BpmnProcessReportServiceTest {
         val secondProcessReportProcessElement = ReportProcessElement(
             id = "bpmn-report-test-process-2",
             participant = ReportParticipantElement(
-                number = 2,
+                number = "2",
                 name = MLText(
                     LocaleUtils.toLocale("ru") to "Процесс 2",
                     LocaleUtils.toLocale("en") to "Process 2"
