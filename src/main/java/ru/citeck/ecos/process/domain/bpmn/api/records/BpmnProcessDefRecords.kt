@@ -659,36 +659,31 @@ class BpmnProcessDefRecords(
         }
 
         fun getSectionPath(): List<SectionPathPart> {
-            return getSectionPath(procDef.sectionRef)
-        }
-    }
+            val getAtts: (EntityRef) -> SectionDto = {
+                recordsService.getAtts(it, SectionDto::class.java)
+            }
 
-    fun getSectionPath(sectionRef: EntityRef): List<SectionPathPart> {
+            val getInfoByDto: (SectionDto) -> SectionPathPart = { section ->
+                SectionPathPart(
+                    code = section.sectionCode?.takeIf { it.isNotBlank() },
+                    name = section.name
+                )
+            }
 
-        val getAtts: (EntityRef) -> SectionDto = {
-            recordsService.getAtts(it, SectionDto::class.java)
-        }
-
-        val getInfoByDto: (SectionDto) -> SectionPathPart = {
-            SectionPathPart(
-                code = it.sectionCode?.takeIf { it.isNotBlank() },
-                name = it.name
-            )
-        }
-
-        val result = ArrayList<SectionPathPart>()
-        var sectionDto = getAtts(sectionRef)
-        result.add(getInfoByDto(sectionDto))
-
-        var currentRef = sectionDto.parent
-
-        while (currentRef != null) {
-            sectionDto = getAtts(currentRef)
+            val result = ArrayList<SectionPathPart>()
+            var sectionDto = getAtts(procDef.sectionRef)
             result.add(getInfoByDto(sectionDto))
-            currentRef = sectionDto.parent
-        }
 
-        return result.reversed()
+            var currentRef = sectionDto.parent
+
+            while (currentRef != null) {
+                sectionDto = getAtts(currentRef)
+                result.add(getInfoByDto(sectionDto))
+                currentRef = sectionDto.parent
+            }
+
+            return result.reversed()
+        }
     }
 
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
