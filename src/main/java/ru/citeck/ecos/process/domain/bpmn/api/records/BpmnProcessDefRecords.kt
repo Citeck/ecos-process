@@ -206,7 +206,7 @@ class BpmnProcessDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return EntityRef.create(APP_NAME, BpmnProcessDefRecords.ID, this)
+        return EntityRef.create(APP_NAME, ID, this)
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {
@@ -653,17 +653,43 @@ class BpmnProcessDefRecords(
             return EprocBpmnPreviewValue(procDef.id, procDef.modified.toEpochMilli())
         }
 
-        @AttName("bpmn-report")
         fun getBpmnReport(): List<ReportElement>? {
             val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it) }
             return def?.let { bpmnProcessReportService.generateReportElementListForBpmnDefinition(it) }
+        }
+
+        fun getSectionPath(): List<SectionPathPart> {
+            val getAtts: (EntityRef) -> SectionDto = {
+                recordsService.getAtts(it, SectionDto::class.java)
+            }
+
+            val getInfoByDto: (SectionDto) -> SectionPathPart = { section ->
+                SectionPathPart(
+                    code = section.sectionCode?.takeIf { it.isNotBlank() },
+                    name = section.name
+                )
+            }
+
+            val result = ArrayList<SectionPathPart>()
+            var sectionDto = getAtts(procDef.sectionRef)
+            result.add(getInfoByDto(sectionDto))
+
+            var currentRef = sectionDto.parent
+
+            while (currentRef != null) {
+                sectionDto = getAtts(currentRef)
+                result.add(getInfoByDto(sectionDto))
+                currentRef = sectionDto.parent
+            }
+
+            return result.reversed()
         }
     }
 
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(EprocApp.NAME, BpmnProcessDefRecords.ID, id).toString()
+            val ref = EntityRef.create(EprocApp.NAME, ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }
@@ -803,4 +829,17 @@ class BpmnProcessDefRecords(
 
         fun getDisplayName() = getName()
     }
+
+    data class SectionDto(
+        val sectionCode: String?,
+        @AttName("name?json")
+        val name: MLText?,
+        @AttName("parentRef?id")
+        val parent: EntityRef?
+    )
+
+    inner class SectionPathPart(
+        val code: String?,
+        var name: MLText?
+    )
 }

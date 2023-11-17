@@ -24,7 +24,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
         return BpmnParticipantDef(
             id = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
-            number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() }?.toInt(),
+            number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() },
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             processRef = element.processRef.localPart,
             ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE])
@@ -42,7 +42,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
 
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
 
-            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
+            element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it) }
         }
     }
 }
