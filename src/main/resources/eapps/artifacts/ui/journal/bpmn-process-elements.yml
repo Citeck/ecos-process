@@ -42,6 +42,8 @@ columns:
   - id: outcomeName
     visible: false
   - id: document
-    visible: false
+    type: ASSOC
+    formatter:
+      type: assoc
   - id: documentTypeRef
     visible: false
