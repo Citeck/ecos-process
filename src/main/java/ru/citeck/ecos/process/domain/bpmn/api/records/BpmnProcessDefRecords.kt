@@ -206,7 +206,7 @@ class BpmnProcessDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return EntityRef.create(APP_NAME, BpmnProcessDefRecords.ID, this)
+        return EntityRef.create(APP_NAME, ID, this)
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {
@@ -689,7 +689,7 @@ class BpmnProcessDefRecords(
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(EprocApp.NAME, BpmnProcessDefRecords.ID, id).toString()
+            val ref = EntityRef.create(EprocApp.NAME, ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }
