@@ -654,7 +654,7 @@ class BpmnProcessDefRecords(
         }
 
         fun getBpmnReport(): List<ReportElement>? {
-            val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it) }
+            val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it, validate = false) }
             return def?.let { bpmnProcessReportService.generateReportElementListForBpmnDefinition(it) }
         }
 

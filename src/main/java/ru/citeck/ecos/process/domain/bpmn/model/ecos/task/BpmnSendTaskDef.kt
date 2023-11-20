@@ -5,6 +5,7 @@ import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 import ru.citeck.ecos.records2.RecordRef
 import java.util.*
 
@@ -35,9 +36,9 @@ data class BpmnSendTaskDef(
 
     val asyncConfig: AsyncConfig,
     val jobConfig: JobConfig
-) {
+) : Validated {
 
-    init {
+    override fun validate() {
         if (body.isBlank() && RecordRef.isEmpty(template)) {
             throw EcosBpmnElementDefinitionException(id, "Template is mandatory parameter with empty body")
         }

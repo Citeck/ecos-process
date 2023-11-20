@@ -5,6 +5,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionEx
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 
 data class BpmnServiceTaskDef(
     val id: String,
@@ -24,9 +25,9 @@ data class BpmnServiceTaskDef(
     val resultVariable: String = "",
 
     val multiInstanceConfig: MultiInstanceConfig? = null
-) {
+) : Validated {
 
-    init {
+    override fun validate() {
         if (type == ServiceTaskType.EXTERNAL && externalTaskTopic.isNullOrBlank()) {
             throw EcosBpmnElementDefinitionException(
                 id,

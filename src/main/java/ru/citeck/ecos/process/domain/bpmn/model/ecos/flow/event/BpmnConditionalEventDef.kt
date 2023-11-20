@@ -4,6 +4,7 @@ import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.BpmnConditionDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.ConditionType
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 
 @JsonTypeName("conditionalEvent")
 data class BpmnConditionalEventDef(
@@ -18,10 +19,9 @@ data class BpmnConditionalEventDef(
     val variableEvents: Set<BpmnVariableEvents> = emptySet(),
 
     val condition: BpmnConditionDef
-) : BpmnAbstractEventDef() {
+) : BpmnAbstractEventDef(), Validated {
 
-    init {
-
+    override fun validate() {
         if (condition.type == ConditionType.OUTCOME) {
             throw EcosBpmnElementDefinitionException(
                 id,

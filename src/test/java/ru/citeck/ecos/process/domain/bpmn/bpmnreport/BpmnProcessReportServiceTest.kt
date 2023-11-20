@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmnreport
+package ru.citeck.ecos.process.domain.bpmn.bpmnreport
 
 import org.apache.commons.lang3.LocaleUtils
 import org.junit.jupiter.api.Test
@@ -340,7 +340,7 @@ class BpmnProcessReportServiceTest {
         val fileDefinition = ResourceUtils.getFile(
             "classpath:test/bpmn/report/bpmn-report-test-process.bpmn.xml"
         ).readText(StandardCharsets.UTF_8)
-        val bpmnDefinitionDef = BpmnIO.importEcosBpmn(fileDefinition)
+        val bpmnDefinitionDef = BpmnIO.importEcosBpmn(fileDefinition, validate = false)
 
         val actualList = processReportService.generateReportElementListForBpmnDefinition(bpmnDefinitionDef)
 

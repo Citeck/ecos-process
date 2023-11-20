@@ -7,6 +7,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 
 class ImportContext(
     val converters: EcosOmgConverters,
+    val validateRequired: Boolean = true,
     val bpmnSignalEventDefs: MutableList<BpmnSignalEventDef> = mutableListOf(),
     val bpmnErrorEventDefs: MutableMap<String, BpmnErrorEventDef> = mutableMapOf(),
     val conditionalEventDefs: MutableList<BpmnConditionalEventDef> = mutableListOf()

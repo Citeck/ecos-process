@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmnreport
+package ru.citeck.ecos.process.domain.bpmn.bpmnreport
 
 import org.apache.commons.lang3.LocaleUtils
 import org.junit.jupiter.api.Test

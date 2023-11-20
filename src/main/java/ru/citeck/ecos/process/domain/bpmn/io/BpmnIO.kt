@@ -154,12 +154,12 @@ object BpmnIO {
         extensionTypeResolver
     )
 
-    fun importEcosBpmn(definitions: String): BpmnDefinitionDef {
-        return importEcosBpmn(BpmnXmlUtils.readFromString(definitions))
+    fun importEcosBpmn(definitions: String, validate: Boolean = true): BpmnDefinitionDef {
+        return importEcosBpmn(BpmnXmlUtils.readFromString(definitions), validate)
     }
 
-    fun importEcosBpmn(definitions: TDefinitions): BpmnDefinitionDef {
-        return ecosBpmnConverters.import(definitions, BpmnDefinitionDef::class.java).data
+    fun importEcosBpmn(definitions: TDefinitions, validate: Boolean = true): BpmnDefinitionDef {
+        return ecosBpmnConverters.import(definitions, BpmnDefinitionDef::class.java, validate).data
     }
 
     fun exportEcosBpmn(definitions: BpmnDefinitionDef): TDefinitions {

@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionRecords
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private val allowedSourceIds = listOf(DmnDecisionRecords.ID, DmnDecisionLatestRecords.ID)
@@ -35,9 +36,9 @@ data class BpmnBusinessRuleTaskDef(
     val versionTag: String? = null,
 
     val multiInstanceConfig: MultiInstanceConfig? = null
-) {
+) : Validated {
 
-    init {
+    override fun validate() {
         if (decisionRef.isNotEmpty()) {
             val sourceId = decisionRef.getSourceId()
 

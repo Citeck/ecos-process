@@ -110,8 +110,9 @@ class BpmnProcessReportService(
 
         for (flowElement in flowElements) {
 
-            if (Json.mapper.convert(flowElement.data["name"], MLText::class.java)?.takeIf { !MLText.isEmpty(it) } == null
-                && flowElement.data["number"].takeIf { it.isNotNull() } == null) {
+            if (Json.mapper.convert(flowElement.data["name"], MLText::class.java)?.takeIf { !MLText.isEmpty(it) } == null &&
+                flowElement.data["number"].takeIf { it.isNotNull() } == null
+            ) {
                 continue
             }
 
