@@ -1,0 +1,47 @@
+# Скрин просмотра определенной версии процесса. Список инцидентов c фильтрацией по message.
+
+# @name ProcessDefinitionViewProcessIncidentsFilterMessage
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-incident",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "att": "bpmnDefEngine",
+                    "t": "eq",
+                    "val": "eproc/bpmn-def-engine@4e215304-5c80-11ee-8cae-1e6ab6bff9b4"
+                },
+                {
+                    "att": "message",
+                    "t": "like",
+                    "val": "some message text"
+                }
+            ]
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "_created"
+            }
+        ]
+    },
+    "attributes": {
+        "message": "message",
+        "processInstance": "processInstance.id",
+        "created": "_created",
+        "activityId": "activityId",
+        "failedActivityId": "failedActivityId",
+        "incidentType": "incidentType",
+        "note": "note"
+    }
+}
+

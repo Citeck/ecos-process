@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
+import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 const val TEST_USER = "testUser"
@@ -30,6 +31,14 @@ class BpmnEventHelper(
             source = appName
             eventType = CommentUpdateEvent.TYPE
             eventClass = CommentUpdateEvent::class.java
+        }
+    )
+
+    private val recordChangedEmitter = eventsService.getEmitter(
+        EmitterConfig.create<RecordChangedEventDto> {
+            source = appName
+            eventType = RecordChangedEvent.TYPE
+            eventClass = RecordChangedEventDto::class.java
         }
     )
 
@@ -62,6 +71,12 @@ class BpmnEventHelper(
             commentUpdateEmitter.emit(event)
         }
     }
+
+    fun sendRecordChangedEvent(event: RecordChangedEventDto) {
+        AuthContext.runAs("testUser") {
+            recordChangedEmitter.emit(event)
+        }
+    }
 }
 
 data class CommentCreateEvent(
@@ -86,3 +101,16 @@ data class CommentUpdateEvent(
         const val TYPE = "comment-update"
     }
 }
+
+data class RecordChangedEventDto(
+    val record: EntityRef,
+    val diff: Diff
+)
+
+data class Diff(
+    val list: List<ChangedValue>
+)
+
+data class ChangedValue(
+    val id: String
+)

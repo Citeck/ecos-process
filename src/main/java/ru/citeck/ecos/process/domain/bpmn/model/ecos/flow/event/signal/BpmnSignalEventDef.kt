@@ -6,6 +6,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnAbstractEventDef
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -28,31 +29,7 @@ data class BpmnSignalEventDef(
     val eventModel: Map<String, String> = emptyMap(),
 
     val manualSignalName: String? = null
-) : BpmnAbstractEventDef() {
-
-    init {
-
-        if (eventFilterByEcosType.isNotEmpty() && eventFilterByRecordType != FilterEventByRecord.ANY) {
-            throw EcosBpmnElementDefinitionException(id, "Event filter by Ecos Type supported only for ANY document.")
-        }
-
-        when (eventType) {
-            EcosEventType.RECORD_CREATED -> {
-                if (eventFilterByEcosType == EntityRef.EMPTY &&
-                    (eventFilterByPredicate == null || eventFilterByPredicate == VoidPredicate.INSTANCE)
-                ) {
-                    throw EcosBpmnElementDefinitionException(
-                        id,
-                        "Event filter by Ecos Type or Predicate required for RECORD_CREATED event"
-                    )
-                }
-            }
-
-            else -> {
-                // do nothing
-            }
-        }
-    }
+) : BpmnAbstractEventDef(), Validated {
 
     val signalName: String
         get() = let {
@@ -98,6 +75,30 @@ data class BpmnSignalEventDef(
                 type = filterByEcosType
             ).toComposedStringWithPredicateChecksum(eventFilterByPredicate ?: VoidPredicate.INSTANCE)
         }
+
+    override fun validate() {
+
+        if (eventFilterByEcosType.isNotEmpty() && eventFilterByRecordType != FilterEventByRecord.ANY) {
+            throw EcosBpmnElementDefinitionException(id, "Event filter by Ecos Type supported only for ANY document.")
+        }
+
+        when (eventType) {
+            EcosEventType.RECORD_CREATED -> {
+                if (eventFilterByEcosType == EntityRef.EMPTY &&
+                    (eventFilterByPredicate == null || eventFilterByPredicate == VoidPredicate.INSTANCE)
+                ) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Event filter by Ecos Type or Predicate required for RECORD_CREATED event"
+                    )
+                }
+            }
+
+            else -> {
+                // do nothing
+            }
+        }
+    }
 }
 
 enum class FilterEventByRecord {

@@ -1,0 +1,458 @@
+{
+  "id": "bpmn-add-variable-to-process",
+  "formKey": "bpmn-add-variable-to-process",
+  "title": {
+    "en": "bpmn-add-variable-to-process"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": false,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "scrollableContent": true,
+        "key": "panel2",
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Название",
+              "en": "Title"
+            },
+            "key": "name",
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "logic": [
+              {
+                "name": "disabled",
+                "trigger": {
+                  "type": "javascript",
+                  "javascript": "const formMode = _.get(instance, 'options.formMode');\nresult = formMode === 'EDIT';"
+                },
+                "actions": [
+                  {
+                    "name": "disabled",
+                    "type": "property",
+                    "property": {
+                      "label": "Disabled",
+                      "value": "disabled",
+                      "type": "boolean"
+                    },
+                    "state": "true"
+                  }
+                ]
+              }
+            ],
+            "type": "textfield",
+            "input": true,
+            "inputMasks": [
+              {}
+            ]
+          },
+          {
+            "label": {
+              "ru": "Тип",
+              "en": "Type"
+            },
+            "key": "type",
+            "dataSrc": "custom",
+            "data": {
+              "custom": "values = [\n  {\n    label: 'string',\n    value: 'string'\n  },\n  {\n    label: 'date',\n    value: 'date'\n  },\n  {\n    label: 'integer',\n    value: 'integer'\n  },\n  {\n    label: 'boolean',\n    value: 'boolean'\n  },\n  {\n    label: 'double',\n    value: 'double'\n  },\n  {\n    label: 'long',\n    value: 'long'\n  },\n  {\n    label: 'null',\n    value: 'null'\n  },\n  {\n    label: 'object',\n    value: 'object'\n  }\n]",
+              "headers": [
+                {}
+              ]
+            },
+            "optionalWhenDisabled": false,
+            "type": "ecosSelect",
+            "input": true,
+            "defaultValue": ""
+          },
+          {
+            "label": {
+              "ru": "Container"
+            },
+            "key": "typedValueInfo",
+            "hideLabel": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "object"
+            },
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "label": {
+                  "ru": "Тип объекта"
+                },
+                "key": "objectTypeName",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "input": true,
+                "inputMasks": [
+                  {}
+                ]
+              },
+              {
+                "label": {
+                  "ru": "Формат сериализации"
+                },
+                "key": "serializationDataFormat",
+                "disabled": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "conditional": {
+                  "show": "true",
+                  "when": "type",
+                  "eq": "object"
+                },
+                "type": "textfield",
+                "input": true,
+                "inputMasks": [
+                  {}
+                ]
+              },
+              {
+                "label": {
+                  "ru": "Ошибка десериализации"
+                },
+                "key": "errorMsg",
+                "disabled": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.type === 'object' && !!value",
+                "type": "textfield",
+                "input": true,
+                "inputMasks": [
+                  {}
+                ]
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "Tabs"
+            },
+            "key": "tabs",
+            "components": [
+              {
+                "label": {
+                  "ru": "Сериализованное значение"
+                },
+                "key": "serialized",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Text Area"
+                    },
+                    "key": "serializableValue.serialized",
+                    "hideLabel": true,
+                    "disabled": true,
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textarea",
+                    "input": true
+                  }
+                ]
+              },
+              {
+                "label": {
+                  "ru": "Десериализованное значение"
+                },
+                "key": "deserialized",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Text Area"
+                    },
+                    "key": "serializableValue.deserialized",
+                    "hideLabel": true,
+                    "editor": "ace",
+                    "wysiwyg": "",
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "calculateValue": "value = _.get(data, 'serializableValue.deserialized');",
+                    "allowCalculateOverride": true,
+                    "optionalWhenDisabled": false,
+                    "as": "json",
+                    "type": "textarea",
+                    "input": true,
+                    "tab": 1
+                  }
+                ]
+              }
+            ],
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "object"
+            },
+            "type": "tabs",
+            "input": false
+          },
+          {
+            "label": {
+              "ru": "Значение"
+            },
+            "key": "booleanValue",
+            "dataSrc": "custom",
+            "data": {
+              "custom": "values = [\n  {\n    value: 'true',\n    label: 'true',\n  },\n  {\n    value: 'false',\n    label: 'false'\n  }\n]",
+              "headers": [
+                {}
+              ]
+            },
+            "calculateValue": "value = data.value;\nconsole.log(\"AAAAAA\", value)",
+            "allowCalculateOverride": true,
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "boolean"
+            },
+            "defaultValue": "",
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Значение"
+            },
+            "key": "dateValue",
+            "datePicker": {
+              "minDate": "",
+              "maxDate": ""
+            },
+            "defaultValue": "",
+            "refreshOn": [],
+            "calculateValue": "value = data.value",
+            "allowCalculateOverride": true,
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "date"
+            },
+            "type": "datetime",
+            "input": true,
+            "suffix": true
+          },
+          {
+            "label": {
+              "ru": "Значение"
+            },
+            "key": "stringValue",
+            "defaultValue": "",
+            "refreshOn": [],
+            "calculateValue": "value = data.value",
+            "allowCalculateOverride": true,
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "string"
+            },
+            "type": "textfield",
+            "input": true,
+            "inputMasks": [
+              {}
+            ]
+          },
+          {
+            "label": {
+              "ru": "Значение"
+            },
+            "key": "integerValue",
+            "validate": {
+              "integer": false
+            },
+            "isBigNumber": false,
+            "delimiterValue": " ",
+            "refreshOn": [],
+            "calculateValue": "value = data.value",
+            "allowCalculateOverride": true,
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "integer"
+            },
+            "type": "number",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Значение"
+            },
+            "key": "doubleValue",
+            "validate": {
+              "integer": false
+            },
+            "isBigNumber": false,
+            "delimiterValue": " ",
+            "requireDecimal": true,
+            "refreshOn": [],
+            "calculateValue": "value = data.value",
+            "allowCalculateOverride": true,
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "double"
+            },
+            "decimalLimit": 4,
+            "type": "number",
+            "input": true,
+            "defaultValue": ""
+          },
+          {
+            "label": {
+              "ru": "Значение"
+            },
+            "key": "longValue",
+            "validate": {
+              "integer": false
+            },
+            "isBigNumber": false,
+            "delimiterValue": " ",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "type",
+              "eq": "long"
+            },
+            "type": "number",
+            "input": true,
+            "defaultValue": ""
+          },
+          {
+            "key": "hiddenValue",
+            "refreshOn": [
+              "booleanValue",
+              "serializableValue.serialized",
+              "serializableValue.deserialized",
+              "dateValue",
+              "stringValue",
+              "integerValue",
+              "doubleValue",
+              "longValue"
+            ],
+            "calculateValue": "switch (data.type) {\n  case 'object':\n    value = JSON.stringify(_.get(data, 'serializableValue.deserialized'));\n    break;\n  case 'boolean':\n    value = _.get(data, 'booleanValue');\n    break;\n  case 'date':\n    value = _.get(data, 'dateValue');\n    break;\n  case 'string':\n    value = _.get(data, 'stringValue');\n    break;\n  case 'integer':\n    value = String(_.get(data, 'integerValue', '')).replace(/ /g, '');\n    break;\n  case 'double':\n    value = String(_.get(data, 'doubleValue', '')).replace(/ /g, '');\n    break;\n  case 'long':\n    value = String(_.get(data, 'longValue', '')).replace(/ /g, '');\n    break;\n  default:\n    value = '';\n}",
+            "optionalWhenDisabled": false,
+            "type": "hidden",
+            "input": true
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Columns"
+        },
+        "key": "columns2",
+        "columns": [
+          {
+            "components": [
+              {
+                "label": "Cancel",
+                "action": "event",
+                "state": "",
+                "showValidations": false,
+                "event": "cancel",
+                "block": true,
+                "type": "button",
+                "input": true,
+                "key": "submit2",
+                "conditional": {
+                  "show": null,
+                  "when": null
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "md": 3,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 0
+          },
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 1,
+            "md": 3
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 2
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "index": 3,
+            "components": [
+              {
+                "label": {
+                  "en": "Save",
+                  "ru": "Сохранить"
+                },
+                "key": "submit",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true,
+                "headers": [
+                  {}
+                ]
+              }
+            ]
+          }
+        ],
+        "oneColumnInViewMode": false,
+        "type": "columns",
+        "input": false
+      }
+    ],
+    "formId": "bpmn-add-variable-to-process"
+  },
+  "attributes": {},
+  "notExists": false
+}

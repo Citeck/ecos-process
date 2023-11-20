@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
@@ -70,7 +71,11 @@ class ProcDefServiceImpl(
         return procDefDto
     }
 
-    private fun uploadProcDefImpl(processDef: NewProcessDefDto, isRaw: Boolean = false): ProcDefDto {
+    private fun uploadProcDefImpl(
+        processDef: NewProcessDefDto,
+        isRaw: Boolean = false,
+        comment: String = ""
+    ): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
         val now = Instant.now()
@@ -95,6 +100,7 @@ class ProcDefServiceImpl(
         newRevision.format = processDef.format
         newRevision.createdBy = AuthContext.getCurrentUser()
         newRevision.dataState = dataState.name
+        newRevision.comment = comment
 
         val sendProcDefEvent: () -> Unit
 
@@ -105,6 +111,7 @@ class ProcDefServiceImpl(
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
             currentProcDef.formRef = processDef.formRef.toString()
+            currentProcDef.workingCopySourceRef = processDef.workingCopySourceRef.toString()
             currentProcDef.extId = processDef.id
             currentProcDef.procType = processDef.procType
             currentProcDef.name = mapper.toString(processDef.name)
@@ -133,6 +140,7 @@ class ProcDefServiceImpl(
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
             currentProcDef.formRef = processDef.formRef.toString()
+            currentProcDef.workingCopySourceRef = processDef.workingCopySourceRef.toString()
             currentProcDef.name = mapper.toString(processDef.name)
             currentProcDef.modified = now
             currentProcDef.enabled = processDef.enabled
@@ -175,7 +183,7 @@ class ProcDefServiceImpl(
     ): ProcDefEvent {
         return ProcDefEvent(
             procDefRef = when (procType) {
-                BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id)
+                BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)
                 DMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, id)
                 CmmnProcDefRecords.CMMN_PROC_TYPE -> {
                     RecordRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
@@ -229,7 +237,18 @@ class ProcDefServiceImpl(
             query = query.and(QProcDefEntity.procDefEntity.procType.eq(predQuery.procType))
         }
         if (StringUtils.isNotBlank(predQuery.moduleId)) {
-            query = query.and(QProcDefEntity.procDefEntity.extId.likeIgnoreCase("%" + predQuery.moduleId + "%"))
+            query = query.and(QProcDefEntity.procDefEntity.extId.containsIgnoreCase(predQuery.moduleId))
+        }
+        if (StringUtils.isNotBlank(predQuery.name)) {
+            query = query.and(QProcDefEntity.procDefEntity.name.containsIgnoreCase(predQuery.name))
+        }
+        if (StringUtils.isNotBlank(predQuery.sectionRef)) {
+            val sectionEntity = QProcDefEntity.procDefEntity.sectionRef
+            query = if (predQuery.sectionRef.equals(DEFAULT_BPMN_SECTION)) {
+                query.and(sectionEntity.eq(DEFAULT_BPMN_SECTION).or(sectionEntity.isEmpty).or(sectionEntity.isNull))
+            } else {
+                query.and(QProcDefEntity.procDefEntity.sectionRef.eq(predQuery.sectionRef))
+            }
         }
         return query
     }
@@ -242,7 +261,7 @@ class ProcDefServiceImpl(
         return procDefRepo.count(predicateToQuery(predicate))
     }
 
-    override fun uploadNewRev(dto: ProcDefWithDataDto): ProcDefDto {
+    override fun uploadNewRev(dto: ProcDefWithDataDto, comment: String): ProcDefDto {
 
         val currentTenant = tenantService.getCurrent()
         val id = dto.id
@@ -255,19 +274,20 @@ class ProcDefServiceImpl(
         val newProcessDefDto = dto.toNewProcessDefDto()
 
         if (procDefEntity == null) {
-            result = uploadProcDefImpl(newProcessDefDto)
+            result = uploadProcDefImpl(newProcessDefDto, comment = comment)
         } else {
 
             val currentData = procDefEntity.lastRev!!.data
             val definitionDataIsChanged = !Arrays.equals(currentData, dto.data)
 
             if (definitionDataIsChanged) {
-                result = uploadProcDefImpl(newProcessDefDto)
+                result = uploadProcDefImpl(newProcessDefDto, comment = comment)
             } else {
 
                 procDefEntity.alfType = dto.alfType
                 procDefEntity.ecosTypeRef = dto.ecosTypeRef.toString()
                 procDefEntity.formRef = dto.formRef.toString()
+                procDefEntity.workingCopySourceRef = dto.workingCopySourceRef.toString()
                 procDefEntity.name = mapper.toString(dto.name)
                 procDefEntity.enabled = dto.enabled
                 procDefEntity.autoStartEnabled = dto.autoStartEnabled
@@ -292,6 +312,7 @@ class ProcDefServiceImpl(
             alfType = alfType,
             ecosTypeRef = ecosTypeRef,
             formRef = formRef,
+            workingCopySourceRef = workingCopySourceRef,
             format = format,
             procType = procType,
             enabled = enabled,
@@ -301,7 +322,7 @@ class ProcDefServiceImpl(
         )
     }
 
-    override fun uploadNewDraftRev(dto: ProcDefWithDataDto): ProcDefDto {
+    override fun uploadNewDraftRev(dto: ProcDefWithDataDto, comment: String, forceMajorVersion: Boolean): ProcDefDto {
         with(dto) {
 
             val currentTenant = tenantService.getCurrent()
@@ -318,6 +339,7 @@ class ProcDefServiceImpl(
                 currentProcDef.alfType = alfType
                 currentProcDef.ecosTypeRef = ecosTypeRef.toString()
                 currentProcDef.formRef = formRef.toString()
+                currentProcDef.workingCopySourceRef = workingCopySourceRef.toString()
                 currentProcDef.name = mapper.toString(name)
                 currentProcDef.modified = now
                 currentProcDef.enabled = enabled
@@ -329,7 +351,9 @@ class ProcDefServiceImpl(
 
             if (definitionDataIsChanged) {
 
-                if (currentRev.dataState == ProcDefRevDataState.RAW.name && currentUser == currentRev.createdBy) {
+                if (!forceMajorVersion && currentRev.dataState == ProcDefRevDataState.RAW.name &&
+                    currentUser == currentRev.createdBy
+                ) {
                     // update existing revision
 
                     currentRev.data = data
@@ -357,6 +381,7 @@ class ProcDefServiceImpl(
                     newRevision.format = format
                     newRevision.createdBy = currentUser
                     newRevision.dataState = ProcDefRevDataState.RAW.name
+                    newRevision.comment = comment
 
                     updateCurrentProcDefFromDto()
 
@@ -439,6 +464,10 @@ class ProcDefServiceImpl(
         return procDefRevRepo.findByDeploymentId(deploymentId)?.toDto()
     }
 
+    override fun getProcessDefRevByDeploymentIds(deploymentIds: List<String>): List<ProcDefRevDto> {
+        return procDefRevRepo.findByDeploymentIdIsIn(deploymentIds).map { it.toDto() }
+    }
+
     override fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto? {
         val currentTenant = tenantService.getCurrent()
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, id.type, id.id)
@@ -459,12 +488,12 @@ class ProcDefServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto? {
+    override fun findProcDef(procType: String, ecosTypeRef: EntityRef?, alfTypes: List<String>?): ProcDefRevDto? {
 
         val currentTenant = tenantService.getCurrent()
         var processDef: ProcDefEntity? = null
 
-        if (RecordRef.isNotEmpty(ecosTypeRef)) {
+        if (EntityRef.isNotEmpty(ecosTypeRef)) {
 
             val ecosType = ecosTypeRef.toString()
             processDef = procDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(
@@ -541,5 +570,7 @@ class ProcDefServiceImpl(
     class PredicateQuery {
         val moduleId: String? = null
         val procType: String? = null
+        val sectionRef: String? = null
+        val name: String? = null
     }
 }

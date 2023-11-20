@@ -7,11 +7,13 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.RefBinding
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.VariablesMappingPropagation
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 data class BpmnCallActivityDef(
     val id: String,
     val name: MLText,
+    val number: Int?,
     val documentation: MLText,
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),
@@ -30,9 +32,9 @@ data class BpmnCallActivityDef(
     val jobConfig: JobConfig,
 
     val multiInstanceConfig: MultiInstanceConfig? = null
-) {
+) : Validated {
 
-    init {
+    override fun validate() {
         if (processRef.isEmpty() && calledElement.isNullOrEmpty()) {
             throw EcosBpmnElementDefinitionException(id, "Process reference or called element must be specified.")
         }

@@ -1,0 +1,139 @@
+{
+  "id": "bpmn-admin-suspend-instance",
+  "formKey": "bpmn-admin-suspend-instance",
+  "title": {
+    "en": "bpmn-admin-suspend-instance"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": false,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "HTML"
+        },
+        "key": "html",
+        "tag": "div",
+        "className": "text-bold",
+        "attrs": [
+          {
+            "attr": "color",
+            "value": "grey"
+          }
+        ],
+        "content": {
+          "en": "<p>\nSuspending a process instance means that the execution is stopped, so the token state will not change. However, actions that do not change token state, like setting or removing variables, etc. will still succeed.</p>\n<p>\nTasks belonging to this process instance will also be suspended. This means that any actions influencing the tasks' lifecycles will fail, such as\n</p>\n\n<ul class=\"ul-initial\">\n\n<li>claiming</li>\n<li>completing</li>\n<li>delegation</li>\n<li>changes in task assignees, owners, etc.</li>\n\n</ul>\n\n<p>\nActions that only change task properties will still succeed, such as changing variables.\n</p>\n<p>\nIf a process instance is in the state suspended, the engine will also not execute jobs associated with this process instance.\n</p>\n<p>\nIf this process instance have a process instance hierarchy, suspending this process instance from the hierarchy will not suspend other process instances from that hierarchy.\n</p>\n<p>\nDo you really want to suspend this process instance?\n</p>\n",
+          "ru": "<p>\nПриостановка экземпляра процесса означает, что выполнение останавливается, поэтому состояние токена не изменится. Однако действия, которые не меняют состояние токена, например установка или удаление переменных и т. д., по-прежнему будут успешными.\n</p>\n<p>\nЗадачи, принадлежащие этому экземпляру процесса, также будут приостановлены. Это означает, что любые действия, влияющие на жизненный цикл задач, завершатся неудачей, например:\n</p>\n<ul class=\"ul-initial\">\n\n<li>утверждения</li>\n<li>завершение</li>\n<li>делегирование</li>\n<li>изменения в исполнителях задач, владельцах и т. д.</li>\n\n</ul>\n<p>\nДействия, которые изменяют только свойства задачи, по-прежнему будут успешными, например изменение переменных.    \n</p>\n<p>\nЕсли экземпляр процесса находится в состоянии приостановления, механизм также не будет выполнять задания, связанные с этим экземпляром процесса.\n</p>\n<p>\nЕсли этот экземпляр процесса имеет иерархию экземпляров процесса, приостановка этого экземпляра процесса из иерархии не приведет к приостановке других экземпляров процесса из этой иерархии.\n</p>\n<p>\nВы действительно хотите приостановить данный экземпляр процесса?\n</p>\n"
+        },
+        "refreshOnChange": false,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "htmlelement",
+        "input": false
+      },
+      {
+        "label": {
+          "ru": "Columns"
+        },
+        "key": "columns2",
+        "columns": [
+          {
+            "components": [
+              {
+                "label": "Cancel",
+                "action": "event",
+                "state": "",
+                "showValidations": false,
+                "event": "cancel",
+                "block": true,
+                "type": "button",
+                "input": true,
+                "key": "submit2",
+                "conditional": {
+                  "show": null,
+                  "when": null
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "md": 3,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 0
+          },
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 1,
+            "md": 3
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 2
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "index": 3,
+            "components": [
+              {
+                "label": {
+                  "ru": "Приостановить",
+                  "en": "Suspend"
+                },
+                "key": "submit",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true,
+                "headers": [
+                  {}
+                ]
+              }
+            ]
+          }
+        ],
+        "oneColumnInViewMode": false,
+        "type": "columns",
+        "input": false
+      }
+    ],
+    "formId": "bpmn-admin-suspend-instance"
+  },
+  "attributes": {},
+  "notExists": false
+}

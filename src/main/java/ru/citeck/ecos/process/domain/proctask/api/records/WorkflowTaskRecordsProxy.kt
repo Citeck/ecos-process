@@ -40,11 +40,20 @@ class WorkflowTaskRecordsProxy(
         }
 
         val documentTasksFromAlf = queryFromAlf(recsQuery)
-        val documentTasksFromEProc = queryTasksForDocumentFromEcosProcess(query, sortBy, page)
 
+        /*
+        Do not request Camunda tasks with Alfresco enabled due to complexities with filtering, sorting, and merging
+        search results. Expect that requests without a "document" with Alfresco enabled will only come from the mobile application
+         */
+        val documentTasksFromEProc: RecsQueryRes<*> = if (webAppsApi.isAppAvailable(AppName.ALFRESCO) && document.isEmpty()) {
+            RecsQueryRes<Any>()
+        } else {
+            queryTasksForDocumentFromEcosProcess(query, sortBy, page)
+        }
         val result = RecsQueryRes<Any>()
         result.setRecords(documentTasksFromAlf.getRecords() + documentTasksFromEProc.getRecords())
         result.setTotalCount(documentTasksFromAlf.getTotalCount() + documentTasksFromEProc.getTotalCount())
+        result.setHasMore(documentTasksFromAlf.getHasMore() || documentTasksFromEProc.getHasMore())
 
         return result
     }

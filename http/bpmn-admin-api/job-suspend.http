@@ -1,0 +1,18 @@
+# Приостановка фоновой задачи
+
+# @name JobSuspend
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "records": [
+    {
+      "id": "eproc/bpmn-job@8f81d072-6cd4-11ee-b8f8-16c23221ebc0",
+      "attributes": {
+        "action": "SUSPEND"
+      }
+    }
+  ]
+}
+

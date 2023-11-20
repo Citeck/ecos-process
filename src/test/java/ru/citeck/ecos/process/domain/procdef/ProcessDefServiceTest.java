@@ -10,6 +10,7 @@ import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils;
 import ru.citeck.ecos.process.EprocApp;
+import ru.citeck.ecos.process.domain.BpmnProcHelperJava;
 import ru.citeck.ecos.process.domain.cmmn.CmmnConstantsKt;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProc;
 import ru.citeck.ecos.process.domain.proc.command.createproc.CreateProcResp;
@@ -26,6 +27,7 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 import ru.citeck.ecos.webapp.lib.model.type.dto.TypeDef;
@@ -33,10 +35,12 @@ import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry;
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static ru.citeck.ecos.process.domain.bpmn.BpmnConstantsKt.BPMN_PROC_TYPE;
 
 @ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
@@ -92,6 +96,7 @@ public class ProcessDefServiceTest {
             "xml",
             alfType,
             ecosTypeRef,
+            EntityRef.EMPTY,
             EntityRef.EMPTY,
             procDefData,
             null,
@@ -160,5 +165,53 @@ public class ProcessDefServiceTest {
         assertNotNull(getProcStateResp);
         assertEquals(1, getProcStateResp.getVersion());
         assertArrayEquals(stateData, getProcStateResp.getStateData());
+    }
+
+    @Test
+    public void findAllBySectionRefTest() {
+        List<NewProcessDefDto> procDefDtos = new ArrayList<>();
+
+        for (int i = 0; i < 16; i++) {
+            String id = "def-" + i;
+            String sectionRef = "eproc/bpmn-section@testSection";
+
+            if (i < 3) {
+                sectionRef = "eproc/bpmn-section@someCustomSection";
+            } else if (i == 3 || i == 4) {
+                sectionRef = "";
+            } else if (i == 5 || i == 6) {
+                sectionRef = null;
+            }
+
+            NewProcessDefDto dto = new NewProcessDefDto(
+                id,
+                MLText.EMPTY,
+                BPMN_PROC_TYPE,
+                "xml",
+                "{http://www.citeck.ru/model/test/1.0}test-type",
+                EntityRef.EMPTY,
+                EntityRef.EMPTY,
+                EntityRef.EMPTY,
+                BpmnProcHelperJava.buildProcDefXml(id),
+                null,
+                true,
+                false,
+                EntityRef.valueOf(sectionRef),
+                EntityRef.EMPTY
+            );
+            procDefDtos.add(dto);
+        }
+
+        for (NewProcessDefDto dto : procDefDtos) {
+            procDefService.uploadProcDef(dto);
+        }
+
+        List<ProcDefDto> testSectionDefs = procDefService.findAll(Predicates.eq("sectionRef", "eproc/bpmn-section@testSection"), Integer.MAX_VALUE, 0);
+        List<ProcDefDto> customSectionDefs = procDefService.findAll(Predicates.eq("sectionRef", "eproc/bpmn-section@someCustomSection"), Integer.MAX_VALUE, 0);
+        List<ProcDefDto> defaultSectionDefs = procDefService.findAll(Predicates.eq("sectionRef", "eproc/bpmn-section@DEFAULT"), Integer.MAX_VALUE, 0);
+
+        assertEquals(9, testSectionDefs.size());
+        assertEquals(3, customSectionDefs.size());
+        assertEquals(4, defaultSectionDefs.size());
     }
 }

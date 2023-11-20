@@ -1,0 +1,78 @@
+# Скрин просмотра определенного инстанса процесса.
+
+# Пользователю показываем:
+#
+# id (ID) - идентификатор инстанса процесса
+# isSuspended (Приостановлен) - приостановлен ли процесс. Если приостановлен, то показываем иконку "пауза"
+# document (Документ) - документ, по которому запущен процесс, ссылка
+# definitionRef (Описание процесса) - ссылка на описание процесса
+# ecosDefRev (Версия описания) - версия описания процесса, ссылка. Для пользователя показываем цифру версии, вытащить по
+# атрибуту `version`
+# startTime (Время запуска) - время запуска процесса
+#
+# Отображение схемы:
+# bpmnData - схема бп
+# activityStatistics - статистика по активити, для подстветки на схеме.
+# Структура:
+# "activityStatistics": [
+#         "activityStatistics": [
+#          {
+#            "activityId": "Activity_0igjr8g",
+#            "instances": 6,
+#            "incidentStatistics": []
+#          },
+#          {
+#            "activityId": "Activity_0im5rhn",
+#            "instances": 1,
+#            "incidentStatistics": [
+#              {
+#                "type": "failedExternalTask",
+#                "count": 1
+#              },
+#              {
+#                "type": "failedJob",
+#                "count": 3
+#              }
+#            ]
+#          }
+#        ]
+#
+# Действия:
+#
+# Удалить процесс - удалить инстанс процесса. Реализовать как в админке - окно с подтверждением и выбором параметров
+# skipCustomListener, skipIoMappings
+# API см. ProcessInstanceDelete
+#
+# Приостановить процесс - приостановить инстанс процесса. Реализовать как в админке - окно с подтверждением и описанием
+# API см. ProcessInstanceSuspend
+#
+# Возобновить процесс - возобновить инстанс процесса. Реализовать как в админке - окно с подтверждением и описанием
+# API см. ProcessInstanceActivate
+#
+# Добавить переменную в инстанс процесса - Форма создания аналогична форме редактирования
+# переменной в процессе, описание см. в ProcessInstanceViewProcessVariables. За исключением, что необходимо добавить ввод
+# имени переменной (name).
+# Те типы, которые можем редактировать, их можно создавать.
+# API см. ProcessVariableCreateSimpleTypes, ProcessVariableCreateObject, в executionId передаем id инстанса процесса
+#
+
+# @name ProcessInstanceViewProcess
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "records": [
+        "eproc/bpmn-proc@11ad2ac7-24a1-11ee-a082-9ef946a7629a"
+    ],
+    "attributes": {
+        "document": "documentRef",
+        "ecosDefRev": "ecosDefRev",
+        "definitionRef": "ecosDefRev.processDefRef",
+        "startTime": "startTime",
+        "isSuspended": "isSuspended?bool",
+        "bpmnData": "ecosDefRev.definition",
+        "activityStatistics": "activityStatistics[]?json"
+    }
+}
+

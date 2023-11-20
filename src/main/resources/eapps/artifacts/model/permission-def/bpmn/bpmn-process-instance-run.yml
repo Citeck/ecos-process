@@ -1,0 +1,8 @@
+id: bpmn-process-instance-run
+name:
+  ru: Ручной запуск экземпляра БП
+  en: Manual start of BP instance
+
+appliesToTypes:
+  - emodel/type@bpmn-process-def
+  - emodel/type@bpmn-section

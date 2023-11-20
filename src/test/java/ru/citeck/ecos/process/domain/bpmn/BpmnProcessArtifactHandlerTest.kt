@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.apache.commons.lang3.LocaleUtils
-import org.camunda.bpm.engine.RepositoryService
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -13,8 +13,9 @@ import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
-import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
+import ru.citeck.ecos.process.domain.cleanDefinitions
+import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -37,28 +38,22 @@ class BpmnProcessArtifactHandlerTest {
     private lateinit var localAppService: LocalAppService
 
     @Autowired
-    private lateinit var bpmnProcService: BpmnProcService
+    private lateinit var bpmnProcessService: BpmnProcessService
 
     @Autowired
     private lateinit var procDefService: ProcDefService
 
-    @Autowired
-    private lateinit var camundaRepositoryService: RepositoryService
-
-    @BeforeEach
+    @BeforeAll
     fun setUp() {
         AuthContext.runAsSystem {
             localAppService.deployLocalArtifacts()
         }
     }
 
-    @AfterEach
+    @AfterAll
     fun tearDown() {
-        deleteAllProcDefinitions()
-
-        camundaRepositoryService.createDeploymentQuery().list().forEach {
-            camundaRepositoryService.deleteDeployment(it.id, true)
-        }
+        cleanDefinitions()
+        cleanDeployments()
     }
 
     @Test
@@ -95,8 +90,18 @@ class BpmnProcessArtifactHandlerTest {
     }
 
     @Test
+    fun `loaded process should save revision with deployment id`() {
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+
+        val revision = revisions.first()
+
+        assertNotNull(revision.deploymentId)
+        assertThat(revision.deploymentId).isNotBlank()
+    }
+
+    @Test
     fun `loaded process from artifact should be deployed to engine`() {
-        val definitions = bpmnProcService.getProcessDefinitionsByKey(BPMN_TEST_PROCESS_ID)
+        val definitions = bpmnProcessService.getProcessDefinitionsByKey(BPMN_TEST_PROCESS_ID)
 
         assertEquals(1, definitions.size)
         assertEquals(BPMN_TEST_PROCESS_ID, definitions.first().key)

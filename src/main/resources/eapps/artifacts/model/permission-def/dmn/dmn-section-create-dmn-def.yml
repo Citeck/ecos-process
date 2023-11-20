@@ -1,0 +1,7 @@
+id: dmn-section-create-dmn-def
+name:
+  ru: Создание DMN в разделе
+  en: DMN creation in section
+
+appliesToTypes:
+  - emodel/type@dmn-section

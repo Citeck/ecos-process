@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 import org.camunda.spin.impl.json.jackson.format.JacksonJsonDataFormat
 import org.camunda.spin.spi.DataFormatConfigurator
+import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
@@ -15,6 +16,7 @@ import spinjar.com.fasterxml.jackson.databind.JsonDeserializer
 import spinjar.com.fasterxml.jackson.databind.JsonSerializer
 import spinjar.com.fasterxml.jackson.databind.SerializerProvider
 import spinjar.com.fasterxml.jackson.databind.module.SimpleModule
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue as BpmnDataValueDeprecated
 
 class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDataFormat> {
 
@@ -25,6 +27,12 @@ class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDat
     override fun configure(dataFormat: JacksonJsonDataFormat) {
         val mapper = dataFormat.objectMapper
         val module = SimpleModule()
+
+        module.addSerializer(BpmnDataValueDeprecated::class.java, BpmnDataValueBackwardCompatibilityJsonSerializer())
+        module.addDeserializer(
+            BpmnDataValueDeprecated::class.java,
+            BpmnDataValueBackwardCompatibilityJsonDeserializer()
+        )
 
         module.addSerializer(BpmnDataValue::class.java, BpmnDataValueJsonSerializer())
         module.addDeserializer(BpmnDataValue::class.java, BpmnDataValueJsonDeserializer())
@@ -61,6 +69,22 @@ class ScriptObjectMirrorJsonDeserializerNull : JsonDeserializer<ScriptObjectMirr
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ScriptObjectMirror? {
         return null
+    }
+}
+
+@Suppress("DEPRECATION")
+class BpmnDataValueBackwardCompatibilityJsonSerializer : JsonSerializer<BpmnDataValueDeprecated>() {
+
+    override fun serialize(value: BpmnDataValueDeprecated, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeBinary(value.asBinary())
+    }
+}
+
+@Suppress("DEPRECATION")
+class BpmnDataValueBackwardCompatibilityJsonDeserializer : JsonDeserializer<BpmnDataValueDeprecated>() {
+
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): BpmnDataValueDeprecated {
+        return BpmnDataValueDeprecated.create(p.binaryValue)
     }
 }
 

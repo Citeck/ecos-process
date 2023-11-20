@@ -28,6 +28,8 @@ class ProcDefRevEntity {
 
     var dataState: String? = null
 
+    var comment: String? = null
+
     var version = 0
 
     @DBRef(lazy = true)

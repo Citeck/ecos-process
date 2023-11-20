@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.bpmnsection.patch
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.bpmnsection.config.BPMN_SECTION_REPO_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmnsection.config.BpmnSectionConfig
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -63,7 +63,7 @@ class AlfSectionsMigrationPatch(
         alfSections.map {
             val id = it.id.replaceFirst(SPACES_STORE_PREFIX, "")
             recordsService.create(
-                BPMN_SECTION_REPO_SOURCE_ID,
+                BpmnSectionConfig.SOURCE_ID,
                 mapOf(
                     "id" to id,
                     "name" to it.title

@@ -1,0 +1,47 @@
+# Список внешних задач c фильтрацией.
+# Поддерживается фильтрация по `id`, `workerId`, `topicName`, `activityId`, только EQUALS.
+
+# @name ProcessInstanceViewExternalTasksFilter
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-external-task",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "att": "bpmnProcess",
+                    "t": "eq",
+                    "val": "eproc/bpmn-proc@8f7a092a-6cd4-11ee-b8f8-16c23221ebc0"
+                },
+                {
+                    "att": "activityId",
+                    "t": "eq",
+                    "val": "Activity_09lcc75"
+                }
+            ]
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "priority"
+            }
+        ]
+    },
+    "attributes": {
+        "activityId": "activityId",
+        "retries": "retries?num",
+        "workerId": "workerId",
+        "lockExpirationTime": "lockExpirationTime",
+        "topic": "topic",
+        "priority": "priority?num"
+    }
+}
+

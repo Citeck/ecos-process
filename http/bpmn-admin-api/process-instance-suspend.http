@@ -1,0 +1,18 @@
+# Приостановка инстанса процесса
+
+# @name ProcessInstanceSuspend
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "records": [
+    {
+      "id": "eproc/bpmn-proc@11ad2ac7-24a1-11ee-a082-9ef946a7629a",
+      "attributes": {
+        "action": "SUSPEND"
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,40 @@
+# Скрин просмотра определенного инстанса процесса. Список инцидентов.
+
+# Функционал полностью идентичен списку инцедентов в скрине просмотра определенной версии процесса.
+# Отличается только запрос, фильтруем по bpmnProcess
+
+# @name ProcessInstanceViewProcessIncidents
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-incident",
+        "query": {
+            "att": "bpmnProcess",
+            "t": "eq",
+            "val": "eproc/bpmn-proc@9586eda8-6997-11ee-a5b6-2a741ec26063"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "_created"
+            }
+        ]
+    },
+    "attributes": {
+        "message": "message",
+        "processInstance": "processInstance.id",
+        "created": "_created",
+        "activityId": "activityId",
+        "failedActivityId": "failedActivityId",
+        "incidentType": "incidentType",
+        "note": "note"
+    }
+}
+

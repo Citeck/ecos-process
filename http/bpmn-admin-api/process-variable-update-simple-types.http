@@ -1,0 +1,31 @@
+# Обновление переменной процесса (простого типа)
+#
+# type - тип переменной
+# value - значение переменной
+#
+# Поддерживые типы:
+# `string` - строка
+# `date` - дата
+# `integer` - целое число
+# `boolean` - булево значение
+# `double` - дробное число
+# `long` - длинное целое число
+# `null` - пустое значение, используется, если переменной нужно присвоить значение null
+
+# @name ProcessVariableUpdateSimpleType
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "records": [
+        {
+            "id": "eproc/bpmn-variable-instance@bc752596-675c-11ee-96b1-fa02e06f9ec1",
+            "attributes": {
+                "type": "double",
+                "value": 100.322
+            }
+        }
+    ]
+}
+

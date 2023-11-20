@@ -2,26 +2,32 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import ecos.com.fasterxml.jackson210.annotation.JsonProperty
 import mu.KotlinLogging
+import org.apache.commons.lang3.StringUtils
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.DataUriUtil
-import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.BpmnEventSubscriptionService
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
+import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
+import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.perms.ProcDefPermsValue
@@ -34,6 +40,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -46,12 +53,12 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import ru.citeck.ecos.webapp.lib.spring.context.content.EcosContentService
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
-
-const val BPMN_PROCESS_DEF_RECORDS_SOURCE_ID = "bpmn-def"
 
 @Component
 class BpmnProcessDefRecords(
@@ -60,7 +67,10 @@ class BpmnProcessDefRecords(
     private val camundaRepoService: RepositoryService,
     private val remoteWebAppsApi: EcosRemoteWebAppsApi,
     private val procDefEventEmitter: ProcDefEventEmitter,
-    private val bpmnEventSubscriptionService: BpmnEventSubscriptionService
+    private val bpmnEventSubscriptionService: BpmnEventSubscriptionService,
+    private val bpmnProcessReportService: BpmnProcessReportService,
+    private val ecosContentService: EcosContentService,
+    private val bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -68,16 +78,19 @@ class BpmnProcessDefRecords(
     RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
+        const val ID = "bpmn-def"
 
         private const val APP_NAME = AppName.EPROC
         private const val QUERY_BATCH_SIZE = 100
         private const val LIMIT_REQUESTS_COUNT = 100000
         private const val DEFAULT_MAX_ITEMS = 10000000
 
+        private val DEFAULT_SECTION_REF = SectionType.BPMN.getRef("DEFAULT")
+
         private val log = KotlinLogging.logger {}
     }
 
-    override fun getId() = BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
+    override fun getId() = ID
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
 
@@ -100,24 +113,25 @@ class BpmnProcessDefRecords(
         } else {
             DEFAULT_MAX_ITEMS
         }
-        var requiredAmount = maxItems
+        val skip = recsQuery.page.skipCount
+        var requiredAmount = maxItems + skip
         val result = mutableListOf<Any>()
         var numberOfPermissionsCheck = 0
         do {
             val unfilteredBatch = procDefService.findAll(
                 predicate,
                 QUERY_BATCH_SIZE,
-                recsQuery.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
+                QUERY_BATCH_SIZE * numberOfExecutedRequests++
             )
 
-            val checkedRecords: List<BpmnProcDefRecord>
+            val checkedRecords: List<BpmnProcessDefRecord>
             if (AuthContext.isRunAsSystem()) {
-                checkedRecords = unfilteredBatch.map { BpmnProcDefRecord(it) }
+                checkedRecords = unfilteredBatch.map { BpmnProcessDefRecord(it) }
                     .take(requiredAmount)
                 numberOfPermissionsCheck = checkedRecords.size
             } else {
                 checkedRecords = unfilteredBatch.asSequence()
-                    .map { BpmnProcDefRecord(it) }
+                    .map { BpmnProcessDefRecord(it) }
                     .filter {
                         numberOfPermissionsCheck++
                         it.getPermissions().hasReadPerms()
@@ -127,7 +141,7 @@ class BpmnProcessDefRecords(
             }
 
             result.addAll(checkedRecords)
-            requiredAmount = maxItems - result.size
+            requiredAmount -= checkedRecords.size
             val hasMore = unfilteredBatch.size == QUERY_BATCH_SIZE
         } while (hasMore &&
             requiredAmount != 0 &&
@@ -136,6 +150,12 @@ class BpmnProcessDefRecords(
 
         if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
             log.warn("Request count limit reached! Request: $recsQuery")
+        }
+
+        if (skip <= result.size) {
+            result.subList(0, skip).clear()
+        } else {
+            result.clear()
         }
 
         var totalCount = procDefService.getCount(predicate)
@@ -186,11 +206,11 @@ class BpmnProcessDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return EntityRef.create(APP_NAME, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, this)
+        return EntityRef.create(APP_NAME, ID, this)
     }
 
     private fun EntityRef.getPerms(): ProcDefPermsValue {
-        return ProcDefPermsValue(this)
+        return ProcDefPermsValue(this, SectionType.BPMN)
     }
 
     private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
@@ -211,7 +231,7 @@ class BpmnProcessDefRecords(
                 it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
             ) {
 
-                it.sectionRef = "${EprocApp.NAME}/bpmn-section@DEFAULT"
+                it.sectionRef = DEFAULT_BPMN_SECTION
             } else if (it.sectionRef?.startsWith("workspace://SpacesStore/") == true) {
 
                 it.sectionRef = "${EprocApp.NAME}/bpmn-section@" + it.sectionRef?.substringAfterLast('/')
@@ -226,11 +246,34 @@ class BpmnProcessDefRecords(
             return RecordRef.create("alfresco", "workflow", "def_$recordId")
         }
 
+        // TODO: remove atts hack after fix in perms request (should run as sys)
+        val atts = AttContext.getInnerAttsMap().values
+        val allowRead = if (AuthContext.isRunAsSystem()) {
+            true
+        } else if (atts.size == 1 && StringUtils.startsWithAny(
+                atts.first(),
+                "?id",
+                "permissions",
+                "_permissions",
+                "_type",
+                "_status",
+                "sectionRef"
+            )
+        ) {
+            true
+        } else {
+            recordId.toProcDefRef().getPerms().hasReadPerms()
+        }
+
+        if (!allowRead) {
+            return null
+        }
+
         val ref = ProcDefRef.create(BPMN_PROC_TYPE, recordId)
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {
-            BpmnProcDefRecord(
+            BpmnProcessDefRecord(
                 ProcDefDto(
                     it.id,
                     it.name,
@@ -241,6 +284,7 @@ class BpmnProcessDefRecords(
                     it.ecosTypeRef,
                     it.alfType,
                     it.formRef,
+                    it.workingCopySourceRef,
                     it.enabled,
                     it.autoStartEnabled,
                     it.sectionRef,
@@ -259,6 +303,7 @@ class BpmnProcessDefRecords(
                 MLText(),
                 RecordRef.EMPTY,
                 RecordRef.EMPTY,
+                EntityRef.EMPTY,
                 null,
                 false,
                 "",
@@ -270,27 +315,54 @@ class BpmnProcessDefRecords(
             val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
             BpmnMutateRecord(
-                recordId,
-                recordId,
-                procDef.name ?: MLText(),
-                procDef.ecosTypeRef,
-                procDef.formRef,
-                null,
-                procDef.enabled,
-                "",
-                procDef.autoStartEnabled,
-                procDef.sectionRef,
-                procDef.image
+                id = recordId,
+                processDefId = recordId,
+                name = procDef.name ?: MLText(),
+                ecosType = procDef.ecosTypeRef,
+                formRef = procDef.formRef,
+                workingCopySourceRef = procDef.workingCopySourceRef,
+                definition = null,
+                enabled = procDef.enabled,
+                action = "",
+                autoStartEnabled = procDef.autoStartEnabled,
+                sectionRef = procDef.sectionRef,
+                imageBytes = procDef.image,
+                moduleId = recordId
             )
         }
     }
 
     override fun saveMutatedRec(record: BpmnMutateRecord): String {
         val procDefRef = record.id.toProcDefRef()
-        val perms = procDefRef.getPerms()
+        val perms = if (record.isNewRecord) {
+            ProcDefPermsValue(record, SectionType.BPMN)
+        } else {
+            procDefRef.getPerms()
+        }
 
-        if (!perms.hasWritePerms()) {
-            error("Permissions denied for mutate: $procDefRef")
+        if (record.sectionRef.getLocalId() == "ROOT") {
+            error("You can't create processes in ROOT category")
+        }
+        if (record.sectionRef.isEmpty()) {
+            record.sectionRef = DEFAULT_SECTION_REF
+        }
+
+        if (AuthContext.isNotRunAsSystemOrAdmin()) {
+
+            if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
+
+                val hasPermissionToCreateDefinitions = bpmnSectionPermissionsProvider.hasPermissions(
+                    record.sectionRef,
+                    BpmnPermission.SECTION_CREATE_PROC_DEF
+                )
+
+                if (!hasPermissionToCreateDefinitions) {
+                    error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                }
+            }
+            if (!record.isNewRecord && !perms.hasWritePerms()) {
+                error("Permissions denied. You can't edit process definition: $procDefRef")
+            }
         }
 
         val mutateData = bpmnMutateDataProcessor.getCompletedMutateData(record)
@@ -317,6 +389,7 @@ class BpmnProcessDefRecords(
                     ).toByteArray(),
                     ecosTypeRef = ecosType,
                     formRef = formRef,
+                    workingCopySourceRef = workingCopySourceRef,
                     format = BPMN_FORMAT,
                     procType = BPMN_PROC_TYPE,
                     sectionRef = sectionRef,
@@ -332,6 +405,7 @@ class BpmnProcessDefRecords(
                 // update existing process definition
                 currentProc.ecosTypeRef = ecosType
                 currentProc.formRef = formRef
+                currentProc.workingCopySourceRef = workingCopySourceRef
                 currentProc.name = name
                 currentProc.enabled = enabled
                 currentProc.autoStartEnabled = autoStartEnabled
@@ -350,6 +424,7 @@ class BpmnProcessDefRecords(
                         procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(name)
                         procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
                         procDef.otherAttributes[BPMN_PROP_FORM_REF] = formRef.toString()
+                        procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = workingCopySourceRef.toString()
                         procDef.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
                         procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
                         procDef.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
@@ -359,9 +434,9 @@ class BpmnProcessDefRecords(
                 }
 
                 procDefResult = if (saveAsDraft) {
-                    procDefService.uploadNewDraftRev(currentProc)
+                    procDefService.uploadNewDraftRev(currentProc, record.comment, record.forceMajorVersion)
                 } else {
-                    procDefService.uploadNewRev(currentProc)
+                    procDefService.uploadNewRev(currentProc, record.comment)
                 }
             }
 
@@ -458,14 +533,22 @@ class BpmnProcessDefRecords(
         }
     }
 
-    inner class BpmnProcDefRecord(
+    inner class BpmnProcessDefRecord(
         private val procDef: ProcDefDto
     ) {
 
-        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef()) }
+        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef(), SectionType.BPMN) }
+        private val revision: ProcDefRevDto? by lazy {
+            procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId)
+        }
+
+        @AttName("_permissions")
+        fun getPermissionsSysAtt(): ProcDefPermsValue {
+            return permsValue
+        }
 
         fun getPermissions(): ProcDefPermsValue {
-            return permsValue
+            return getPermissionsSysAtt()
         }
 
         fun getEcosType(): EntityRef {
@@ -489,8 +572,8 @@ class BpmnProcessDefRecords(
         }
 
         @AttName("?disp")
-        fun getDisplayName(): String {
-            return MLText.getClosestValue(getName(), I18nContext.getLocale())
+        fun getDisplayName(): MLText {
+            return getName()
         }
 
         fun getEnabled(): Boolean {
@@ -512,8 +595,19 @@ class BpmnProcessDefRecords(
         fun getProcessDefId() = procDef.id
 
         fun getDefinition(): String? {
-            val rev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId) ?: return null
-            return String(rev.data, StandardCharsets.UTF_8)
+            return revision?.let {
+                String(it.data, StandardCharsets.UTF_8)
+            }
+        }
+
+        @AttName("revisionId")
+        fun revisionId(): String {
+            return procDef.revisionId.toString()
+        }
+
+        @AttName("deploymentId")
+        fun getDeploymentId(): String {
+            return revision?.deploymentId ?: ""
         }
 
         @AttName("?json")
@@ -521,9 +615,9 @@ class BpmnProcessDefRecords(
             error("Json representation is not supported")
         }
 
-        @AttName("_type")
+        @AttName(RecordConstants.ATT_TYPE)
         fun getType(): EntityRef {
-            return EntityRef.create("emodel", "type", "bpmn-process-def")
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-process-def")
         }
 
         @AttName("startFormRef")
@@ -534,6 +628,11 @@ class BpmnProcessDefRecords(
         @AttName("formRef")
         fun getFormRef(): EntityRef {
             return procDef.formRef
+        }
+
+        @AttName("workingCopySourceRef")
+        fun getWorkingCopySourceRef(): EntityRef {
+            return procDef.workingCopySourceRef
         }
 
         @AttName(RecordConstants.ATT_CREATED)
@@ -553,56 +652,132 @@ class BpmnProcessDefRecords(
         fun getPreview(): EprocBpmnPreviewValue {
             return EprocBpmnPreviewValue(procDef.id, procDef.modified.toEpochMilli())
         }
+
+        fun getBpmnReport(): List<ReportElement>? {
+            val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it, validate = false) }
+            return def?.let { bpmnProcessReportService.generateReportElementListForBpmnDefinition(it) }
+        }
+
+        fun getSectionPath(): List<SectionPathPart> {
+            val getAtts: (EntityRef) -> SectionDto = {
+                recordsService.getAtts(it, SectionDto::class.java)
+            }
+
+            val getInfoByDto: (SectionDto) -> SectionPathPart = { section ->
+                SectionPathPart(
+                    code = section.sectionCode?.takeIf { it.isNotBlank() },
+                    name = section.name
+                )
+            }
+
+            val result = ArrayList<SectionPathPart>()
+            var sectionDto = getAtts(procDef.sectionRef)
+            result.add(getInfoByDto(sectionDto))
+
+            var currentRef = sectionDto.parent
+
+            while (currentRef != null) {
+                sectionDto = getAtts(currentRef)
+                result.add(getInfoByDto(sectionDto))
+                currentRef = sectionDto.parent
+            }
+
+            return result.reversed()
+        }
     }
 
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {
 
         fun getUrl(): String {
-            val ref = EntityRef.create(EprocApp.NAME, BPMN_PROCESS_DEF_RECORDS_SOURCE_ID, id).toString()
+            val ref = EntityRef.create(EprocApp.NAME, ID, id).toString()
             return "/gateway/eproc/api/procdef/preview?ref=$ref&cb=$cacheBust"
         }
     }
 
-    class BpmnMutateRecord(
+    inner class BpmnMutateRecord(
         var id: String,
         var processDefId: String,
         var name: MLText,
         var ecosType: EntityRef,
         var formRef: EntityRef,
+        var workingCopySourceRef: EntityRef?,
         var definition: String? = null,
         var enabled: Boolean,
         var action: String = "",
         var autoStartEnabled: Boolean,
         var sectionRef: EntityRef,
         var imageBytes: ByteArray?,
-        var createdFromVersion: EntityRef = EntityRef.EMPTY
+        var createdFromVersion: EntityRef = EntityRef.EMPTY,
+        var moduleId: String? = null,
+        var forceMajorVersion: Boolean = false,
+        var comment: String = "",
+        var isUploadNewVersion: Boolean = false
     ) {
+        val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
+        val isNewRecord = id.isBlank()
+
+        @AttName(RecordConstants.ATT_TYPE)
+        fun getType(): EntityRef {
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-process-def")
+        }
+
+        @JsonProperty("version:version")
+        fun applyUploadNewVersionState(version: String) {
+            if (version.isNotBlank()) {
+                forceMajorVersion = true
+
+                isUploadNewVersion = id.isNotBlank()
+            }
+        }
+
+        @JsonProperty("version:comment")
+        fun setVersionComment(comment: String) {
+            this.comment = comment
+        }
 
         fun setImage(imageUrl: String) {
             imageBytes = DataUriUtil.parseData(imageUrl).data
         }
 
         @JsonProperty("_content")
-        fun setContent(contentList: List<ObjectData>) {
-
-            val base64Content = contentList[0].get("url", "")
-            val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
-            val dataMatch = contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
-
-            val format = dataMatch.groupValues[1]
-            val contentText = String(Base64.getDecoder().decode(dataMatch.groupValues[2]))
-
-            definition = when (format) {
-                "text/xml" -> {
-                    contentText
+        fun setContent(content: Any) {
+            definition = when (content) {
+                is String -> {
+                    if (content.trim().startsWith("<?xml")) {
+                        content
+                    } else {
+                        ecosContentService.getContent(EntityRef.valueOf(content))?.readContentAsText()
+                            ?: error("Content is not found: $content")
+                    }
                 }
 
-                "application/json" -> {
-                    error("Json is not supported")
+                is List<*> -> {
+                    val firsElement: Any? = content[0]
+
+                    val contentData = ObjectData.create(firsElement)
+                    val base64Content = contentData.get("url", "")
+                    val contentRegex = "^data:(.+?);base64,(.+)$".toRegex()
+                    val dataMatch =
+                        contentRegex.matchEntire(base64Content) ?: error("Incorrect content: $base64Content")
+
+                    val format = dataMatch.groupValues[1]
+                    when (format) {
+                        "text/xml" -> {
+                            String(Base64.getDecoder().decode(dataMatch.groupValues[2]))
+                        }
+
+                        "application/json" -> {
+                            error("Json is not supported")
+                        }
+
+                        else -> {
+                            error("Unknown format: $format")
+                        }
+                    }
                 }
 
                 else -> {
-                    error("Unknown format: $format")
+                    error("Unknown content type: ${content::class.java}")
                 }
             }
         }
@@ -654,4 +829,17 @@ class BpmnProcessDefRecords(
 
         fun getDisplayName() = getName()
     }
+
+    data class SectionDto(
+        val sectionCode: String?,
+        @AttName("name?json")
+        val name: MLText?,
+        @AttName("parentRef?id")
+        val parent: EntityRef?
+    )
+
+    inner class SectionPathPart(
+        val code: String?,
+        var name: MLText?
+    )
 }

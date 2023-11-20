@@ -11,6 +11,7 @@ data class NewProcessDefDto(
     val alfType: String? = null,
     val ecosTypeRef: EntityRef = EntityRef.EMPTY,
     val formRef: EntityRef = EntityRef.EMPTY,
+    val workingCopySourceRef: EntityRef = EntityRef.EMPTY,
     val data: ByteArray,
     val image: ByteArray?,
     val enabled: Boolean = false,

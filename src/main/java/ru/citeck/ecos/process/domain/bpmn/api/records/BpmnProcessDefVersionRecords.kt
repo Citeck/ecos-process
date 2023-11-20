@@ -4,10 +4,13 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.service.isAllow
+import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
@@ -26,13 +29,13 @@ private const val DRAFT_TAG = "draft"
 private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 
 @Component
-class BpmnProcDefVersionRecords(
+class BpmnProcessDefVersionRecords(
     private val procDefService: ProcDefService,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
-        const val ID = "$BPMN_PROCESS_DEF_RECORDS_SOURCE_ID-version"
+        const val ID = "${BpmnProcessDefRecords.ID}-version"
     }
 
     private val versionRef = ThreadLocal<EntityRef>()
@@ -44,17 +47,28 @@ class BpmnProcDefVersionRecords(
     override fun getRecToMutate(recordId: String): BpmnProcessDefRecords.BpmnMutateRecord {
         val procDefRev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, UUID.fromString(recordId))
             ?: error("Process definition not found for version: $recordId")
-
-        if (procDefRev.procDefId.isBlank()) {
-            error("Process definition id is blank for version: $recordId")
+        check(procDefRev.procDefId.isNotBlank()) {
+            "Process definition id is required"
         }
 
-        versionRef.set(procDefRev.getRef())
+        versionRef.set(procDefRev.getProcessDefVersionsRef())
 
         return bpmnProcessDefRecords.getRecToMutate(procDefRev.procDefId)
     }
 
     override fun saveMutatedRec(record: BpmnProcessDefRecords.BpmnMutateRecord): String {
+        check(
+            BpmnPermission.WRITE.isAllow(
+                EntityRef.Companion.create(
+                    AppName.EPROC,
+                    BpmnProcessDefRecords.ID,
+                    record.id
+                )
+            )
+        ) {
+            "No permission to update process definition ${record.id}"
+        }
+
         record.createdFromVersion = versionRef.get()
         versionRef.remove()
 
@@ -62,11 +76,23 @@ class BpmnProcDefVersionRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val record = recsQuery.getQuery(VersionQuery::class.java).record
-        val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, record.getLocalId())
+        val query = recsQuery.getQuery(VersionQuery::class.java)
+        val bpmnDefId = query.record.getLocalId()
+        check(bpmnDefId.isNotBlank()) {
+            "Process definition id is required"
+        }
 
-        val versions = procDefService.getProcessDefRevs(procDefRef).map {
+        if (!BpmnPermission.READ.isAllow(query.record)) {
+            return RecsQueryRes<VersionRecord>()
+        }
+
+        val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, bpmnDefId)
+        var versions = procDefService.getProcessDefRevs(procDefRef).map {
             it.toVersionRecord()
+        }
+
+        if (query.onlyDeployed) {
+            versions = versions.filter { it.deploymentId.isNotBlank() }
         }
 
         val result = RecsQueryRes<VersionRecord>()
@@ -76,9 +102,29 @@ class BpmnProcDefVersionRecords(
     }
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any> {
-        return procDefService.getProcessDefRevs(recordIds.map { UUID.fromString(it) }).map {
-            it.toVersionRecord()
+        val revisions = procDefService.getProcessDefRevs(recordIds.map { UUID.fromString(it) })
+            .map {
+                it.toVersionRecord()
+            }
+            .sortByIds(recordIds)
+
+        val uniqueProcDefs = revisions.map { it.procDefId }.distinct()
+        check(uniqueProcDefs.size == 1) {
+            "Support get atts of revision only for one process definition"
         }
+        check(
+            BpmnPermission.READ.isAllow(
+                EntityRef.Companion.create(
+                    AppName.EPROC,
+                    BpmnProcessDefRecords.ID,
+                    uniqueProcDefs.first()
+                )
+            )
+        ) {
+            "No permission to read process definition ${uniqueProcDefs.first()}"
+        }
+
+        return revisions
     }
 
     private fun ProcDefRevDto.toVersionRecord(): VersionRecord {
@@ -92,9 +138,10 @@ class BpmnProcDefVersionRecords(
             dataState = dataState,
             procDefId = procDefId,
             modified = created,
-            downloadUrl = "/gateway/${AppName.EPROC}/api/proc-def/version/data?ref=${getRef()}",
+            downloadUrl = "/gateway/${AppName.EPROC}/api/proc-def/version/data?ref=${getProcessDefVersionsRef()}",
             fileName = "${procDefId}_v$externalVersion.bpmn.xml",
             name = MLText.EMPTY,
+            comment = comment,
             modifier = if (createdBy.isNullOrBlank()) {
                 RecordRef.EMPTY
             } else {
@@ -135,7 +182,7 @@ class BpmnProcDefVersionRecords(
         val editLink: String = EDIT_BPMN_PROC_LINK.format(RecordRef.create(AppName.EPROC, ID, id)),
 
         private val dto: ProcDefRevDto
-    ) {
+    ) : IdentifiableRecord {
 
         @get:AttName(".disp")
         val disp: MLText
@@ -160,9 +207,21 @@ class BpmnProcDefVersionRecords(
                 return MLText(disp)
             }
 
+        @get:AttName(RecordConstants.ATT_MODIFIED)
+        val attModified: Instant
+            get() = modified
+
+        @get:AttName(RecordConstants.ATT_MODIFIER)
+        val attModifier: EntityRef
+            get() = modifier
+
         @get:AttName("definition")
         val definition: String
             get() = String(data, Charsets.UTF_8)
+
+        @get:AttName("processDefRef")
+        val processDefRef: EntityRef
+            get() = EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, procDefId)
 
         /**
          *  Lazy load data to avoid memory leaks. See [ProcDefRevDto.data]
@@ -170,13 +229,18 @@ class BpmnProcDefVersionRecords(
         @get:AttName("data")
         val data: ByteArray
             get() = dto.data
+
+        override fun getIdentificator(): String {
+            return id
+        }
     }
 }
 
-private fun ProcDefRevDto.getRef(): EntityRef {
-    return RecordRef.create(AppName.EPROC, BpmnProcDefVersionRecords.ID, id.toString())
+private fun ProcDefRevDto.getProcessDefVersionsRef(): EntityRef {
+    return RecordRef.create(AppName.EPROC, BpmnProcessDefVersionRecords.ID, id.toString())
 }
 
 data class VersionQuery(
-    val record: EntityRef
+    val record: EntityRef,
+    val onlyDeployed: Boolean = false
 )

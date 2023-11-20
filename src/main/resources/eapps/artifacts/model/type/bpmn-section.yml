@@ -8,6 +8,17 @@ name:
 system: true
 sourceId: eproc/bpmn-section
 
+assignablePerms:
+  - emodel/permission-def@bpmn-section-create-process-def
+  - emodel/permission-def@bpmn-section-create-subsection
+  - emodel/permission-def@bpmn-section-edit-process-def
+  - emodel/permission-def@bpmn-process-def-deploy
+  - emodel/permission-def@bpmn-process-def-report-view
+  - emodel/permission-def@bpmn-process-instance-read
+  - emodel/permission-def@bpmn-process-instance-edit
+  - emodel/permission-def@bpmn-process-instance-migrate
+  - emodel/permission-def@bpmn-process-instance-run
+
 model:
   attributes:
     - id: name
@@ -15,6 +26,10 @@ model:
         ru: Имя
         en: Name
       type: MLTEXT
+    - id: sectionCode
+      name:
+        ru: Код
+        en: Code
     - id: parentRef
       name:
         ru: Родительская категория

@@ -5,8 +5,8 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 interface ProcDefService {
@@ -15,9 +15,9 @@ interface ProcDefService {
 
     fun uploadProcDefDraft(processDef: NewProcessDefDto): ProcDefDto
 
-    fun uploadNewRev(dto: ProcDefWithDataDto): ProcDefDto
+    fun uploadNewRev(dto: ProcDefWithDataDto, comment: String = ""): ProcDefDto
 
-    fun uploadNewDraftRev(dto: ProcDefWithDataDto): ProcDefDto
+    fun uploadNewDraftRev(dto: ProcDefWithDataDto, comment: String = "", forceMajorVersion: Boolean = false): ProcDefDto
 
     fun findAllWithData(predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto>
 
@@ -39,7 +39,12 @@ interface ProcDefService {
 
     fun getProcessDefRevByDeploymentId(deploymentId: String): ProcDefRevDto?
 
-    fun findProcDef(procType: String, ecosTypeRef: RecordRef?, alfTypes: List<String>?): ProcDefRevDto?
+    fun getProcessDefRevByDeploymentIds(deploymentIds: List<String>): List<ProcDefRevDto>
+
+    /**
+     * return first enabled process definition by ecosTypeRef hierarchy
+     */
+    fun findProcDef(procType: String, ecosTypeRef: EntityRef?, alfTypes: List<String>?): ProcDefRevDto?
 
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?
 

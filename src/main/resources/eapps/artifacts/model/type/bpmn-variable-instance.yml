@@ -1,0 +1,12 @@
+---
+id: bpmn-variable-instance
+name:
+  en: BPMN Variable instance
+  ru: Переменная экземпляра BPMN процесса
+system: true
+sourceId: eproc/bpmn-variable-instance
+inheritActions: false
+actions:
+  - uiserv/action@edit-variable-bpmn-instance
+  - uiserv/action@delete-variable-bpmn-instance
+defaultCreateVariant: true

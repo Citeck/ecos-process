@@ -128,16 +128,16 @@ class EcosOmgConverters(
         return omgObjectFactory.createTLaneFlowNodeRef(item) as JAXBElement<T>
     }
 
-    fun import(item: Any): EcosElementData<ObjectData> {
-        return import(item, ImportContext(this))
+    fun import(item: Any, validate: Boolean = true): EcosElementData<ObjectData> {
+        return import(item, ImportContext(this, validate))
     }
 
     fun import(item: Any, context: ImportContext): EcosElementData<ObjectData> {
         return import(item, ObjectData::class.java, context)
     }
 
-    fun <T : Any> import(item: Any, expectedType: Class<T>): EcosElementData<T> {
-        return import(item, expectedType, ImportContext(this))
+    fun <T : Any> import(item: Any, expectedType: Class<T>, validate: Boolean = true): EcosElementData<T> {
+        return import(item, expectedType, ImportContext(this, validate))
     }
 
     fun <T : Any> import(item: Any, expectedType: Class<T>, context: ImportContext): EcosElementData<T> {
@@ -154,6 +154,10 @@ class EcosOmgConverters(
         }
 
         val ecosData = converter.converter.import(item, context)
+        if (context.validateRequired && ecosData is Validated) {
+            ecosData.validate()
+        }
+
         val type = ConvertUtils.getTypeByClass(ecosData::class.java)
 
         val convertedData = Json.mapper.convert(ecosData, expectedType)

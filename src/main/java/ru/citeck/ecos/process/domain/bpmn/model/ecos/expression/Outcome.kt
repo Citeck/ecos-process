@@ -41,7 +41,10 @@ class Outcome(
         val EMPTY = Outcome("")
     }
 
-    constructor(taskDefinitionKey: String, value: String, name: MLText) : this("$taskDefinitionKey$SEPARATOR$value", name)
+    constructor(taskDefinitionKey: String, value: String, name: MLText) : this(
+        "$taskDefinitionKey$SEPARATOR$value",
+        name
+    )
 
     init {
         if (data.isNotBlank()) {

@@ -1,0 +1,13 @@
+---
+id: version-migration
+name:
+  ru: Миграция версий
+  en: Version's migration
+type: open-url
+config:
+  withinEcosTab: true
+  url: /v2/bpmn-migration
+predicate:
+  t: eq
+  att: ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-migrate?bool!
+  val: true

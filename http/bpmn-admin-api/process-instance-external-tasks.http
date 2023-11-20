@@ -1,0 +1,64 @@
+# Скрин просмотра определенного инстанса процесса. Список внешних задач.
+
+# В списке пользователю показываем:
+#
+# id (Id внешней задачи) - идентификатор внешней задачи
+#
+# activityId (Элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+# По нажатию выделяем элемент в схеме процесса и перемещаемся к нему.
+#
+# retries (Попытки) - количество попыток выполнения задачи
+#
+# workerId (Id обрабочика) - идентификатор обработчика
+#
+# lockExpirationTime (Срок блокировки) - дата и время окончания блокировки задачи
+#
+# topic (Топик) - Топик задачи
+#
+# priority (Приоритет) - приоритет задачи
+#
+#
+# Пагинация поддерживается.
+# По умолчанию идет сортировка по priority desc
+# В список добавить возможность сортировки по - id, priority asc / desc
+#
+# В query параметр bpmnProcess обязательный
+#
+# Добавить окно поиска с фильтрацией equals по `id`, `workerId`, `topicName`, `activityId`
+# Пример см ProcessInstanceViewExternalTasksFilter
+#
+
+# @name ProcessInstanceViewExternalTasks
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-external-task",
+        "query": {
+            "att": "bpmnProcess",
+            "t": "eq",
+            "val": "eproc/bpmn-proc@b29af474-5dd9-11ee-9787-62d3dfa44630"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "priority"
+            }
+        ]
+    },
+    "attributes": {
+        "activityId": "activityId",
+        "retries": "retries?num",
+        "workerId": "workerId",
+        "lockExpirationTime": "lockExpirationTime",
+        "topic": "topic",
+        "priority": "priority?num"
+    }
+}
+

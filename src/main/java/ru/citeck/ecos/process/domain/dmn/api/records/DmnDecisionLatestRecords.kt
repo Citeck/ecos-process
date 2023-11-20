@@ -3,6 +3,8 @@ package ru.citeck.ecos.process.domain.dmn.api.records
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.DecisionDefinition
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.api.records.IdentifiableRecord
+import ru.citeck.ecos.process.domain.bpmn.api.records.sortByIds
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestDecisionDefinitionsByKeys
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
@@ -26,8 +28,6 @@ class DmnDecisionLatestRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val processDefs = camundaRepositoryService.createProcessDefinitionQuery().latestVersion().list()
-
         val count = camundaRepositoryService
             .createDecisionDefinitionQuery()
             .latestVersion()
@@ -55,6 +55,7 @@ class DmnDecisionLatestRecords(
             .map {
                 it.toDecisionRecord()
             }
+            .sortByIds(recordIds)
     }
 
     private fun DecisionDefinition.toDecisionRecord() = DecisionLatestRecord(
@@ -73,5 +74,10 @@ class DmnDecisionLatestRecords(
         val definition: EntityRef = EntityRef.EMPTY,
         val version: Int,
         val name: String? = ""
-    )
+    ) : IdentifiableRecord {
+
+        override fun getIdentificator(): String {
+            return id
+        }
+    }
 }

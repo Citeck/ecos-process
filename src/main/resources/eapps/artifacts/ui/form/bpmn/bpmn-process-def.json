@@ -96,7 +96,7 @@
                 "key": "sectionRef",
                 "dataSrc": "custom",
                 "data": {
-                  "custom": "values = _.get(data, 'sectionsList.records', []);"
+                  "custom": "values = _.get(data, 'sectionsList.records', []).filter((category) => category.canCreate);"
                 },
                 "defaultValue": "",
                 "refreshOn": [
@@ -210,7 +210,8 @@
             "query": "value = {\n  sourceId: 'eproc/bpmn-section',\n  language: 'predicate',\n  query: {}\n}",
             "attributes": {
               "label": "?disp",
-              "value": "?id"
+              "value": "?id",
+              "canCreate": "permissions._has.bpmn-section-create-process-def?bool"
             },
             "isSingle": false
           },

@@ -6,7 +6,6 @@ import ru.citeck.ecos.apps.artifact.controller.type.binary.BinArtifact
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.api.records.BPMN_PROCESS_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DEF_STATE
@@ -24,7 +23,8 @@ private const val ARTIFACT_TYPE = "process/bpmn"
 @Component
 class BpmnProcessArtifactHandler(
     private val recordsService: RecordsService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords
 ) : EcosArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String) {
@@ -64,12 +64,13 @@ class BpmnProcessArtifactHandler(
         val definition = BpmnXmlUtils.readFromString(stringDef)
         val isRAW = definition.otherAttributes[BPMN_PROP_DEF_STATE] == ProcDefRevDataState.RAW.name
 
-        val bpmnMutateRecord = BpmnProcessDefRecords.BpmnMutateRecord(
+        val bpmnMutateRecord = bpmnProcessDefRecords.BpmnMutateRecord(
             id = "",
             processDefId = "",
             name = MLText.EMPTY,
             ecosType = EntityRef.EMPTY,
             formRef = EntityRef.EMPTY,
+            workingCopySourceRef = EntityRef.EMPTY,
             definition = stringDef,
             enabled = false,
             autoStartEnabled = false,
@@ -82,6 +83,6 @@ class BpmnProcessArtifactHandler(
             imageBytes = null
         )
 
-        recordsService.mutate("${AppName.EPROC}/$BPMN_PROCESS_DEF_RECORDS_SOURCE_ID@", bpmnMutateRecord)
+        recordsService.mutate("${AppName.EPROC}/${BpmnProcessDefRecords.ID}@", bpmnMutateRecord)
     }
 }

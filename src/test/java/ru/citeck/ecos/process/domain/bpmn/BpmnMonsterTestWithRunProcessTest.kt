@@ -31,6 +31,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.util.ResourceUtils
+import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
@@ -41,7 +42,6 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
@@ -51,6 +51,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -79,6 +80,7 @@ private const val ERROR = "error"
 private const val SERVICE_TASK = "servicetask"
 private const val CONDITIONAL = "conditional"
 private const val CALL_ACTIVITY = "callactivity"
+private const val BUSINESS_KEY = "businesskey"
 
 /**
  * Why all tests places on one monster class?
@@ -135,6 +137,8 @@ class BpmnMonsterTestWithRunProcessTest {
     @MockBean
     private lateinit var notificationService: NotificationService
 
+    private lateinit var documentRecordsDao: InMemRecordsDao<Any>
+
     companion object {
         private val harryRecord = PotterRecord()
         private val harryRef = EntityRef.valueOf("hogwarts/people@harry")
@@ -149,6 +153,7 @@ class BpmnMonsterTestWithRunProcessTest {
         private val usersGroupRef = EntityRef.valueOf("emodel/authority-group@users")
 
         private val docRecord = DocRecord()
+        private val modifiedDocRecord = ModifiedDocRecord()
         private val docRef = EntityRef.valueOf("store/doc@1")
         private val docExplicitRef = EntityRef.valueOf("doc@explicit")
 
@@ -177,14 +182,14 @@ class BpmnMonsterTestWithRunProcessTest {
                 .build()
         )
 
-        recordsService.register(
-            RecordsDaoBuilder.create("store/doc")
-                .addRecord(
-                    docRef.getLocalId(),
-                    docRecord
-                )
-                .build()
-        )
+        documentRecordsDao = RecordsDaoBuilder.create("store/doc")
+            .addRecord(
+                docRef.getLocalId(),
+                docRecord
+            )
+            .build()
+
+        recordsService.register(documentRecordsDao)
 
         recordsService.register(
             RecordsDaoBuilder.create("emodel/person")
@@ -225,7 +230,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @AfterEach
     fun clearSubscriptions() {
-        deleteAllProcDefinitions()
+        cleanDefinitions()
         camundaMyBatisExtension.deleteAllEventSubscriptions()
     }
 
@@ -3546,6 +3551,202 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("endEvent")
     }
 
+    @Test
+    fun `test conditional intermediate catch event react on document change`() {
+        val procId = "test-conditional-document-intermediate-catch-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        emptyList()
+                    )
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `conditional event should not react on document change if reaction flag is false`() {
+        val procId = "test-conditional-disabled-document-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        emptyList()
+                    )
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test conditional event with document variables react on document change`() {
+        val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        listOf(ChangedValue("name"))
+                    )
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test conditional event with multiple document variables react on document change`() {
+        val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        listOf(
+                            ChangedValue("name"),
+                            ChangedValue("another_variable")
+                        )
+                    )
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test conditional event with document variables should not react on another variable change`() {
+        val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        listOf(ChangedValue("another_variable"))
+                    )
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test conditional boundary event react on document change`() {
+        val procId = "test-conditional-document-boundary-event"
+
+        saveAndDeployBpmn(CONDITIONAL, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+
+            documentRecordsDao.setRecord(
+                docRef.getLocalId(),
+                modifiedDocRecord
+            )
+
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    docRef,
+                    Diff(
+                        emptyList()
+                    )
+                )
+            )
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString(),
+            variables_docRef
+        ).execute()
+
+        verify(process, never()).hasFinished("endEvent")
+        verify(process).hasFinished("endFromEvent")
+    }
+
     // ---CALL ACTIVITY TESTS ---
 
     @Test
@@ -3754,6 +3955,50 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    // ---BUSINESS KEY TESTS ---
+
+    @Test
+    fun `resolve business key by document test`() {
+        val procId = "test-resolve-business-key"
+
+        saveAndDeployBpmn(BUSINESS_KEY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it.processInstance.businessKey).isEqualTo(docRef.toString())
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            variables_docRef
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `resolve business key by source business key test`() {
+        val procId = "test-resolve-business-key"
+
+        saveAndDeployBpmn(BUSINESS_KEY, procId)
+
+        `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
+
+        `when`(childProcess.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it.processInstance.businessKey).isEqualTo(docRef.toString())
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            docRef.toString()
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
         action: () -> Unit
@@ -3806,6 +4051,15 @@ class BpmnMonsterTestWithRunProcessTest {
 
         @AttName("name")
         val name: String = "Doc 1",
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
+
+    class ModifiedDocRecord(
+
+        @AttName("name")
+        val name: String = "Doc 2",
 
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")

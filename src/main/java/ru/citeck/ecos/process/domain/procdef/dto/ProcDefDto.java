@@ -39,6 +39,8 @@ public class ProcDefDto {
 
     private EntityRef formRef;
 
+    private EntityRef workingCopySourceRef;
+
     @NotNull
     private Boolean enabled;
 
@@ -63,6 +65,7 @@ public class ProcDefDto {
                       @NotNull EntityRef ecosTypeRef,
                       @NotNull String alfType,
                       EntityRef formRef,
+                      EntityRef workingCopySourceRef,
                       Boolean enabled,
                       Boolean autoStartEnabled,
                       @NotNull
@@ -78,6 +81,7 @@ public class ProcDefDto {
         this.ecosTypeRef = ecosTypeRef;
         this.alfType = alfType;
         this.formRef = formRef;
+        this.workingCopySourceRef = workingCopySourceRef;
         this.enabled = enabled;
         this.autoStartEnabled = autoStartEnabled;
         this.sectionRef = sectionRef;
@@ -217,5 +221,13 @@ public class ProcDefDto {
 
     public void setDataState(ProcDefRevDataState dataState) {
         this.dataState = dataState;
+    }
+
+    public EntityRef getWorkingCopySourceRef() {
+        return workingCopySourceRef;
+    }
+
+    public void setWorkingCopySourceRef(EntityRef workingCopySourceRef) {
+        this.workingCopySourceRef = workingCopySourceRef;
     }
 }

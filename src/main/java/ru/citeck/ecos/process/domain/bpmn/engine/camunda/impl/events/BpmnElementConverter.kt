@@ -7,7 +7,7 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcService
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.records2.RecordRef
@@ -21,7 +21,7 @@ private const val CLASS_IMPL_POSTFIX = "Impl"
  */
 @Component
 class BpmnElementConverter(
-    val bpmnProcService: BpmnProcService,
+    val bpmnProcessService: BpmnProcessService,
     val procDefService: ProcDefService,
 ) {
 
@@ -34,7 +34,7 @@ class BpmnElementConverter(
 private lateinit var cnv: BpmnElementConverter
 
 fun DelegateExecution.toFlowElement(): FlowElementEvent {
-    val processDefinition = cnv.bpmnProcService.getProcessDefinition(processDefinitionId)
+    val processDefinition = cnv.bpmnProcessService.getProcessDefinition(processDefinitionId)
     val flowElement = bpmnModelElementInstance
 
     if (processDefinition == null || flowElement == null) {
@@ -59,7 +59,7 @@ fun DelegateExecution.toFlowElement(): FlowElementEvent {
 }
 
 fun DelegateTask.toTaskEvent(): UserTaskEvent {
-    val processDefinition = cnv.bpmnProcService.getProcessDefinition(processDefinitionId) ?: error(
+    val processDefinition = cnv.bpmnProcessService.getProcessDefinition(processDefinitionId) ?: error(
         "Process definition is null. TaskId: $id, name: $name, executionId: $executionId, " +
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
     )

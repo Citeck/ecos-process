@@ -1,0 +1,81 @@
+id: bpmn-subordinates-tasks
+name: { ru: Задачи подчиненных, en: Subordinates tasks }
+
+sourceId: eproc/proc-task
+system: true
+
+predicate:
+  t: eq
+  a: actorManager
+  v: $CURRENT
+
+actions:
+  - uiserv/action@view-task
+  - uiserv/action@view-task-in-background
+
+columns:
+
+  - id: priority
+    name:
+      en: Priority
+      ru: Приоритет
+    formatter:
+      type: workflowPriority
+    searchable: false
+    sortable: false
+
+  - id: name
+    name:
+      en: Task name
+      ru: Название задачи
+    sortable: false
+    searchable: false
+    formatter:
+      type: action
+      config:
+        actionId: view-task
+
+  - id: actors
+    name:
+      en: Assignee
+      ru: Ответственный
+    multiple: true
+
+  - id: documentRef
+    name:
+      en: Document
+      ru: Документ
+    searchable: false
+    sortable: false
+
+  - id: _ECM__type
+    name:
+      en: Document type
+      ru: Тип документа
+    searchable: false
+    sortable: false
+
+  - id: dueDate
+    name:
+      en: Due date
+      ru: Срок
+    type: DATETIME
+    searchable: false
+    sortable: false
+
+  - id: _created
+    name:
+      en: Start date
+      ru: Дата начала
+    visible: false
+    type: DATETIME
+    searchable: false
+    sortable: true
+
+  - id: id
+    name:
+      en: Name
+      ru: Имя
+    visible: false
+    searchable: false
+    sortable: false

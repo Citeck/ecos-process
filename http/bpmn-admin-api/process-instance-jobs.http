@@ -1,0 +1,69 @@
+# Скрин просмотра определенного инстанса процесса. Список фоновых задач.
+
+# В списке пользователю показываем:
+#
+# id (Id задачи) - идентификатор фоновой задачи
+#
+# created (Дата создания) - дата создания фоновой задачи
+#
+# dueDate (Дата выполнения) - дата выполнения фоновой задачи
+#
+# retries (Попытки) - количество попыток выполнения фоновой задачи
+#
+# activityId (Элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+# По нажатию выделяем элемент в схеме процесса и перемещаемся к нему.
+#
+# failedActivityId (Отказавший элемент) - пользователю показываем имя элемента (mltext) из схемы процесса, вытащить по id.
+# По нажатию выделяем элемент в схеме процесса и перемещаемся к нему.
+#
+# configuration (Конфигурация) - конфигурация фоновой задачи
+#
+#
+# Действия:
+# Каждую джобу можно приостановить или возобновить. Текущее состояние можно получить по "state": "state{.disp, suspended}"
+# Можно реализовать через действие - кнопку play / pause, тогда она будет еще показывать текущее состояние.
+# Если джоба запущена (suspended = false), то кнопка в состоянии пауза, по нажатию приостанавливаем джобу, API - JobSuspend
+# Если джоба приостановлена (suspended = true), то кнопка в состоянии play, по нажатию возобновляем джобу, API - JobActivate
+#
+#
+# Пагинация поддерживается.
+# По умочанию идет сортировка по dueDate desc
+# В список добавить возможность сортировки по - id, dueDate, retries asc / desc
+#
+# В query параметр bpmnProcess обязательный
+
+# @name ProcessInstanceViewJobs
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-job",
+        "query": {
+            "att": "bpmnProcess",
+            "t": "eq",
+            "val": "eproc/bpmn-proc@8f7a092a-6cd4-11ee-b8f8-16c23221ebc0"
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0
+        },
+        "sortBy": [
+            {
+                "ascending": false,
+                "attribute": "dueDate"
+            }
+        ]
+    },
+    "attributes": {
+        "state": "state{.disp, suspended}",
+        "created": "_created",
+        "dueDate": "dueDate",
+        "retries": "retries?num",
+        "activityId": "jobDefinition.activityId",
+        "failedActivityId": "failedActivityId",
+        "configuration": "jobDefinition.configuration"
+    }
+}
+

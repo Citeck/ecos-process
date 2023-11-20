@@ -10,7 +10,7 @@ import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
-import ru.citeck.ecos.process.domain.deleteAllProcDefinitions
+import ru.citeck.ecos.process.domain.cleanDefinitions
 import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
@@ -24,7 +24,7 @@ class UpdateEventSubscriptionsListenerModelTest {
 
     @BeforeEach
     fun clear() {
-        deleteAllProcDefinitions()
+        cleanDefinitions()
 
         eventsService.getListeners().forEach {
             it.value.listeners.forEach { listener ->

@@ -24,7 +24,8 @@ fun ProcDefRevEntity.toDto(): ProcDefRevDto {
         deploymentId = deploymentId,
         dataState = ProcDefRevDataState.from(dataState),
         version = version,
-        initialData = data
+        initialData = data,
+        comment = comment ?: ""
     )
 }
 
@@ -38,6 +39,7 @@ fun ProcDefEntity.toDto(): ProcDefDto {
     procDefDto.alfType = alfType
     procDefDto.ecosTypeRef = RecordRef.valueOf(ecosTypeRef)
     procDefDto.formRef = RecordRef.valueOf(formRef)
+    procDefDto.workingCopySourceRef = RecordRef.valueOf(workingCopySourceRef)
     procDefDto.enabled = enabled ?: false
     procDefDto.autoStartEnabled = autoStartEnabled ?: false
     procDefDto.format = lastRev?.format ?: ""

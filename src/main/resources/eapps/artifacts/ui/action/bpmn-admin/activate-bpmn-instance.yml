@@ -1,0 +1,30 @@
+---
+id: activate-bpmn-instance
+name:
+  ru: Возобновить экземпляр процесса
+  en: Activate process instance
+confirm:
+  title:
+    ru: Возобновить экземпляр процесса
+    en: Activate process instance
+  message: {}
+  formRef: uiserv/form@bpmn-admin-activate-instance
+  formAttributes: {}
+  attributesMapping: {}
+type: mutate
+config:
+  record:
+    id: '${recordRef}'
+    attributes:
+      action: ACTIVATE
+predicate:
+  t: and
+  val:
+    - t: and
+      val:
+        - t: eq
+          att: isSuspended?bool!
+          val: true
+        - t: eq
+          att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-edit?bool!
+          val: true

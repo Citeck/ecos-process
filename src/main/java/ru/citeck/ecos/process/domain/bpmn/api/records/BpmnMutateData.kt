@@ -4,14 +4,21 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
+import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.util.*
 
 @Component
-class BpmnMutateDataProcessor {
+class BpmnMutateDataProcessor(
+    private val procDefService: ProcDefService
+) {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -19,16 +26,44 @@ class BpmnMutateDataProcessor {
 
     fun getCompletedMutateData(mutateRecord: BpmnProcessDefRecords.BpmnMutateRecord): BpmnMutateData {
 
-        val (statedInitialDefinition, saveAsDraft) = mutateRecord.getStatedDefinition()
+        var (statedInitialDefinition, saveAsDraft) = mutateRecord.getStatedDefinition()
 
         var recordId = mutateRecord.id
+        var processDefId = mutateRecord.processDefId
+        var name = mutateRecord.name
+        var workingCopySourceRef = EntityRef.EMPTY
+        var autoStartEnabled = mutateRecord.autoStartEnabled
+        var enabled = mutateRecord.enabled
+
+        if (mutateRecord.isModuleCopy()) {
+            recordId = mutateRecord.moduleId ?: error("moduleId is missing")
+            processDefId = recordId
+
+            val procDef = BpmnXmlUtils.readFromString(statedInitialDefinition)
+
+            procDef.otherAttributes[BPMN_PROP_ENABLED] = false.toString()
+            procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = false.toString()
+            procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
+
+            val lastRevisionId: UUID = getLastRevisionId(mutateRecord.id)
+            workingCopySourceRef = EntityRef.create(
+                AppName.EPROC,
+                BpmnProcessDefVersionRecords.ID,
+                lastRevisionId.toString()
+            )
+
+            procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = workingCopySourceRef.toString()
+
+            statedInitialDefinition = BpmnXmlUtils.writeToString(procDef)
+            autoStartEnabled = false
+            enabled = false
+        }
+
+        var newEcosDefinition = ""
         var ecosType = mutateRecord.ecosType
         var formRef = mutateRecord.formRef
-        var name = mutateRecord.name
-        var processDefId = mutateRecord.processDefId
-        var enabled = mutateRecord.enabled
-        var autoStartEnabled = mutateRecord.autoStartEnabled
-        var newEcosDefinition = ""
+        var sectionRef = mutateRecord.sectionRef
+
         var newCamundaDefinitionStr = ""
 
         if (statedInitialDefinition.isNotBlank()) {
@@ -39,6 +74,7 @@ class BpmnMutateDataProcessor {
 
                 ecosType = EntityRef.valueOf(draftDefinition.otherAttributes[BPMN_PROP_ECOS_TYPE])
                 formRef = EntityRef.valueOf(draftDefinition.otherAttributes[BPMN_PROP_FORM_REF])
+                sectionRef = EntityRef.valueOf(draftDefinition.otherAttributes[BPMN_PROP_SECTION_REF])
                 name =
                     Json.mapper.convert(draftDefinition.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java)
                         ?: MLText()
@@ -58,6 +94,7 @@ class BpmnMutateDataProcessor {
 
                 ecosType = ecosBpmnDefinition.ecosType
                 formRef = ecosBpmnDefinition.formRef
+                sectionRef = ecosBpmnDefinition.sectionRef
                 name = ecosBpmnDefinition.name
                 processDefId = ecosBpmnDefinition.id
                 enabled = ecosBpmnDefinition.enabled
@@ -82,9 +119,10 @@ class BpmnMutateDataProcessor {
             name = name,
             ecosType = ecosType,
             formRef = formRef,
+            workingCopySourceRef = workingCopySourceRef,
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
-            sectionRef = mutateRecord.sectionRef,
+            sectionRef = sectionRef,
             createdFromVersion = mutateRecord.createdFromVersion,
             image = mutateRecord.imageBytes,
             newEcosDefinition = if (newEcosDefinition.isBlank()) {
@@ -97,8 +135,40 @@ class BpmnMutateDataProcessor {
         )
     }
 
+    private fun BpmnProcessDefRecords.BpmnMutateRecord.isModuleCopy(): Boolean {
+        return !moduleId.isNullOrBlank() && id != moduleId
+    }
+
+    private fun getLastRevisionId(id: String): UUID {
+        val ref = ProcDefRef.create(BPMN_PROC_TYPE, id)
+        val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
+        return currentProc.revisionId
+    }
+
     private fun BpmnProcessDefRecords.BpmnMutateRecord.getStatedDefinition(): Pair<String, Boolean> {
-        val initialDefinition = definition
+        val initialDefinition: String? = when (true) {
+            isModuleCopy() -> {
+                val ref = ProcDefRef.create(BPMN_PROC_TYPE, processDefId)
+                val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
+
+                String(currentProc.data)
+            }
+
+            (isUploadNewVersion && !definition.isNullOrBlank()) -> {
+                val procDef = BpmnXmlUtils.readFromString(definition!!)
+                val procDefIdFromXml = procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID].toString()
+
+                if (procDefIdFromXml == id) {
+                    definition
+                }
+
+                procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = id
+
+                BpmnXmlUtils.writeToString(procDef)
+            }
+
+            else -> definition
+        }
 
         return if (initialDefinition.isNullOrBlank()) {
             "" to false
@@ -150,6 +220,7 @@ data class BpmnMutateData(
     val name: MLText,
     val ecosType: EntityRef,
     val formRef: EntityRef,
+    val workingCopySourceRef: EntityRef = EntityRef.EMPTY,
     val enabled: Boolean,
     val autoStartEnabled: Boolean,
     val sectionRef: EntityRef,

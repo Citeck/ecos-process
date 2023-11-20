@@ -1,0 +1,239 @@
+# @name ProcessMigrationMigrate
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "records": [
+    {
+      "id": "eproc/bpmn-process-migration@",
+      "attributes": {
+        "action": "MIGRATE",
+        "async": true,
+        "migrationExecution": {
+          "migrationPlan": {
+            "sourceProcessDefinitionId": "edac663d-588f-11ee-8815-16ace1462d15",
+            "targetProcessDefinitionId": "03617f32-69a7-11ee-994b-2a741ec26063",
+            "instructions": [
+              {
+                "sourceActivityIds": [
+                  "Activity_075fn7f"
+                ],
+                "targetActivityIds": [
+                  "Activity_075fn7f"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_1au0l5z"
+                ],
+                "targetActivityIds": [
+                  "Activity_1au0l5z"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0wkz1lt"
+                ],
+                "targetActivityIds": [
+                  "Activity_0wkz1lt"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0eqj1lx"
+                ],
+                "targetActivityIds": [
+                  "Activity_0eqj1lx"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0gj8byg"
+                ],
+                "targetActivityIds": [
+                  "Activity_0gj8byg"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Event_1r1iz4d"
+                ],
+                "targetActivityIds": [
+                  "Event_1r1iz4d"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_1s1qza0"
+                ],
+                "targetActivityIds": [
+                  "Activity_1s1qza0"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_1ar75mp"
+                ],
+                "targetActivityIds": [
+                  "Activity_1ar75mp"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0ljqre8"
+                ],
+                "targetActivityIds": [
+                  "Activity_0ljqre8"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Event_1gcx5kh"
+                ],
+                "targetActivityIds": [
+                  "Event_1gcx5kh"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_065unek"
+                ],
+                "targetActivityIds": [
+                  "Activity_065unek"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_14kiu06"
+                ],
+                "targetActivityIds": [
+                  "Activity_14kiu06"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0nm7lvd"
+                ],
+                "targetActivityIds": [
+                  "Activity_0nm7lvd"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_07y7523"
+                ],
+                "targetActivityIds": [
+                  "Activity_07y7523"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0ckj94t"
+                ],
+                "targetActivityIds": [
+                  "Activity_0ckj94t"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Event_0ylrni5"
+                ],
+                "targetActivityIds": [
+                  "Event_0ylrni5"
+                ],
+                "updateEventTrigger": true
+              },
+              {
+                "sourceActivityIds": [
+                  "Gateway_1ahbt65"
+                ],
+                "targetActivityIds": [
+                  "Gateway_1ahbt65"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_03zkf9i"
+                ],
+                "targetActivityIds": [
+                  "Activity_03zkf9i"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Event_0vpdr2y"
+                ],
+                "targetActivityIds": [
+                  "Event_0vpdr2y"
+                ],
+                "updateEventTrigger": true
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0exoz38"
+                ],
+                "targetActivityIds": [
+                  "Activity_0exoz38"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Gateway_1u21a6r"
+                ],
+                "targetActivityIds": [
+                  "Gateway_1u21a6r"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_0d7vvkr"
+                ],
+                "targetActivityIds": [
+                  "Activity_0d7vvkr"
+                ],
+                "updateEventTrigger": false
+              },
+              {
+                "sourceActivityIds": [
+                  "Activity_1rjuk4l"
+                ],
+                "targetActivityIds": [
+                  "Activity_1rjuk4l"
+                ],
+                "updateEventTrigger": false
+              }
+            ]
+          },
+          "processInstanceQuery": {
+            "processDefinitionId": "edac663d-588f-11ee-8815-16ace1462d15",
+            "activityIdIn": [
+              "Activity_1au0l5z"
+            ]
+          },
+          "skipCustomListeners": true
+        }
+      }
+    }
+  ]
+}
+

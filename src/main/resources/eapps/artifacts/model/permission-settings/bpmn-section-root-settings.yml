@@ -1,0 +1,39 @@
+id: bpmn-section-root-settings
+
+recordRef: eproc/bpmn-section@ROOT
+inherit: false
+
+settings:
+
+  - authorities:
+      - GROUP_bp-administrator
+    permissions:
+      - emodel/permission-def@read
+      - emodel/permission-def@write
+      - emodel/permission-def@bpmn-process-def-deploy
+      - emodel/permission-def@bpmn-process-def-report-view
+      - emodel/permission-def@bpmn-process-instance-run
+      - emodel/permission-def@bpmn-process-instance-edit
+      - emodel/permission-def@bpmn-process-instance-read
+      - emodel/permission-def@bpmn-process-instance-migrate
+      - emodel/permission-def@bpmn-section-edit-process-def
+
+  - authorities:
+      - GROUP_bp-manager
+    permissions:
+      - emodel/permission-def@read
+      - emodel/permission-def@bpmn-process-def-report-view
+
+  - authorities:
+      - GROUP_bp-developer
+    permissions:
+      - emodel/permission-def@read
+      - emodel/permission-def@bpmn-process-def-deploy
+      - emodel/permission-def@bpmn-process-instance-run
+      - emodel/permission-def@bpmn-process-def-report-view
+      - emodel/permission-def@bpmn-process-instance-migrate
+
+  - authorities:
+      - GROUP_bp-viewer
+    permissions:
+      - emodel/permission-def@read

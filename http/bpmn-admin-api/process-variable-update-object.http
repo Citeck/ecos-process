@@ -1,0 +1,24 @@
+# Обновление переменной процесса (объекта)
+#
+# type - тип переменной, при обновлении объекта - object
+# objectTypeName - имя класса объекта
+# value - значение переменной в формате json
+
+# @name ProcessVariableUpdateObject
+POST http://localhost/gateway/api/records/mutate
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "records": [
+        {
+            "id": "eproc/bpmn-variable-instance@bc752596-675c-11ee-96b1-fa02e06f9ec1",
+            "attributes": {
+                "type": "object",
+                "objectTypeName": "java.util.ArrayList<ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome>",
+                "value": "[{\"id\":\"send_for_approval\",\"name\":{\"ru\":\"Отправить на согласование\"},\"config\":{\"theme\":\"PRIMARY\"}}]"
+            }
+        }
+    ]
+}
+

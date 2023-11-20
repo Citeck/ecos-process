@@ -96,7 +96,7 @@ class BpmnSectionTest {
             RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2-1"),
             "parentRef?id"
         ).asText()
-        assertEquals(parentOfRec2, "eproc/bpmn-section@testSection2")
+        assertEquals("eproc/bpmn-section@testSection2", parentOfRec2)
 
         bpmnSectionArtifactHandler.deleteArtifact("testSection2")
         bpmnSectionArtifactHandler.deleteArtifact("testSection2-1")
@@ -114,8 +114,8 @@ class BpmnSectionTest {
 
         recordsService.create(PROXY_DATA_SOURCE_ID, testSection)
         val atts = recordsService.getAtts("$PROXY_DATA_SOURCE_ID@testSection3", listOf("name"))
-        assertEquals(atts.getId().toString(), "bpmn-section@testSection3")
-        assertEquals(atts.getAtts()["name"].asText(), "testSectionName3")
+        assertEquals("eproc/bpmn-section@testSection3", atts.getId().toString())
+        assertEquals("testSectionName3", atts.getAtts()["name"].asText())
 
         recordsService.delete("bpmn-section@testSection3")
         assertEquals(queryAll().getRecords().size, recordsBefore)
@@ -138,8 +138,8 @@ class BpmnSectionTest {
         recordsService.mutate("$PROXY_DATA_SOURCE_ID@testSection4", changeNameAtt)
 
         val atts = recordsService.getAtts("$PROXY_DATA_SOURCE_ID@testSection4", listOf("name"))
-        assertEquals(atts.getId().toString(), "bpmn-section@testSection4")
-        assertEquals(atts.getAtts()["name"].asText(), "Renamed")
+        assertEquals("eproc/bpmn-section@testSection4", atts.getId().toString())
+        assertEquals("Renamed", atts.getAtts()["name"].asText())
 
         recordsService.delete("bpmn-section@testSection4")
         assertEquals(queryAll().getRecords().size, recordsBefore)

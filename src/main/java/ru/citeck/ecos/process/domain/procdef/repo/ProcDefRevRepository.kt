@@ -19,5 +19,11 @@ interface ProcDefRevRepository : MongoRepository<ProcDefRevEntity, EntityUuid> {
 
     fun findByDeploymentId(deploymentId: String): ProcDefRevEntity?
 
+    /**
+     *  Return def rev entity without data, because it is too big memory usage.
+     */
+    @Query(fields = "{ 'data' : null }")
+    fun findByDeploymentIdIsIn(deploymentIds: List<String>): List<ProcDefRevEntity>
+
     fun queryAllByDeploymentIdIsNotNull(pageable: Pageable): Slice<ProcDefRevEntity>
 }

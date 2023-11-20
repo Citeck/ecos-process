@@ -1,0 +1,20 @@
+# @name ProcessMigrationGeneratePlan
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "query": {
+    "sourceId": "eproc/bpmn-process-migration",
+    "query": {
+      "migrationPlanGeneration": {
+        "sourceProcessDefinitionId": "03dd086d-2bbb-11ee-9d6a-825e605339f6",
+        "targetProcessDefinitionId": "03617f32-69a7-11ee-994b-2a741ec26063",
+        "updateEventTriggers": false
+      }
+    }
+  },
+  "attributes": {
+    "migrationPlan": "migrationPlan?json"
+  }
+}

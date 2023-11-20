@@ -1,0 +1,7 @@
+id: dmn-section-create-subsection
+name:
+  ru: Создание подразделов
+  en: Subsections creation
+
+appliesToTypes:
+  - emodel/type@dmn-section

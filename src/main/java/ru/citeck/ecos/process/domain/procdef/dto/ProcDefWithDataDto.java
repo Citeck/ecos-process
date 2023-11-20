@@ -50,6 +50,8 @@ public class ProcDefWithDataDto {
 
     private EntityRef formRef;
 
+    private EntityRef workingCopySourceRef;
+
     private Boolean enabled;
 
     private Boolean autoStartEnabled;
@@ -75,6 +77,7 @@ public class ProcDefWithDataDto {
         this.created = other.created;
         this.version = other.version;
         this.formRef = other.formRef;
+        this.workingCopySourceRef = other.workingCopySourceRef;
         this.enabled = other.enabled;
         this.autoStartEnabled = other.autoStartEnabled;
         setSectionRef(other.sectionRef);
@@ -94,6 +97,7 @@ public class ProcDefWithDataDto {
         this.created = def.getCreated();
         this.version = rev.getVersion();
         this.formRef = def.getFormRef();
+        this.workingCopySourceRef = def.getWorkingCopySourceRef();
         this.enabled = def.getEnabled();
         this.autoStartEnabled = def.getAutoStartEnabled();
         setSectionRef(def.getSectionRef());
@@ -217,6 +221,14 @@ public class ProcDefWithDataDto {
 
     public EntityRef getCreatedFromVersion() {
         return createdFromVersion;
+    }
+
+    public EntityRef getWorkingCopySourceRef() {
+        return workingCopySourceRef;
+    }
+
+    public void setWorkingCopySourceRef(EntityRef workingCopySourceRef) {
+        this.workingCopySourceRef = workingCopySourceRef;
     }
 
     public void setCreatedFromVersion(EntityRef createdFromVersion) {
