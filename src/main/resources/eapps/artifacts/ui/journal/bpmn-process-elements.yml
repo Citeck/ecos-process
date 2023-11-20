@@ -47,3 +47,4 @@ columns:
       type: assoc
   - id: documentTypeRef
     visible: false
+    searchable: false
