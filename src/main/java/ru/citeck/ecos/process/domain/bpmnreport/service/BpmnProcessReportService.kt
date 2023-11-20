@@ -110,6 +110,11 @@ class BpmnProcessReportService(
 
         for (flowElement in flowElements) {
 
+            if (Json.mapper.convert(flowElement.data["name"], MLText::class.java)?.takeIf { !MLText.isEmpty(it) } == null
+                && flowElement.data["number"].takeIf { it.isNotNull() } == null) {
+                continue
+            }
+
             val elementType = ElementType.values().find { it.flowElementType == flowElement.type } ?: continue
 
             val reportElement = ReportElement(
