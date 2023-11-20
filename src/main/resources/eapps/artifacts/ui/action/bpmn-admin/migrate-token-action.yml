@@ -10,5 +10,5 @@ config:
     id: ${?id}
 predicate:
   t: eq
-  att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-edit?bool!
+  att: bpmnDefEngine.ecosDefRev.processDefRef.permissions._has.bpmn-process-instance-migrate?bool!
   val: true
