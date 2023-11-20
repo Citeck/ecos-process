@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.util.ResourceUtils
@@ -27,6 +28,7 @@ class BpmnDraftConvertTest {
 
         val result = BpmnIO.importEcosBpmn(definition, false)
 
-        assert(result.id.isNotBlank())
+        assertThat(result.process).hasSize(1)
+        assertThat(result.process[0].flowElements).hasSize(25)
     }
 }
