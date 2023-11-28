@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmnreport.model
 
 enum class ElementType(val flowElementType: String, val type: String) {
-    STATUS("bpmn:BpmnTask", "Status"),
+    TASK("bpmn:BpmnTask", "Task"),
 
     EXCLUSIVE_GATEWAY("bpmn:BpmnExclusiveGateway", "Exclusive Gateway"),
     PARALLEL_GATEWAY("bpmn:BpmnParallelGateway", "Parallel Gateway"),

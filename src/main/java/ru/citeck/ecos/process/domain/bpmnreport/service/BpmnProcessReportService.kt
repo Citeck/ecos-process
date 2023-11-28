@@ -125,10 +125,15 @@ class BpmnProcessReportService(
             )
 
             when (elementType) {
-                // Status
-                ElementType.STATUS -> {
-                    reportElement.statusElement =
-                        reportElementsService.convertReportStatusElement(flowElement, ecosType!!)
+                // Task (Status)
+                ElementType.TASK -> {
+                    if (flowElement.data["ecosTaskDefinition"].isEmpty()) {
+                        reportElement.taskElement =
+                            reportElementsService.convertReportTaskElement(flowElement, elementType, ecosType)
+                    } else {
+                        reportElement.statusElement =
+                            reportElementsService.convertReportStatusElement(flowElement, ecosType!!)
+                    }
                     reportElement.incoming = getReportSequencesForFlowElement(flowElement, flowElements)
                 }
 

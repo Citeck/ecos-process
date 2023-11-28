@@ -43,7 +43,7 @@ class ReportElementsServiceTest {
 
         val flowElementDef = BpmnFlowElementDef(
             id = "test_status",
-            type = ElementType.STATUS.flowElementType,
+            type = ElementType.TASK.flowElementType,
             data = ObjectData.create(
                 mapOf(
                     "name" to MLText(
