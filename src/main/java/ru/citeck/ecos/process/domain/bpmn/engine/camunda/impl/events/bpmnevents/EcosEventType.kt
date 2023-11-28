@@ -11,11 +11,18 @@ enum class EcosEventType(
         listOf(
             EventRepresentation(
                 eventName = "comment-create",
-                defaultModel = mapOf("text" to "text", "commentRecord" to "commentRecord?id")
+                defaultModel = mapOf(
+                    "text" to "text",
+                    "commentRecord" to "commentRecord?id",
+                    "attachments" to "attachments[]?id"
+                )
             ),
             EventRepresentation(
                 eventName = "ecos.comment.create",
-                defaultModel = mapOf("text" to "textAfter", "commentRecord" to "commentRec?id")
+                defaultModel = mapOf(
+                    "text" to "textAfter",
+                    "commentRecord" to "commentRec?id"
+                )
             )
         )
     ),
