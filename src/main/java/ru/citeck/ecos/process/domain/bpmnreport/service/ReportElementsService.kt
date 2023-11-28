@@ -60,6 +60,7 @@ class ReportElementsService(
         updateBaseElement(subProcessElement, flowElement, elementType)
 
         subProcessElement.subProcessName = getNameByEntity(flowElement.data["processRef"].asText())
+            .takeUnless { it.isBlank() } ?: flowElement.data["calledElement"].asText()
 
         return subProcessElement
     }
