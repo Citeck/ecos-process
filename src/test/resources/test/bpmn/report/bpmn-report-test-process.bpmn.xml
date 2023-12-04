@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1RR6yBn" name="Тестовый процесс отчетов" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:name_ml="{&quot;ru&quot;:&quot;Тестовый процесс отчетов&quot;,&quot;en&quot;:&quot;Reports test process&quot;}" ecos:formRef="" ecos:sectionRef="eproc/bpmn-section@DEFAULT" ecos:enabled="false" ecos:autoStartEnabled="true" ecos:defState="CONVERTED" ecos:processDefId="bpmn-report-test-process" ecos:ecosType="emodel/type@bpmn-report-test-type">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1RR6yBn" name="Тестовый процесс отчетов" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:workingCopySourceRef="" ecos:name_ml="{&quot;ru&quot;:&quot;Тестовый процесс отчетов&quot;,&quot;en&quot;:&quot;Reports test process&quot;}" ecos:formRef="" ecos:sectionRef="eproc/bpmn-section@DEFAULT" ecos:enabled="false" ecos:autoStartEnabled="true" ecos:defState="CONVERTED" ecos:processDefId="bpmn-report-test-process" ecos:ecosType="emodel/type@bpmn-report-test-type">
     <bpmn:process isExecutable="true" id="bpmn-report-test-process">
         <bpmn:laneSet id="LaneSet_0usis5l">
             <bpmn:lane name="Инициатор" id="Lane_1f6fnqq" ecos:documentation="{&quot;ru&quot;:&quot;Действия инициатора&quot;,&quot;en&quot;:&quot;Initiator actions&quot;}" ecos:name_ml="{&quot;ru&quot;:&quot;Инициатор&quot;,&quot;en&quot;:&quot;Initiator&quot;}" ecos:number="1">
@@ -61,16 +61,28 @@
         <bpmn:startEvent isInterrupting="true" name="Старт 2 процесса" id="Event_1108d97" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Старт 2 процесса&quot;,&quot;en&quot;:&quot;Start process 2&quot;}" ecos:number="1" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
             <bpmn:outgoing >Flow_15npbpj</bpmn:outgoing>
         </bpmn:startEvent>
-        <bpmn:endEvent name="Конец 2 процесса" id="Event_0x2fpow" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Конец 2 процесса&quot;,&quot;en&quot;:&quot;End process 2&quot;}" ecos:number="3" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
-            <bpmn:incoming >Flow_0hgwgn6</bpmn:incoming>
-        </bpmn:endEvent>
         <bpmn:sequenceFlow sourceRef="Event_1108d97" targetRef="Activity_1m2gh5p" name="" id="Flow_15npbpj" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:sequenceFlow sourceRef="Activity_1m2gh5p" targetRef="Event_0x2fpow" name="" id="Flow_0hgwgn6" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Activity_1m2gh5p" targetRef="Activity_1ljphcd" name="" id="Flow_0hgwgn6" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
         <bpmn:scriptTask scriptFormat="javascript" name="Скрипт задача" id="Activity_1m2gh5p" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Скрипт задача&quot;,&quot;en&quot;:&quot;Script task&quot;}" ecos:number="2" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="return true;">
             <bpmn:incoming >Flow_15npbpj</bpmn:incoming>
             <bpmn:outgoing >Flow_0hgwgn6</bpmn:outgoing>
             <bpmn:script>return true;</bpmn:script>
         </bpmn:scriptTask>
+        <bpmn:endEvent name="Конец 2 процесса" id="Event_0x2fpow" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Конец 2 процесса&quot;,&quot;en&quot;:&quot;End process 2&quot;}" ecos:number="3" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_1ilccsi</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:subProcess triggeredByEvent="false" name="Подпроцесс" id="Activity_1ljphcd" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Подпроцесс&quot;}" ecos:number="sub1" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_0hgwgn6</bpmn:incoming>
+            <bpmn:outgoing >Flow_1ilccsi</bpmn:outgoing>
+            <bpmn:startEvent isInterrupting="true" name="Под-старт" id="Event_0lc5q55" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Под-старт&quot;}" ecos:number="1" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+                <bpmn:outgoing >Flow_1pimcuz</bpmn:outgoing>
+            </bpmn:startEvent>
+            <bpmn:endEvent name="Под-конец" id="Event_0gvcqnd" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Под-конец&quot;}" ecos:number="2" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+                <bpmn:incoming >Flow_1pimcuz</bpmn:incoming>
+            </bpmn:endEvent>
+            <bpmn:sequenceFlow sourceRef="Event_0lc5q55" targetRef="Event_0gvcqnd" name="" id="Flow_1pimcuz" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        </bpmn:subProcess>
+        <bpmn:sequenceFlow sourceRef="Activity_1ljphcd" targetRef="Event_0x2fpow" name="" id="Flow_1ilccsi" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
         <bpmn:textAnnotation id="TextAnnotation_00ob35p" ecos:name_ml="{&quot;ru&quot;:&quot;Простая аннотация 2&quot;,&quot;en&quot;:&quot;Just annotation 2&quot;}">
             <bpmn:text>Простая аннотация 2</bpmn:text>
         </bpmn:textAnnotation>
@@ -149,37 +161,52 @@
                 <di:waypoint x="771.0" y="310.0"/>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNShape bpmnElement="Participant_0ojxy55" isExpanded="true" id="Participant_0ojxy55_di">
-                <dc:Bounds x="106.0" y="580.0" width="600.0" height="250.0"/>
+                <dc:Bounds x="106.0" y="580.0" width="914.0" height="250.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="TextAnnotation_00ob35p" isExpanded="true" id="TextAnnotation_00ob35p_di">
+                <dc:Bounds x="290.0" y="590.0" width="140.0" height="30.0"/>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="Event_1108d97" isExpanded="true" id="Event_1108d97_di">
                 <dc:Bounds x="182.0" y="692.0" width="36.0" height="36.0"/>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="Event_0x2fpow" isExpanded="true" id="Event_0x2fpow_di">
-                <dc:Bounds x="612.0" y="692.0" width="36.0" height="36.0"/>
-            </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="Activity_1m2gh5p" isExpanded="true" id="Activity_14gxccm_di">
-                <dc:Bounds x="360.0" y="670.0" width="100.0" height="80.0"/>
+                <dc:Bounds x="260.0" y="670.0" width="100.0" height="80.0"/>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="TextAnnotation_00ob35p" isExpanded="true" id="TextAnnotation_00ob35p_di">
-                <dc:Bounds x="460.0" y="590.0" width="140.0" height="30.0"/>
+            <bpmndi:BPMNShape bpmnElement="Event_0x2fpow" isExpanded="true" id="Event_0x2fpow_di">
+                <dc:Bounds x="912.0" y="692.0" width="36.0" height="36.0"/>
             </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Association_1rbr6dg" id="Association_1rbr6dg_di">
+                <di:waypoint x="326.0" y="670.0"/>
+                <di:waypoint x="346.0" y="620.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="Activity_1ljphcd" isExpanded="true" id="Activity_1ljphcd_di">
+                <dc:Bounds x="460.0" y="610.0" width="350.0" height="200.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0lc5q55" isExpanded="true" id="Event_0lc5q55_di">
+                <dc:Bounds x="500.0" y="692.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_0gvcqnd" isExpanded="true" id="Event_0gvcqnd_di">
+                <dc:Bounds x="742.0" y="692.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1pimcuz" id="Flow_1pimcuz_di">
+                <di:waypoint x="536.0" y="710.0"/>
+                <di:waypoint x="742.0" y="710.0"/>
+            </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="Flow_15npbpj" id="Flow_15npbpj_di">
                 <di:waypoint x="218.0" y="710.0"/>
-                <di:waypoint x="360.0" y="710.0"/>
+                <di:waypoint x="260.0" y="710.0"/>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="Flow_0hgwgn6" id="Flow_0hgwgn6_di">
+                <di:waypoint x="360.0" y="710.0"/>
                 <di:waypoint x="460.0" y="710.0"/>
-                <di:waypoint x="612.0" y="710.0"/>
             </bpmndi:BPMNEdge>
-            <bpmndi:BPMNEdge bpmnElement="Association_1rbr6dg" id="Association_1rbr6dg_di">
-                <di:waypoint x="448.0" y="670.0"/>
-                <di:waypoint x="496.0" y="620.0"/>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1ilccsi" id="Flow_1ilccsi_di">
+                <di:waypoint x="810.0" y="710.0"/>
+                <di:waypoint x="912.0" y="710.0"/>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="Flow_1ot8itm" id="Flow_1ot8itm_di">
                 <di:waypoint x="730.0" y="420.0"/>
-                <di:waypoint x="730.0" y="530.0"/>
-                <di:waypoint x="260.0" y="530.0"/>
-                <di:waypoint x="260.0" y="580.0"/>
+                <di:waypoint x="730.0" y="580.0"/>
             </bpmndi:BPMNEdge>
         </bpmndi:BPMNPlane>
     </bpmndi:BPMNDiagram>

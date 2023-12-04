@@ -334,6 +334,52 @@ class BpmnProcessReportServiceTest {
                         LocaleUtils.toLocale("en") to "End process 2"
                     )
                 )
+            ),
+            ReportElement(
+                id = "Activity_1ljphcd",
+                number = "sub1",
+                process = secondProcessReportProcessElement,
+                subProcessElement = ReportSubProcessElement(
+                    type = ElementType.SUB_PROCESS.type,
+                    elements = listOf("Event_0lc5q55", "Event_0gvcqnd"),
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Подпроцесс"
+                    )
+                )
+            ),
+            ReportElement(
+                id = "Event_0lc5q55",
+                number = "sub1-1",
+                process = secondProcessReportProcessElement,
+                eventElement = ReportEventElement(
+                    type = ElementType.START_EVENT.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Под-старт"
+                    )
+                ),
+                subProcessElement = ReportSubProcessElement(
+                    type = ElementType.SUB_PROCESS.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Подпроцесс"
+                    )
+                )
+            ),
+            ReportElement(
+                id = "Event_0gvcqnd",
+                number = "sub1-2",
+                process = secondProcessReportProcessElement,
+                eventElement = ReportEventElement(
+                    type = ElementType.END_EVENT.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Под-конец"
+                    )
+                ),
+                subProcessElement = ReportSubProcessElement(
+                    type = ElementType.SUB_PROCESS.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Подпроцесс"
+                    )
+                )
             )
         )
 
