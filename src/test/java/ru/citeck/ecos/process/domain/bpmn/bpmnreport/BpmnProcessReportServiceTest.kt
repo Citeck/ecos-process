@@ -78,7 +78,7 @@ class BpmnProcessReportServiceTest {
         val expectedList = listOf(
             ReportElement(
                 id = "StartEvent_1ew9rff",
-                number = 1,
+                number = "1",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 eventElement = ReportEventElement(
@@ -91,7 +91,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_1kl13e5",
-                number = 2,
+                number = "2",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 taskElement = ReportTaskElement(
@@ -136,7 +136,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Gateway_1ffgbao",
-                number = 3,
+                number = "3",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 gatewayElement = ReportBaseElement(
@@ -149,7 +149,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_11v8b2q",
-                number = 4,
+                number = "4",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 statusElement = ReportStatusElement(
@@ -181,7 +181,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_0g3q0t9",
-                number = 5,
+                number = "5",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 eventElement = ReportEventElement(
@@ -194,7 +194,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_1c8v8jj",
-                number = 6,
+                number = "6",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 eventElement = ReportEventElement(
@@ -212,7 +212,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_14dolni",
-                number = 7,
+                number = "7",
                 process = mainReportProcessElement,
                 lane = mainLane2ReportLaneElement,
                 taskElement = ReportTaskElement(
@@ -251,7 +251,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_0hro9d5",
-                number = 8,
+                number = "8",
                 process = mainReportProcessElement,
                 lane = mainLane2ReportLaneElement,
                 subProcessElement = ReportSubProcessElement(
@@ -291,7 +291,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_1108d97",
-                number = 1,
+                number = "1",
                 process = secondProcessReportProcessElement,
                 eventElement = ReportEventElement(
                     type = ElementType.START_EVENT.type,
@@ -303,7 +303,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_1m2gh5p",
-                number = 2,
+                number = "2",
                 process = secondProcessReportProcessElement,
                 taskElement = ReportTaskElement(
                     type = ElementType.SCRIPT_TASK.type,
@@ -325,7 +325,7 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_0x2fpow",
-                number = 3,
+                number = "3",
                 process = secondProcessReportProcessElement,
                 eventElement = ReportEventElement(
                     type = ElementType.END_EVENT.type,
