@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.bpmnreport.model
 
 data class ReportElement(
     val id: String,
-    val number: Int?,
+    var number: String?,
     val process: ReportProcessElement,
     var lane: ReportLaneElement? = null,
     var annotations: ArrayList<ReportAnnotationElement>? = null,

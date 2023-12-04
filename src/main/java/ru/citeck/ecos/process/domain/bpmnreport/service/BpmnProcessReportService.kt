@@ -31,7 +31,8 @@ class BpmnProcessReportService(
                 getReportParticipantElementByProcessId(process.id, it)
             }
 
-            reportElements.addAll(convertBpmnFlowElementToReportElements(process.flowElements, reportProcess, ecosType))
+            reportElements.addAll(convertBpmnFlowElementToReportElements(process.flowElements, reportProcess, ecosType,
+                null))
             addAnnotationsToReportElements(reportElements, process.artifacts)
             addLanesToReportElements(reportElements, process.lanes)
         }
@@ -104,7 +105,8 @@ class BpmnProcessReportService(
     private fun convertBpmnFlowElementToReportElements(
         flowElements: List<BpmnFlowElementDef>,
         reportProcessElement: ReportProcessElement,
-        ecosType: EntityRef?
+        ecosType: EntityRef?,
+        prefixNumber: String?
     ): List<ReportElement> {
         val elements = ArrayList<ReportElement>()
 
@@ -118,10 +120,11 @@ class BpmnProcessReportService(
 
             val elementType = ElementType.values().find { it.flowElementType == flowElement.type } ?: continue
 
+            val prefix = prefixNumber ?: ""
             val reportElement = ReportElement(
-                flowElement.id,
-                flowElement.data["number"].takeIf { it.isNotNull() }?.asInt(),
-                reportProcessElement
+                id = flowElement.id,
+                number = prefix + flowElement.data["number"].takeIf { it.isNotNull() }?.asText(),
+                process = reportProcessElement
             )
 
             when (elementType) {
@@ -172,15 +175,18 @@ class BpmnProcessReportService(
                     val subProcessArtifacts = flowElement.data["artifacts"].asList(BpmnArtifactDef::class.java)
 
                     val elementsFromSubProcess =
-                        convertBpmnFlowElementToReportElements(subProcessElements, reportProcessElement, ecosType)
+                        convertBpmnFlowElementToReportElements(subProcessElements, reportProcessElement, ecosType,
+                            reportElement.number + "-")
                     if (elementsFromSubProcess.isNotEmpty()) {
                         addAnnotationsToReportElements(elementsFromSubProcess, subProcessArtifacts)
                         reportElement.subProcessElement?.elements = elementsFromSubProcess.map { it.id }
 
                         elementsFromSubProcess.forEach {
-                            it.subProcessElement = ReportSubProcessElement().apply {
-                                type = reportElement.subProcessElement?.type ?: ""
-                                name = reportElement.subProcessElement?.name ?: MLText.EMPTY
+                            if (it.subProcessElement == null){
+                                it.subProcessElement = ReportSubProcessElement().apply {
+                                    type = reportElement.subProcessElement?.type ?: ""
+                                    name = reportElement.subProcessElement?.name ?: MLText.EMPTY
+                                }
                             }
                         }
 
