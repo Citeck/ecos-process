@@ -3,11 +3,13 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
@@ -18,8 +20,11 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 // TODO: permissions and tests
 /**
- * Used for BPMN editor, select called process in DMN element.
- * return id as process key is important for BPMN editor.
+ * The source is used to select deployed process in engine.
+ *
+ * For example, in the BPMN editor, select called process in DMN element.
+ *
+ * return id as process key is important contract.
  */
 @Component
 class BpmnProcessLatestRecords(
@@ -107,6 +112,17 @@ class BpmnProcessLatestRecords(
         val version: Int,
         val name: String? = ""
     ) : IdentifiableRecord {
+
+        @AttName(".disp")
+        fun getDisp(): MLText {
+            return MLText(name ?: id)
+        }
+
+        @AttName("startFormRef")
+        fun getStartFormRef(): EntityRef {
+            val startFormRefFromDef = recordsService.getAtt(definition, "startFormRef?id").asText()
+            return EntityRef.valueOf(startFormRefFromDef)
+        }
 
         override fun getIdentificator(): String {
             return id

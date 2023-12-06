@@ -14,11 +14,14 @@ import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Service
@@ -28,7 +31,8 @@ class BpmnProcessServiceImpl(
     private val procDefService: ProcDefService,
     private val bpmnEventEmitter: BpmnEventEmitter,
     private val processInstanceRestService: ProcessInstanceRestService,
-    private val historyService: HistoryService
+    private val historyService: HistoryService,
+    private val recordsService: RecordsService
 ) : BpmnProcessService {
 
     companion object {
@@ -36,8 +40,12 @@ class BpmnProcessServiceImpl(
     }
 
     override fun startProcess(processKey: String, businessKey: String?, variables: Map<String, Any?>): ProcessInstance {
-        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, processKey))
-            ?: throw IllegalArgumentException("Process definition with key $processKey not found")
+        val definitionId = recordsService.getAtt(
+            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processKey),
+            "definition.id"
+        ).asText()
+        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, definitionId))
+            ?: throw IllegalArgumentException("Process definition with id $definitionId not found")
 
         check(definition.enabled) {
             "Starting a disabled process is not possible"

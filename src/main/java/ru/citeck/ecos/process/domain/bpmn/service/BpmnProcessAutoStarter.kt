@@ -14,7 +14,6 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
@@ -26,8 +25,6 @@ class BpmnProcessAutoStarter(
 
     companion object {
         private val log = KotlinLogging.logger {}
-
-        private val TYPE_CASE = EntityRef.create(AppName.EMODEL, "type", "case")
     }
 
     // TODO: narrow the scope of create record events
@@ -86,6 +83,8 @@ class BpmnProcessAutoStarter(
         )
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
+
+        // Auto-start process working only for process, which procDef.id = process.id
         bpmnProcessService.startProcess(procDef.id, record.toString(), processVariables)
     }
 
