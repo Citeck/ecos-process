@@ -13,11 +13,59 @@
   "definition": {
     "components": [
       {
-        "formRef": "uiserv/form@bpmn-base-form-elements",
+        "label": {
+          "ru": "ID элемента",
+          "en": "Element ID"
+        },
+        "key": "id",
+        "validate": {
+          "required": true,
+          "pattern": "^[a-zA-Z0-9-_*]+$",
+          "minLength": 3
+        },
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "validateOn": "blur",
+        "type": "textfield",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Номер элемента",
+          "en": "Element number"
+        },
+        "key": "number",
+        "defaultValue": "",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "textfield",
         "input": true,
-        "key": "includeForm2",
-        "label": "Форма: Bpmn base form elements",
-        "type": "includeForm"
+        "inputMasks": [
+          {}
+        ]
+      },
+      {
+        "label": {
+          "ru": "Имя",
+          "en": "Name"
+        },
+        "key": "name_ml",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlText",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "Документация",
+          "en": "Documentation"
+        },
+        "key": "documentation",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "mlTextarea",
+        "input": true
       },
       {
         "formRef": "uiserv/form@bpmn-base-form-multi-instance",

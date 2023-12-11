@@ -78,7 +78,8 @@ class BpmnProcessReportServiceTest {
         val expectedList = listOf(
             ReportElement(
                 id = "StartEvent_1ew9rff",
-                number = 1,
+                prefix = null,
+                number = "1",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 eventElement = ReportEventElement(
@@ -91,7 +92,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_1kl13e5",
-                number = 2,
+                prefix = null,
+                number = "2",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 taskElement = ReportTaskElement(
@@ -136,7 +138,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Gateway_1ffgbao",
-                number = 3,
+                prefix = null,
+                number = "3",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 gatewayElement = ReportBaseElement(
@@ -149,7 +152,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_11v8b2q",
-                number = 4,
+                prefix = null,
+                number = "4",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 statusElement = ReportStatusElement(
@@ -181,7 +185,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_0g3q0t9",
-                number = 5,
+                prefix = null,
+                number = "5",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 eventElement = ReportEventElement(
@@ -194,7 +199,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_1c8v8jj",
-                number = 6,
+                prefix = null,
+                number = "6",
                 process = mainReportProcessElement,
                 lane = mainLane1ReportLaneElement,
                 eventElement = ReportEventElement(
@@ -212,7 +218,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_14dolni",
-                number = 7,
+                prefix = null,
+                number = "7",
                 process = mainReportProcessElement,
                 lane = mainLane2ReportLaneElement,
                 taskElement = ReportTaskElement(
@@ -251,7 +258,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_0hro9d5",
-                number = 8,
+                prefix = null,
+                number = "8",
                 process = mainReportProcessElement,
                 lane = mainLane2ReportLaneElement,
                 subProcessElement = ReportSubProcessElement(
@@ -291,7 +299,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_1108d97",
-                number = 1,
+                prefix = null,
+                number = "1",
                 process = secondProcessReportProcessElement,
                 eventElement = ReportEventElement(
                     type = ElementType.START_EVENT.type,
@@ -303,7 +312,8 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Activity_1m2gh5p",
-                number = 2,
+                prefix = null,
+                number = "2",
                 process = secondProcessReportProcessElement,
                 taskElement = ReportTaskElement(
                     type = ElementType.SCRIPT_TASK.type,
@@ -325,13 +335,63 @@ class BpmnProcessReportServiceTest {
             ),
             ReportElement(
                 id = "Event_0x2fpow",
-                number = 3,
+                prefix = null,
+                number = "3",
                 process = secondProcessReportProcessElement,
                 eventElement = ReportEventElement(
                     type = ElementType.END_EVENT.type,
                     name = MLText(
                         LocaleUtils.toLocale("ru") to "Конец 2 процесса",
                         LocaleUtils.toLocale("en") to "End process 2"
+                    )
+                )
+            ),
+            ReportElement(
+                id = "Activity_1ljphcd",
+                prefix = null,
+                number = "sub1",
+                process = secondProcessReportProcessElement,
+                subProcessElement = ReportSubProcessElement(
+                    type = ElementType.SUB_PROCESS.type,
+                    elements = listOf("Event_0lc5q55", "Event_0gvcqnd"),
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Подпроцесс"
+                    )
+                )
+            ),
+            ReportElement(
+                id = "Event_0lc5q55",
+                prefix = "sub1-",
+                number = "1",
+                process = secondProcessReportProcessElement,
+                eventElement = ReportEventElement(
+                    type = ElementType.START_EVENT.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Под-старт"
+                    )
+                ),
+                subProcessElement = ReportSubProcessElement(
+                    type = ElementType.SUB_PROCESS.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Подпроцесс"
+                    )
+                )
+            ),
+            ReportElement(
+                id = "Event_0gvcqnd",
+                prefix = "sub1-",
+                number = "2",
+                process = secondProcessReportProcessElement,
+                eventElement = ReportEventElement(
+                    type = ElementType.END_EVENT.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Под-конец"
+                    )
+                ),
+                subProcessElement = ReportSubProcessElement(
+                    type = ElementType.SUB_PROCESS.type,
+                    name = MLText(
+                        LocaleUtils.toLocale("ru") to "Подпроцесс"
                     )
                 )
             )
