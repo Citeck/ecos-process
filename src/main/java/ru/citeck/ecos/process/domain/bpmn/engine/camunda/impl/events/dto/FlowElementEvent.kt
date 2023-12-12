@@ -11,6 +11,7 @@ data class FlowElementEvent(
     var elementDefId: String? = null,
     var procDeploymentVersion: Int? = null,
     var procInstanceId: EntityRef? = null,
+    var processId: String? = null,
     var executionId: String? = null,
     var document: RecordRef? = null,
 

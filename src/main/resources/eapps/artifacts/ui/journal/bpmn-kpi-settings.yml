@@ -1,0 +1,33 @@
+---
+id: bpmn-kpi-settings
+name:
+  en: Bpmn KPI Settings
+  ru: Настройка BPMN KPI
+typeRef: emodel/type@bpmn-kpi-settings
+columns:
+  - id: name
+    name:
+      ru: Имя
+      en: Name
+  - id: kpiType
+    name:
+      ru: Тип
+      en: Type
+  - id: processRef
+    name:
+      ru: Процесс
+      en: Process
+    type: ASSOC
+    formatter:
+      type: assoc
+  - id: dmnCondition
+    name:
+      ru: Условие
+      en: Condition
+    type: ASSOC
+  - id: enabled
+    name:
+      ru: Включен
+      en: Enabled
+    type: BOOLEAN
+system: true

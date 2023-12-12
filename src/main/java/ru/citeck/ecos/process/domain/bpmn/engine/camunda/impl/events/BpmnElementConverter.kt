@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import javax.annotation.PostConstruct
 
@@ -23,6 +24,7 @@ private const val CLASS_IMPL_POSTFIX = "Impl"
 class BpmnElementConverter(
     val bpmnProcessService: BpmnProcessService,
     val procDefService: ProcDefService,
+    val recordsService: RecordsService
 ) {
 
     @PostConstruct
@@ -48,11 +50,12 @@ fun DelegateExecution.toFlowElement(): FlowElementEvent {
 
     return FlowElementEvent(
         engine = BPMN_CAMUNDA_ENGINE,
-        procDefId = processDefinition.key,
+        procDefId = rev?.procDefId,
         elementType = flowElement.javaClass.simpleName.removeSuffix(CLASS_IMPL_POSTFIX),
         elementDefId = flowElement.id,
         procDeploymentVersion = rev?.version?.inc(),
         procInstanceId = getProcessInstanceRef(),
+        processId = processDefinition.key,
         executionId = id,
         document = getDocumentRef()
     )
@@ -63,7 +66,10 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         "Process definition is null. TaskId: $id, name: $name, executionId: $executionId, " +
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
     )
-    val rev = cnv.procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
+    val rev = cnv.procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId) ?: error(
+        "Process definition revision is null. TaskId: $id, name: $name, executionId: $executionId, " +
+            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
+    )
 
     val outcome = getOutcome()
 
@@ -73,9 +79,10 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         form = getFormRef(),
         assignee = assignee,
         roles = getTaskRoles(),
-        procDefId = processDefinition.key,
-        procDeploymentVersion = rev?.version?.inc(),
+        procDefId = rev.procDefId,
+        procDeploymentVersion = rev.version.inc(),
         procInstanceId = getProcessInstanceRef(),
+        processId = processDefinition.key,
         elementDefId = taskDefinitionKey,
         created = createTime?.toInstant(),
         dueDate = dueDate?.toInstant(),

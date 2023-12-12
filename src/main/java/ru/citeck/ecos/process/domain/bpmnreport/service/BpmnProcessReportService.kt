@@ -31,18 +31,26 @@ class BpmnProcessReportService(
                 getReportParticipantElementByProcessId(process.id, it)
             }
 
-            reportElements.addAll(convertBpmnFlowElementToReportElements(process.flowElements, reportProcess, ecosType,
-                null))
+            reportElements.addAll(
+                convertBpmnFlowElementToReportElements(
+                    process.flowElements,
+                    reportProcess,
+                    ecosType,
+                    null
+                )
+            )
             addAnnotationsToReportElements(reportElements, process.artifacts)
             addLanesToReportElements(reportElements, process.lanes)
         }
 
-        reportElements.sortWith(compareBy(
-            { it.process.participant?.number },
-            { it.process.id },
-            { it.prefix },
-            { it.number?.toIntOrNull() ?: Int.MAX_VALUE }
-        ))
+        reportElements.sortWith(
+            compareBy(
+                { it.process.participant?.number },
+                { it.process.id },
+                { it.prefix },
+                { it.number?.toIntOrNull() ?: Int.MAX_VALUE }
+            )
+        )
 
         return reportElements
     }
@@ -182,8 +190,12 @@ class BpmnProcessReportService(
                     val prefix = reportElement.prefix?.let { reportElement.prefix + reportElement.number + "-" }
                         ?: (reportElement.number + "-")
                     val elementsFromSubProcess =
-                        convertBpmnFlowElementToReportElements(subProcessElements, reportProcessElement, ecosType,
-                            prefix)
+                        convertBpmnFlowElementToReportElements(
+                            subProcessElements,
+                            reportProcessElement,
+                            ecosType,
+                            prefix
+                        )
                     if (elementsFromSubProcess.isNotEmpty()) {
                         addAnnotationsToReportElements(elementsFromSubProcess, subProcessArtifacts)
                         reportElement.subProcessElement?.elements = elementsFromSubProcess.map { it.id }

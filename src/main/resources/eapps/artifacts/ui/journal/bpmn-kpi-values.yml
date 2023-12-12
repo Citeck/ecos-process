@@ -1,0 +1,17 @@
+---
+id: bpmn-kpi-values
+name:
+  en: Bpmn KPI values
+  ru: Значения BPMN KPI
+typeRef: emodel/type@bpmn-kpi-value
+columns:
+  - id: kpiSettingsRef
+    name:
+      ru: Настройка KPI
+      en: KPI settings
+    type: ASSOC
+  - id: value
+    name:
+      ru: Значение
+      en: Value
+system: true

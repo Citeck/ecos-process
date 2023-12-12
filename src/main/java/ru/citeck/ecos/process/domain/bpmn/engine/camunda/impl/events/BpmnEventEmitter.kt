@@ -11,7 +11,12 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTas
 const val BPMN_EVENT_USER_TASK_CREATE = "bpmn-user-task-create"
 const val BPMN_EVENT_USER_TASK_COMPLETE = "bpmn-user-task-complete"
 const val BPMN_EVENT_USER_TASK_ASSIGN = "bpmn-user-task-assign"
-const val BPMN_EVENT_FLOW_ELEMENT_START = "bpmn-flow-element-start"
+
+const val BPMN_EVENT_ACTIVITY_ELEMENT_START = "bpmn-activity-element-start"
+const val BPMN_EVENT_ACTIVITY_ELEMENT_END = "bpmn-activity-element-end"
+
+const val BPMN_EVENT_FLOW_ELEMENT_TAKE = "bpmn-flow-element-take"
+
 const val BPMN_EVENT_PROCESS_START = "bpmn-process-start"
 
 /**
@@ -36,7 +41,23 @@ class BpmnEventEmitter(
     private val flowElementsStartEmitter = eventsService.getEmitter(
         EmitterConfig.create<FlowElementEvent> {
             source = appName
-            eventType = BPMN_EVENT_FLOW_ELEMENT_START
+            eventType = BPMN_EVENT_ACTIVITY_ELEMENT_START
+            eventClass = FlowElementEvent::class.java
+        }
+    )
+
+    private val flowElementsEndEmitter = eventsService.getEmitter(
+        EmitterConfig.create<FlowElementEvent> {
+            source = appName
+            eventType = BPMN_EVENT_ACTIVITY_ELEMENT_END
+            eventClass = FlowElementEvent::class.java
+        }
+    )
+
+    private val flowElementsTakeEmitter = eventsService.getEmitter(
+        EmitterConfig.create<FlowElementEvent> {
+            source = appName
+            eventType = BPMN_EVENT_FLOW_ELEMENT_TAKE
             eventClass = FlowElementEvent::class.java
         }
     )
@@ -71,6 +92,14 @@ class BpmnEventEmitter(
 
     fun emitElementStart(event: FlowElementEvent) {
         flowElementsStartEmitter.emit(event)
+    }
+
+    fun emitElementEnd(event: FlowElementEvent) {
+        flowElementsEndEmitter.emit(event)
+    }
+
+    fun emitFlowElementTake(event: FlowElementEvent) {
+        flowElementsTakeEmitter.emit(event)
     }
 
     fun emitUserTaskCreateEvent(event: UserTaskEvent) {

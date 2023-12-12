@@ -9,6 +9,10 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.*
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
+import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -75,7 +79,7 @@ fun saveAndDeployBpmnFromResource(resource: String, id: String) {
 }
 
 fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActions?) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = ResourceUtils.getFile("classpath:$resource")
             .readText(StandardCharsets.UTF_8)
@@ -86,6 +90,33 @@ fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActio
     }
 
     helper.recordsService.mutate(recordAtts)
+}
+
+fun createDurationKpiSettings(
+    id: String,
+    kpiType: BpmnKpiType = BpmnKpiType.DURATION,
+    process: String,
+    source: String? = null,
+    sourceEventType: BpmnKpiEventType? = null,
+    target: String,
+    targetEventType: BpmnKpiEventType,
+    timeType: BpmnDurationKpiTimeType = BpmnDurationKpiTimeType.CALENDAR
+): EntityRef {
+    val kpiSettings = mapOf(
+        "id" to id,
+        "name" to "test kpi",
+        "kpiType" to kpiType.name,
+        "processRef" to EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, process),
+        "enabled" to true,
+        "sourceBpmnActivityId" to source,
+        "sourceBpmnActivityEvent" to sourceEventType?.name,
+        "targetBpmnActivityId" to target,
+        "targetBpmnActivityEvent" to targetEventType.name,
+        "durationKpi" to 10_000,
+        "durationKpiTimeType" to timeType.name
+    )
+
+    return helper.recordsService.create("eproc/${BpmnKpiSettingsDaoConfig.SOURCE_ID}", kpiSettings)
 }
 
 fun uploadNewVersionFromResource(resource: String, id: String, comment: String, replace: Pair<String, String>) {

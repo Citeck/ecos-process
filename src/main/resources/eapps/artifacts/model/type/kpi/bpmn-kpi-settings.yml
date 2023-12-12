@@ -1,0 +1,82 @@
+---
+id: bpmn-kpi-settings
+name:
+  en: Bpmn KPI Settings
+  ru: Настройка BPMN KPI
+
+system: true
+sourceId: eproc/bpmn-kpi-settings
+formRef: uiserv/form@bpmn-kpi-settings-form
+journalRef: uiserv/journal@bpmn-kpi-settings
+dispNameTemplate:
+  ru: '${name}'
+defaultCreateVariant: true
+createVariants:
+  - id: upload
+    name: { ru: Загрузить конфигурацию, en: Upload configuration }
+    formRef: 'uiserv/form@ecos-artifact-upload'
+actions:
+  - uiserv/action@download-text-yml
+  - uiserv/action@edit
+  - uiserv/action@edit-json
+  - uiserv/action@delete
+
+
+model:
+  attributes:
+    - id: name
+      name:
+        ru: Название
+        en: Name
+    - id: kpiType
+      name:
+        ru: Тип
+        en: Type
+    - id: enabled
+      name:
+        ru: Включен
+        en: Enabled
+      type: BOOLEAN
+    - id: processRef
+      name:
+        ru: Процесс
+        en: Process
+      type: ASSOC
+    - id: dmnCondition
+      name:
+        ru: Условие
+        en: Condition
+      type: ASSOC
+    - id: sourceBpmnActivityId
+      name:
+        ru: Исходный BPMN элемент
+        en: Source BPMN Activity
+    - id: sourceBpmnActivityEvent
+      name:
+        ru: Событие исходного BPMN элемента
+        en: Source BPMN Activity Event
+    - id: targetBpmnActivityId
+      name:
+        ru: Целевой BPMN элемент
+        en: Target BPMN Activity
+    - id: targetBpmnActivityEvent
+      name:
+        ru: Событие целевого BPMN элемента
+        en: Target BPMN Activity Event
+    - id: durationKpi
+      name:
+        ru: KPI по длительности
+        en: Duration KPI
+    - id: durationKpiTimeType
+      name:
+        ru: Тип времени
+        en: Duration type
+    - id: countKpi
+      name:
+        ru: KPI по количеству
+        en: Count KPI
+      type: NUMBER
+    - id: countPeriod
+      name:
+        ru: Период
+        en: Period

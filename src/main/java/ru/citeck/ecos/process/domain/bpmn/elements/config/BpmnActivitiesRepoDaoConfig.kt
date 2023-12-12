@@ -16,6 +16,8 @@ import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElemen
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 
+const val BPMN_PROCESS_ELEMENT_TYPE = "bpmn-process-element"
+
 @Configuration
 class BpmnActivitiesRepoDaoConfig(
     private val dbDomainFactory: DbDomainFactory,
@@ -54,7 +56,7 @@ class BpmnActivitiesRepoDaoConfig(
             }
         }
 
-        val typeRef = ModelUtils.getTypeRef("bpmn-process-element")
+        val typeRef = ModelUtils.getTypeRef(BPMN_PROCESS_ELEMENT_TYPE)
         val recordsDao = dbDomainFactory.create(
             DbDomainConfig.create()
                 .withRecordsDao(

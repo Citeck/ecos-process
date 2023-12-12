@@ -117,20 +117,20 @@ class ProcTaskServiceImpl(
             .selectTasks()
     }
 
-    override fun getTasksByProcess(processId: String): List<ProcTaskDto> {
+    override fun getTasksByProcess(processInstanceId: String): List<ProcTaskDto> {
         return camundaTaskService.createTaskQuery()
-            .processInstanceId(processId)
+            .processInstanceId(processInstanceId)
             .initializeFormKeys()
             .list()
             .map { it.toProcTask() }
     }
 
-    override fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto> {
+    override fun getTasksByProcessForCurrentUser(processInstanceId: String): List<ProcTaskDto> {
         log.debug {
-            "getTasksByProcessForCurrentUser: processId=$processId "
+            "getTasksByProcessForCurrentUser: processInstanceId=$processInstanceId "
         }
 
-        return getTasksByProcess(processId).filter {
+        return getTasksByProcess(processInstanceId).filter {
             it.isCurrentUserTaskActorOrDelegate()
         }
     }

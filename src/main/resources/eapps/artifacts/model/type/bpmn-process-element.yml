@@ -46,6 +46,10 @@ model:
       name:
         ru: Экземпляр процесса
         en: Process instance
+    - id: processId
+      name:
+        ru: Идентификатор процесса
+        en: Process identifier
     - id: elementDefId
       name:
         ru: Идентификатор элемента

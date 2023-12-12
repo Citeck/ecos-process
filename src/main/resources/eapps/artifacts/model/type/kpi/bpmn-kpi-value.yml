@@ -1,0 +1,35 @@
+---
+id: bpmn-kpi-value
+name:
+  en: Bpmn KPI value
+  ru: BPMN KPI значение
+system: true
+storageType: ECOS_MODEL
+formRef: uiserv/form@bpmn-kpi-value-form
+journalRef: uiserv/journal@bpmn-kpi-values
+inheritForm: false
+defaultCreateVariant: false
+model:
+  attributes:
+    - id: kpiSettingsRef
+      name:
+        ru: Настройка KPI
+        en: KPI settings
+      type: ASSOC
+      config:
+        typeRef: emodel/type@bpmn-kpi-settings
+    - id: value
+      name:
+        ru: Значение
+        en: Value
+      type: NUMBER
+    - id: processInstanceId
+      name:
+        ru: Идентификатор процесса
+        en: Process instance id
+      type: ASSOC
+    - id: processId
+      name:
+        ru: Идентификатор процесса
+        en: Process id
+

@@ -14,6 +14,7 @@ data class UserTaskEvent(
     var procDefId: String? = null,
     var procDeploymentVersion: Int? = null,
     var procInstanceId: EntityRef? = null,
+    var processId: String? = null,
     var elementDefId: String? = null,
     var created: Instant? = null,
     var dueDate: Instant? = null,

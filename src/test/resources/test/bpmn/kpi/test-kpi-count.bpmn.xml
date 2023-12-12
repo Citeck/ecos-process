@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_M5OS4ET" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:workingCopySourceRef="" ecos:name_ml="{}" ecos:formRef="" ecos:sectionRef="eproc/bpmn-section@DEFAULT" ecos:enabled="true" ecos:autoStartEnabled="false" ecos:defState="CONVERTED" ecos:processDefId="test-kpi-count" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="test-kpi-count">
+        <bpmn:startEvent isInterrupting="true" name="" id="startEvent" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_19mq3vh</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:subProcess triggeredByEvent="false" name="" id="subProcess" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_19mq3vh</bpmn:incoming>
+            <bpmn:outgoing >Flow_0x2i669</bpmn:outgoing>
+            <bpmn:startEvent isInterrupting="true" name="" id="startEventSubProcess" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+                <bpmn:outgoing >Flow_1061g88</bpmn:outgoing>
+            </bpmn:startEvent>
+            <bpmn:sequenceFlow sourceRef="startEventSubProcess" targetRef="userTask" name="" id="Flow_1061g88" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+            <bpmn:endEvent name="" id="endEventSubProcess" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+                <bpmn:incoming >Flow_0v64ems</bpmn:incoming>
+            </bpmn:endEvent>
+            <bpmn:sequenceFlow sourceRef="userTask" targetRef="endEventSubProcess" name="" id="Flow_0v64ems" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+            <bpmn:userTask name="userTask" id="userTask" ecos:documentation="{}" ecos:manualRecipients="[&quot;admin&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:{},&quot;config&quot;:{&quot;theme&quot;:&quot;PRIMARY&quot;}}]" ecos:name_ml="{&quot;ru&quot;:&quot;userTask&quot;}" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">
+                <bpmn:incoming >Flow_1061g88</bpmn:incoming>
+                <bpmn:outgoing >Flow_0v64ems</bpmn:outgoing>
+            </bpmn:userTask>
+        </bpmn:subProcess>
+        <bpmn:sequenceFlow sourceRef="startEvent" targetRef="subProcess" name="" id="Flow_19mq3vh" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:endEvent name="" id="endEvent" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_0x2i669</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow sourceRef="subProcess" targetRef="endEvent" name="" id="Flow_0x2i669" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+    </bpmn:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="test-kpi-count" id="BPMNPlane_1">
+            <bpmndi:BPMNShape bpmnElement="startEvent" isExpanded="true" id="startEvent_di">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="subProcess" isExpanded="true" id="subProcess_di">
+                <dc:Bounds x="250.0" y="-1.0" width="350.0" height="200.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="startEventSubProcess" isExpanded="true" id="startEventSubProcess_di">
+                <dc:Bounds x="290.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEventSubProcess" isExpanded="true" id="endEventSubProcess_di">
+                <dc:Bounds x="542.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="userTask" isExpanded="true" id="Activity_1k5ehpl_di">
+                <dc:Bounds x="380.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_1061g88" id="Flow_1061g88_di">
+                <di:waypoint x="326.0" y="99.0"/>
+                <di:waypoint x="380.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0v64ems" id="Flow_0v64ems_di">
+                <di:waypoint x="480.0" y="99.0"/>
+                <di:waypoint x="542.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNShape bpmnElement="endEvent" isExpanded="true" id="endEvent_di">
+                <dc:Bounds x="662.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_19mq3vh" id="Flow_19mq3vh_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="250.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_0x2i669" id="Flow_0x2i669_di">
+                <di:waypoint x="600.0" y="99.0"/>
+                <di:waypoint x="662.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

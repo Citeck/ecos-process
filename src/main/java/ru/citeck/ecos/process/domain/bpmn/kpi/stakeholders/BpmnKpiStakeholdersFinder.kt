@@ -1,0 +1,86 @@
+package ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders
+
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
+import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
+import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
+
+interface BpmnKpiStakeholdersFinder {
+
+    fun getRecordsService(): RecordsService
+
+    fun searchStakeholders(
+        processId: String,
+        activityId: String,
+        eventType: BpmnKpiEventType,
+        kpiType: BpmnKpiType
+    ): List<BpmnKpiSettings> {
+        // TODO: replace after bugfix in ecos-webapp-spring-base-parent 1.50+ ECOSCOM-5071
+        // val processRef = processId.toEntityRef(AppName.EPROC, BpmnProcessLatestRecords.ID)
+
+        var processRef = processId.toEntityRef()
+        if (processRef.getAppName().isBlank()) {
+            processRef = processRef.withAppName(AppName.EPROC)
+        }
+        if (processRef.getSourceId().isBlank()) {
+            processRef = processRef.withSourceId(BpmnProcessLatestRecords.ID)
+        }
+
+        return getRecordsService().query(
+            RecordsQuery.create {
+                withSourceId(BpmnKpiSettingsDaoConfig.SOURCE_ID)
+                withLanguage(PredicateService.LANGUAGE_PREDICATE)
+                withQuery(
+                    Predicates.and(
+                        Predicates.eq("processRef", processRef),
+                        Predicates.eq("enabled", true),
+                        Predicates.eq("kpiType", kpiType.name),
+                        Predicates.eq("targetBpmnActivityId", activityId),
+                        Predicates.eq("targetBpmnActivityEvent", eventType.name)
+                    )
+                )
+                withPage(QueryPage(10_000, 0, null))
+            },
+            BpmnKpiSettings::class.java
+        ).getRecords()
+    }
+}
+
+class BpmnKpiSettings(
+    var id: String = "",
+
+    var name: String? = "",
+    var enabled: Boolean = false,
+    var processRef: EntityRef? = EntityRef.EMPTY,
+    var dmnCondition: EntityRef? = EntityRef.EMPTY,
+
+    var sourceBpmnActivityId: String? = "",
+    var sourceBpmnActivityEvent: BpmnKpiEventType? = null,
+
+    var targetBpmnActivityId: String? = "",
+    var targetBpmnActivityEvent: BpmnKpiEventType? = null,
+
+    var durationKpi: String? = "",
+    var durationKpiTimeType: BpmnDurationKpiTimeType? = null,
+
+    var countKpi: Long? = null,
+    var countPeriod: String? = ""
+) {
+
+    fun getRef(): EntityRef {
+        return if (id.isNotBlank()) {
+            EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, id)
+        } else {
+            EntityRef.EMPTY
+        }
+    }
+}

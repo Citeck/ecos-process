@@ -48,3 +48,4 @@ columns:
   - id: documentTypeRef
     visible: false
     searchable: false
+  - id: processId

@@ -337,9 +337,13 @@ class BpmnProcessRecords(
             return processDefinition?.deploymentId ?: ""
         }
 
-        @AttName("key")
-        fun getKey(): String {
+        @AttName("processDefinitionKey")
+        fun getProcessDefinitionKey(): String {
             return processDefinition?.key ?: ""
+        }
+
+        fun getKey(): String {
+            return bpmnProcessService.getProcessDefinitionByProcessInstanceId(id)?.key ?: ""
         }
 
         @AttName("bpmnDefEngine")
