@@ -91,6 +91,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     fun `search kpi settings trigger source start`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
             processId = TEST_PROCESS,
+            document = EntityRef.EMPTY,
             activityId = "activitySource",
             eventType = BpmnKpiEventType.START,
             BpmnKpiType.DURATION
@@ -103,6 +104,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     fun `search kpi settings trigger source end`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
             processId = TEST_PROCESS,
+            document = EntityRef.EMPTY,
             activityId = "activitySource",
             eventType = BpmnKpiEventType.END,
             BpmnKpiType.DURATION
@@ -115,6 +117,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     fun `search kpi settings trigger target start duration`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
             processId = TEST_PROCESS,
+            document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.START,
             BpmnKpiType.DURATION
@@ -132,6 +135,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     fun `search kpi settings trigger target start count`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
             processId = TEST_PROCESS,
+            document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.START,
             BpmnKpiType.COUNT
@@ -149,6 +153,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     fun `search kpi settings trigger target end duration`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
             processId = TEST_PROCESS,
+            document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.END,
             BpmnKpiType.DURATION
@@ -166,6 +171,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     fun `search kpi settings trigger target end count`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
             processId = TEST_PROCESS,
+            document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.END,
             BpmnKpiType.COUNT

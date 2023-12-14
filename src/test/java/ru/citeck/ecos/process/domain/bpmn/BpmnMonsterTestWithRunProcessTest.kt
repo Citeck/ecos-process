@@ -53,6 +53,7 @@ import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
 import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
@@ -166,8 +167,12 @@ class BpmnMonsterTestWithRunProcessTest {
         private val usersGroupRef = EntityRef.valueOf("emodel/authority-group@users")
 
         private val docRecord = DocRecord()
+        private val docRecord2 = DocRecord2()
+        private val docRecord3 = DocRecord3()
         private val modifiedDocRecord = ModifiedDocRecord()
         private val docRef = EntityRef.valueOf("store/doc@1")
+        private val docRef2 = EntityRef.valueOf("store/doc@2")
+        private val docRef3 = EntityRef.valueOf("store/doc@3")
         private val docExplicitRef = EntityRef.valueOf("doc@explicit")
 
         private val variables_docRef = mapOf(
@@ -199,6 +204,14 @@ class BpmnMonsterTestWithRunProcessTest {
             .addRecord(
                 docRef.getLocalId(),
                 docRecord
+            )
+            .addRecord(
+                docRef2.getLocalId(),
+                docRecord2
+            )
+            .addRecord(
+                docRef3.getLocalId(),
+                docRecord3
             )
             .build()
 
@@ -4286,6 +4299,100 @@ class BpmnMonsterTestWithRunProcessTest {
         )
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["store/doc@1", "store/doc@2"])
+    fun `kpi with dmn condition true test`(docRef: String) {
+        val procId = "test-kpi-with-dmn"
+        val dmnId = "dmn-kpi-test"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = procId,
+                source = "Activity_user_task",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END,
+                dmnCondition = EntityRef.create(
+                    AppName.EPROC,
+                    DmnDecisionLatestRecords.ID,
+                    "Decision_dmn-kpi-test"
+                )
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                BPMN_DOCUMENT_REF to docRef
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+            org.mockito.kotlin.check { kpiValue ->
+                assertThat(kpiValue.settingsRef).isEqualTo(
+                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                )
+                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+            }
+        )
+    }
+
+    @Test
+    fun `kpi with dmn condition false test`() {
+        val procId = "test-kpi-with-dmn"
+        val dmnId = "dmn-kpi-test"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = procId,
+                source = "Activity_user_task",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END,
+                dmnCondition = EntityRef.create(
+                    AppName.EPROC,
+                    DmnDecisionLatestRecords.ID,
+                    "Decision_dmn-kpi-test"
+                )
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                BPMN_DOCUMENT_REF to docRef3.toString()
+            )
+        ).execute()
+
+        verify(process).hasFinished("endEvent")
+        verify(bpmnKpiService, Mockito.times(0)).createKpiValue(
+            any()
+        )
+    }
+
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
         action: () -> Unit
@@ -4339,6 +4446,9 @@ class BpmnMonsterTestWithRunProcessTest {
         @AttName("name")
         val name: String = "Doc 1",
 
+        @AttName("sum")
+        val sum: Double = 5_500.0,
+
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")
     )
@@ -4346,7 +4456,34 @@ class BpmnMonsterTestWithRunProcessTest {
     class ModifiedDocRecord(
 
         @AttName("name")
+        val name: String = "Doc 1 modified",
+
+        @AttName("sum")
+        val sum: Double = 7_000.0,
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
+
+    class DocRecord2(
+
+        @AttName("name")
         val name: String = "Doc 2",
+
+        @AttName("sum")
+        val sum: Double = 13_000.0,
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
+
+    class DocRecord3(
+
+        @AttName("name")
+        val name: String = "Doc 3",
+
+        @AttName("sum")
+        val sum: Double = 20_000.0,
 
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")

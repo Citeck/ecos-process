@@ -100,7 +100,8 @@ fun createDurationKpiSettings(
     sourceEventType: BpmnKpiEventType? = null,
     target: String,
     targetEventType: BpmnKpiEventType,
-    timeType: BpmnDurationKpiTimeType = BpmnDurationKpiTimeType.CALENDAR
+    timeType: BpmnDurationKpiTimeType = BpmnDurationKpiTimeType.CALENDAR,
+    dmnCondition: EntityRef = EntityRef.EMPTY
 ): EntityRef {
     val kpiSettings = mapOf(
         "id" to id,
@@ -113,7 +114,8 @@ fun createDurationKpiSettings(
         "targetBpmnActivityId" to target,
         "targetBpmnActivityEvent" to targetEventType.name,
         "durationKpi" to 10_000,
-        "durationKpiTimeType" to timeType.name
+        "durationKpiTimeType" to timeType.name,
+        "dmnCondition" to dmnCondition
     )
 
     return helper.recordsService.create("eproc/${BpmnKpiSettingsDaoConfig.SOURCE_ID}", kpiSettings)

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definitions xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/dmn"
+             xmlns:ecos="http://www.citeck.ru/ecos/dmn/1.0" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0"
+             xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" namespace="http://camunda.org/schema/1.0/dmn"
+             exporter="Camunda Modeler" exporterVersion="5.8.0" name="dmn-kpi-test" id="dmn-kpi-test"
+             ecos:model="{&quot;documentSum&quot;:&quot;sum?num&quot;,&quot;documentName&quot;:&quot;name&quot;}"
+             ecos:sectionRef="" ecos:defId="dmn-kpi-test" modeler:executionPlatform="Camunda Platform"
+             ecos:name_ml="{&quot;ru&quot;:&quot;dmn-kpi-test&quot;}" modeler:executionPlatformVersion="7.17.0">
+    <decision name="DMN kpi test" id="Decision_dmn-kpi-test" camunda:versionTag="">
+        <decisionTable hitPolicy="FIRST" id="DecisionTable_0nkijsr">
+            <input id="Input_1" label="doc name" camunda:inputVariable="documentName">
+                <inputExpression typeRef="string" id="InputExpression_1">
+                    <text></text>
+                </inputExpression>
+            </input>
+            <input id="InputClause_1lh35pk" label="doc sum" biodi:width="192" camunda:inputVariable="documentSum">
+                <inputExpression typeRef="double" id="LiteralExpression_106deej">
+                    <text></text>
+                </inputExpression>
+            </input>
+            <output name="result" typeRef="boolean" id="Output_1" biodi:width="192"/>
+            <rule id="DecisionRule_1q1omnu">
+                <inputEntry id="UnaryTests_1a5ezxn">
+                    <text>"Doc 3"</text>
+                </inputEntry>
+                <inputEntry id="UnaryTests_0y2trb0">
+                    <text></text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_0iv4tc8">
+                    <text>false</text>
+                </outputEntry>
+            </rule>
+            <rule id="DecisionRule_1awtwmk">
+                <inputEntry id="UnaryTests_02cryo0">
+                    <text>"Doc 1"</text>
+                </inputEntry>
+                <inputEntry id="UnaryTests_0oljl77">
+                    <text></text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_1pi9gh5">
+                    <text>true</text>
+                </outputEntry>
+            </rule>
+            <rule id="DecisionRule_094je5w">
+                <inputEntry id="UnaryTests_1ebyiuz">
+                    <text></text>
+                </inputEntry>
+                <inputEntry id="UnaryTests_1oz2wr4">
+                    <text>&gt; 10000</text>
+                </inputEntry>
+                <outputEntry id="LiteralExpression_0e4cw5d">
+                    <text>true</text>
+                </outputEntry>
+            </rule>
+        </decisionTable>
+    </decision>
+    <dmndi:DMNDI>
+        <dmndi:DMNDiagram>
+            <dmndi:DMNShape dmnElementRef="Decision_dmn-kpi-test">
+                <dc:Bounds x="160.0" y="100.0" width="180.0" height="80.0"/>
+            </dmndi:DMNShape>
+        </dmndi:DMNDiagram>
+    </dmndi:DMNDI>
+</definitions>

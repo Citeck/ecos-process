@@ -1,10 +1,14 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders
 
+import mu.KotlinLogging
+import ru.citeck.ecos.process.common.toDecisionKey
+import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
 import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
+import ru.citeck.ecos.process.domain.dmn.service.EcosDmnService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
@@ -16,10 +20,17 @@ import ru.citeck.ecos.webapp.api.entity.toEntityRef
 
 interface BpmnKpiStakeholdersFinder {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     fun getRecordsService(): RecordsService
+
+    fun getEcosDmnService(): EcosDmnService
 
     fun searchStakeholders(
         processId: String,
+        document: EntityRef,
         activityId: String,
         eventType: BpmnKpiEventType,
         kpiType: BpmnKpiType
@@ -52,6 +63,38 @@ interface BpmnKpiStakeholdersFinder {
             },
             BpmnKpiSettings::class.java
         ).getRecords()
+            .filter {
+                it.dmnConditionSatisfied(document)
+            }
+    }
+
+    private fun BpmnKpiSettings.dmnConditionSatisfied(documentRef: EntityRef): Boolean {
+        if (EntityRef.isEmpty(dmnCondition)) {
+            return true
+        }
+
+        val dmnConditionRef = dmnCondition!!
+        val model = getRecordsService().getAtt(dmnConditionRef, "definition.model")
+            .asMap(String::class.java, String::class.java)
+        val filledModel = mutableMapOf<String, Any?>()
+
+        getRecordsService().getAtts(documentRef, model).forEach { key, attr ->
+            filledModel[key] = attr.asJavaObj()
+        }
+
+        val result = getEcosDmnService().evaluateDecisionByKeyAndCollectMapEntries(
+            dmnConditionRef.toDecisionKey(),
+            filledModel
+        )
+        if (result.isEmpty()) {
+            log.debug { "Decision result is empty for kpi settings: ${this.id}" }
+            return false
+        }
+
+        val decisionResult = result.values.first().first().toString().toBoolean()
+        log.debug { "Decision result for kpi settings: ${this.id} is $decisionResult" }
+
+        return decisionResult
     }
 }
 
@@ -61,7 +104,9 @@ class BpmnKpiSettings(
     var name: String? = "",
     var enabled: Boolean = false,
     var processRef: EntityRef? = EntityRef.EMPTY,
+
     var dmnCondition: EntityRef? = EntityRef.EMPTY,
+    var model: Map<String, String>? = emptyMap(),
 
     var sourceBpmnActivityId: String? = "",
     var sourceBpmnActivityEvent: BpmnKpiEventType? = null,

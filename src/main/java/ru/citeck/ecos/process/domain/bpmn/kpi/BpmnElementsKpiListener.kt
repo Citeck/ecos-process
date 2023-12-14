@@ -13,6 +13,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.Predicates.empty
 import ru.citeck.ecos.records2.predicate.model.Predicates.eq
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
 @Component
@@ -30,7 +31,6 @@ class BpmnElementsKpiListener(
         eventsService.addListener<BpmnElementEventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(BpmnElementEventData::class.java)
-            withTransactional(true)
             withFilter(
                 eq("typeDef.id", BPMN_PROCESS_ELEMENT_TYPE)
             )
@@ -43,7 +43,6 @@ class BpmnElementsKpiListener(
         eventsService.addListener<BpmnElementEventData> {
             withEventType(RecordChangedEvent.TYPE)
             withDataClass(BpmnElementEventData::class.java)
-            withTransactional(true)
             withFilter(
                 Predicates.and(
                     eq("typeDef.id", BPMN_PROCESS_ELEMENT_TYPE),
@@ -106,7 +105,10 @@ class BpmnElementsKpiListener(
         var created: Instant = Instant.MIN,
 
         @AttName("record.completed")
-        var completed: Instant? = null
+        var completed: Instant? = null,
+
+        @AttName("record.document")
+        var document: EntityRef? = EntityRef.EMPTY
     ) {
 
         fun toBpmnElementEvent() = BpmnElementEvent(
@@ -114,7 +116,8 @@ class BpmnElementsKpiListener(
             processId = processId,
             activityId = elementDefId,
             created = created,
-            completed = completed
+            completed = completed,
+            document = document ?: EntityRef.EMPTY
         )
     }
 }

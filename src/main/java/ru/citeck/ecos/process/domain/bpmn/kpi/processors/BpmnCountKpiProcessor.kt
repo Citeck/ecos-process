@@ -33,6 +33,7 @@ class BpmnCountKpiProcessor(
     private fun saveCountKpi(bpmnEvent: BpmnElementEvent, kpiEventType: BpmnKpiEventType) {
         val stakeholders = finder.searchStakeholders(
             bpmnEvent.processId,
+            bpmnEvent.document,
             bpmnEvent.activityId,
             kpiEventType,
             BpmnKpiType.COUNT

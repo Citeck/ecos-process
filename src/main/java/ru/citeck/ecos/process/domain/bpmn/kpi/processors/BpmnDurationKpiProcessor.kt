@@ -103,6 +103,7 @@ class BpmnDurationKpiProcessor(
     ) {
         val stakeholders = finder.searchStakeholders(
             bpmnEvent.processId,
+            bpmnEvent.document,
             bpmnEvent.activityId,
             kpiEventType,
             BpmnKpiType.DURATION

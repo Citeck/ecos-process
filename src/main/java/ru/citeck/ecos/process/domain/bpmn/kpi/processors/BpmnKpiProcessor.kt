@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi.processors
 
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
 interface BpmnKpiProcessor {
@@ -10,6 +11,7 @@ interface BpmnKpiProcessor {
 }
 
 class BpmnElementEvent(
+    val document: EntityRef,
     val procInstanceId: String,
     val processId: String,
     val activityId: String,
