@@ -12,6 +12,7 @@ interface BpmnKpiProcessor {
 
 class BpmnElementEvent(
     val document: EntityRef,
+    val documentType: EntityRef,
     val procInstanceId: String,
     val processId: String,
     val activityId: String,

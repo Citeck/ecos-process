@@ -32,4 +32,22 @@ model:
       name:
         ru: Идентификатор процесса
         en: Process id
+    - id: document
+      name:
+        ru: Документ
+        en: Document
+      type: ASSOC
+    - id: documentTypeRef
+      name:
+        ru: Тип документа
+        en: Document type
+      type: ASSOC
+    - id: sourceBpmnActivityId
+      name:
+        ru: Исходный BPMN элемент
+        en: Source BPMN Activity
+    - id: targetBpmnActivityId
+      name:
+        ru: Целевой BPMN элемент
+        en: Target BPMN Activity
 

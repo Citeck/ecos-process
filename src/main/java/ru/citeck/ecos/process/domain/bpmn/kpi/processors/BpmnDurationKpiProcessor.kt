@@ -145,7 +145,11 @@ class BpmnDurationKpiProcessor(
                         settingsRef = stakeholder.getRef(),
                         value = kpiValue,
                         processInstanceId = bpmnEvent.procInstanceId,
-                        processId = bpmnEvent.processId
+                        processId = bpmnEvent.processId,
+                        document = bpmnEvent.document,
+                        documentType = bpmnEvent.documentType,
+                        sourceBpmnActivityId = foundSourceElement.elementDefId,
+                        targetBpmnActivityId = bpmnEvent.activityId
                     )
                 )
             }
@@ -179,6 +183,7 @@ class BpmnDurationKpiProcessor(
 
     private data class ElementInfo(
         var created: Instant? = null,
-        var completed: Instant? = null
+        var completed: Instant? = null,
+        var elementDefId: String? = null
     )
 }

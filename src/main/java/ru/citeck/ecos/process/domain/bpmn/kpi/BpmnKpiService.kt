@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi
 
 import org.springframework.stereotype.Service
+import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
@@ -22,12 +23,22 @@ class BpmnKpiServiceImpl(
     private val recordsService: RecordsService
 ) : BpmnKpiService {
 
+    companion object {
+        private val log = mu.KotlinLogging.logger {}
+    }
+
     override fun createKpiValue(value: BpmnKpiValue) {
+        log.trace { "Create BpmnKpiValue: \n${value.toPrettyString()}" }
+
         val atts = mapOf(
             "kpiSettingsRef" to value.settingsRef,
             "value" to value.value,
             "processInstanceId" to value.processInstanceId,
-            "processId" to value.processId
+            "processId" to value.processId,
+            "document" to value.document,
+            "documentTypeRef" to value.documentType,
+            "sourceBpmnActivityId" to value.sourceBpmnActivityId,
+            "targetBpmnActivityId" to value.targetBpmnActivityId
         )
         recordsService.create("${AppName.EMODEL}/$BPMN_KPI_VALUE_SOURCE_ID", atts)
     }
@@ -52,7 +63,11 @@ data class BpmnKpiValue(
     val settingsRef: EntityRef,
     val value: Number,
     val processInstanceId: String,
-    val processId: String
+    val processId: String,
+    val document: EntityRef,
+    val documentType: EntityRef,
+    val sourceBpmnActivityId: String?,
+    val targetBpmnActivityId: String?
 )
 
 enum class BpmnKpiType {

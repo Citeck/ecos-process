@@ -60,7 +60,11 @@ class BpmnCountKpiProcessor(
                         settingsRef = stakeholder.getRef(),
                         value = 1,
                         processInstanceId = bpmnEvent.procInstanceId,
-                        processId = bpmnEvent.processId
+                        processId = bpmnEvent.processId,
+                        document = bpmnEvent.document,
+                        documentType = bpmnEvent.documentType,
+                        sourceBpmnActivityId = null,
+                        targetBpmnActivityId = bpmnEvent.activityId
                     )
                 )
             } else {

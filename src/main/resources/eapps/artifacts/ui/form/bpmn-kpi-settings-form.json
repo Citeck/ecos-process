@@ -427,10 +427,10 @@
                           "values": [
                             {
                               "label": {
-                                "ru": "Обычное",
-                                "en": "Regular"
+                                "ru": "Календарное",
+                                "en": "Calendar"
                               },
-                              "value": "REGULAR"
+                              "value": "CALENDAR"
                             },
                             {
                               "label": {
@@ -444,7 +444,7 @@
                             {}
                           ]
                         },
-                        "defaultValue": "REGULAR",
+                        "defaultValue": "CALENDAR",
                         "optionalWhenDisabled": false,
                         "conditional": {
                           "show": "true",

@@ -108,7 +108,10 @@ class BpmnElementsKpiListener(
         var completed: Instant? = null,
 
         @AttName("record.document")
-        var document: EntityRef? = EntityRef.EMPTY
+        var document: EntityRef? = EntityRef.EMPTY,
+
+        @AttName("record.document._type?id")
+        var documentType: EntityRef? = EntityRef.EMPTY
     ) {
 
         fun toBpmnElementEvent() = BpmnElementEvent(
@@ -117,7 +120,8 @@ class BpmnElementsKpiListener(
             activityId = elementDefId,
             created = created,
             completed = completed,
-            document = document ?: EntityRef.EMPTY
+            document = document ?: EntityRef.EMPTY,
+            documentType = documentType ?: EntityRef.EMPTY
         )
     }
 }

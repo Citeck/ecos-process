@@ -4,6 +4,7 @@ name:
   en: Bpmn KPI values
   ru: Значения BPMN KPI
 typeRef: emodel/type@bpmn-kpi-value
+system: true
 columns:
   - id: kpiSettingsRef
     name:
@@ -14,4 +15,7 @@ columns:
     name:
       ru: Значение
       en: Value
-system: true
+  - id: document
+    type: ASSOC
+    formatter:
+      type: assoc
