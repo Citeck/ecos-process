@@ -99,8 +99,10 @@ class BpmnProcessRecords(
         val predicate = getQuery(Predicate::class.java)
         val bpmnQuery = PredicateUtils.convertToDto(predicate, BpmnProcQuery::class.java)
 
-        check(bpmnQuery.bpmnDefEngine.isNotEmpty() && bpmnQuery.bpmnDefEngine.getLocalId().isNotBlank()) {
-            "Bpmn definition engine is mandatory for query process instances"
+        if (AuthContext.isNotRunAsSystemOrAdmin()) {
+            check(bpmnQuery.bpmnDefEngine.isNotEmpty() && bpmnQuery.bpmnDefEngine.getLocalId().isNotBlank()) {
+                "Bpmn definition engine is mandatory for query process instances"
+            }
         }
 
         return ProcessInstanceQuery(
@@ -337,9 +339,13 @@ class BpmnProcessRecords(
             return processDefinition?.deploymentId ?: ""
         }
 
-        @AttName("key")
-        fun getKey(): String {
+        @AttName("processDefinitionKey")
+        fun getProcessDefinitionKey(): String {
             return processDefinition?.key ?: ""
+        }
+
+        fun getKey(): String {
+            return bpmnProcessService.getProcessDefinitionByProcessInstanceId(id)?.key ?: ""
         }
 
         @AttName("bpmnDefEngine")
