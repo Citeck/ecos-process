@@ -12,7 +12,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 
 @Component
-class BpmnProcessElementsDao : RecordsDaoProxy(
+class BpmnProcessElementsProxyDao : RecordsDaoProxy(
     BPMN_ELEMENTS_SOURCE_ID,
     BPMN_ELEMENTS_REPO_SOURCE_ID
 ) {

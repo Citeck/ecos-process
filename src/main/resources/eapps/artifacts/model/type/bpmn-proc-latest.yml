@@ -1,0 +1,9 @@
+---
+id: bpmn-proc-latest
+name:
+  en: ECOS BPMN Process
+  ru: ECOS BPMN процесс
+system: true
+sourceId: eproc/bpmn-proc-latest
+inheritActions: false
+defaultCreateVariant: false

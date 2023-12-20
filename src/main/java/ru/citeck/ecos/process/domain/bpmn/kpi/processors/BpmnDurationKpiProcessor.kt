@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.common.toPrettyString
-import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsDao
+import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao
 import ru.citeck.ecos.process.domain.bpmn.kpi.*
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiDefaultStakeholdersFinder
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiSettings
@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates.eq
 import ru.citeck.ecos.records2.predicate.model.Predicates.notEmpty
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.wkgsch.lib.schedule.WorkingScheduleService
 import java.time.Duration
 import java.time.Instant
 
@@ -21,12 +22,11 @@ import java.time.Instant
 class BpmnDurationKpiProcessor(
     private val finder: BpmnKpiDefaultStakeholdersFinder,
     private val recordsService: RecordsService,
-    private val bpmnKpiService: BpmnKpiService
+    private val bpmnKpiService: BpmnKpiService,
+    private val workingScheduleService: WorkingScheduleService
 ) : BpmnKpiProcessor {
 
     companion object {
-        private const val WK_SCHEDULE_SOURCE_ID = "emodel/working-schedule-action"
-
         private val log = KotlinLogging.logger {}
     }
 
@@ -124,7 +124,7 @@ class BpmnDurationKpiProcessor(
 
             val foundSourceElement = recordsService.query(
                 RecordsQuery.create {
-                    withSourceId(BpmnProcessElementsDao.BPMN_ELEMENTS_SOURCE_ID)
+                    withSourceId(BpmnProcessElementsProxyDao.BPMN_ELEMENTS_SOURCE_ID)
                     withLanguage(PredicateService.LANGUAGE_PREDICATE)
                     withQuery(
                         Predicates.and(
@@ -157,28 +157,12 @@ class BpmnDurationKpiProcessor(
     }
 
     private fun getWorkingTimeDiff(start: Instant, end: Instant): Duration {
-        val diffDuration = recordsService.queryOne(
-            RecordsQuery.create {
-                withSourceId(WK_SCHEDULE_SOURCE_ID)
-                withQuery(
-                    """
-                        {
-                          "type": "get-working-time",
-                          "config": {
-                            "from": "$start",
-                            "to": "$end"
-                          },
-                          "query": {}
-                        }
-                    """.trimIndent()
-                )
-            },
-            "data"
-        ).asText()
+        val schedule = workingScheduleService.getScheduleById("DEFAULT")
+        val duration = schedule.getWorkingTime(start, end)
 
-        log.trace { "Getting working time between $start and $end: $diffDuration" }
+        log.trace { "Getting working time between $start and $end: $duration" }
 
-        return Duration.parse(diffDuration)
+        return duration
     }
 
     private data class ElementInfo(

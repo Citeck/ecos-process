@@ -16,9 +16,9 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
-import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiSettings
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
@@ -66,13 +66,13 @@ class ArtifactsHandlerTest {
 
     companion object {
         private val durationSettingsRef = EntityRef.create(
-            AppName.EPROC,
-            BpmnKpiSettingsDaoConfig.SOURCE_ID,
+            AppName.EMODEL,
+            BPMN_KPI_SETTINGS_SOURCE_ID,
             "test-duration-kpi-settings"
         )
         private val countSettingsReF = EntityRef.create(
-            AppName.EPROC,
-            BpmnKpiSettingsDaoConfig.SOURCE_ID,
+            AppName.EMODEL,
+            BPMN_KPI_SETTINGS_SOURCE_ID,
             "test-count-kpi-settings"
         )
     }

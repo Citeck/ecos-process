@@ -6,13 +6,13 @@ import org.springframework.stereotype.Component
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.*
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
-import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -30,7 +30,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
 import javax.annotation.PostConstruct
 
-private val typeRef = TypeUtils.getTypeRef("type0")
+private val typeRef = ModelUtils.getTypeRef("type0")
 
 /**
  * @author Roman Makarskiy
@@ -113,12 +113,12 @@ fun createDurationKpiSettings(
         "sourceBpmnActivityEvent" to sourceEventType?.name,
         "targetBpmnActivityId" to target,
         "targetBpmnActivityEvent" to targetEventType.name,
-        "durationKpi" to 10_000,
+        "durationKpi" to "15m",
         "durationKpiTimeType" to timeType.name,
         "dmnCondition" to dmnCondition
     )
 
-    return helper.recordsService.create("eproc/${BpmnKpiSettingsDaoConfig.SOURCE_ID}", kpiSettings)
+    return helper.recordsService.create(BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP, kpiSettings)
 }
 
 fun uploadNewVersionFromResource(resource: String, id: String, comment: String, replace: Pair<String, String>) {

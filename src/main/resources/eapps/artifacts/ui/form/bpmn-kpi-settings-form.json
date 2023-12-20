@@ -349,8 +349,8 @@
                     "components": [
                       {
                         "label": {
-                          "ru": "Значение",
-                          "en": "Value"
+                          "ru": "Норма",
+                          "en": "Rate"
                         },
                         "key": "durationKpi",
                         "tooltip": {
@@ -380,8 +380,8 @@
                       },
                       {
                         "label": {
-                          "ru": "Значение",
-                          "en": "Value"
+                          "ru": "Норма",
+                          "en": "Rate"
                         },
                         "key": "countKpi",
                         "validate": {

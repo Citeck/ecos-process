@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "eproc/bpmn-kpi-settings"
+source-id: "emodel/bpmn-kpi-settings"
 
 name:
   ru: Настройка BPMN KPI

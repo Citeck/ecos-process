@@ -2,12 +2,12 @@ package ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders
 
 import mu.KotlinLogging
 import ru.citeck.ecos.process.common.toDecisionKey
-import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
-import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
 import ru.citeck.ecos.process.domain.dmn.service.EcosDmnService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -48,7 +48,7 @@ interface BpmnKpiStakeholdersFinder {
 
         return getRecordsService().query(
             RecordsQuery.create {
-                withSourceId(BpmnKpiSettingsDaoConfig.SOURCE_ID)
+                withSourceId(BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP)
                 withLanguage(PredicateService.LANGUAGE_PREDICATE)
                 withQuery(
                     Predicates.and(
@@ -102,6 +102,7 @@ class BpmnKpiSettings(
     var id: String = "",
 
     var name: String? = "",
+    var kpiType: BpmnKpiType? = null,
     var enabled: Boolean = false,
     var processRef: EntityRef? = EntityRef.EMPTY,
 
@@ -116,6 +117,7 @@ class BpmnKpiSettings(
 
     var durationKpi: String? = "",
     var durationKpiTimeType: BpmnDurationKpiTimeType? = null,
+    var kpiAsNumber: Long? = null,
 
     var countKpi: Long? = null,
     var countPeriod: String? = ""
@@ -123,7 +125,7 @@ class BpmnKpiSettings(
 
     fun getRef(): EntityRef {
         return if (id.isNotBlank()) {
-            EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, id)
+            EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, id)
         } else {
             EntityRef.EMPTY
         }

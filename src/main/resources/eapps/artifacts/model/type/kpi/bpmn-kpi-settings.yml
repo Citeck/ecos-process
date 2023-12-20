@@ -3,25 +3,24 @@ id: bpmn-kpi-settings
 name:
   en: Bpmn KPI Settings
   ru: Настройка BPMN KPI
-
 system: true
-sourceId: eproc/bpmn-kpi-settings
+storageType: ECOS_MODEL
 formRef: uiserv/form@bpmn-kpi-settings-form
 journalRef: uiserv/journal@bpmn-kpi-settings
 dispNameTemplate:
   ru: '${name}'
-defaultCreateVariant: true
-createVariants:
-  - id: upload
-    name: { ru: Загрузить конфигурацию, en: Upload configuration }
-    formRef: 'uiserv/form@ecos-artifact-upload'
 actions:
   - uiserv/action@download-text-yml
   - uiserv/action@edit
   - uiserv/action@edit-json
   - uiserv/action@delete
-
-
+defaultCreateVariant: true
+createVariants:
+  - id: upload
+    name:
+      ru: Загрузить конфигурацию
+      en: Upload configuration
+    formRef: uiserv/form@ecos-artifact-upload
 model:
   attributes:
     - id: name
@@ -42,6 +41,8 @@ model:
         ru: Процесс
         en: Process
       type: ASSOC
+      config:
+        typeRef: emodel/type@bpmn-proc-latest
     - id: dmnCondition
       name:
         ru: Условие
@@ -80,3 +81,51 @@ model:
       name:
         ru: Период
         en: Period
+    - id: kpiAsNumber
+      name:
+        ru: KPI
+        en: KPI
+      type: NUMBER
+      computed:
+        type: SCRIPT
+        config:
+          fn: |-
+            // Function to convert human-readable duration to milliseconds
+            function parseDurationToMillis(duration) {
+                // Regular expression to match units and values
+                var regex = /(\d+)([dhms])/g;
+
+                // Mapping of unit characters to milliseconds
+                var unitMap = {
+                    'd': 24 * 60 * 60 * 1000, // days to milliseconds
+                    'h': 60 * 60 * 1000,      // hours to milliseconds
+                    'm': 60 * 1000,           // minutes to milliseconds
+                    's': 1000                 // seconds to milliseconds
+                };
+
+                var totalMilliseconds = 0;
+                var match;
+
+                while ((match = regex.exec(duration)) !== null) {
+                    var value = parseInt(match[1]);
+                    var unit = unitMap[match[2]];
+
+                    totalMilliseconds += value * unit;
+                }
+
+                return totalMilliseconds;
+            }
+
+            var durationKpi = value.load("durationKpi");
+            var countKpi = value.load("countKpi?num");
+
+            if (durationKpi !== null && durationKpi.trim().length !== 0) {
+                return parseDurationToMillis(durationKpi);
+            }
+
+            if (countKpi !== null) {
+                return countKpi;
+            }
+
+            throw new Error("Не задана норма kpi");
+        storingType: ON_MUTATE

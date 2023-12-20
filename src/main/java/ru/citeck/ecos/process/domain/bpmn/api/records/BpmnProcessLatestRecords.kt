@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -122,6 +123,11 @@ class BpmnProcessLatestRecords(
         fun getStartFormRef(): EntityRef {
             val startFormRefFromDef = recordsService.getAtt(definition, "startFormRef?id").asText()
             return EntityRef.valueOf(startFormRefFromDef)
+        }
+
+        @AttName(RecordConstants.ATT_TYPE)
+        fun getType(): EntityRef {
+            return EntityRef.create(AppName.EMODEL, "type", "bpmn-proc-latest")
         }
 
         override fun getIdentificator(): String {

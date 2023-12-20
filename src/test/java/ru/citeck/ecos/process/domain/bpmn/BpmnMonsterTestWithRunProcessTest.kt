@@ -47,10 +47,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatis
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiService
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
-import ru.citeck.ecos.process.domain.bpmn.kpi.config.BpmnKpiSettingsDaoConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
@@ -4058,7 +4058,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
             }
@@ -4095,7 +4095,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isLessThan(3_000)
             }
@@ -4132,7 +4132,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
             }
@@ -4169,7 +4169,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
             }
@@ -4206,7 +4206,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
             }
@@ -4249,7 +4249,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isEqualTo(1)
             }
@@ -4292,7 +4292,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isEqualTo(1)
             }
@@ -4342,7 +4342,7 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
                 assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EPROC, BpmnKpiSettingsDaoConfig.SOURCE_ID, settingsId)
+                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
                 )
                 assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
             }
