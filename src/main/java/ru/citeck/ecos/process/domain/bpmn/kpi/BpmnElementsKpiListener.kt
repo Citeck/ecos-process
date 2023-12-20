@@ -98,6 +98,9 @@ class BpmnElementsKpiListener(
         @AttName("record.processId")
         var processId: String = "",
 
+        @AttName("record.procDefId")
+        var procDefId: String = "",
+
         @AttName("record.elementDefId")
         var elementDefId: String = "",
 
@@ -117,6 +120,7 @@ class BpmnElementsKpiListener(
         fun toBpmnElementEvent() = BpmnElementEvent(
             procInstanceId = procInstanceId,
             processId = processId,
+            procDefId = procDefId,
             activityId = elementDefId,
             created = created,
             completed = completed,

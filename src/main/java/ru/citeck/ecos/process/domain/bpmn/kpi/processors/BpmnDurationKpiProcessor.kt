@@ -146,6 +146,7 @@ class BpmnDurationKpiProcessor(
                         value = kpiValue,
                         processInstanceId = bpmnEvent.procInstanceId,
                         processId = bpmnEvent.processId,
+                        procDefId = bpmnEvent.procDefId,
                         document = bpmnEvent.document,
                         documentType = bpmnEvent.documentType,
                         sourceBpmnActivityId = foundSourceElement.elementDefId,

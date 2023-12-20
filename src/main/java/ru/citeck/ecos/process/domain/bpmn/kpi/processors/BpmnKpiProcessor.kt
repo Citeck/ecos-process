@@ -15,6 +15,7 @@ class BpmnElementEvent(
     val documentType: EntityRef,
     val procInstanceId: String,
     val processId: String,
+    val procDefId: String,
     val activityId: String,
     val created: Instant,
     val completed: Instant? = null

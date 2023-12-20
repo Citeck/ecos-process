@@ -61,6 +61,7 @@ class BpmnCountKpiProcessor(
                         value = 1,
                         processInstanceId = bpmnEvent.procInstanceId,
                         processId = bpmnEvent.processId,
+                        procDefId = bpmnEvent.procDefId,
                         document = bpmnEvent.document,
                         documentType = bpmnEvent.documentType,
                         sourceBpmnActivityId = null,

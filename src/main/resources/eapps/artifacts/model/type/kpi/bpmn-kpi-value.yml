@@ -33,6 +33,10 @@ model:
       name:
         ru: Идентификатор процесса
         en: Process id
+    - id: procDefId
+      name:
+        ru: Идентификатор описания процесса
+        en: Process definition id
     - id: document
       name:
         ru: Документ
