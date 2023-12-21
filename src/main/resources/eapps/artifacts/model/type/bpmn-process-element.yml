@@ -36,8 +36,13 @@ model:
         en: Element type
     - id: procDefId
       name:
+        ru: Идентификатор описания процесса
+        en: Process definition id
+    - id: procDefRef
+      name:
         ru: Описание процесса
         en: Process definition
+      type: ASSOC
     - id: procDeploymentVersion
       name:
         ru: Версия описания процесса
@@ -50,6 +55,11 @@ model:
       name:
         ru: Идентификатор процесса
         en: Process identifier
+    - id: processRef
+      name:
+        ru: Процесс
+        en: Process
+      type: ASSOC
     - id: elementDefId
       name:
         ru: Идентификатор элемента

@@ -24,19 +24,21 @@ model:
         ru: Значение
         en: Value
       type: NUMBER
-    - id: processInstanceId
+    - id: processInstanceRef
       name:
-        ru: Идентификатор процесса
-        en: Process instance id
+        ru: Экземпляр процесса
+        en: Process instance
       type: ASSOC
-    - id: processId
+    - id: processRef
       name:
-        ru: Идентификатор процесса
-        en: Process id
-    - id: procDefId
+        ru: Процесс
+        en: Process
+      type: ASSOC
+    - id: procDefRef
       name:
-        ru: Идентификатор описания процесса
-        en: Process definition id
+        ru: Описание процесса
+        en: Process definition
+      type: ASSOC
     - id: document
       name:
         ru: Документ

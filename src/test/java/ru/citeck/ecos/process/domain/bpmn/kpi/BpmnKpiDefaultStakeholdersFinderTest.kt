@@ -9,9 +9,11 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiDefaultStakeholdersFinder
 import ru.citeck.ecos.process.domain.createDurationKpiSettings
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
@@ -29,7 +31,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     private val kpiSettings = mutableListOf<EntityRef>()
 
     companion object {
-        private const val TEST_PROCESS = "test-process"
+        private val testProcess = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, "test-process")
     }
 
     @BeforeAll
@@ -37,7 +39,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
         kpiSettings.add(
             createDurationKpiSettings(
                 id = "settings_duration_start_end_0",
-                process = TEST_PROCESS,
+                process = testProcess,
                 source = "activitySource",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "activityTarget",
@@ -48,7 +50,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
         kpiSettings.add(
             createDurationKpiSettings(
                 id = "settings_duration_start_end_1",
-                process = TEST_PROCESS,
+                process = testProcess,
                 source = "activitySource1",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "activityTarget1",
@@ -59,7 +61,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
         kpiSettings.add(
             createDurationKpiSettings(
                 id = "settings_duration_start_start_0",
-                process = TEST_PROCESS,
+                process = testProcess,
                 source = "activitySource",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "activityTarget",
@@ -70,7 +72,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
         kpiSettings.add(
             createDurationKpiSettings(
                 id = "settings_count_start",
-                process = TEST_PROCESS,
+                process = testProcess,
                 target = "activityTarget",
                 targetEventType = BpmnKpiEventType.START,
                 kpiType = BpmnKpiType.COUNT
@@ -79,7 +81,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
         kpiSettings.add(
             createDurationKpiSettings(
                 id = "settings_count_end",
-                process = TEST_PROCESS,
+                process = testProcess,
                 target = "activityTarget",
                 targetEventType = BpmnKpiEventType.END,
                 kpiType = BpmnKpiType.COUNT
@@ -90,7 +92,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Test
     fun `search kpi settings trigger source start`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
-            processId = TEST_PROCESS,
+            processRef = testProcess,
             document = EntityRef.EMPTY,
             activityId = "activitySource",
             eventType = BpmnKpiEventType.START,
@@ -103,7 +105,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Test
     fun `search kpi settings trigger source end`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
-            processId = TEST_PROCESS,
+            processRef = testProcess,
             document = EntityRef.EMPTY,
             activityId = "activitySource",
             eventType = BpmnKpiEventType.END,
@@ -116,7 +118,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Test
     fun `search kpi settings trigger target start duration`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
-            processId = TEST_PROCESS,
+            processRef = testProcess,
             document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.START,
@@ -134,7 +136,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Test
     fun `search kpi settings trigger target start count`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
-            processId = TEST_PROCESS,
+            processRef = testProcess,
             document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.START,
@@ -152,7 +154,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Test
     fun `search kpi settings trigger target end duration`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
-            processId = TEST_PROCESS,
+            processRef = testProcess,
             document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.END,
@@ -170,7 +172,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Test
     fun `search kpi settings trigger target end count`() {
         val stakeholders = bpmnKpiDefaultStakeholdersFinder.searchStakeholders(
-            processId = TEST_PROCESS,
+            processRef = testProcess,
             document = EntityRef.EMPTY,
             activityId = "activityTarget",
             eventType = BpmnKpiEventType.END,

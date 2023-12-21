@@ -48,7 +48,7 @@ class SendNotificationDelegate : JavaDelegate {
     private lateinit var notificationService: NotificationService
     private lateinit var camundaRoleService: CamundaRoleService
     private lateinit var mailUtils: MailUtils
-    private lateinit var document: RecordRef
+    private lateinit var document: EntityRef
 
     private fun init(execution: DelegateExecution) {
         notificationService = AppContext.getBean(NotificationService::class.java)

@@ -8,12 +8,14 @@ import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElemen
 import ru.citeck.ecos.process.domain.bpmn.kpi.*
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiDefaultStakeholdersFinder
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiSettings
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.Predicates.eq
 import ru.citeck.ecos.records2.predicate.model.Predicates.notEmpty
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.wkgsch.lib.schedule.WorkingScheduleService
 import java.time.Duration
 import java.time.Instant
@@ -102,7 +104,7 @@ class BpmnDurationKpiProcessor(
         calcKpi: (stakeHolder: BpmnKpiSettings, foundSourceElement: ElementInfo) -> Number?
     ) {
         val stakeholders = finder.searchStakeholders(
-            bpmnEvent.processId,
+            bpmnEvent.processRef,
             bpmnEvent.document,
             bpmnEvent.activityId,
             kpiEventType,
@@ -128,11 +130,12 @@ class BpmnDurationKpiProcessor(
                     withLanguage(PredicateService.LANGUAGE_PREDICATE)
                     withQuery(
                         Predicates.and(
-                            eq("procInstanceId", bpmnEvent.procInstanceId),
+                            eq("procInstanceId", bpmnEvent.procInstanceRef),
                             eq("elementDefId", stakeholder.sourceBpmnActivityId),
                             elementCompletionPredicate
                         )
                     )
+                    withSortBy(SortBy(RecordConstants.ATT_CREATED, false))
                 },
                 ElementInfo::class.java
             ).getRecords().firstOrNull() ?: return@forEach
@@ -144,9 +147,9 @@ class BpmnDurationKpiProcessor(
                     BpmnKpiValue(
                         settingsRef = stakeholder.getRef(),
                         value = kpiValue,
-                        processInstanceId = bpmnEvent.procInstanceId,
-                        processId = bpmnEvent.processId,
-                        procDefId = bpmnEvent.procDefId,
+                        processInstanceRef = bpmnEvent.procInstanceRef,
+                        processRef = bpmnEvent.processRef,
+                        procDefRef = bpmnEvent.procDefRef,
                         document = bpmnEvent.document,
                         documentType = bpmnEvent.documentType,
                         sourceBpmnActivityId = foundSourceElement.elementDefId,

@@ -139,7 +139,7 @@ class CamundaExtensions(
         return Json.mapper.readList(outcomesValue, TaskOutcome::class.java)
     }
 
-    internal fun getTaskRoles(document: RecordRef, key: Pair<String, String>): List<TaskRole> {
+    internal fun getTaskRoles(document: EntityRef, key: Pair<String, String>): List<TaskRole> {
         if (document == RecordRef.EMPTY) {
             return emptyList()
         }
@@ -175,46 +175,46 @@ class CamundaExtensions(
 
 private lateinit var ext: CamundaExtensions
 
-fun DelegateExecution.getDocumentRef(): RecordRef {
+fun DelegateExecution.getDocumentRef(): EntityRef {
     val documentVar = getVariable(BPMN_DOCUMENT_REF) as String?
-    return RecordRef.valueOf(documentVar)
+    return EntityRef.valueOf(documentVar)
 }
 
-fun DelegateExecution.getNotBlankDocumentRef(): RecordRef {
+fun DelegateExecution.getNotBlankDocumentRef(): EntityRef {
     val documentFromVar = getDocumentRef()
-    if (RecordRef.isEmpty(documentFromVar)) error("Document Ref can't be empty")
+    if (EntityRef.isEmpty(documentFromVar)) error("Document Ref can't be empty")
     return documentFromVar
 }
 
-fun DelegateTask.getDocumentRef(): RecordRef {
+fun DelegateTask.getDocumentRef(): EntityRef {
     val documentVar = getVariable(BPMN_DOCUMENT_REF) as String?
-    return RecordRef.valueOf(documentVar)
+    return EntityRef.valueOf(documentVar)
 }
 
-fun DelegateTask.getFormRef(): RecordRef {
+fun DelegateTask.getFormRef(): EntityRef {
     return if (this is TaskEntity) {
         val taskDef = this.taskDefinition
         val formKey = taskDef?.formKey?.expressionText ?: ""
 
-        RecordRef.valueOf(formKey)
+        EntityRef.valueOf(formKey)
     } else {
-        RecordRef.EMPTY
+        EntityRef.EMPTY
     }
 }
 
-fun DelegateTask.getProcessInstanceRef(): RecordRef {
+fun DelegateTask.getProcessInstanceRef(): EntityRef {
     return if (processInstanceId.isNotBlank()) {
-        RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
+        EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
     } else {
-        RecordRef.EMPTY
+        EntityRef.EMPTY
     }
 }
 
-fun DelegateExecution.getProcessInstanceRef(): RecordRef {
+fun DelegateExecution.getProcessInstanceRef(): EntityRef {
     return if (processInstanceId.isNotBlank()) {
-        RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
+        EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
     } else {
-        RecordRef.EMPTY
+        EntityRef.EMPTY
     }
 }
 

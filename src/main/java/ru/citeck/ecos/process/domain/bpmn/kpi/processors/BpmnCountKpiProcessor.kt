@@ -32,7 +32,7 @@ class BpmnCountKpiProcessor(
 
     private fun saveCountKpi(bpmnEvent: BpmnElementEvent, kpiEventType: BpmnKpiEventType) {
         val stakeholders = finder.searchStakeholders(
-            bpmnEvent.processId,
+            bpmnEvent.processRef,
             bpmnEvent.document,
             bpmnEvent.activityId,
             kpiEventType,
@@ -49,7 +49,7 @@ class BpmnCountKpiProcessor(
                     "\nfor bpmnEvent: \n${bpmnEvent.toPrettyString()}"
             }
 
-            val foundKpi = bpmnKpiService.queryKpiValues(stakeholder.getRef(), bpmnEvent.processId)
+            val foundKpi = bpmnKpiService.queryKpiValues(stakeholder.getRef(), bpmnEvent.processRef)
                 .firstOrNull()
 
             if (foundKpi == null) {
@@ -59,9 +59,9 @@ class BpmnCountKpiProcessor(
                     BpmnKpiValue(
                         settingsRef = stakeholder.getRef(),
                         value = 1,
-                        processInstanceId = bpmnEvent.procInstanceId,
-                        processId = bpmnEvent.processId,
-                        procDefId = bpmnEvent.procDefId,
+                        processInstanceRef = bpmnEvent.procInstanceRef,
+                        processRef = bpmnEvent.processRef,
+                        procDefRef = bpmnEvent.procDefRef,
                         document = bpmnEvent.document,
                         documentType = bpmnEvent.documentType,
                         sourceBpmnActivityId = null,

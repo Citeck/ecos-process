@@ -41,6 +41,7 @@ import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
@@ -4037,7 +4038,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "Activity_user_task",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "Activity_user_task",
@@ -4074,7 +4075,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "startEvent",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "Activity_user_task",
@@ -4111,7 +4112,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "startEvent",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "Activity_user_task",
@@ -4148,7 +4149,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "startEvent",
                 sourceEventType = BpmnKpiEventType.END,
                 target = "Activity_user_task",
@@ -4185,7 +4186,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "startEvent",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "endEvent",
@@ -4228,7 +4229,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.COUNT,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 target = activityId,
                 targetEventType = BpmnKpiEventType.START
             )
@@ -4244,7 +4245,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         verify(process).hasFinished("endEvent")
 
-        `when`(bpmnKpiService.queryKpiValues(any(), anyString())).thenReturn(emptyList())
+        `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
@@ -4271,7 +4272,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.COUNT,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 target = activityId,
                 targetEventType = BpmnKpiEventType.END
             )
@@ -4287,7 +4288,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         verify(process).hasFinished("endEvent")
 
-        `when`(bpmnKpiService.queryKpiValues(any(), anyString())).thenReturn(emptyList())
+        `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
         verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
             org.mockito.kotlin.check { kpiValue ->
@@ -4310,7 +4311,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "Activity_user_task",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "Activity_user_task",
@@ -4359,7 +4360,7 @@ class BpmnMonsterTestWithRunProcessTest {
             createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
-                process = procId,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
                 source = "Activity_user_task",
                 sourceEventType = BpmnKpiEventType.START,
                 target = "Activity_user_task",

@@ -4,6 +4,8 @@ import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
@@ -13,6 +15,7 @@ import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.annotation.PostConstruct
 
 private const val CLASS_IMPL_POSTFIX = "Impl"
@@ -51,11 +54,21 @@ fun DelegateExecution.toFlowElement(): FlowElementEvent {
     return FlowElementEvent(
         engine = BPMN_CAMUNDA_ENGINE,
         procDefId = rev?.procDefId,
+        procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
+            RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
+        } else {
+            EntityRef.EMPTY
+        },
         elementType = flowElement.javaClass.simpleName.removeSuffix(CLASS_IMPL_POSTFIX),
         elementDefId = flowElement.id,
         procDeploymentVersion = rev?.version?.inc(),
         procInstanceId = getProcessInstanceRef(),
         processId = processDefinition.key,
+        processRef = if (processDefinition.key.isNotBlank()) {
+            RecordRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
+        } else {
+            EntityRef.EMPTY
+        },
         executionId = id,
         document = getDocumentRef()
     )
@@ -80,9 +93,19 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         assignee = assignee,
         roles = getTaskRoles(),
         procDefId = rev.procDefId,
+        procDefRef = if (rev.procDefId.isNotBlank()) {
+            RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
+        } else {
+            EntityRef.EMPTY
+        },
         procDeploymentVersion = rev.version.inc(),
         procInstanceId = getProcessInstanceRef(),
         processId = processDefinition.key,
+        processRef = if (processDefinition.key.isNotBlank()) {
+            RecordRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
+        } else {
+            EntityRef.EMPTY
+        },
         elementDefId = taskDefinitionKey,
         created = createTime?.toInstant(),
         dueDate = dueDate?.toInstant(),

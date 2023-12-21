@@ -15,7 +15,7 @@ interface BpmnKpiService {
 
     fun createKpiValue(value: BpmnKpiValue)
 
-    fun queryKpiValues(kpiSettingsRef: EntityRef, processId: String): List<EntityRef>
+    fun queryKpiValues(kpiSettingsRef: EntityRef, processRef: EntityRef): List<EntityRef>
 }
 
 @Service
@@ -33,9 +33,9 @@ class BpmnKpiServiceImpl(
         val atts = mapOf(
             "kpiSettingsRef" to value.settingsRef,
             "value" to value.value,
-            "processInstanceId" to value.processInstanceId,
-            "processId" to value.processId,
-            "procDefId" to value.procDefId,
+            "processInstanceRef" to value.processInstanceRef,
+            "processRef" to value.processRef,
+            "procDefRef" to value.procDefRef,
             "document" to value.document,
             "documentTypeRef" to value.documentType,
             "sourceBpmnActivityId" to value.sourceBpmnActivityId,
@@ -44,7 +44,7 @@ class BpmnKpiServiceImpl(
         recordsService.create("${AppName.EMODEL}/$BPMN_KPI_VALUE_SOURCE_ID", atts)
     }
 
-    override fun queryKpiValues(kpiSettingsRef: EntityRef, processId: String): List<EntityRef> {
+    override fun queryKpiValues(kpiSettingsRef: EntityRef, processRef: EntityRef): List<EntityRef> {
         return recordsService.query(
             RecordsQuery.create {
                 withSourceId("${AppName.EMODEL}/$BPMN_KPI_VALUE_SOURCE_ID")
@@ -52,7 +52,7 @@ class BpmnKpiServiceImpl(
                 withQuery(
                     Predicates.and(
                         Predicates.eq("kpiSettingsRef", kpiSettingsRef),
-                        Predicates.eq("processId", processId)
+                        Predicates.eq("processRef", processRef)
                     )
                 )
             }
@@ -63,9 +63,9 @@ class BpmnKpiServiceImpl(
 data class BpmnKpiValue(
     val settingsRef: EntityRef,
     val value: Number,
-    val processInstanceId: String,
-    val processId: String,
-    val procDefId: String,
+    val processInstanceRef: EntityRef,
+    val processRef: EntityRef,
+    val procDefRef: EntityRef,
     val document: EntityRef,
     val documentType: EntityRef,
     val sourceBpmnActivityId: String?,

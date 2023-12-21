@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders
 
 import mu.KotlinLogging
 import ru.citeck.ecos.process.common.toDecisionKey
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP
 import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
@@ -16,7 +15,6 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import ru.citeck.ecos.webapp.api.entity.toEntityRef
 
 interface BpmnKpiStakeholdersFinder {
 
@@ -29,23 +27,12 @@ interface BpmnKpiStakeholdersFinder {
     fun getEcosDmnService(): EcosDmnService
 
     fun searchStakeholders(
-        processId: String,
+        processRef: EntityRef,
         document: EntityRef,
         activityId: String,
         eventType: BpmnKpiEventType,
         kpiType: BpmnKpiType
     ): List<BpmnKpiSettings> {
-        // TODO: replace after bugfix in ecos-webapp-spring-base-parent 1.50+ ECOSCOM-5071
-        // val processRef = processId.toEntityRef(AppName.EPROC, BpmnProcessLatestRecords.ID)
-
-        var processRef = processId.toEntityRef()
-        if (processRef.getAppName().isBlank()) {
-            processRef = processRef.withAppName(AppName.EPROC)
-        }
-        if (processRef.getSourceId().isBlank()) {
-            processRef = processRef.withSourceId(BpmnProcessLatestRecords.ID)
-        }
-
         return getRecordsService().query(
             RecordsQuery.create {
                 withSourceId(BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP)

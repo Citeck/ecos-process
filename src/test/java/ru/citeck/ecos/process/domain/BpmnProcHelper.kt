@@ -95,7 +95,7 @@ fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActio
 fun createDurationKpiSettings(
     id: String,
     kpiType: BpmnKpiType = BpmnKpiType.DURATION,
-    process: String,
+    process: EntityRef,
     source: String? = null,
     sourceEventType: BpmnKpiEventType? = null,
     target: String,
@@ -107,7 +107,7 @@ fun createDurationKpiSettings(
         "id" to id,
         "name" to "test kpi",
         "kpiType" to kpiType.name,
-        "processRef" to EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, process),
+        "processRef" to process,
         "enabled" to true,
         "sourceBpmnActivityId" to source,
         "sourceBpmnActivityEvent" to sourceEventType?.name,

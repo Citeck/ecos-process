@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates.empty
 import ru.citeck.ecos.records2.predicate.model.Predicates.eq
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.time.Instant
 
 @Component
@@ -59,7 +60,7 @@ class BpmnElementsKpiListener(
     }
 
     private fun handleCreateEvent(event: BpmnElementEventData) {
-        if (event.procInstanceId.isBlank() || event.processId.isBlank() || event.elementDefId.isBlank()) {
+        if (event.procInstanceId.isBlank() || (event.processRef?.isEmpty() == true) || event.elementDefId.isBlank()) {
             log.warn {
                 "Cannot handle create event with empty procInstanceId, processId or elementDefId: " +
                     "${Json.mapper.toPrettyString(event)}"
@@ -77,7 +78,7 @@ class BpmnElementsKpiListener(
     }
 
     private fun handleChangedEvent(event: BpmnElementEventData) {
-        if (event.procInstanceId.isBlank() || event.processId.isBlank() || event.elementDefId.isBlank() ||
+        if (event.procInstanceId.isBlank() || (event.processRef?.isEmpty() == true) || event.elementDefId.isBlank() ||
             event.completed == null
         ) {
             log.warn {
@@ -95,11 +96,11 @@ class BpmnElementsKpiListener(
         @AttName("record.procInstanceId")
         var procInstanceId: String = "",
 
-        @AttName("record.processId")
-        var processId: String = "",
+        @AttName("record.processRef?id")
+        var processRef: EntityRef? = EntityRef.EMPTY,
 
-        @AttName("record.procDefId")
-        var procDefId: String = "",
+        @AttName("record.procDefRef?id")
+        var procDefRef: EntityRef? = EntityRef.EMPTY,
 
         @AttName("record.elementDefId")
         var elementDefId: String = "",
@@ -118,9 +119,9 @@ class BpmnElementsKpiListener(
     ) {
 
         fun toBpmnElementEvent() = BpmnElementEvent(
-            procInstanceId = procInstanceId,
-            processId = processId,
-            procDefId = procDefId,
+            procInstanceRef = procInstanceId.toEntityRef(),
+            processRef = processRef ?: EntityRef.EMPTY,
+            procDefRef = procDefRef ?: EntityRef.EMPTY,
             activityId = elementDefId,
             created = created,
             completed = completed,
