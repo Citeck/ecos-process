@@ -362,7 +362,7 @@
                           "pattern": "^(\\d+d)?\\s*((?:[01]?\\d|2[0-3])h)?\\s*((?:[0-5]?\\d)m)?$"
                         },
                         "placeholder": {
-                          "ru": "1h 30m"
+                          "ru": "1d 1h 30m"
                         },
                         "defaultValue": "",
                         "refreshOn": [],

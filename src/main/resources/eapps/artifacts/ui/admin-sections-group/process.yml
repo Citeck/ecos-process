@@ -29,3 +29,9 @@ sections:
     config:
       journalId: bpmn-kpi-settings
 
+  - type: JOURNAL
+    name:
+      ru: Значения KPI
+      en: KPI values
+    config:
+      journalId: bpmn-kpi-values

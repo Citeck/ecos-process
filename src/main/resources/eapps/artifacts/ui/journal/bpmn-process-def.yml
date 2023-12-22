@@ -2,6 +2,7 @@
 id: bpmn-process-def
 
 system: true
+typeRef: emodel/type@bpmn-process-def
 
 name:
   en: BPMN Processes

@@ -34,11 +34,15 @@ model:
         ru: Процесс
         en: Process
       type: ASSOC
+      config:
+        typeRef: emodel/type@bpmn-proc-latest
     - id: procDefRef
       name:
         ru: Описание процесса
         en: Process definition
       type: ASSOC
+      config:
+        typeRef: emodel/type@bpmn-process-def
     - id: document
       name:
         ru: Документ
@@ -49,6 +53,8 @@ model:
         ru: Тип документа
         en: Document type
       type: ASSOC
+      config:
+        typeRef: emodel/type@type
     - id: sourceBpmnActivityId
       name:
         ru: Исходный BPMN элемент
