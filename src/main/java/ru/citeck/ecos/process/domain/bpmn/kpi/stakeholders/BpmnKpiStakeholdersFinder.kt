@@ -2,9 +2,9 @@ package ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders
 
 import mu.KotlinLogging
 import ru.citeck.ecos.process.common.toDecisionKey
-import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
-import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP
 import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
 import ru.citeck.ecos.process.domain.dmn.service.EcosDmnService

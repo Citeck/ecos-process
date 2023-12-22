@@ -12,5 +12,4 @@ class KpiSettingsDaoTestConfig {
     fun createKpiSettingsRepoDao(): InMemDataRecordsDao {
         return InMemDataRecordsDao(BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP)
     }
-
 }

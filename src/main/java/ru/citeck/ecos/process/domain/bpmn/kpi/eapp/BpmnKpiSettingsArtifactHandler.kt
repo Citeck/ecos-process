@@ -69,7 +69,6 @@ class BpmnKpiSettingsArtifactHandler(
                 }
             }
         }
-
     }
 
     override fun deployArtifact(artifact: BpmnKpiSettings) {
