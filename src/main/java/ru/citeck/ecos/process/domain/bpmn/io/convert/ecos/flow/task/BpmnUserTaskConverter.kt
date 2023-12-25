@@ -56,7 +56,12 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 TaskPriority.valueOf(element.otherAttributes[BPMN_PROP_PRIORITY]!!)
             },
             priorityExpression = element.otherAttributes[BPMN_PROP_PRIORITY_EXPRESSION],
-            multiInstanceConfig = element.toMultiInstanceConfig()
+            multiInstanceConfig = element.toMultiInstanceConfig(),
+            isIncludeLazyApproval = element.otherAttributes[BPMN_PROP_LA_IS_INCLUDE_LAZY_APPROVAL].toBoolean(),
+            notificationType = element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE],
+            notificationTemplate = RecordRef.Companion.valueOf(
+                element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
+            )
         )
     }
 
@@ -81,6 +86,10 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS_MODE, element.manualRecipientsMode.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS, Json.mapper.toString(element.manualRecipients))
+
+            otherAttributes.putIfNotBlank(BPMN_PROP_LA_IS_INCLUDE_LAZY_APPROVAL, element.isIncludeLazyApproval.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TYPE, element.notificationType)
+            otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TEMPLATE, element.notificationTemplate.toString())
 
             element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
             element.multiInstanceConfig?.let {

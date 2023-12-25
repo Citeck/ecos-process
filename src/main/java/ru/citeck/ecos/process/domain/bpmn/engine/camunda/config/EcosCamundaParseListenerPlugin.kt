@@ -6,10 +6,12 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.listener.BpmnElementsEventsParseListener
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.task.listener.TaskVariablesParseListener
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask.UserTaskAssignParseListener
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask.UserTaskLazyApprovalParseListener
 
 @Component
 class EcosCamundaParseListenerPlugin(
     private val userTaskAssignParseListener: UserTaskAssignParseListener,
+    private val userTaskLazyApprovalParseListener: UserTaskLazyApprovalParseListener,
     private val bpmnElementsEventsParseListener: BpmnElementsEventsParseListener,
     private val taskParseListener: TaskVariablesParseListener
 ) : AbstractProcessEnginePlugin() {
@@ -18,6 +20,7 @@ class EcosCamundaParseListenerPlugin(
         val listeners = processEngineConfiguration.customPreBPMNParseListeners ?: mutableListOf()
 
         listeners.add(userTaskAssignParseListener)
+        listeners.add(userTaskLazyApprovalParseListener)
         listeners.add(bpmnElementsEventsParseListener)
         listeners.add(taskParseListener)
 

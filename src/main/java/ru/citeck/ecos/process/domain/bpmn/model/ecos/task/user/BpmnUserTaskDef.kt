@@ -30,7 +30,12 @@ data class BpmnUserTaskDef(
 
     val multiInstanceConfig: MultiInstanceConfig? = null,
 
-    private var multiInstanceAutoMode_: Boolean = false
+    private var multiInstanceAutoMode_: Boolean = false,
+
+    val isIncludeLazyApproval: Boolean = false,
+    val notificationType: String? = null,
+    val notificationTemplate: RecordRef? = null
+
 ) : Validated {
 
     val multiInstanceAutoMode: Boolean get() = multiInstanceAutoMode_
