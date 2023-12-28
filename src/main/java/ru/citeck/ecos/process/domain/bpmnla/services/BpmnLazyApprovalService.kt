@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.config.lib.service.EcosConfigService
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.lazyapproval.api.BpmnLazyApprovalRemoteApi
 import ru.citeck.ecos.license.EcosLicense
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
@@ -33,9 +34,11 @@ class BpmnLazyApprovalService(
     private val ecosConfigService: EcosConfigService,
     private val notificationService: NotificationService,
     private val mailUtils: MailUtils
-) {
+) : BpmnLazyApprovalRemoteApi {
 
-    private val isEnt = EcosLicense.getForWebApp { it.isEnterprise() }
+    private val hasLicense = EcosLicense.getForEntLib {
+        it.get("developer").asBoolean() || it.get("features").has("lazy-approval")
+    }
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -45,10 +48,10 @@ class BpmnLazyApprovalService(
 
     fun sendNotification(delegateTask: DelegateTask) {
 
-//        if (!isEnt()) {
-//            log.info("The lazy approval functionality is only available for the enterprise version.")
-//            return
-//        }
+        if (!hasLicense()) {
+            log.info("The lazy approval functionality is only available for the enterprise version.")
+            return
+        }
 
         val candidates = if (delegateTask.assignee != null) {
             listOf(delegateTask.assignee)
@@ -123,7 +126,7 @@ class BpmnLazyApprovalService(
         return meta
     }
 
-    fun approveTask(taskId: String, taskOutcome: String, userId: String, token: String, comment: String?) {
+    override fun approveTask(taskId: String, taskOutcome: String, userId: String, token: String, comment: String) {
         val task = procTaskService.getTaskById(taskId)
         if (task == null) {
             log.debug { "Task with id = ${taskId} not found!" }

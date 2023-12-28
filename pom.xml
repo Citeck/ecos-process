@@ -179,6 +179,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>ru.citeck.ecos.ent.lazyapproval</groupId>
+            <artifactId>ecos-lazy-approval</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 
     <build>
