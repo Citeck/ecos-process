@@ -86,7 +86,7 @@
               "en": "Enabled"
             },
             "key": "enabled",
-            "defaultValue": true,
+            "defaultValue": false,
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "checkbox",
