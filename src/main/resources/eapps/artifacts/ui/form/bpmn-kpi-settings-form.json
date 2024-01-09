@@ -86,9 +86,6 @@
               "en": "Enabled"
             },
             "key": "enabled",
-            "validate": {
-              "required": true
-            },
             "defaultValue": true,
             "refreshOn": [],
             "optionalWhenDisabled": false,
@@ -354,17 +351,16 @@
                         },
                         "key": "durationKpi",
                         "tooltip": {
-                          "ru": "Продолжительность времени указывается в формате d, h, m:\n\n1d 3h 10m - 1 день 3 часа 10 минут\n1d - 1 день\n1h 15m - 1 час 15 минут\n30m - 30 минут\n",
+                          "ru": "Продолжительность времени указывается в формате h, m:\n\n3h 10m - 3 часа 10 минут\n30m - 30 минут\n",
                           "en": "The duration time is specified in the format d, h, m:\n\n1d 3h 10m - 1 day 3 hours 10 minutes\n1d - 1 day\n1h 15m - 1 hour 15 minutes\n30m - 30 minutes"
                         },
                         "validate": {
                           "required": true,
-                          "pattern": "^(\\d+d)?\\s*((?:[01]?\\d|2[0-3])h)?\\s*((?:[0-5]?\\d)m)?$"
+                          "pattern": "^((\\d+)h)?\\s*((\\d+)m)?$"
                         },
                         "placeholder": {
-                          "ru": "1d 1h 30m"
+                          "ru": "1h 30m"
                         },
-                        "defaultValue": "",
                         "refreshOn": [],
                         "optionalWhenDisabled": false,
                         "conditional": {
