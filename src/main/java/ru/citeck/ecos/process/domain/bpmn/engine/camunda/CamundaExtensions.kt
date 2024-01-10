@@ -244,6 +244,10 @@ fun DelegateTask.getTitle(): MLText {
     return if (titleFromDef != MLText.EMPTY) titleFromDef else defaultName
 }
 
+fun DelegateTask.getCompletedBy(): String {
+    return getVariable(BPMN_TASK_COMPLETED_BY) as String? ?: ""
+}
+
 fun EntityRef.isAuthorityGroupRef(): Boolean {
     return getSourceId() == SRC_ID_GROUP
 }

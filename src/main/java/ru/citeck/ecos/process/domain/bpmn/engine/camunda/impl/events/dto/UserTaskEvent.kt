@@ -24,6 +24,7 @@ data class UserTaskEvent(
     var executionId: String? = null,
     var name: MLText? = null,
     var comment: String? = null,
+    var completedBy: String? = null,
     var outcome: String? = null,
     var outcomeName: MLText? = null,
     var completedOnBehalfOf: String? = null,
