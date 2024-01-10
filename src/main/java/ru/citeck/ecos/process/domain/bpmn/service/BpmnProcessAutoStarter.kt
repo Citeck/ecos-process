@@ -35,7 +35,13 @@ class BpmnProcessAutoStarter(
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { handleStartProcessEvent(it) }
-            withFilter(Predicates.eq("record._isDraft?bool!", false))
+            withFilter(
+                Predicates.and(
+                    Predicates.eq("record._type.isSubTypeOf.user-base?bool", true),
+                    Predicates.eq("record._isDraft?bool!", false)
+                )
+
+            )
         }
         // React on record draft state changed to false
         eventsService.addListener<EventData> {
@@ -43,7 +49,13 @@ class BpmnProcessAutoStarter(
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { handleStartProcessEvent(it) }
-            withFilter(Predicates.eq("after?bool", false))
+            withFilter(
+                Predicates.and(
+                    Predicates.eq("record._type.isSubTypeOf.user-base?bool", true),
+                    Predicates.eq("after?bool", false)
+                )
+
+            )
         }
     }
 
