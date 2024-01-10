@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
@@ -57,9 +58,11 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             },
             priorityExpression = element.otherAttributes[BPMN_PROP_PRIORITY_EXPRESSION],
             multiInstanceConfig = element.toMultiInstanceConfig(),
-            isIncludeLazyApproval = element.otherAttributes[BPMN_PROP_LA_IS_INCLUDE_LAZY_APPROVAL].toBoolean(),
-            notificationType = element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE],
-            notificationTemplate = RecordRef.Companion.valueOf(
+            laEnabled = element.otherAttributes[BPMN_PROP_LA_ENABLED].toBoolean(),
+            laNotificationType = element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE]?.let {
+                NotificationType.valueOf(it)
+            },
+            laNotificationTemplate = RecordRef.valueOf(
                 element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
             )
         )
@@ -87,9 +90,12 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS_MODE, element.manualRecipientsMode.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS, Json.mapper.toString(element.manualRecipients))
 
-            otherAttributes.putIfNotBlank(BPMN_PROP_LA_IS_INCLUDE_LAZY_APPROVAL, element.isIncludeLazyApproval.toString())
-            otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TYPE, element.notificationType)
-            otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TEMPLATE, element.notificationTemplate.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_LA_ENABLED,
+                element.laEnabled.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TYPE,
+                element.laNotificationType.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TEMPLATE,
+                element.laNotificationTemplate.toString())
 
             element.number?.let { otherAttributes.putIfNotBlank(BPMN_PROP_NUMBER, it.toString()) }
             element.multiInstanceConfig?.let {

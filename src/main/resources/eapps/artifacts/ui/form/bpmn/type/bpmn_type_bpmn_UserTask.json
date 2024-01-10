@@ -357,13 +357,14 @@
           "record": {
             "id": "emodel/meta@",
             "attributes": {
-              "isLicense": "$license.enterprise?bool"
+              "isDeveloper": "$license.developer?bool",
+              "hasFeatureLazyApproval": "$license.features.lazy-approval"
             }
           },
           "forceLoad": false
         },
         "update": {
-          "type": "disabled"
+          "type": "once"
         },
         "key": "isLicense",
         "type": "asyncData",
@@ -380,7 +381,7 @@
         },
         "refreshOn": [],
         "optionalWhenDisabled": false,
-        "customConditional": "show = data.isLicense",
+        "customConditional": "show = data.isLicense.isDeveloper == true || data.isLicense.hasFeatureLazyApproval != null;",
         "type": "panel",
         "input": false,
         "components": [
@@ -389,7 +390,8 @@
               "ru": "Согласование по почте",
               "en": "Lazy approval"
             },
-            "key": "isIncludeLazyApproval",
+            "key": "laEnabled",
+            "clearOnHide": false,
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "checkbox",
@@ -400,11 +402,12 @@
               "ru": "Тип уведомления",
               "en": "Notification type"
             },
-            "key": "notificationType",
+            "key": "laNotificationType",
             "disabled": true,
             "validate": {
               "required": true
             },
+            "clearOnHide": false,
             "dataSrc": "values",
             "data": {
               "values": [
@@ -427,10 +430,9 @@
                 {}
               ]
             },
-            "defaultValue": "",
             "customDefaultValue": "value = \"EMAIL_NOTIFICATION\";",
             "optionalWhenDisabled": false,
-            "customConditional": "show = data.isIncludeLazyApproval == true;",
+            "customConditional": "show = data.laEnabled == true;",
             "type": "ecosSelect",
             "input": true
           },
@@ -439,16 +441,17 @@
               "ru": "Шаблон уведомления",
               "en": "Notification template"
             },
-            "key": "notificationTemplate",
+            "key": "laNotificationTemplate",
             "validate": {
               "required": true
             },
+            "clearOnHide": false,
             "modalTitle": "",
             "journalId": "notification-templates",
             "queryData": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
-            "customConditional": "show = data.isIncludeLazyApproval == true;",
+            "customConditional": "show = data.laEnabled == true;",
             "type": "selectJournal",
             "input": true
           }

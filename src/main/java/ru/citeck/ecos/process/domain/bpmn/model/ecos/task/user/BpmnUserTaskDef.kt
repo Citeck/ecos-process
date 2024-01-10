@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
@@ -32,9 +33,9 @@ data class BpmnUserTaskDef(
 
     private var multiInstanceAutoMode_: Boolean = false,
 
-    val isIncludeLazyApproval: Boolean = false,
-    val notificationType: String? = null,
-    val notificationTemplate: RecordRef? = null
+    val laEnabled: Boolean = false,
+    val laNotificationType: NotificationType? = null,
+    val laNotificationTemplate: RecordRef? = null
 
 ) : Validated {
 
@@ -65,6 +66,13 @@ data class BpmnUserTaskDef(
         }
 
         if (multiInstanceAutoMode && manualRecipientsMode) {
+            throw EcosBpmnElementDefinitionException(
+                id,
+                "Task can't be in multi-instance auto mode and manual recipients mode at the same time"
+            )
+        }
+
+        if (laEnabled && laNotificationType == null) {
             throw EcosBpmnElementDefinitionException(
                 id,
                 "Task can't be in multi-instance auto mode and manual recipients mode at the same time"

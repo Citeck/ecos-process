@@ -8,7 +8,7 @@ import ru.citeck.ecos.process.domain.bpmnla.services.BpmnLazyApprovalService
 @Component
 class UserTaskLazyApprovalListener(
     private val bpmnLazyApprovalService: BpmnLazyApprovalService
-) : TaskListener{
+) : TaskListener {
 
     override fun notify(delegateTask: DelegateTask) {
         bpmnLazyApprovalService.sendNotification(delegateTask)

@@ -1,6 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
@@ -29,6 +31,9 @@ data class UserTaskEvent(
     var completedOnBehalfOf: String? = null,
     var document: EntityRef? = null,
     var roles: List<TaskRole> = emptyList(),
+    var laEnabled: Boolean = false,
+    var laNotificationType: NotificationType? = null,
+    var laNotificationTemplate: RecordRef? = null,
 
     @AttName("document._type?id")
     var documentTypeRef: EntityRef? = null,

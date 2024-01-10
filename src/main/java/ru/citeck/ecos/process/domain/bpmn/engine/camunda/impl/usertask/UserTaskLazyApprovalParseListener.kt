@@ -8,7 +8,7 @@ import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl
 import org.camunda.bpm.engine.impl.util.xml.Element
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.addTaskListener
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_LA_IS_INCLUDE_LAZY_APPROVAL
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_LA_ENABLED
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toCamundaKey
 
 @Component
@@ -21,7 +21,7 @@ class UserTaskLazyApprovalParseListener(
     }
 
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl?, activity: ActivityImpl) {
-        val isLA = userTaskElement.attribute(BPMN_PROP_LA_IS_INCLUDE_LAZY_APPROVAL.toCamundaKey())
+        val isLA = userTaskElement.attribute(BPMN_PROP_LA_ENABLED.toCamundaKey())
             .toBoolean()
 
         if (isLA) {

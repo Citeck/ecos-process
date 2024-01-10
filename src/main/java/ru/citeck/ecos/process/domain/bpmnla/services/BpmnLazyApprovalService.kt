@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.bpmnla.services
 
 import mu.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateTask
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.config.lib.service.EcosConfigService
@@ -13,12 +12,9 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
-import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
@@ -26,8 +22,6 @@ import java.util.*
 
 @Component
 class BpmnLazyApprovalService(
-    @Lazy
-    private val bpmnProcessService: BpmnProcessService,
     @Lazy
     private val procTaskService: ProcTaskService,
     private val procDefService: ProcDefService,
@@ -42,21 +36,22 @@ class BpmnLazyApprovalService(
 
     companion object {
         private val log = KotlinLogging.logger {}
-        private val DEFAULT_COMMENT_KEY = "lazy-approval-default-comment"
-        private val MAIL_FOR_ANSWER_KEY = "lazy-approval-mail-for-reply"
+        private const val DEFAULT_COMMENT_KEY = "lazy-approval-default-comment"
+        private const val MAIL_FOR_ANSWER_KEY = "lazy-approval-mail-for-reply"
+        private const val TASK_TOKEN_NAME = "tokenLA"
     }
 
     fun sendNotification(delegateTask: DelegateTask) {
 
         if (!hasLicense()) {
-            log.info("The lazy approval functionality is only available for the enterprise version.")
+            log.warn("The lazy approval functionality is only available for the enterprise version.")
             return
         }
 
         val candidates = if (delegateTask.assignee != null) {
             listOf(delegateTask.assignee)
         } else {
-            delegateTask.candidates.map { it.userId ?: it.groupId }
+            delegateTask.candidates.flatMap { listOfNotNull(it.userId, it.groupId) }
         }
         val mailsOfRecipients = mailUtils.getEmails(candidates)
         if (mailsOfRecipients.isEmpty()) {
@@ -67,25 +62,13 @@ class BpmnLazyApprovalService(
             return
         }
 
-        val processDefinition = bpmnProcessService.getProcessDefinition(delegateTask.processDefinitionId)
-        val deploymentId = processDefinition?.deploymentId
-        if (deploymentId == null) {
-            log.debug { "DeploymentId is null for delegateTask = ${delegateTask.id}" }
-            return
-        }
+        val taskEvent = delegateTask.toTaskEvent()
 
-        val taskDefinition = getBpmnUserTasksDefByDeploymentId(deploymentId)
-            .find { it.id == delegateTask.taskDefinitionKey }
-        if (taskDefinition == null) {
-            log.debug { "Task definition not found for task = ${delegateTask.taskDefinitionKey}" }
-        }
-
-        when (taskDefinition?.notificationType) {
-            NotificationType.EMAIL_NOTIFICATION.toString() -> {
-                val templateRef = getBpmnUserTasksDefByDeploymentId(deploymentId)
-                    .find { it.id == delegateTask.taskDefinitionKey }?.notificationTemplate
+        when (taskEvent.laNotificationType) {
+            NotificationType.EMAIL_NOTIFICATION -> {
+                val templateRef = taskEvent.laNotificationTemplate
                 if (templateRef == null) {
-                    log.debug { "Notification template is null for task = ${delegateTask.taskDefinitionKey}" }
+                    log.warn { "Notification template is null for task = ${delegateTask.taskDefinitionKey}" }
                     return
                 }
 
@@ -105,18 +88,18 @@ class BpmnLazyApprovalService(
             }
 
             else -> {
-                log.debug { "Unknown notification type : ${taskDefinition?.notificationType}" }
+                log.warn { "Unknown notification type : ${taskEvent.laNotificationType}" }
             }
         }
     }
 
-    fun addTokenLAToTask(delegateTask: DelegateTask): UUID {
+    private fun addTokenLAToTask(delegateTask: DelegateTask): UUID {
         val token = UUID.randomUUID()
-        delegateTask.setVariableLocal("tokenLA", token)
+        delegateTask.setVariableLocal(TASK_TOKEN_NAME, token)
         return token
     }
 
-    fun getAdditionalMeta(taskId: String, token: UUID): Map<String, Any> {
+    private fun getAdditionalMeta(taskId: String, token: UUID): Map<String, Any> {
         val meta = mutableMapOf<String, Any>()
         meta["task_id"] = taskId
         meta["task_token"] = token.toString()
@@ -129,63 +112,34 @@ class BpmnLazyApprovalService(
     override fun approveTask(taskId: String, taskOutcome: String, userId: String, token: String, comment: String) {
         val task = procTaskService.getTaskById(taskId)
         if (task == null) {
-            log.debug { "Task with id = ${taskId} not found!" }
+            log.warn { "Task with id = ${taskId} not found!" }
             return
         }
 
         val outcome = task.possibleOutcomes.find { it.id == taskOutcome }
         if (outcome == null) {
-            log.debug { "Task with id = ${taskId} has no outcome with id = ${taskOutcome}!" }
+            log.warn { "Task with id = ${taskId} has no outcome with id = ${taskOutcome}!" }
             return
         }
 
-        val tokenLA = procTaskService.getVariableLocal(taskId, "tokenLA").toString()
+        val tokenLA = procTaskService.getVariableLocal(taskId, TASK_TOKEN_NAME).toString()
         if (token != tokenLA) {
-            log.debug { "Task with id = ${taskId} has no token = ${token}! tokenLA = ${tokenLA}" }
+            log.warn { "Task with id = ${taskId} has no token = ${token}! tokenLA = ${tokenLA}" }
             return
         }
 
-        val taskOutcome = task.definitionKey?.let { Outcome(it, outcome.id, outcome.name) }
-        if (taskOutcome == null) {
-            log.debug { "Task with id = ${taskId} has no outcome = ${outcome}!" }
+        val completeTaskOutcome = task.definitionKey?.let { Outcome(it, outcome.id, outcome.name) }
+        if (completeTaskOutcome == null) {
+            log.warn { "Task with id = ${taskId} has no outcome = ${outcome}!" }
             return
         }
 
         AuthContext.runAsFull(userId) {
             procTaskService.completeTask(CompleteTaskData(
                 task = task,
-                outcome = taskOutcome,
-                variables = comment?.let { mapOf("comment" to it) } ?: emptyMap()
+                outcome = completeTaskOutcome,
+                variables = mapOf("comment" to comment)
             ))
         }
     }
-
-    @Cacheable(cacheNames = [BPMN_USER_TASKS_DEF_BY_DEPLOYMENT_ID_CACHE_NAME])
-    fun getBpmnUserTasksDefByDeploymentId(deploymentId: String): List<BpmnUserTaskDef> {
-        val defRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
-        if (defRev == null) {
-            log.error { "Process definition revision is null. DeploymentId: $deploymentId" }
-            return emptyList()
-        }
-
-        return defRev.getBpmnUserTasksDef()
-    }
-}
-
-const val BPMN_USER_TASKS_DEF_BY_DEPLOYMENT_ID_CACHE_NAME = "bpmn-user-tasks-def-by-deployment-id-cache"
-
-fun ProcDefRevDto.getBpmnUserTasksDef(): List<BpmnUserTaskDef> {
-    val defXml = String(this.data, Charsets.UTF_8)
-
-    val resultTaskDefList = arrayListOf<BpmnUserTaskDef>()
-
-    BpmnIO.importEcosBpmn(defXml).process.forEach { process ->
-        resultTaskDefList.addAll(
-            process.flowElements
-                .filter { it.type == "bpmn:BpmnUserTask" }
-                .mapNotNull { it.data.getAs(BpmnUserTaskDef::class.java) }
-        )
-    }
-
-    return resultTaskDefList
 }
