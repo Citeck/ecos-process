@@ -27,7 +27,6 @@ class BpmnProcessAutoStarter(
         private val log = KotlinLogging.logger {}
     }
 
-    // TODO: narrow the scope of create record events
     init {
         // React on record created without draft
         eventsService.addListener<EventData> {
