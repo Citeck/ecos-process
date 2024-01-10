@@ -372,6 +372,10 @@ class BpmnProcessDefRecords(
             val currentProc = procDefService.getProcessDefById(newRef)
             val procDefResult: ProcDefDto
 
+            if (record.processDefId.isBlank()) {
+                record.processDefId = recordId
+            }
+
             if ((recordId != processDefId) && currentProc != null) {
                 error("Process definition with id " + newRef.id + " already exists")
             }
