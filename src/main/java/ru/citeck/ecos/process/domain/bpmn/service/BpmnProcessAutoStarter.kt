@@ -28,7 +28,7 @@ class BpmnProcessAutoStarter(
     }
 
     init {
-        // React on record created without draft
+        // React on user-base record created without draft
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
@@ -42,7 +42,7 @@ class BpmnProcessAutoStarter(
 
             )
         }
-        // React on record draft state changed to false
+        // React on user-base record draft state changed to false
         eventsService.addListener<EventData> {
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
