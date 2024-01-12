@@ -24,9 +24,11 @@ columns:
   - id: sourceBpmnActivityId
     type: TEXT
     visible: false
+    groupable: true
   - id: targetBpmnActivityId
     type: TEXT
     visible: false
+    groupable: true
   - id: processRef
     type: ASSOC
   - id: procDefRef

@@ -129,3 +129,20 @@ model:
 
             throw new Error("Не задана норма kpi");
         storingType: ON_MUTATE
+    - id: manualOverrideDisplayKpi
+      name:
+        ru: Отображать KPI на BPMN элементе
+        en: Display KPI on BPMN Activity
+    - id: displayKpiOnBpmnActivityId
+      computed:
+        type: SCRIPT
+        config:
+          fn: |-
+            var manualOverrideDisplayKpi = value.load("manualOverrideDisplayKpi");
+
+            if (manualOverrideDisplayKpi !== null && manualOverrideDisplayKpi.trim().length !== 0) {
+              return manualOverrideDisplayKpi;
+            }
+
+            return value.load("targetBpmnActivityId");
+        storingType: NONE

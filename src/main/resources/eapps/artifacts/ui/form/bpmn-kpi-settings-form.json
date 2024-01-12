@@ -107,7 +107,14 @@
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "type": "selectJournal",
-            "input": true
+            "input": true,
+            "source": {
+              "custom": {
+                "columns": []
+              },
+              "type": "journal",
+              "customValues": []
+            }
           },
           {
             "label": {
@@ -121,7 +128,14 @@
             "optionalWhenDisabled": false,
             "type": "selectJournal",
             "input": true,
-            "queryData": ""
+            "queryData": "",
+            "source": {
+              "custom": {
+                "columns": []
+              },
+              "type": "journal",
+              "customValues": []
+            }
           },
           {
             "label": {
@@ -456,6 +470,40 @@
                 "oneColumnInViewMode": false,
                 "type": "columns",
                 "input": false
+              },
+              {
+                "label": {
+                  "ru": "Panel"
+                },
+                "key": "panel5",
+                "title": {
+                  "ru": "Отображение на схеме",
+                  "en": "Display on the diagram"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "panel",
+                "input": false,
+                "components": [
+                  {
+                    "label": {
+                      "ru": "manualOverrideDisplayKpi"
+                    },
+                    "key": "manualOverrideDisplayKpi",
+                    "tooltip": {
+                      "ru": "По умолчанию, KPI на схеме BPMN будет отображаться у целевого элемента. Если нужно отобразить на другом элементе, укажите его id в этом поле.",
+                      "en": "By default, the KPI on the BPMN schema will be displayed on the target element. If you want to display on another element, specify its id in this field."
+                    },
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textfield",
+                    "input": true,
+                    "inputMasks": [
+                      {}
+                    ]
+                  }
+                ]
               }
             ]
           }
