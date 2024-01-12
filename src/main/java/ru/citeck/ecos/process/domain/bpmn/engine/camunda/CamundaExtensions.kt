@@ -262,6 +262,10 @@ fun DelegateTask.getUserTaskLaInfo(): UserTaskLaInfo {
     return ext.getUserTaskLaInfo(processDefinitionId to taskDefinitionKey)
 }
 
+fun DelegateTask.getCompletedBy(): String {
+    return getVariable(BPMN_TASK_COMPLETED_BY) as String? ?: ""
+}
+
 fun EntityRef.isAuthorityGroupRef(): Boolean {
     return getSourceId() == SRC_ID_GROUP
 }

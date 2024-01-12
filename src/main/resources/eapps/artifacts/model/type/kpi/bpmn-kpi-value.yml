@@ -3,12 +3,12 @@ id: bpmn-kpi-value
 name:
   en: Bpmn KPI value
   ru: BPMN KPI значение
-
 system: true
 storageType: ECOS_MODEL
 formRef: uiserv/form@bpmn-kpi-value-form
 journalRef: uiserv/journal@bpmn-kpi-values
 inheritForm: false
+inheritActions: false
 defaultCreateVariant: false
 model:
   attributes:
@@ -63,4 +63,3 @@ model:
       name:
         ru: Целевой BPMN элемент
         en: Target BPMN Activity
-

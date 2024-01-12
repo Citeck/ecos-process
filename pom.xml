@@ -57,6 +57,11 @@
     <dependencies>
 
         <dependency>
+            <groupId>ru.citeck.ecos.ent.groupactions</groupId>
+            <artifactId>ecos-group-actions</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>ru.citeck.ecos.webapp</groupId>
             <artifactId>ecos-webapp-lib-spring</artifactId>
             <version>${ecos.webapp.version}</version>

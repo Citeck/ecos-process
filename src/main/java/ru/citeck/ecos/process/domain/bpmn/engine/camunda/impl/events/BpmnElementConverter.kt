@@ -115,6 +115,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         executionId = executionId,
         name = getTitle(),
         comment = getVariableLocal(BPMN_TASK_COMMENT_LOCAL) as? String,
+        completedBy = getCompletedBy(),
         outcome = outcome.value,
         outcomeName = outcome.name,
         completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,

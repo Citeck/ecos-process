@@ -27,23 +27,34 @@ class BpmnProcessAutoStarter(
         private val log = KotlinLogging.logger {}
     }
 
-    // TODO: narrow the scope of create record events
     init {
-        // React on record created without draft
+        // React on user-base record created without draft
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { handleStartProcessEvent(it) }
-            withFilter(Predicates.eq("record._isDraft?bool!", false))
+            withFilter(
+                Predicates.and(
+                    Predicates.eq("record._type.isSubTypeOf.user-base?bool", true),
+                    Predicates.eq("record._isDraft?bool!", false)
+                )
+
+            )
         }
-        // React on record draft state changed to false
+        // React on user-base record draft state changed to false
         eventsService.addListener<EventData> {
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { handleStartProcessEvent(it) }
-            withFilter(Predicates.eq("after?bool", false))
+            withFilter(
+                Predicates.and(
+                    Predicates.eq("record._type.isSubTypeOf.user-base?bool", true),
+                    Predicates.eq("after?bool", false)
+                )
+
+            )
         }
     }
 
