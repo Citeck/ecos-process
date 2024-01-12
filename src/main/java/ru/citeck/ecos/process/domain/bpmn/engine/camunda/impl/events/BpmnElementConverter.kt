@@ -9,10 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
-import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.records2.RecordRef
@@ -88,6 +85,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
     )
 
     val outcome = getOutcome()
+    val userTaskLaInfo = getUserTaskLaInfo()
 
     return UserTaskEvent(
         taskId = RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
@@ -121,24 +119,8 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         outcomeName = outcome.name,
         completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,
         document = getDocumentRef(),
-        laEnabled = rev.getBpmnUserTasksDef().find { it.id == taskDefinitionKey }?.laEnabled ?: false,
-        laNotificationType = rev.getBpmnUserTasksDef().find { it.id == taskDefinitionKey }?.laNotificationType,
-        laNotificationTemplate = rev.getBpmnUserTasksDef().find { it.id == taskDefinitionKey }?.laNotificationTemplate
+        laEnabled = userTaskLaInfo.laEnabled,
+        laNotificationType = userTaskLaInfo.laNotificationType,
+        laNotificationTemplate = userTaskLaInfo.laNotificationTemplate
     )
-}
-
-fun ProcDefRevDto.getBpmnUserTasksDef(): List<BpmnUserTaskDef> {
-    val defXml = String(this.data, Charsets.UTF_8)
-
-    val resultTaskDefList = arrayListOf<BpmnUserTaskDef>()
-
-    BpmnIO.importEcosBpmn(defXml).process.forEach { process ->
-        resultTaskDefList.addAll(
-            process.flowElements
-                .filter { it.type == "bpmn:BpmnUserTask" }
-                .mapNotNull { it.data.getAs(BpmnUserTaskDef::class.java) }
-        )
-    }
-
-    return resultTaskDefList
 }

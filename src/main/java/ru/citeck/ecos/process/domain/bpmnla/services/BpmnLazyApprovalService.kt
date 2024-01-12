@@ -11,11 +11,11 @@ import ru.citeck.ecos.license.EcosLicense
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
-import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import java.util.*
@@ -24,7 +24,6 @@ import java.util.*
 class BpmnLazyApprovalService(
     @Lazy
     private val procTaskService: ProcTaskService,
-    private val procDefService: ProcDefService,
     private val ecosConfigService: EcosConfigService,
     private val notificationService: NotificationService,
     private val mailUtils: MailUtils
@@ -138,7 +137,7 @@ class BpmnLazyApprovalService(
             procTaskService.completeTask(CompleteTaskData(
                 task = task,
                 outcome = completeTaskOutcome,
-                variables = mapOf("comment" to comment)
+                variables = mapOf(BPMN_COMMENT to comment)
             ))
         }
     }

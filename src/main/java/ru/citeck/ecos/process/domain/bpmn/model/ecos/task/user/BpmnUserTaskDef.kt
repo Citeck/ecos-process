@@ -75,7 +75,7 @@ data class BpmnUserTaskDef(
         if (laEnabled && laNotificationType == null) {
             throw EcosBpmnElementDefinitionException(
                 id,
-                "Task can't be in multi-instance auto mode and manual recipients mode at the same time"
+                "Lazy approval notification type cannot be empty if lazy approval is enabled."
             )
         }
     }
