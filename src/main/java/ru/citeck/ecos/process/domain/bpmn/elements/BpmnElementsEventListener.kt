@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EventsService
+import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
@@ -13,7 +14,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 
 @Component
-class BpmnElementsCreateListener(
+class BpmnElementsEventListener(
     eventsService: EventsService,
     private val recordsService: RecordsService
 ) {
@@ -56,6 +57,35 @@ class BpmnElementsCreateListener(
                     data["comment"] = event.comment
                     recordsService.mutate(existingElement, data)
                 }
+            }
+        }
+
+        eventsService.addListener<UserTaskEvent> {
+            withEventType(BPMN_EVENT_USER_TASK_DELETE)
+            withDataClass(UserTaskEvent::class.java)
+            withAction { event ->
+                val existingElement = recordsService.queryOne(
+                    RecordsQuery.create {
+                        withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
+                        withQuery(
+                            Predicates.and(
+                                Predicates.eq("executionId", event.executionId),
+                                Predicates.eq("elementId", event.taskId?.toString())
+                            )
+                        )
+                    }
+                )
+                if (existingElement == null) {
+                    log.warn {
+                        "Cannot process user task delete event, because element not found: \n${event.toPrettyString()}"
+                    }
+                    return@withAction
+                }
+
+                val data = ObjectData.create()
+                data["completed"] = event.time
+                data["comment"] = event.comment
+                recordsService.mutate(existingElement, data)
             }
         }
 

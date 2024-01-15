@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTas
 const val BPMN_EVENT_USER_TASK_CREATE = "bpmn-user-task-create"
 const val BPMN_EVENT_USER_TASK_COMPLETE = "bpmn-user-task-complete"
 const val BPMN_EVENT_USER_TASK_ASSIGN = "bpmn-user-task-assign"
+const val BPMN_EVENT_USER_TASK_DELETE = "bpmn-user-task-delete"
 
 const val BPMN_EVENT_ACTIVITY_ELEMENT_START = "bpmn-activity-element-start"
 const val BPMN_EVENT_ACTIVITY_ELEMENT_END = "bpmn-activity-element-end"
@@ -86,6 +87,14 @@ class BpmnEventEmitter(
         }
     )
 
+    private val userTaskDeleteEmitter = eventsService.getEmitter(
+        EmitterConfig.create<UserTaskEvent> {
+            source = appName
+            eventType = BPMN_EVENT_USER_TASK_DELETE
+            eventClass = UserTaskEvent::class.java
+        }
+    )
+
     fun emitProcessStart(event: ProcessStartEvent) {
         processStartEmitter.emit(event)
     }
@@ -112,5 +121,9 @@ class BpmnEventEmitter(
 
     fun emitUserTaskAssignEvent(event: UserTaskEvent) {
         userTaskAssignEmitter.emit(event)
+    }
+
+    fun emitUserTaskDeleteEvent(event: UserTaskEvent) {
+        userTaskDeleteEmitter.emit(event)
     }
 }

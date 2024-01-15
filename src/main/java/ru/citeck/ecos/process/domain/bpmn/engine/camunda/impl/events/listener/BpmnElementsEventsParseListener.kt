@@ -20,7 +20,8 @@ class BpmnElementsEventsParseListener(
     private val bpmnFlowElementTakeEventExecutionListener: BpmnFlowElementTakeEventExecutionListener,
     private val bpmnTaskCreateListener: BpmnTaskCreateEventListener,
     private val bpmnTaskCompleteListener: BpmnTaskCompleteEventListener,
-    private val bpmnTaskAssignListener: BpmnTaskAssignEventListener
+    private val bpmnTaskAssignListener: BpmnTaskAssignEventListener,
+    private val bpmnTaskDeleteEventListener: BpmnTaskDeleteEventListener
 ) : AbstractBpmnParseListener() {
 
     private fun addActivityListeners(activity: ActivityImpl) {
@@ -36,6 +37,7 @@ class BpmnElementsEventsParseListener(
         activity.addTaskListener(TaskListener.EVENTNAME_CREATE, bpmnTaskCreateListener)
         activity.addTaskListener(TaskListener.EVENTNAME_COMPLETE, bpmnTaskCompleteListener)
         activity.addTaskListener(TaskListener.EVENTNAME_ASSIGNMENT, bpmnTaskAssignListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_DELETE, bpmnTaskDeleteEventListener)
     }
 
     override fun parseStartEvent(startEventElement: Element, scope: ScopeImpl, startEventActivity: ActivityImpl) {
@@ -71,7 +73,6 @@ class BpmnElementsEventsParseListener(
     }
 
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        // addActivityListeners(activity)
         addUserTaskListeners(activity)
     }
 
