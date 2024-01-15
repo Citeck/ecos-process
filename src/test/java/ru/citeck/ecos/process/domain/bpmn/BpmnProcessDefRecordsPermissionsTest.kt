@@ -466,8 +466,8 @@ class BpmnProcessDefRecordsPermissionsTest {
     @AfterAll
     fun afterAll() {
 
-        cleanDefinitions()
         cleanDeployments()
+        cleanDefinitions()
 
         val bpmnTypeBefore = bpmnTypeBefore
         if (bpmnTypeBefore == null) {

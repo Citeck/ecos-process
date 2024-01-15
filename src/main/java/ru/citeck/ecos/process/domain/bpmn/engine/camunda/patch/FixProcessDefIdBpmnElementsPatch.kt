@@ -87,7 +87,7 @@ class FixProcessDefIdBpmnElementsPatch(
 
         val found = recordsService.query(
             RecordsQuery.create {
-                withSourceId("${AppName.EPROC}/${BPMN_ELEMENTS_SOURCE_ID}")
+                withSourceId("${AppName.EPROC}/$BPMN_ELEMENTS_SOURCE_ID")
                 withQuery(
                     Predicates.and(
                         Predicates.eq("engine", "camunda"),
@@ -135,8 +135,8 @@ class CacheableProcDefRefResolver(
         log.info { "Get process def ref by process id: $processId" }
 
         return recordsService.getAtt(
-            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processId), "definition?id"
+            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processId),
+            "definition?id"
         ).asText()
     }
-
 }

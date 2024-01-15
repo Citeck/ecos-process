@@ -56,7 +56,7 @@ class BpmnStartDifferentProcessInOneDefinitionTest {
 
     @AfterAll
     fun tearDown() {
-        cleanDefinitions()
         cleanDeployments()
+        cleanDefinitions()
     }
 }

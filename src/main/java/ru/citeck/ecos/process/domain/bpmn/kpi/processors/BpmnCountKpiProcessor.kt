@@ -56,7 +56,8 @@ class BpmnCountKpiProcessor(
             }
 
             appLockService.doInSync(
-                "bpmn-kpi-count-increment", Duration.ofSeconds(10)
+                "bpmn-kpi-count-increment",
+                Duration.ofSeconds(10)
             ) {
                 TxnContext.doInNewTxn {
                     val foundKpi = bpmnKpiService.queryKpiValues(stakeholder.getRef(), bpmnEvent.processRef)
