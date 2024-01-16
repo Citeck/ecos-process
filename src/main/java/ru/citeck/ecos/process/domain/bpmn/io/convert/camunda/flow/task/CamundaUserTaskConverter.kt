@@ -97,12 +97,18 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
             otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE] = element.manualRecipientsMode.toString()
             otherAttributes[BPMN_PROP_MULTI_INSTANCE_AUTO_MODE] = element.multiInstanceAutoMode.toString()
-            otherAttributes[BPMN_PROP_LA_ENABLED] = element.laEnabled.toString()
-            otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE] = element.laNotificationType.toString()
-            otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE] = element.laNotificationTemplate.toString()
             otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))
 
             otherAttributes.putIfNotBlank(BPMN_PROP_OUTCOMES, Json.mapper.toString(element.outcomes))
+
+            otherAttributes[BPMN_PROP_LA_ENABLED] = element.laEnabled.toString()
+            element.laNotificationType?.let {
+                otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE] = it.toString()
+            }
+            element.laNotificationTemplate?.let {
+                otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE] = it.toString()
+            }
+
         }
     }
 
