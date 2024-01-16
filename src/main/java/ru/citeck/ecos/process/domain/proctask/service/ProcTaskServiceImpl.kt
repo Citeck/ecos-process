@@ -15,7 +15,9 @@ import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
-import ru.citeck.ecos.process.domain.proctask.dto.*
+import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
+import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
+import ru.citeck.ecos.process.domain.proctask.dto.getComment
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.*
@@ -312,6 +314,14 @@ class ProcTaskServiceImpl(
 
     override fun getVariable(taskId: String, variableName: String): Any? {
         return camundaTaskService.getVariable(taskId, variableName)
+    }
+
+    override fun getVariablesLocal(taskId: String): Map<String, Any?> {
+        return camundaTaskService.getVariablesLocal(taskId)
+    }
+
+    override fun getVariableLocal(taskId: String, variableName: String): Any? {
+        return camundaTaskService.getVariableLocal(taskId, variableName)
     }
 
     override fun claimTask(taskId: String, userId: String) {

@@ -31,6 +31,10 @@ interface ProcTaskService {
 
     fun getVariable(taskId: String, variableName: String): Any?
 
+    fun getVariablesLocal(taskId: String): Map<String, Any?>
+
+    fun getVariableLocal(taskId: String, variableName: String): Any?
+
     fun claimTask(taskId: String, userId: String)
 
     fun unclaimTask(taskId: String)
