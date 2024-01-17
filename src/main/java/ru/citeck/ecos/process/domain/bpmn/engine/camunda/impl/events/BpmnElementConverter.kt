@@ -85,6 +85,7 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
     )
 
     val outcome = getOutcome()
+    val userTaskLaInfo = getUserTaskLaInfo()
 
     return UserTaskEvent(
         taskId = RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
@@ -118,6 +119,9 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         outcome = outcome.value,
         outcomeName = outcome.name,
         completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,
-        document = getDocumentRef()
+        document = getDocumentRef(),
+        laEnabled = userTaskLaInfo.laEnabled,
+        laNotificationType = userTaskLaInfo.laNotificationType,
+        laNotificationTemplate = userTaskLaInfo.laNotificationTemplate
     )
 }

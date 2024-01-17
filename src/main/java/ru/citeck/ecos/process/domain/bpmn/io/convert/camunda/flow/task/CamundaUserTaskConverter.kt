@@ -100,6 +100,15 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_ASSIGNEES, recipientsToJsonWithoutType(element.assignees))
 
             otherAttributes.putIfNotBlank(BPMN_PROP_OUTCOMES, Json.mapper.toString(element.outcomes))
+
+            otherAttributes[BPMN_PROP_LA_ENABLED] = element.laEnabled.toString()
+            element.laNotificationType?.let {
+                otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE] = it.toString()
+            }
+            element.laNotificationTemplate?.let {
+                otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE] = it.toString()
+            }
+
         }
     }
 
