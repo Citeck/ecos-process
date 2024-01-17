@@ -24,6 +24,7 @@ class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDat
         return JacksonJsonDataFormat::class.java
     }
 
+    @Suppress("DEPRECATION")
     override fun configure(dataFormat: JacksonJsonDataFormat) {
         val mapper = dataFormat.objectMapper
         val module = SimpleModule()

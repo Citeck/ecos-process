@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain
 
 import org.camunda.bpm.engine.RepositoryService
+import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanGenerationDto
 import org.springframework.stereotype.Component
 import org.springframework.util.ResourceUtils
@@ -40,7 +41,8 @@ class BpmnProcHelper(
     val recordsService: RecordsService,
     val procDefRepo: ProcDefRepository,
     val procDefRevRepo: ProcDefRevRepository,
-    val camundaRepositoryService: RepositoryService
+    val camundaRepositoryService: RepositoryService,
+    val taskService: TaskService
 ) {
     @PostConstruct
     private fun init() {
@@ -205,6 +207,12 @@ fun saveAndDeployBpmn(elementFolder: String, id: String) {
 fun cleanDefinitions() {
     helper.procDefRevRepo.deleteAll()
     helper.procDefRepo.deleteAll()
+}
+
+fun clearTasks() {
+    helper.taskService.createTaskQuery().list().forEach {
+        helper.taskService.deleteTask(it.id, true)
+    }
 }
 
 fun cleanDeployments() {

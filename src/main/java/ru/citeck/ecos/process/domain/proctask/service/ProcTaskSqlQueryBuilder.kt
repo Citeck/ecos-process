@@ -21,6 +21,15 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.system.measureTimeMillis
 
+const val ATT_CURRENT_USER_WITH_AUTH = "\$CURRENT"
+const val ATT_CURRENT_USER = "\$CURRENT_USER"
+
+/**
+ * Convert predicate to SQL query for Camunda tasks
+ *
+ * @property ATT_ACTORS means all possible candidates for the task
+ * @property ATT_ASSIGNEE means exact user who is assigned to the task
+ */
 class ProcTaskSqlQueryBuilder(
     private val authoritiesApi: EcosAuthoritiesApi,
     private val taskService: TaskService
@@ -31,18 +40,20 @@ class ProcTaskSqlQueryBuilder(
         private const val TASK_ALIAS = "task"
         private const val CANDIDATE_ALIAS = "candidate"
 
+        const val ATT_ACTORS = "actors"
+        const val ATT_ACTOR = "actor"
+        const val ATT_ASSIGNEE = "assignee"
+        const val ATT_DOCUMENT = "document"
+        const val ATT_DOCUMENT_TYPE = "documentType"
+
         private val TASK_ATTS_MAPPING = mapOf(
-            RecordConstants.ATT_CREATED to "$TASK_ALIAS.${TaskQueryProperty.CREATE_TIME.name}"
+            RecordConstants.ATT_CREATED to "$TASK_ALIAS.${TaskQueryProperty.CREATE_TIME.name}",
+            ATT_ASSIGNEE to "$TASK_ALIAS.${TaskQueryProperty.ASSIGNEE.name}"
         )
 
         private val TASK_ATTS_TYPES = mapOf(
             RecordConstants.ATT_CREATED to AttributeType.DATETIME
         )
-
-        const val ATT_ACTORS = "actors"
-        const val ATT_ACTOR = "actor"
-        const val ATT_DOCUMENT = "document"
-        const val ATT_DOCUMENT_TYPE = "documentType"
 
         private val PROC_VARIABLES_MAPPING = mapOf(
             ATT_DOCUMENT to BPMN_DOCUMENT_REF,
@@ -72,10 +83,23 @@ class ProcTaskSqlQueryBuilder(
             is EmptyPredicate -> {
                 if (PROC_VARIABLES_MAPPING.containsKey(predicate.getAttribute())) {
                     addEmptyVariableCondition(PROC_VARIABLES_MAPPING[predicate.getAttribute()], true)
+                } else if (TASK_ATTS_MAPPING.containsKey(predicate.getAttribute())) {
+                    val field = TASK_ATTS_MAPPING[predicate.getAttribute()]
+                    if (field.isNullOrBlank()) {
+                        false
+                    } else {
+                        condition.append(" (")
+                            .append(field)
+                            .append(" IS NULL OR ")
+                            .append(field)
+                            .append(" = '') ")
+                        true
+                    }
                 } else {
                     false
                 }
             }
+
             is NotPredicate -> {
                 val prevLen = condition.length
                 condition.append(" NOT (")
@@ -87,6 +111,7 @@ class ProcTaskSqlQueryBuilder(
                     false
                 }
             }
+
             is ComposedPredicate -> {
 
                 val joinOperator: String = when (predicate) {
@@ -156,11 +181,9 @@ class ProcTaskSqlQueryBuilder(
                         "AND $CANDIDATE_ALIAS.type_ = 'candidate'"
                 )
             }
-            val actors = if (value.isTextual() && value.asText() == "\$CURRENT") {
-                AuthContext.getCurrentUserWithAuthorities()
-            } else {
-                castSqlParamValueToListOf(value, AttributeType.AUTHORITY)
-            }
+
+            val actors: List<Any?> = castSqlParamValueToListOf(value, AttributeType.AUTHORITY)
+
             val users = actors.filter {
                 it is String && !it.startsWith(AuthGroup.PREFIX) && !it.startsWith(AuthRole.PREFIX)
             }
@@ -214,6 +237,7 @@ class ProcTaskSqlQueryBuilder(
                 ValuePredicate.Type.LT -> "<"
                 ValuePredicate.Type.GE -> ">="
                 ValuePredicate.Type.LE -> "<="
+                ValuePredicate.Type.EQ -> "="
                 else -> return false
             }
 
@@ -292,6 +316,14 @@ class ProcTaskSqlQueryBuilder(
         type: AttributeType,
         result: MutableList<Any?> = ArrayList()
     ): List<Any?> {
+        if (value.isTextual() && value.asText() == ATT_CURRENT_USER_WITH_AUTH) {
+            return AuthContext.getCurrentUserWithAuthorities()
+        }
+
+        if (value.isTextual() && value.asText() == ATT_CURRENT_USER) {
+            return listOf(AuthContext.getCurrentUser())
+        }
+
         if (value.isArray()) {
             value.forEach {
                 castSqlParamValueToListOf(it, type, result)
@@ -399,10 +431,14 @@ class ProcTaskSqlQueryBuilder(
         if (withLimitAndSort && skipCount > 0) {
             sqlSelectQuery.append(" OFFSET $skipCount")
         }
+
         var nativeTaskQuery = taskService.createNativeTaskQuery().sql(sqlSelectQuery.toString())
         for ((key, value) in params) {
             nativeTaskQuery = nativeTaskQuery.parameter(key, value)
         }
+
+        log.trace { "Build proc task query:\n $sqlSelectQuery \n with params: \n$params" }
+
         return nativeTaskQuery
     }
 
@@ -414,6 +450,7 @@ class ProcTaskSqlQueryBuilder(
                 withLimitAndSort = true
             ).list().map { it.id }
         }
+
         val totalCount: Long
         val camundaCountTime = measureTimeMillis {
             totalCount = if (maxItems > tasks.size) {
@@ -425,8 +462,10 @@ class ProcTaskSqlQueryBuilder(
                 ).count()
             }
         }
+
         log.debug { "Camunda task count: $camundaCountTime ms" }
         log.debug { "Camunda tasks: $tasksFromCamundaTime ms" }
+
         return DbFindRes(tasks, totalCount)
     }
 }
