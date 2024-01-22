@@ -122,6 +122,9 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         document = getDocumentRef(),
         laEnabled = userTaskLaInfo.laEnabled,
         laNotificationType = userTaskLaInfo.laNotificationType,
-        laNotificationTemplate = userTaskLaInfo.laNotificationTemplate
+        laNotificationTemplate = userTaskLaInfo.laNotificationTemplate,
+        laReportEnabled = userTaskLaInfo.laReportEnabled,
+        laSuccessReportNotificationTemplate = userTaskLaInfo.laSuccessReportNotificationTemplate,
+        laErrorReportNotificationTemplate = userTaskLaInfo.laErrorReportNotificationTemplate
     )
 }

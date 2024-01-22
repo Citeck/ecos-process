@@ -4,7 +4,10 @@ import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.records2.RecordRef
 
 data class UserTaskLaInfo(
-    val laEnabled: Boolean,
-    val laNotificationType: NotificationType?,
-    val laNotificationTemplate: RecordRef?
+    val laEnabled: Boolean = false,
+    val laNotificationType: NotificationType? = null,
+    val laNotificationTemplate: RecordRef? = null,
+    val laReportEnabled: Boolean = false,
+    val laSuccessReportNotificationTemplate: RecordRef? = null,
+    val laErrorReportNotificationTemplate: RecordRef? = null
 )

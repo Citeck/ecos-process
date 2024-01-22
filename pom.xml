@@ -20,6 +20,7 @@
         <camunda.spin.version>1.18.0</camunda.spin.version>
 
         <ecos.bpmn-commons-values.version>1.0.0</ecos.bpmn-commons-values.version>
+        <ecos.ecos-lazy-approval.version>1.1.0-SNAPSHOT</ecos.ecos-lazy-approval.version>
 
         <querydsl.version>4.2.1</querydsl.version>
         <mongock.version>3.0.2.BETA</mongock.version>
@@ -187,7 +188,7 @@
         <dependency>
             <groupId>ru.citeck.ecos.ent.lazyapproval</groupId>
             <artifactId>ecos-lazy-approval</artifactId>
-            <version>1.0.0</version>
+            <version>${ecos.ecos-lazy-approval.version}</version>
         </dependency>
 
     </dependencies>

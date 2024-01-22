@@ -35,6 +35,9 @@ data class UserTaskEvent(
     var laEnabled: Boolean = false,
     var laNotificationType: NotificationType? = null,
     var laNotificationTemplate: RecordRef? = null,
+    var laReportEnabled: Boolean = false,
+    var laSuccessReportNotificationTemplate: RecordRef? = null,
+    var laErrorReportNotificationTemplate: RecordRef? = null,
 
     @AttName("document._type?id")
     var documentTypeRef: EntityRef? = null,
