@@ -24,6 +24,7 @@ import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
+import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
@@ -159,15 +160,17 @@ class BpmnLazyApprovalService(
         }
 
         return try {
-            AuthContext.runAsFull(userId) {
-                procTaskService.completeTask(CompleteTaskData(
-                    task = task,
-                    outcome = completeTaskOutcome,
-                    variables = mapOf(BPMN_COMMENT to comment)
-                ))
-            }
+            TxnContext.doInNewTxn {
+                AuthContext.runAsFull(userId) {
+                    procTaskService.completeTask(CompleteTaskData(
+                        task = task,
+                        outcome = completeTaskOutcome,
+                        variables = mapOf(BPMN_COMMENT to comment)
+                    ))
+                }
 
-            fillLazyApprovalReport(MailProcessingCode.OK, task)
+                fillLazyApprovalReport(MailProcessingCode.OK, task)
+            }
         } catch (e: Exception) {
             log.warn { "Task with id = $taskId failed! The following error occurred: ${e.cause?.message}" }
             fillLazyApprovalReport(MailProcessingCode.EXCEPTION, e.cause?.message, task)
