@@ -171,6 +171,7 @@ class BpmnEventSubscriptionService(
             withFilter(predicateFilterByTypes)
             withTransactional(true)
             withAction { updated ->
+                log.debug { "Receive subscription conditional event: \n${Json.mapper.toPrettyString(updated)}" }
                 bpmnConditionalEventsProcessor.processEvent(updated)
             }
         }

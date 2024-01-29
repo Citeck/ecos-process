@@ -17,6 +17,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import kotlin.system.measureTimeMillis
 
 @Component
 class CamundaEventProcessor(
@@ -32,46 +33,50 @@ class CamundaEventProcessor(
 
     fun processEvent(incomingEvent: GeneralEvent) {
 
-        val incomingEventData = incomingEvent.toIncomingEventData()
-        val foundSubscriptions = eventSubscriptionFinder.getActualCamundaSubscriptions(incomingEventData)
+        val time = measureTimeMillis {
+            val incomingEventData = incomingEvent.toIncomingEventData()
+            val foundSubscriptions = eventSubscriptionFinder.getActualCamundaSubscriptions(incomingEventData)
 
-        if (foundSubscriptions.isEmpty()) {
-            return
-        }
-
-        val defaultModelForIncomingEvent = let {
             if (foundSubscriptions.isEmpty()) {
-                emptyMap()
-            } else {
-                EcosEventType.findRepresentation(incomingEventData.eventName)?.defaultModel ?: emptyMap()
+                return
+            }
+
+            val defaultModelForIncomingEvent = let {
+                if (foundSubscriptions.isEmpty()) {
+                    emptyMap()
+                } else {
+                    EcosEventType.findRepresentation(incomingEventData.eventName)?.defaultModel ?: emptyMap()
+                }
+            }
+
+            for (subscription in foundSubscriptions) {
+                val finalEventModel = mutableMapOf<String, String>()
+                finalEventModel.putAll(defaultModelForIncomingEvent)
+
+                val attsFromPredicate = let {
+                    val predicate = Json.mapper.read(subscription.event.predicate, Predicate::class.java)
+                        ?: VoidPredicate.INSTANCE
+                    return@let PredicateUtils.getAllPredicateAttributes(predicate).associateBy { it }
+                }
+
+                finalEventModel.putAll(attsFromPredicate)
+                finalEventModel.putAll(subscription.event.model)
+
+                val eventAttributes = evaluateAttributes(incomingEvent, finalEventModel)
+                if (eventAttributes.isMatchPredicates(subscription.event.predicate)) {
+                    log.debug {
+                        "Event match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
+                    }
+                    exploder.fireEvent(subscription.id, BpmnDataValue.create(eventAttributes))
+                } else {
+                    log.debug {
+                        "Event doesn't match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
+                    }
+                }
             }
         }
 
-        for (subscription in foundSubscriptions) {
-            val finalEventModel = mutableMapOf<String, String>()
-            finalEventModel.putAll(defaultModelForIncomingEvent)
-
-            val attsFromPredicate = let {
-                val predicate = Json.mapper.read(subscription.event.predicate, Predicate::class.java)
-                    ?: VoidPredicate.INSTANCE
-                return@let PredicateUtils.getAllPredicateAttributes(predicate).associateBy { it }
-            }
-
-            finalEventModel.putAll(attsFromPredicate)
-            finalEventModel.putAll(subscription.event.model)
-
-            val eventAttributes = evaluateAttributes(incomingEvent, finalEventModel)
-            if (eventAttributes.isMatchPredicates(subscription.event.predicate)) {
-                log.debug {
-                    "Event match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
-                }
-                exploder.fireEvent(subscription.id, BpmnDataValue.create(eventAttributes))
-            } else {
-                log.debug {
-                    "Event doesn't match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
-                }
-            }
-        }
+        log.trace { "Process event ${incomingEvent.id} in $time ms" }
     }
 
     private fun evaluateAttributes(
