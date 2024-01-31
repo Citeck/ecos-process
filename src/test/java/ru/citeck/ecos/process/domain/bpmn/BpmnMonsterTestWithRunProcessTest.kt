@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.RuntimeService
@@ -155,6 +156,8 @@ class BpmnMonsterTestWithRunProcessTest {
     private val kpiSettings = mutableListOf<EntityRef>()
 
     companion object {
+        private const val KPI_ASYNC_WAIT_TIMEOUT_SECONDS = 15L
+
         private val harryRecord = PotterRecord()
         private val harryRef = EntityRef.valueOf("hogwarts/people@harry")
 
@@ -4055,15 +4058,17 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
@@ -4092,15 +4097,17 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isLessThan(3_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isLessThan(3_000)
+                }
+            )
+        }
     }
 
     @Test
@@ -4129,15 +4136,17 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
@@ -4166,15 +4175,17 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
@@ -4203,15 +4214,17 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @ParameterizedTest
@@ -4247,14 +4260,16 @@ class BpmnMonsterTestWithRunProcessTest {
 
         `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isEqualTo(1)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isEqualTo(1)
+                }
+            )
+        }
     }
 
     @ParameterizedTest
@@ -4290,14 +4305,16 @@ class BpmnMonsterTestWithRunProcessTest {
 
         `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isEqualTo(1)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isEqualTo(1)
+                }
+            )
+        }
     }
 
     @ParameterizedTest
@@ -4339,15 +4356,17 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
@@ -4388,10 +4407,12 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(0)).createKpiValue(
-            any()
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(0)).createKpiValue(
+                any()
+            )
+        }
     }
 
     fun getSubscriptionsAfterAction(
