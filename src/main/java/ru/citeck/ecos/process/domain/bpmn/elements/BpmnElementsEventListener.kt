@@ -11,12 +11,16 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ELEMENT_DEF_ID
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ELEMENT_ID
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_PROCESS_INSTANCE_ID
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.txn.lib.TxnContext
 
 @Component
 class BpmnElementsEventListener(
@@ -84,6 +88,7 @@ class BpmnElementMutateTaskExecutorConfig {
     fun taskExecutor(): ThreadPoolTaskExecutor {
         val executor = ThreadPoolTaskExecutor()
         // Only one thread because have error with records unique constraint "ecos_record_ref___ext_id_idx"
+        // and sequence logic with queryOne existing element and update it
         executor.corePoolSize = 1
         executor.initialize()
         return executor
@@ -103,20 +108,28 @@ class BpmnElementMutationAsyncProvider(
     private fun execute(action: () -> Unit) {
         bpmnElementAsyncExecutor.execute {
             AuthContext.runAsSystem {
-                action()
+                TxnContext.doInNewTxn {
+                    action()
+                }
             }
         }
     }
 
     fun completeTask(event: UserTaskEvent) {
         execute {
+            require(event.procInstanceId?.isNotEmpty() == true) {
+                "Process instance id is empty for event: $event"
+            }
+
+            log.trace { "Complete task element. Event: $event"}
+
             val existingElement = recordsService.queryOne(
                 RecordsQuery.create {
                     withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
                     withQuery(
                         Predicates.and(
-                            Predicates.eq("executionId", event.executionId),
-                            Predicates.eq("elementId", event.taskId?.toString())
+                            Predicates.eq(BPMN_PROCESS_INSTANCE_ID, event.procInstanceId.toString()),
+                            Predicates.eq(BPMN_ELEMENT_ID, event.taskId?.toString())
                         )
                     )
                 }
@@ -136,13 +149,19 @@ class BpmnElementMutationAsyncProvider(
 
     fun reactOnDeleteTaskEvent(event: UserTaskEvent) {
         execute {
+            require(event.procInstanceId?.isNotEmpty() == true) {
+                "Process instance id is empty for event: $event"
+            }
+
+            log.trace { "React on delete task event: $event"}
+
             val existingElement = recordsService.queryOne(
                 RecordsQuery.create {
                     withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
                     withQuery(
                         Predicates.and(
-                            Predicates.eq("executionId", event.executionId),
-                            Predicates.eq("elementId", event.taskId?.toString())
+                            Predicates.eq(BPMN_PROCESS_INSTANCE_ID, event.procInstanceId.toString()),
+                            Predicates.eq(BPMN_ELEMENT_ID, event.taskId?.toString())
                         )
                     )
                 }
@@ -163,7 +182,12 @@ class BpmnElementMutationAsyncProvider(
 
     fun createTaskElement(event: UserTaskEvent, completedEvent: Boolean) {
         execute {
+            require(event.procInstanceId?.isNotEmpty() == true) {
+                "Process instance id is empty for event: $event"
+            }
+
             log.trace { "Create task element. Event: $event. Completed: $completedEvent" }
+
             val data = ObjectData.create(event)
             if (completedEvent) {
                 data["started"] = event.time
@@ -184,9 +208,13 @@ class BpmnElementMutationAsyncProvider(
 
     fun createStartActivityFlowElement(event: FlowElementEvent) {
         execute {
+            require(event.procInstanceId?.isNotEmpty() == true) {
+                "Process instance id is empty for event: $event"
+            }
             check(event.elementType != "UserTask") {
                 "User task event not allowed for start flow element: $event"
             }
+
             log.trace { "Create start BPMN element by event: $event" }
 
             val data = ObjectData.create(event)
@@ -201,9 +229,13 @@ class BpmnElementMutationAsyncProvider(
 
     fun creteEndActivityFlowElement(event: FlowElementEvent) {
         execute {
+            require(event.procInstanceId?.isNotEmpty() == true) {
+                "Process instance id is empty for event: $event"
+            }
             check(event.elementType != "UserTask") {
                 "User task event not allowed for end flow element: $event"
             }
+
             log.trace { "Create end BPMN element by event: $event" }
 
             val existingElement = recordsService.queryOne(
@@ -211,8 +243,8 @@ class BpmnElementMutationAsyncProvider(
                     withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
                     withQuery(
                         Predicates.and(
-                            Predicates.eq("elementDefId", event.elementDefId),
-                            Predicates.eq("executionId", event.executionId),
+                            Predicates.eq(BPMN_ELEMENT_DEF_ID, event.elementDefId),
+                            Predicates.eq(BPMN_PROCESS_INSTANCE_ID, event.procInstanceId.toString()),
                         )
                     )
                 }
@@ -231,6 +263,9 @@ class BpmnElementMutationAsyncProvider(
 
     fun createTakeFlowElement(event: FlowElementEvent) {
         execute {
+            require(event.procInstanceId?.isNotEmpty() == true) {
+                "Process instance id is empty for event: $event"
+            }
             check(event.elementType != "UserTask") {
                 "User task event not allowed for take flow element: $event"
             }

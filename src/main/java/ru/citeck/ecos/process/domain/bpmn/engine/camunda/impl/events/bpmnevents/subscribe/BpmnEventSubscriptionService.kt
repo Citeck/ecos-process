@@ -122,17 +122,16 @@ class BpmnEventSubscriptionService(
                 "eventTypes: $listenerEventNames, atts: $attributes"
         }
 
+        val excludeBpmnElementsOptimizationPredicate = Predicates.notEq(
+            "record._type?id", "${AppName.EMODEL}/type@$BPMN_PROCESS_ELEMENT_TYPE"
+        )
+
         val addedListeners = listenerEventNames.map { listenerEventName ->
             eventsService.addListener<ObjectData> {
                 withDataClass(ObjectData::class.java)
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
-                // optimization - exclude BPMN_PROCESS_ELEMENT_TYPE from subscription
-                withFilter(
-                    Predicates.notEq(
-                        "record._type?id", "${AppName.EMODEL}/type@$BPMN_PROCESS_ELEMENT_TYPE"
-                    )
-                )
+                withFilter(excludeBpmnElementsOptimizationPredicate)
                 withTransactional(true)
                 withAction { event ->
                     log.debug { "Receive subscription event: \n${Json.mapper.toPrettyString(event)}" }

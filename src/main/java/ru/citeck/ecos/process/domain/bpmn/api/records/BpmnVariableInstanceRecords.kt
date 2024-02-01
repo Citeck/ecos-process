@@ -10,6 +10,7 @@ import org.camunda.bpm.engine.variable.value.SerializableValue
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EXECUTION_ID
 import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.RecordConstants
@@ -44,7 +45,6 @@ class BpmnVariableInstanceRecords(
         private const val ATT_TYPE = "type"
         private const val ATT_VALUE = "value"
         private const val ATT_OBJECT_TYPE_NAME = "objectTypeName"
-        private const val ATT_EXECUTION_ID = "executionId"
 
         private const val TYPE_STRING = "string"
         private const val TYPE_DATE = "date"
@@ -102,7 +102,7 @@ class BpmnVariableInstanceRecords(
         val (executionId: String, name: String) = if (currentVariable != null) {
             currentVariable.executionId to currentVariable.name
         } else {
-            this.getAtt(ATT_EXECUTION_ID).asText() to this.getAtt(ATT_NAME).asText()
+            this.getAtt(BPMN_EXECUTION_ID).asText() to this.getAtt(ATT_NAME).asText()
         }
 
         require(this.id.isNotBlank() || executionId.isNotBlank()) {
