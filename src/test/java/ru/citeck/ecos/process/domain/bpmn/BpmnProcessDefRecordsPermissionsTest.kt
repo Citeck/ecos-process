@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.bpmn
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito.`when`
@@ -41,12 +40,10 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.model.perms.registry.TypePermissionsRegistry
 import ru.citeck.ecos.webapp.lib.model.type.dto.TypeDef
 import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
-import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.util.*
 import kotlin.test.assertEquals
 
 @Suppress("UNCHECKED_CAST")
-@ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)

@@ -29,7 +29,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
 public class TimerServiceImplTest {
 

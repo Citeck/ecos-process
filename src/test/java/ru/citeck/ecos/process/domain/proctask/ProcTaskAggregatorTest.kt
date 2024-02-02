@@ -1,14 +1,11 @@
 package ru.citeck.ecos.process.domain.proctask
 
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.impl.util.ClockUtil
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,10 +21,8 @@ import ru.citeck.ecos.process.domain.proctask.service.aggregate.ProcTaskAggregat
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
-import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.text.SimpleDateFormat
 
-@ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 class ProcTaskAggregatorTest {
 
