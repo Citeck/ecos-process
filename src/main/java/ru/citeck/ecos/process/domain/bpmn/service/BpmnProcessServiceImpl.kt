@@ -23,6 +23,7 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import kotlin.system.measureTimeMillis
 
 @Service
 class BpmnProcessServiceImpl(
@@ -40,32 +41,40 @@ class BpmnProcessServiceImpl(
     }
 
     override fun startProcess(processKey: String, businessKey: String?, variables: Map<String, Any?>): ProcessInstance {
-        val definitionId = recordsService.getAtt(
-            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processKey),
-            "definition.id"
-        ).asText()
-        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, definitionId))
-            ?: throw IllegalArgumentException("Process definition with id $definitionId not found")
+        val processInstance: ProcessInstance
+        val time = measureTimeMillis {
 
-        check(definition.enabled) {
-            "Starting a disabled process is not possible"
+            val definitionId = recordsService.getAtt(
+                EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processKey),
+                "definition.id"
+            ).asText()
+            val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, definitionId))
+                ?: throw IllegalArgumentException("Process definition with id $definitionId not found")
+
+            check(definition.enabled) {
+                "Starting a disabled process is not possible"
+            }
+
+            val processVariables = variables.toMutableMap()
+            processVariables[BPMN_WORKFLOW_INITIATOR] = AuthContext.getCurrentUser()
+
+            val instance = camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, processVariables)
+
+            bpmnEventEmitter.emitProcessStart(
+                ProcessStartEvent(
+                    processKey = processKey,
+                    processInstanceId = instance.id,
+                    processDefinitionId = instance.processDefinitionId,
+                    document = EntityRef.valueOf(businessKey)
+                )
+            )
+
+            processInstance = instance
         }
 
-        val processVariables = variables.toMutableMap()
-        processVariables[BPMN_WORKFLOW_INITIATOR] = AuthContext.getCurrentUser()
+        log.debug { "Start process ${processInstance.id} in $time ms" }
 
-        val instance = camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, processVariables)
-
-        bpmnEventEmitter.emitProcessStart(
-            ProcessStartEvent(
-                processKey = processKey,
-                processInstanceId = instance.id,
-                processDefinitionId = instance.processDefinitionId,
-                document = EntityRef.valueOf(businessKey)
-            )
-        )
-
-        return instance
+        return processInstance
     }
 
     override fun deleteProcessInstance(

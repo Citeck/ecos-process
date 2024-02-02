@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi.eapp
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.apps.app.domain.handler.EcosArtifactHandler
 import ru.citeck.ecos.events2.EventsService
@@ -25,6 +26,10 @@ class BpmnKpiSettingsArtifactHandler(
     private val eventsService: EventsService
 ) : EcosArtifactHandler<BpmnKpiSettings> {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     override fun deleteArtifact(artifactId: String) {
         recordsService.delete(
             EntityRef.create(
@@ -46,7 +51,7 @@ class BpmnKpiSettingsArtifactHandler(
                 withDataClass(BpmnKpiSettingsAtts::class.java)
                 withFilter(Predicates.eq("typeDef.id", "bpmn-kpi-settings"))
                 withAction {
-                    println("listenChanges: ${it.toPrettyString()}")
+                    log.debug { "Received event for kpi eval: \n${it.toPrettyString()}" }
 
                     listener.accept(
                         BpmnKpiSettings(
@@ -72,8 +77,6 @@ class BpmnKpiSettingsArtifactHandler(
     }
 
     override fun deployArtifact(artifact: BpmnKpiSettings) {
-        println("deployArtifact: ${artifact.toPrettyString()}")
-
         recordsService.mutate(
             EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, ""),
             artifact
