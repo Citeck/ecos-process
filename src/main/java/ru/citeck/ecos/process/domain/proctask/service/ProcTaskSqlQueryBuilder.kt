@@ -45,10 +45,12 @@ class ProcTaskSqlQueryBuilder(
         const val ATT_ASSIGNEE = "assignee"
         const val ATT_DOCUMENT = "document"
         const val ATT_DOCUMENT_TYPE = "documentType"
+        const val ATT_TASK_KEY = "taskKey"
 
         private val TASK_ATTS_MAPPING = mapOf(
             RecordConstants.ATT_CREATED to "$TASK_ALIAS.${TaskQueryProperty.CREATE_TIME.name}",
-            ATT_ASSIGNEE to "$TASK_ALIAS.${TaskQueryProperty.ASSIGNEE.name}"
+            ATT_ASSIGNEE to "$TASK_ALIAS.${TaskQueryProperty.ASSIGNEE.name}",
+            ATT_TASK_KEY to "$TASK_ALIAS.task_def_key_"
         )
 
         private val TASK_ATTS_TYPES = mapOf(
