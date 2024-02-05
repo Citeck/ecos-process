@@ -108,6 +108,7 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             element.laNotificationTemplate?.let {
                 otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE] = it.toString()
             }
+
         }
     }
 

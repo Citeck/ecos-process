@@ -123,8 +123,7 @@ class BpmnEventSubscriptionService(
         }
 
         val excludeBpmnElementsOptimizationPredicate = Predicates.notEq(
-            "record._type?id",
-            "${AppName.EMODEL}/type@$BPMN_PROCESS_ELEMENT_TYPE"
+            "record._type?id", "${AppName.EMODEL}/type@$BPMN_PROCESS_ELEMENT_TYPE"
         )
 
         val addedListeners = listenerEventNames.map { listenerEventName ->

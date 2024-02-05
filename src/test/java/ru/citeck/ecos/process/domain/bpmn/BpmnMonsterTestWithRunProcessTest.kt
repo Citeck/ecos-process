@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.ArgumentMatchers.anyString
@@ -64,6 +65,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneOffset
@@ -100,6 +102,7 @@ private const val BUSINESS_KEY = "businesskey"
  *
  * @author Roman Makarskiy
  */
+@ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 class BpmnMonsterTestWithRunProcessTest {
 

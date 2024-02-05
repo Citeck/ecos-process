@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -19,9 +20,11 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.toIncomingEventData
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.time.Instant
 import java.util.*
 
+@ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 internal class CamundaEventProcessorTest {
 

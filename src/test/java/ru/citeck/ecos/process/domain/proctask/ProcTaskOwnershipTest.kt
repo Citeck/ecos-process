@@ -13,6 +13,7 @@ import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_GROUP_ORIGINAL
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_USER_ORIGINAL
+import ru.citeck.ecos.process.domain.clearTasks
 import ru.citeck.ecos.process.domain.proctask.api.records.*
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records3.RecordsService
