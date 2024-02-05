@@ -1,0 +1,47 @@
+// Example request for getting KPI values average with deviation for a process definition
+
+POST http://localhost/gateway/api/records/query
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "emodel/bpmn-kpi-value",
+        "language": "predicate",
+        "consistency": "EVENTUAL",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "t": "eq",
+                    "att": "_type",
+                    "val": "emodel/type@bpmn-kpi-value"
+                },
+                {
+                    "att": "procDefRef",
+                    "t": "contains",
+                    "val": [
+                        "eproc/bpmn-def@test-kpi-duration"
+                    ]
+                }
+            ]
+        },
+        "page": {
+            "skipCount": 0,
+            "page": 1
+        },
+        "sortBy": [],
+        "groupBy": [
+            "kpiSettingsRef.kpiAsNumber&targetBpmnActivityId&kpiSettingsRef"
+        ]
+    },
+    "attributes": {
+        "kpiRef": "kpiSettingsRef{disp:?disp,value:?assoc}",
+        "kpi": "kpiSettingsRef.kpiAsNumber?num|fmt(0.00)",
+        "displayKpiOnBpmnActivityId": "kpiSettingsRef.displayKpiOnBpmnActivityId",
+        "kpiValue": "avg(value)?num|fmt(0.00)",
+        "kpiDeviation": "(avg(value) / kpiSettingsRef.kpiAsNumber * 100 - 100)?num|fmt(0.00)"
+    },
+    "version": 1
+}
+

@@ -17,12 +17,10 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.role.service.RoleService
+import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.TaskRole
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ASSIGNEES
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_OUTCOMES
+import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome.Companion.OUTCOME_NAME_POSTFIX
@@ -33,6 +31,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSubProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
+import ru.citeck.ecos.process.domain.bpmnla.dto.UserTaskLaInfo
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -139,7 +138,7 @@ class CamundaExtensions(
         return Json.mapper.readList(outcomesValue, TaskOutcome::class.java)
     }
 
-    internal fun getTaskRoles(document: RecordRef, key: Pair<String, String>): List<TaskRole> {
+    internal fun getTaskRoles(document: EntityRef, key: Pair<String, String>): List<TaskRole> {
         if (document == RecordRef.EMPTY) {
             return emptyList()
         }
@@ -167,6 +166,21 @@ class CamundaExtensions(
         }
     }
 
+    internal fun getUserTaskLaInfo(key: Pair<String, String>): UserTaskLaInfo {
+        val taskDefinition = taskDeployedCamundaDefCache.get(key).task
+            ?: return UserTaskLaInfo(false, null, null)
+
+        return UserTaskLaInfo(
+            laEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_ENABLED].toBoolean(),
+            laNotificationType = taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE]?.let {
+                NotificationType.valueOf(it)
+            },
+            laNotificationTemplate = RecordRef.valueOf(
+                taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
+            )
+        )
+    }
+
     data class CachedTaskDefData(
         val docType: EntityRef = EntityRef.EMPTY,
         val task: TUserTask? = null
@@ -175,46 +189,46 @@ class CamundaExtensions(
 
 private lateinit var ext: CamundaExtensions
 
-fun DelegateExecution.getDocumentRef(): RecordRef {
+fun DelegateExecution.getDocumentRef(): EntityRef {
     val documentVar = getVariable(BPMN_DOCUMENT_REF) as String?
-    return RecordRef.valueOf(documentVar)
+    return EntityRef.valueOf(documentVar)
 }
 
-fun DelegateExecution.getNotBlankDocumentRef(): RecordRef {
+fun DelegateExecution.getNotBlankDocumentRef(): EntityRef {
     val documentFromVar = getDocumentRef()
-    if (RecordRef.isEmpty(documentFromVar)) error("Document Ref can't be empty")
+    if (EntityRef.isEmpty(documentFromVar)) error("Document Ref can't be empty")
     return documentFromVar
 }
 
-fun DelegateTask.getDocumentRef(): RecordRef {
+fun DelegateTask.getDocumentRef(): EntityRef {
     val documentVar = getVariable(BPMN_DOCUMENT_REF) as String?
-    return RecordRef.valueOf(documentVar)
+    return EntityRef.valueOf(documentVar)
 }
 
-fun DelegateTask.getFormRef(): RecordRef {
+fun DelegateTask.getFormRef(): EntityRef {
     return if (this is TaskEntity) {
         val taskDef = this.taskDefinition
         val formKey = taskDef?.formKey?.expressionText ?: ""
 
-        RecordRef.valueOf(formKey)
+        EntityRef.valueOf(formKey)
     } else {
-        RecordRef.EMPTY
+        EntityRef.EMPTY
     }
 }
 
-fun DelegateTask.getProcessInstanceRef(): RecordRef {
+fun DelegateTask.getProcessInstanceRef(): EntityRef {
     return if (processInstanceId.isNotBlank()) {
-        RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
+        EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
     } else {
-        RecordRef.EMPTY
+        EntityRef.EMPTY
     }
 }
 
-fun DelegateExecution.getProcessInstanceRef(): RecordRef {
+fun DelegateExecution.getProcessInstanceRef(): EntityRef {
     return if (processInstanceId.isNotBlank()) {
-        RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
+        EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
     } else {
-        RecordRef.EMPTY
+        EntityRef.EMPTY
     }
 }
 
@@ -242,6 +256,14 @@ fun DelegateTask.getTitle(): MLText {
     val defaultName = MLText(name ?: id)
     val titleFromDef = ext.getTaskTitle(processDefinitionId to taskDefinitionKey)
     return if (titleFromDef != MLText.EMPTY) titleFromDef else defaultName
+}
+
+fun DelegateTask.getUserTaskLaInfo(): UserTaskLaInfo {
+    return ext.getUserTaskLaInfo(processDefinitionId to taskDefinitionKey)
+}
+
+fun DelegateTask.getCompletedBy(): String {
+    return getVariable(BPMN_TASK_COMPLETED_BY) as String? ?: ""
 }
 
 fun EntityRef.isAuthorityGroupRef(): Boolean {

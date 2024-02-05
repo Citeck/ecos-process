@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.RuntimeService
@@ -24,6 +25,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.internal.verification.VerificationModeFactory.times
+import org.mockito.kotlin.any
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,14 +42,20 @@ import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiService
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.RecordRef
@@ -55,12 +63,15 @@ import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -137,9 +148,16 @@ class BpmnMonsterTestWithRunProcessTest {
     @MockBean
     private lateinit var notificationService: NotificationService
 
+    @MockBean
+    private lateinit var bpmnKpiService: BpmnKpiService
+
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
 
+    private val kpiSettings = mutableListOf<EntityRef>()
+
     companion object {
+        private const val KPI_ASYNC_WAIT_TIMEOUT_SECONDS = 15L
+
         private val harryRecord = PotterRecord()
         private val harryRef = EntityRef.valueOf("hogwarts/people@harry")
 
@@ -153,8 +171,12 @@ class BpmnMonsterTestWithRunProcessTest {
         private val usersGroupRef = EntityRef.valueOf("emodel/authority-group@users")
 
         private val docRecord = DocRecord()
+        private val docRecord2 = DocRecord2()
+        private val docRecord3 = DocRecord3()
         private val modifiedDocRecord = ModifiedDocRecord()
         private val docRef = EntityRef.valueOf("store/doc@1")
+        private val docRef2 = EntityRef.valueOf("store/doc@2")
+        private val docRef3 = EntityRef.valueOf("store/doc@3")
         private val docExplicitRef = EntityRef.valueOf("doc@explicit")
 
         private val variables_docRef = mapOf(
@@ -186,6 +208,14 @@ class BpmnMonsterTestWithRunProcessTest {
             .addRecord(
                 docRef.getLocalId(),
                 docRecord
+            )
+            .addRecord(
+                docRef2.getLocalId(),
+                docRecord2
+            )
+            .addRecord(
+                docRef3.getLocalId(),
+                docRecord3
             )
             .build()
 
@@ -232,6 +262,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun clearSubscriptions() {
         cleanDefinitions()
         camundaMyBatisExtension.deleteAllEventSubscriptions()
+        recordsService.delete(kpiSettings)
     }
 
     // ---BPMN USER TASK TESTS ---
@@ -3999,6 +4030,391 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    // ---KPI TESTS ---
+
+    @Test
+    fun `kpi on user task duration from start to end user task`() {
+        val procId = "test-kpi-duration"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "Activity_user_task",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `kpi on user task duration from start event to start user task`() {
+        val procId = "test-kpi-duration"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "startEvent",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.START
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isLessThan(3_000)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `kpi on user task duration from start event to user task end`() {
+        val procId = "test-kpi-duration"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "startEvent",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `kpi on user task duration from start end event to user task end`() {
+        val procId = "test-kpi-duration"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "startEvent",
+                sourceEventType = BpmnKpiEventType.END,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `kpi on user task duration from start to end process`() {
+        val procId = "test-kpi-duration"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "startEvent",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "endEvent",
+                targetEventType = BpmnKpiEventType.END
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
+            "endEvent"
+        ]
+    )
+    fun `kpi count start event`(activityId: String) {
+        val procId = "test-kpi-count"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.COUNT,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                target = activityId,
+                targetEventType = BpmnKpiEventType.START
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+
+        `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isEqualTo(1)
+                }
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
+            "endEvent"
+        ]
+    )
+    fun `kpi count end event`(activityId: String) {
+        val procId = "test-kpi-count"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.COUNT,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                target = activityId,
+                targetEventType = BpmnKpiEventType.END
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).execute()
+
+        verify(process).hasFinished("endEvent")
+
+        `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isEqualTo(1)
+                }
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["store/doc@1", "store/doc@2"])
+    fun `kpi with dmn condition true test`(docRef: String) {
+        val procId = "test-kpi-with-dmn"
+        val dmnId = "dmn-kpi-test"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "Activity_user_task",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END,
+                dmnCondition = EntityRef.create(
+                    AppName.EPROC,
+                    DmnDecisionLatestRecords.ID,
+                    "Decision_dmn-kpi-test"
+                )
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                BPMN_DOCUMENT_REF to docRef
+            )
+        ).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `kpi with dmn condition false test`() {
+        val procId = "test-kpi-with-dmn"
+        val dmnId = "dmn-kpi-test"
+        val settingsId = UUID.randomUUID().toString()
+
+        kpiSettings.add(
+            createDurationKpiSettings(
+                id = settingsId,
+                kpiType = BpmnKpiType.DURATION,
+                process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
+                source = "Activity_user_task",
+                sourceEventType = BpmnKpiEventType.START,
+                target = "Activity_user_task",
+                targetEventType = BpmnKpiEventType.END,
+                dmnCondition = EntityRef.create(
+                    AppName.EPROC,
+                    DmnDecisionLatestRecords.ID,
+                    "Decision_dmn-kpi-test"
+                )
+            )
+        )
+
+        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
+
+        `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
+            TimeUnit.SECONDS.sleep(3)
+            it.complete()
+        }
+
+        run(process).startByKey(
+            procId,
+            mapOf(
+                BPMN_DOCUMENT_REF to docRef3.toString()
+            )
+        ).execute()
+
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(0)).createKpiValue(
+                any()
+            )
+        }
+    }
+
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
         action: () -> Unit
@@ -4052,6 +4468,9 @@ class BpmnMonsterTestWithRunProcessTest {
         @AttName("name")
         val name: String = "Doc 1",
 
+        @AttName("sum")
+        val sum: Double = 5_500.0,
+
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")
     )
@@ -4059,7 +4478,34 @@ class BpmnMonsterTestWithRunProcessTest {
     class ModifiedDocRecord(
 
         @AttName("name")
+        val name: String = "Doc 1 modified",
+
+        @AttName("sum")
+        val sum: Double = 7_000.0,
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
+
+    class DocRecord2(
+
+        @AttName("name")
         val name: String = "Doc 2",
+
+        @AttName("sum")
+        val sum: Double = 13_000.0,
+
+        @AttName("_type")
+        val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
+
+    class DocRecord3(
+
+        @AttName("name")
+        val name: String = "Doc 3",
+
+        @AttName("sum")
+        val sum: Double = 20_000.0,
 
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")

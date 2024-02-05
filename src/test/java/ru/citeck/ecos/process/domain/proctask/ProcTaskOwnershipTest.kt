@@ -2,8 +2,7 @@ package ru.citeck.ecos.process.domain.proctask
 
 import org.assertj.core.api.Assertions.*
 import org.camunda.bpm.engine.TaskService
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,6 +13,7 @@ import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_GROUP_ORIGINAL
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_USER_ORIGINAL
+import ru.citeck.ecos.process.domain.clearTasks
 import ru.citeck.ecos.process.domain.proctask.api.records.*
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records3.RecordsService
@@ -41,10 +41,10 @@ class ProcTaskOwnershipTest {
     private lateinit var recordsService: RecordsService
 
     companion object {
-        private val testHarryUser = "harry"
+        private const val TEST_HARRY_USER = "harry"
 
         private val candidateGroups = listOf("GROUP_test", "GROUP_test2")
-        private val candidateUsers = listOf(testHarryUser, "ron", "hermione")
+        private val candidateUsers = listOf(TEST_HARRY_USER, "ron", "hermione")
     }
 
     @Test
@@ -54,7 +54,7 @@ class ProcTaskOwnershipTest {
 
         candidateGroups.forEach { taskService.addCandidateGroup(task.id, it) }
 
-        AuthContext.runAsFull(testHarryUser, listOf("GROUP_test")) {
+        AuthContext.runAsFull(TEST_HARRY_USER, listOf("GROUP_test")) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -71,7 +71,7 @@ class ProcTaskOwnershipTest {
 
         val updatedTask = procTaskService.getTaskById(task.id) ?: error("Task not found")
 
-        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(testHarryUser)
+        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(TEST_HARRY_USER)
         assertThat(updatedTask.candidateGroups).isEmpty()
         assertThat(updatedTask.candidateUsers).isEmpty()
 
@@ -86,7 +86,7 @@ class ProcTaskOwnershipTest {
 
         candidateUsers.forEach { taskService.addCandidateUser(task.id, it) }
 
-        AuthContext.runAsFull(testHarryUser, listOf("GROUP_test")) {
+        AuthContext.runAsFull(TEST_HARRY_USER, listOf("GROUP_test")) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -103,7 +103,7 @@ class ProcTaskOwnershipTest {
 
         val updatedTask = procTaskService.getTaskById(task.id) ?: error("Task not found")
 
-        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(testHarryUser)
+        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(TEST_HARRY_USER)
         assertThat(updatedTask.candidateGroups).isEmpty()
         assertThat(updatedTask.candidateUsers).isEmpty()
 
@@ -119,7 +119,7 @@ class ProcTaskOwnershipTest {
         candidateUsers.forEach { taskService.addCandidateUser(task.id, it) }
         candidateGroups.forEach { taskService.addCandidateGroup(task.id, it) }
 
-        AuthContext.runAsFull(testHarryUser, listOf("GROUP_test")) {
+        AuthContext.runAsFull(TEST_HARRY_USER, listOf("GROUP_test")) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -136,7 +136,7 @@ class ProcTaskOwnershipTest {
 
         val updatedTask = procTaskService.getTaskById(task.id) ?: error("Task not found")
 
-        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(testHarryUser)
+        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(TEST_HARRY_USER)
         assertThat(updatedTask.candidateGroups).isEmpty()
         assertThat(updatedTask.candidateUsers).isEmpty()
 
@@ -151,7 +151,7 @@ class ProcTaskOwnershipTest {
 
         taskService.addCandidateGroup(task.id, "GROUP_not_harry_group")
 
-        AuthContext.runAsFull(testHarryUser, listOf("GROUP_test")) {
+        AuthContext.runAsFull(TEST_HARRY_USER, listOf("GROUP_test")) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -176,7 +176,7 @@ class ProcTaskOwnershipTest {
 
         taskService.addCandidateGroup(task.id, "GROUP_not_harry_group")
 
-        AuthContext.runAsFull(testHarryUser, listOf(AuthRole.ADMIN)) {
+        AuthContext.runAsFull(TEST_HARRY_USER, listOf(AuthRole.ADMIN)) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -193,7 +193,7 @@ class ProcTaskOwnershipTest {
 
         val updatedTask = procTaskService.getTaskById(task.id) ?: error("Task not found")
 
-        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(testHarryUser)
+        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(TEST_HARRY_USER)
         assertThat(updatedTask.candidateGroups).isEmpty()
         assertThat(updatedTask.candidateUsers).isEmpty()
 
@@ -208,7 +208,7 @@ class ProcTaskOwnershipTest {
 
         taskService.addCandidateGroup(task.id, "GROUP_not_harry_group")
 
-        AuthContext.runAsFull(testHarryUser, listOf(AuthRole.SYSTEM)) {
+        AuthContext.runAsFull(TEST_HARRY_USER, listOf(AuthRole.SYSTEM)) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -225,7 +225,7 @@ class ProcTaskOwnershipTest {
 
         val updatedTask = procTaskService.getTaskById(task.id) ?: error("Task not found")
 
-        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(testHarryUser)
+        assertThat(updatedTask.assignee.getLocalId()).isEqualTo(TEST_HARRY_USER)
         assertThat(updatedTask.candidateGroups).isEmpty()
         assertThat(updatedTask.candidateUsers).isEmpty()
 
@@ -239,9 +239,9 @@ class ProcTaskOwnershipTest {
         taskService.saveTask(task)
         taskService.setVariableLocal(task.id, BPMN_TASK_CANDIDATES_GROUP_ORIGINAL, candidateGroups)
 
-        taskService.setAssignee(task.id, testHarryUser)
+        taskService.setAssignee(task.id, TEST_HARRY_USER)
 
-        AuthContext.runAs(testHarryUser) {
+        AuthContext.runAs(TEST_HARRY_USER) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -275,9 +275,9 @@ class ProcTaskOwnershipTest {
         taskService.saveTask(task)
         taskService.setVariableLocal(task.id, BPMN_TASK_CANDIDATES_USER_ORIGINAL, candidateUsers)
 
-        taskService.setAssignee(task.id, testHarryUser)
+        taskService.setAssignee(task.id, TEST_HARRY_USER)
 
-        AuthContext.runAs(testHarryUser) {
+        AuthContext.runAs(TEST_HARRY_USER) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """
@@ -312,9 +312,9 @@ class ProcTaskOwnershipTest {
         taskService.setVariableLocal(task.id, BPMN_TASK_CANDIDATES_GROUP_ORIGINAL, candidateGroups)
         taskService.setVariableLocal(task.id, BPMN_TASK_CANDIDATES_USER_ORIGINAL, candidateUsers)
 
-        taskService.setAssignee(task.id, testHarryUser)
+        taskService.setAssignee(task.id, TEST_HARRY_USER)
 
-        AuthContext.runAs(testHarryUser) {
+        AuthContext.runAs(TEST_HARRY_USER) {
             val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id))
             val ownershipAction = ObjectData.create(
                 """

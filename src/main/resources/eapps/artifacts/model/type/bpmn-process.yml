@@ -1,8 +1,8 @@
 ---
 id: bpmn-process
 name:
-  en: ECOS BPMN Process
-  ru: ECOS BPMN процесс
+  en: ECOS BPMN Process Instance
+  ru: ECOS BPMN экземпляр процесса
 system: true
 sourceId: eproc/bpmn-proc
 inheritActions: false

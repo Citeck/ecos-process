@@ -96,7 +96,10 @@
                 "key": "sectionRef",
                 "dataSrc": "custom",
                 "data": {
-                  "custom": "values = _.get(data, 'sectionsList.records', []).filter((category) => category.canCreate);"
+                  "custom": "const records = _.get(data, 'sectionsList.records', []);\nconst currentSection = _.get(data, 'sectionRef', \"\");\nvalues = records.filter((category) => category.canCreate || category.id === currentSection);",
+                  "headers": [
+                    {}
+                  ]
                 },
                 "defaultValue": "",
                 "refreshOn": [

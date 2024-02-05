@@ -1,0 +1,10 @@
+---
+id: test-count-kpi-settings
+name: test count kpi
+kpiType: COUNT
+enabled: true
+processRef: eproc/bpmn-proc-latest@some-process
+dmnCondition: eproc/dmn-decision-latest@Decision_test
+targetBpmnActivityId: target_id
+targetBpmnActivityEvent: START
+countKpi: 30

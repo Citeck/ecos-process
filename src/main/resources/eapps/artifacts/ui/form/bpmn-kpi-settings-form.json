@@ -1,0 +1,610 @@
+{
+  "id": "bpmn-kpi-settings-form",
+  "formKey": "",
+  "title": {
+    "en": "BPMN KPI settings form"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "",
+  "width": "",
+  "system": false,
+  "i18n": {},
+  "definition": {
+    "components": [
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel2",
+        "validate": {
+          "required": true
+        },
+        "scrollableContent": true,
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Название",
+              "en": "Name"
+            },
+            "key": "name",
+            "validate": {
+              "required": true
+            },
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true,
+            "inputMasks": [
+              {}
+            ]
+          },
+          {
+            "label": {
+              "ru": "Тип",
+              "en": "Type"
+            },
+            "key": "kpiType",
+            "validate": {
+              "required": true
+            },
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": {
+                    "ru": "Продолжительность",
+                    "en": "Duration"
+                  },
+                  "value": "DURATION"
+                },
+                {
+                  "label": {
+                    "ru": "Количество",
+                    "en": "Count"
+                  },
+                  "value": "COUNT"
+                }
+              ],
+              "headers": [
+                {}
+              ]
+            },
+            "defaultValue": "DURATION",
+            "optionalWhenDisabled": false,
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Включено",
+              "en": "Enabled"
+            },
+            "key": "enabled",
+            "defaultValue": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "checkbox",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Процесс",
+              "en": "Process"
+            },
+            "key": "processRef",
+            "validate": {
+              "required": true
+            },
+            "modalTitle": "",
+            "journalId": "bpmn-process-latest",
+            "queryData": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "selectJournal",
+            "input": true,
+            "source": {
+              "custom": {
+                "columns": []
+              },
+              "type": "journal",
+              "customValues": []
+            }
+          },
+          {
+            "label": {
+              "ru": "Условие DMN",
+              "en": "DMN condition"
+            },
+            "key": "dmnCondition",
+            "modalTitle": "",
+            "journalId": "dmn-decision-latest",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "selectJournal",
+            "input": true,
+            "queryData": "",
+            "source": {
+              "custom": {
+                "columns": []
+              },
+              "type": "journal",
+              "customValues": []
+            }
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel",
+            "title": {
+              "ru": "Исходный BPMN элемент",
+              "en": "Source BPMN activity"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "kpiType",
+              "eq": "DURATION"
+            },
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Columns"
+                },
+                "key": "columns",
+                "columns": [
+                  {
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Идентификатор",
+                          "en": "Id"
+                        },
+                        "key": "sourceBpmnActivityId",
+                        "validate": {
+                          "required": true
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "inputMasks": [
+                          {}
+                        ]
+                      }
+                    ],
+                    "type": "column",
+                    "input": false,
+                    "key": "column",
+                    "index": 0
+                  },
+                  {
+                    "index": 1,
+                    "type": "column",
+                    "input": false,
+                    "key": "column",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Событие",
+                          "en": "Event"
+                        },
+                        "key": "sourceBpmnActivityEvent",
+                        "validate": {
+                          "required": true
+                        },
+                        "dataSrc": "values",
+                        "data": {
+                          "values": [
+                            {
+                              "label": {
+                                "ru": "Начало",
+                                "en": "Start"
+                              },
+                              "value": "START"
+                            },
+                            {
+                              "label": {
+                                "ru": "Завершение",
+                                "en": "End"
+                              },
+                              "value": "END"
+                            }
+                          ],
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": "",
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      }
+                    ]
+                  }
+                ],
+                "oneColumnInViewMode": false,
+                "type": "columns",
+                "input": false
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel3",
+            "title": {
+              "ru": "Целевой BPMN элемент",
+              "en": "Target BPMN activity"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Columns"
+                },
+                "key": "columns3",
+                "columns": [
+                  {
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Идентификатор",
+                          "en": "Id"
+                        },
+                        "key": "targetBpmnActivityId",
+                        "validate": {
+                          "required": true
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "inputMasks": [
+                          {}
+                        ]
+                      }
+                    ],
+                    "type": "column",
+                    "input": false,
+                    "key": "column",
+                    "index": 0
+                  },
+                  {
+                    "index": 1,
+                    "type": "column",
+                    "input": false,
+                    "key": "column",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Событие",
+                          "en": "Event"
+                        },
+                        "key": "targetBpmnActivityEvent",
+                        "validate": {
+                          "required": true
+                        },
+                        "dataSrc": "values",
+                        "data": {
+                          "values": [
+                            {
+                              "label": {
+                                "ru": "Начало",
+                                "en": "Start"
+                              },
+                              "value": "START"
+                            },
+                            {
+                              "label": {
+                                "ru": "Завершение",
+                                "en": "End"
+                              },
+                              "value": "END"
+                            }
+                          ],
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": "",
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      }
+                    ]
+                  }
+                ],
+                "oneColumnInViewMode": false,
+                "type": "columns",
+                "input": false
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
+            "key": "panel4",
+            "title": {
+              "ru": "KPI",
+              "en": "KPI"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Columns"
+                },
+                "key": "columns4",
+                "columns": [
+                  {
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Норма",
+                          "en": "Rate"
+                        },
+                        "key": "durationKpi",
+                        "tooltip": {
+                          "ru": "Продолжительность времени указывается в формате h, m:\n\n3h 10m - 3 часа 10 минут\n30m - 30 минут\n",
+                          "en": "The duration time is specified in the format d, h, m:\n\n1d 3h 10m - 1 day 3 hours 10 minutes\n1d - 1 day\n1h 15m - 1 hour 15 minutes\n30m - 30 minutes"
+                        },
+                        "validate": {
+                          "required": true,
+                          "pattern": "^((\\d+)h)?\\s*((\\d+)m)?$"
+                        },
+                        "placeholder": {
+                          "ru": "1h 30m"
+                        },
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "conditional": {
+                          "show": "true",
+                          "when": "kpiType",
+                          "eq": "DURATION"
+                        },
+                        "type": "textfield",
+                        "input": true,
+                        "inputMasks": [
+                          {}
+                        ]
+                      },
+                      {
+                        "label": {
+                          "ru": "Норма",
+                          "en": "Rate"
+                        },
+                        "key": "countKpi",
+                        "validate": {
+                          "required": true
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "conditional": {
+                          "show": "true",
+                          "when": "kpiType",
+                          "eq": "COUNT"
+                        },
+                        "type": "textfield",
+                        "input": true,
+                        "inputMasks": [
+                          {}
+                        ]
+                      }
+                    ],
+                    "type": "column",
+                    "input": false,
+                    "key": "column",
+                    "index": 0
+                  },
+                  {
+                    "index": 1,
+                    "type": "column",
+                    "input": false,
+                    "key": "column",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Тип",
+                          "en": "Type"
+                        },
+                        "key": "durationKpiTimeType",
+                        "validate": {
+                          "required": true
+                        },
+                        "dataSrc": "values",
+                        "data": {
+                          "values": [
+                            {
+                              "label": {
+                                "ru": "Календарное",
+                                "en": "Calendar"
+                              },
+                              "value": "CALENDAR"
+                            },
+                            {
+                              "label": {
+                                "ru": "Рабочее",
+                                "en": "Working"
+                              },
+                              "value": "WORKING"
+                            }
+                          ],
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": "CALENDAR",
+                        "optionalWhenDisabled": false,
+                        "conditional": {
+                          "show": "true",
+                          "when": "kpiType",
+                          "eq": "DURATION"
+                        },
+                        "type": "ecosSelect",
+                        "input": true
+                      }
+                    ]
+                  }
+                ],
+                "oneColumnInViewMode": false,
+                "type": "columns",
+                "input": false
+              },
+              {
+                "label": {
+                  "ru": "Panel"
+                },
+                "key": "panel5",
+                "title": {
+                  "ru": "Отображение на схеме",
+                  "en": "Display on the diagram"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "panel",
+                "input": false,
+                "components": [
+                  {
+                    "label": {
+                      "ru": "manualOverrideDisplayKpi"
+                    },
+                    "key": "manualOverrideDisplayKpi",
+                    "tooltip": {
+                      "ru": "По умолчанию, KPI на схеме BPMN будет отображаться у целевого элемента. Если нужно отобразить на другом элементе, укажите его id в этом поле.",
+                      "en": "By default, the KPI on the BPMN schema will be displayed on the target element. If you want to display on another element, specify its id in this field."
+                    },
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textfield",
+                    "input": true,
+                    "inputMasks": [
+                      {}
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Columns"
+        },
+        "key": "columns2",
+        "columns": [
+          {
+            "components": [
+              {
+                "label": "Cancel",
+                "action": "event",
+                "state": "",
+                "showValidations": false,
+                "event": "cancel",
+                "block": true,
+                "type": "button",
+                "input": true,
+                "key": "submit2",
+                "conditional": {
+                  "show": null,
+                  "when": null
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "md": 3,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 0
+          },
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 1,
+            "md": 3
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 2
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "index": 3,
+            "components": [
+              {
+                "label": {
+                  "ru": "Создать",
+                  "en": "Submit"
+                },
+                "key": "submit",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true
+              }
+            ]
+          }
+        ],
+        "oneColumnInViewMode": false,
+        "type": "columns",
+        "input": false
+      }
+    ],
+    "formId": "bpmn-kpi-settings-form"
+  },
+  "attributes": {},
+  "notExists": false
+}

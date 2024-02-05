@@ -11,10 +11,12 @@ import ru.citeck.ecos.data.sql.records.perms.DbRecordPerms
 import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.model.lib.utils.ModelUtils
-import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsMixin
+import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.records3.record.dao.RecordsDao
 import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
+
+const val BPMN_PROCESS_ELEMENT_TYPE = "bpmn-process-element"
 
 @Configuration
 class BpmnActivitiesRepoDaoConfig(
@@ -54,7 +56,7 @@ class BpmnActivitiesRepoDaoConfig(
             }
         }
 
-        val typeRef = ModelUtils.getTypeRef("bpmn-process-element")
+        val typeRef = ModelUtils.getTypeRef(BPMN_PROCESS_ELEMENT_TYPE)
         val recordsDao = dbDomainFactory.create(
             DbDomainConfig.create()
                 .withRecordsDao(

@@ -3,7 +3,9 @@ package ru.citeck.ecos.process.domain.proctask
 import org.assertj.core.api.Assertions.*
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.impl.util.ClockUtil
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -14,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.clearTasks
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.aggregate.AlfWorkflowTaskProvider
@@ -26,7 +29,6 @@ import java.text.SimpleDateFormat
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProcTaskAggregatorTest {
 
     @Autowired
@@ -59,7 +61,7 @@ class ProcTaskAggregatorTest {
      * task1	01.01.2001 13:00
      * alfTask3	01.01.2000 18:00
      */
-    @BeforeAll
+    @BeforeEach
     fun setUp() {
         createTestTask("task1", "01/01/2001 13:00:00.000")
         createTestTask("task2", "01/01/2001 13:24:00.000")
@@ -71,6 +73,11 @@ class ProcTaskAggregatorTest {
         createTestTask("task8", "06/06/2001 13:00:00.000")
         createTestTask("task9", "01/10/2001 13:00:00.000")
         createTestTask("task10", "01/12/2001 13:00:00.000")
+    }
+
+    @AfterEach
+    fun tearDown() {
+        clearTasks()
     }
 
     private fun createTestTask(id: String, createTime: String) {

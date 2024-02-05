@@ -1454,8 +1454,8 @@ class BpmnProcessPermissionsTest {
     @AfterEach
     fun tearDown() {
 
-        cleanDefinitions()
         cleanDeployments()
+        cleanDefinitions()
 
         val bpmnTypeBefore = bpmnTypeBefore
         if (bpmnTypeBefore == null) {

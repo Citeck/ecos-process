@@ -1,0 +1,67 @@
+---
+id: bpmn-kpi-values
+name:
+  en: Bpmn KPI values
+  ru: Значения BPMN KPI
+typeRef: emodel/type@bpmn-kpi-value
+system: true
+columns:
+  - id: kpiSettingsRef
+    name:
+      ru: KPI
+      en: KPI
+    type: ASSOC
+    sortable: true
+  - id: value
+    type: NUMBER
+  - id: kpiRate
+    attribute: kpiSettingsRef.kpiAsNumber
+    name:
+      ru: Норма
+      en: Rate
+    groupable: true
+    type: NUMBER
+  - id: sourceBpmnActivityId
+    type: TEXT
+    visible: false
+    groupable: true
+  - id: targetBpmnActivityId
+    type: TEXT
+    visible: false
+    groupable: true
+  - id: processRef
+    type: ASSOC
+  - id: procDefRef
+    type: ASSOC
+    visible: false
+  - id: processInstanceRef
+    attribute: processInstanceRef.id
+    type: TEXT
+    sortable: false
+    searchable: false
+    visible: false
+  - id: document
+    type: ASSOC
+    formatter:
+      type: assoc
+    searchable: false
+    sortable: true
+  - id: documentTypeRef
+    type: ASSOC
+    formatter:
+      type: assoc
+    searchable: true
+    sortable: true
+    visible: false
+  - id: _created
+    name:
+      en: Created
+      ru: Создан
+    type: DATETIME
+    visible: false
+  - id: _modified
+    name:
+      en: Modified
+      ru: Обновлен
+    type: DATETIME
+

@@ -37,8 +37,8 @@ class BpmnProcessDefRecordsActionsTest {
 
     @AfterEach
     fun tearDown() {
-        cleanDefinitions()
         cleanDeployments()
+        cleanDefinitions()
     }
 
     @Test

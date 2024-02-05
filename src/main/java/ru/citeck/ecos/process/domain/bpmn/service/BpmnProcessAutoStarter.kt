@@ -14,8 +14,8 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import kotlin.system.measureTimeMillis
 
 @Component
 class BpmnProcessAutoStarter(
@@ -26,44 +26,57 @@ class BpmnProcessAutoStarter(
 
     companion object {
         private val log = KotlinLogging.logger {}
-
-        private val TYPE_CASE = EntityRef.create(AppName.EMODEL, "type", "case")
     }
 
-    // TODO: narrow the scope of create record events
     init {
-        // React on record created without draft
+        // React on user-base record created without draft
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { handleStartProcessEvent(it) }
-            withFilter(Predicates.eq("record._isDraft?bool!", false))
+            withFilter(
+                Predicates.and(
+                    Predicates.eq("record._type.isSubTypeOf.user-base?bool", true),
+                    Predicates.eq("record._isDraft?bool!", false)
+                )
+
+            )
         }
-        // React on record draft state changed to false
+        // React on user-base record draft state changed to false
         eventsService.addListener<EventData> {
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
             withTransactional(true)
             withAction { handleStartProcessEvent(it) }
-            withFilter(Predicates.eq("after?bool", false))
+            withFilter(
+                Predicates.and(
+                    Predicates.eq("record._type.isSubTypeOf.user-base?bool", true),
+                    Predicates.eq("after?bool", false)
+                )
+
+            )
         }
     }
 
     private fun handleStartProcessEvent(eventData: EventData) {
-        log.debug { "Received event: $eventData" }
+        val time = measureTimeMillis {
+            log.debug { "Received event: $eventData" }
 
-        if (eventData.eventRef == RecordRef.EMPTY) {
-            log.warn { "Cannot auto start process for empty eventRef: $eventData" }
-            return
+            if (eventData.eventRef == RecordRef.EMPTY) {
+                log.warn { "Cannot auto start process for empty eventRef: $eventData" }
+                return
+            }
+
+            if (eventData.typeRef == RecordRef.EMPTY) {
+                log.warn { "Cannot auto start process for empty typeRef: $eventData" }
+                return
+            }
+
+            startProcessIfRequired(eventData.eventRef, eventData.typeRef)
         }
 
-        if (eventData.typeRef == RecordRef.EMPTY) {
-            log.warn { "Cannot auto start process for empty typeRef: $eventData" }
-            return
-        }
-
-        startProcessIfRequired(eventData.eventRef, eventData.typeRef)
+        log.trace { "Handled start process event for record ${eventData.eventRef} in $time ms" }
     }
 
     private fun startProcessIfRequired(record: EntityRef, type: EntityRef) {
@@ -86,6 +99,8 @@ class BpmnProcessAutoStarter(
         )
 
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
+
+        // Auto-start process working only for process, which procDef.id = process.id
         bpmnProcessService.startProcess(procDef.id, record.toString(), processVariables)
     }
 

@@ -15,56 +15,61 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.addTaskListener
  */
 @Component
 class BpmnElementsEventsParseListener(
-    private val bpmnLogExecutionListener: BpmnFlowElementEventExecutionListener,
+    private val bpmnActivityStartEventExecutionListener: BpmnActivityStartEventExecutionListener,
+    private val bpmnActivityEndEventExecutionListener: BpmnActivityEndEventExecutionListener,
+    private val bpmnFlowElementTakeEventExecutionListener: BpmnFlowElementTakeEventExecutionListener,
     private val bpmnTaskCreateListener: BpmnTaskCreateEventListener,
     private val bpmnTaskCompleteListener: BpmnTaskCompleteEventListener,
-    private val bpmnTaskAssignListener: BpmnTaskAssignEventListener
+    private val bpmnTaskAssignListener: BpmnTaskAssignEventListener,
+    private val bpmnTaskDeleteEventListener: BpmnTaskDeleteEventListener
 ) : AbstractBpmnParseListener() {
 
-    private fun addActivityFlowElementListener(activity: ActivityImpl) {
-        activity.addBuiltInListener(ExecutionListener.EVENTNAME_START, bpmnLogExecutionListener)
+    private fun addActivityListeners(activity: ActivityImpl) {
+        activity.addBuiltInListener(ExecutionListener.EVENTNAME_START, bpmnActivityStartEventExecutionListener)
+        activity.addBuiltInListener(ExecutionListener.EVENTNAME_END, bpmnActivityEndEventExecutionListener)
     }
 
     private fun addSequenceFlowElementListener(activity: TransitionImpl) {
-        activity.addBuiltInListener(ExecutionListener.EVENTNAME_TAKE, bpmnLogExecutionListener)
+        activity.addBuiltInListener(ExecutionListener.EVENTNAME_TAKE, bpmnFlowElementTakeEventExecutionListener)
     }
 
     private fun addUserTaskListeners(activity: ActivityImpl) {
         activity.addTaskListener(TaskListener.EVENTNAME_CREATE, bpmnTaskCreateListener)
         activity.addTaskListener(TaskListener.EVENTNAME_COMPLETE, bpmnTaskCompleteListener)
         activity.addTaskListener(TaskListener.EVENTNAME_ASSIGNMENT, bpmnTaskAssignListener)
+        activity.addTaskListener(TaskListener.EVENTNAME_DELETE, bpmnTaskDeleteEventListener)
     }
 
     override fun parseStartEvent(startEventElement: Element, scope: ScopeImpl, startEventActivity: ActivityImpl) {
-        addActivityFlowElementListener(startEventActivity)
+        addActivityListeners(startEventActivity)
     }
 
     override fun parseExclusiveGateway(exclusiveGwElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseInclusiveGateway(inclusiveGwElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseParallelGateway(parallelGwElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseScriptTask(scriptTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseServiceTask(serviceTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseTask(taskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseManualTask(manualTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseUserTask(userTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
@@ -72,7 +77,7 @@ class BpmnElementsEventsParseListener(
     }
 
     override fun parseEndEvent(endEventElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseSequenceFlow(sequenceFlowElement: Element, scopeElement: ScopeImpl, transition: TransitionImpl) {
@@ -80,15 +85,15 @@ class BpmnElementsEventsParseListener(
     }
 
     override fun parseSendTask(sendTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseReceiveTask(receiveTaskElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseEventBasedGateway(eventBasedGwElement: Element, scope: ScopeImpl, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseIntermediateThrowEvent(
@@ -96,7 +101,7 @@ class BpmnElementsEventsParseListener(
         scope: ScopeImpl,
         activity: ActivityImpl
     ) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseIntermediateCatchEvent(
@@ -104,7 +109,7 @@ class BpmnElementsEventsParseListener(
         scope: ScopeImpl,
         activity: ActivityImpl
     ) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseBoundaryEvent(
@@ -112,14 +117,22 @@ class BpmnElementsEventsParseListener(
         scopeElement: ScopeImpl,
         nestedActivity: ActivityImpl
     ) {
-        addActivityFlowElementListener(nestedActivity)
+        addActivityListeners(nestedActivity)
     }
 
     override fun parseSubProcess(subProcessElement: Element?, scope: ScopeImpl?, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
     }
 
     override fun parseCallActivity(callActivityElement: Element?, scope: ScopeImpl?, activity: ActivityImpl) {
-        addActivityFlowElementListener(activity)
+        addActivityListeners(activity)
+    }
+
+    override fun parseBusinessRuleTask(businessRuleTaskElement: Element?, scope: ScopeImpl?, activity: ActivityImpl) {
+        addActivityListeners(activity)
+    }
+
+    override fun parseTransaction(transactionElement: Element?, scope: ScopeImpl?, activity: ActivityImpl) {
+        addActivityListeners(activity)
     }
 }

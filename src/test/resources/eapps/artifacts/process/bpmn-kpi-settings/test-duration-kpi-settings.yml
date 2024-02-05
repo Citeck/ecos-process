@@ -1,0 +1,13 @@
+---
+id: test-duration-kpi-settings
+name: test duration kpi
+kpiType: DURATION
+enabled: true
+processRef: eproc/bpmn-proc-latest@some-process
+dmnCondition: eproc/dmn-decision-latest@Decision_test
+sourceBpmnActivityId: source_id
+sourceBpmnActivityEvent: START
+targetBpmnActivityId: target_id
+targetBpmnActivityEvent: END
+durationKpi: 1h 30m
+durationKpiTimeType: WORKING

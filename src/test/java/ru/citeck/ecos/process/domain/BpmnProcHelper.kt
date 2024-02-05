@@ -1,14 +1,19 @@
 package ru.citeck.ecos.process.domain
 
 import org.camunda.bpm.engine.RepositoryService
+import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanGenerationDto
 import org.springframework.stereotype.Component
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.*
+import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
+import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
@@ -26,7 +31,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
 import javax.annotation.PostConstruct
 
-private val typeRef = TypeUtils.getTypeRef("type0")
+private val typeRef = ModelUtils.getTypeRef("type0")
 
 /**
  * @author Roman Makarskiy
@@ -36,7 +41,8 @@ class BpmnProcHelper(
     val recordsService: RecordsService,
     val procDefRepo: ProcDefRepository,
     val procDefRevRepo: ProcDefRevRepository,
-    val camundaRepositoryService: RepositoryService
+    val camundaRepositoryService: RepositoryService,
+    val taskService: TaskService
 ) {
     @PostConstruct
     private fun init() {
@@ -75,7 +81,7 @@ fun saveAndDeployBpmnFromResource(resource: String, id: String) {
 }
 
 fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActions?) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = ResourceUtils.getFile("classpath:$resource")
             .readText(StandardCharsets.UTF_8)
@@ -86,6 +92,35 @@ fun saveBpmnWithAction(resource: String, id: String, action: BpmnProcessDefActio
     }
 
     helper.recordsService.mutate(recordAtts)
+}
+
+fun createDurationKpiSettings(
+    id: String,
+    kpiType: BpmnKpiType = BpmnKpiType.DURATION,
+    process: EntityRef,
+    source: String? = null,
+    sourceEventType: BpmnKpiEventType? = null,
+    target: String,
+    targetEventType: BpmnKpiEventType,
+    timeType: BpmnDurationKpiTimeType = BpmnDurationKpiTimeType.CALENDAR,
+    dmnCondition: EntityRef = EntityRef.EMPTY
+): EntityRef {
+    val kpiSettings = mapOf(
+        "id" to id,
+        "name" to "test kpi",
+        "kpiType" to kpiType.name,
+        "processRef" to process,
+        "enabled" to true,
+        "sourceBpmnActivityId" to source,
+        "sourceBpmnActivityEvent" to sourceEventType?.name,
+        "targetBpmnActivityId" to target,
+        "targetBpmnActivityEvent" to targetEventType.name,
+        "durationKpi" to "15m",
+        "durationKpiTimeType" to timeType.name,
+        "dmnCondition" to dmnCondition
+    )
+
+    return helper.recordsService.create(BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP, kpiSettings)
 }
 
 fun uploadNewVersionFromResource(resource: String, id: String, comment: String, replace: Pair<String, String>) {
@@ -172,6 +207,12 @@ fun saveAndDeployBpmn(elementFolder: String, id: String) {
 fun cleanDefinitions() {
     helper.procDefRevRepo.deleteAll()
     helper.procDefRepo.deleteAll()
+}
+
+fun clearTasks() {
+    helper.taskService.createTaskQuery().list().forEach {
+        helper.taskService.deleteTask(it.id, true)
+    }
 }
 
 fun cleanDeployments() {

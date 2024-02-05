@@ -13,9 +13,9 @@ interface ProcTaskService {
 
     fun findTasks(predicate: Predicate, sortBy: List<SortBy>, page: QueryPage): DbFindRes<String>
 
-    fun getTasksByProcess(processId: String): List<ProcTaskDto>
+    fun getTasksByProcess(processInstanceId: String): List<ProcTaskDto>
 
-    fun getTasksByProcessForCurrentUser(processId: String): List<ProcTaskDto>
+    fun getTasksByProcessForCurrentUser(processInstanceId: String): List<ProcTaskDto>
 
     fun getTasksByDocument(document: String): List<ProcTaskDto>
 
@@ -30,6 +30,10 @@ interface ProcTaskService {
     fun getVariables(taskId: String): Map<String, Any?>
 
     fun getVariable(taskId: String, variableName: String): Any?
+
+    fun getVariablesLocal(taskId: String): Map<String, Any?>
+
+    fun getVariableLocal(taskId: String, variableName: String): Any?
 
     fun claimTask(taskId: String, userId: String)
 

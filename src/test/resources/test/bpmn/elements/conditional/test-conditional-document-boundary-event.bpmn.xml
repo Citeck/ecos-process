@@ -9,14 +9,14 @@
         </bpmn:endEvent>
         <bpmn:sequenceFlow sourceRef="StartEvent_1ew9rff" targetRef="userTask" name="" id="Flow_0lr9svb" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
         <bpmn:sequenceFlow sourceRef="userTask" targetRef="endEvent" name="" id="Flow_0k1n5t5" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot; &quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:boundaryEvent  cancelActivity="true" attachedToRef="userTask" name="" id="conditionalEvent" ecos:variableEvents="[]" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:reactOnDocumentChange="true" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:conditionConfig="{&quot;fn&quot;:&quot;var docName = document.load(\&quot;name\&quot;);\n \nlog.info(\&quot;docName: \&quot; + docName);\n \ndocName === \&quot;Doc 2\&quot;;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="SCRIPT" ecos:documentVariables="[&quot;&quot;]">
+        <bpmn:boundaryEvent  cancelActivity="true" attachedToRef="userTask" name="" id="conditionalEvent" ecos:variableEvents="[]" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:reactOnDocumentChange="true" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:conditionConfig="{&quot;fn&quot;:&quot;var docName = document.load(\&quot;name\&quot;);\n \nlog.info(\&quot;docName: \&quot; + docName);\n \ndocName === \&quot;Doc 1 modified\&quot;;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="SCRIPT" ecos:documentVariables="[&quot;&quot;]">
             <bpmn:outgoing>Flow_02te8e8</bpmn:outgoing>
             <bpmn:conditionalEventDefinition id="ConditionalEventDefinition_1yct659">
                 <bpmn:condition xsi:type="bpmn:tFormalExpression" language="javascript">var docName = document.load("name");
 
 log.info("docName: " + docName);
 
-docName === "Doc 2";</bpmn:condition>
+docName === "Doc 1 modified";</bpmn:condition>
             </bpmn:conditionalEventDefinition>
         </bpmn:boundaryEvent>
         <bpmn:userTask name="" id="userTask" ecos:documentation="{}" ecos:manualRecipients="[&quot;admin&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;done&quot;},&quot;config&quot;:{&quot;theme&quot;:&quot;PRIMARY&quot;}}]" ecos:name_ml="{}" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">

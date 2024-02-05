@@ -7,22 +7,31 @@ name:
 order: 10
 sections:
 
-    - name:
-        en: BPMN models
-        ru: Модели BPMN
-      type: BPM
+  - name:
+      en: BPMN models
+      ru: Модели BPMN
+    type: BPM
 
-    - name:
-        en: BP Administration
-        ru: Администрирование БП
-      type: BPMN_ADMIN
+  - name:
+      en: BP Administration
+      ru: Администрирование БП
+    type: BPMN_ADMIN
 
-    - name:
-        en: DMN models
-        ru: Модели DMN
-      type: DMN
+  - name:
+      en: DMN models
+      ru: Модели DMN
+    type: DMN
 
-#    - type: JOURNAL
-#      config:
-#        journalId: bpmn-process-def
+  - type: JOURNAL
+    name:
+      ru: Настройка KPI
+      en: KPI Settings
+    config:
+      journalId: bpmn-kpi-settings
 
+  - type: JOURNAL
+    name:
+      ru: Значения KPI
+      en: KPI values
+    config:
+      journalId: bpmn-kpi-values
