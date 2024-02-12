@@ -48,6 +48,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
+import ru.citeck.ecos.process.domain.bpmn.event.BpmnEcosEventTestAction
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
@@ -150,6 +151,9 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @MockBean
     private lateinit var bpmnKpiService: BpmnKpiService
+
+    @SpyBean
+    private lateinit var bpmnEcosEventTestAction: BpmnEcosEventTestAction
 
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
 
@@ -2972,6 +2976,41 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("event_end_1")
         verify(process, never()).hasFinished("event_end_2")
     }
+
+    @Test
+    fun `bpmn event throw ecos event from script task`() {
+        val procId = "bpmn-events-ecos-event-script-task-throw-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            // do nothing
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("Script_task_throw")
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+    }
+
+    @Test
+    fun `bpmn event throw ecos event from script task payload test`() {
+        val procId = "bpmn-events-ecos-event-script-task-throw-payload-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+
+        verify(process).hasFinished("endEventBase")
+        verify(bpmnEcosEventTestAction, Mockito.times(1)).callAction(
+            org.mockito.kotlin.check {
+                assertThat(it["foo"].asText()).isEqualTo("bar")
+                assertThat(it["itsNum"].asInt()).isEqualTo(123)
+            }
+        )
+    }
+
 
     @Test
     fun `bpmn event intermediate throw`() {
