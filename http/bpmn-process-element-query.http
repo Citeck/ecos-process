@@ -1,0 +1,33 @@
+POST http://enterprise.ecos24.ru/gateway/api/records/query
+Authorization: Bearer {{$auth.token("eis-qa")}}
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/bpmn-process-elements",
+        "language": "predicate",
+        "query": {
+            "t": "and",
+            "v": [
+                {
+                    "t": "eq",
+                    "a": "procDefRef",
+                    "v": "eproc/bpmn-def@conference-request"
+                },
+                {
+                    "t": "not-empty",
+                    "a": "completed"
+                }
+            ]
+        },
+        "groupBy": [
+            "elementDefId"
+        ]
+    },
+    "attributes": {
+        "0": "elementDefId",
+        "1": "count(*)?num"
+    },
+    "version": 1
+}
+
