@@ -24,18 +24,15 @@ class BpmnEcosEventTestListener(
                 callAction(event)
             }
         }
-
     }
 
     private fun callAction(event: ObjectData) {
         action.callAction(event)
     }
-
 }
 
 @Component
 class BpmnEcosEventTestAction {
-
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -44,5 +41,4 @@ class BpmnEcosEventTestAction {
     fun callAction(event: ObjectData) {
         log.info { "Test event received: $event" }
     }
-
 }
