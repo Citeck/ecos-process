@@ -1,5 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.service
 
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.query.CalledProcessInstanceQueryDto
 import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService
@@ -33,7 +36,8 @@ class BpmnProcessServiceImpl(
     private val bpmnEventEmitter: BpmnEventEmitter,
     private val processInstanceRestService: ProcessInstanceRestService,
     private val historyService: HistoryService,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+    private val meterRegistry: MeterRegistry
 ) : BpmnProcessService {
 
     companion object {
@@ -41,6 +45,9 @@ class BpmnProcessServiceImpl(
     }
 
     override fun startProcess(processKey: String, businessKey: String?, variables: Map<String, Any?>): ProcessInstance {
+        val timer = Timer.start()
+        val tag = Tag.of("processKey", processKey)
+
         val processInstance: ProcessInstance
         val time = measureTimeMillis {
 
@@ -73,6 +80,11 @@ class BpmnProcessServiceImpl(
         }
 
         log.debug { "Start process ${processInstance.id} in $time ms" }
+
+        timer.stop(Timer.builder("bpmn.process.start.time")
+            .description("Time to start BPMN process")
+            .tags(listOf(tag))
+            .register(meterRegistry))
 
         return processInstance
     }
