@@ -111,34 +111,36 @@ class BpmnLazyApprovalService(
     override fun approveTask(taskId: String, taskOutcome: String, userId: String, token: String, comment: String) {
         val task = procTaskService.getTaskById(taskId)
         if (task == null) {
-            log.warn { "Task with id = ${taskId} not found!" }
+            log.warn { "Task with id = $taskId not found!" }
             return
         }
 
         val outcome = task.possibleOutcomes.find { it.id == taskOutcome }
         if (outcome == null) {
-            log.warn { "Task with id = ${taskId} has no outcome with id = ${taskOutcome}!" }
+            log.warn { "Task with id = $taskId has no outcome with id = $taskOutcome!" }
             return
         }
 
         val tokenLA = procTaskService.getVariableLocal(taskId, TASK_TOKEN_NAME).toString()
         if (token != tokenLA) {
-            log.warn { "Task with id = ${taskId} has no token = ${token}! tokenLA = ${tokenLA}" }
+            log.warn { "Task with id = $taskId has no token = $token! tokenLA = $tokenLA" }
             return
         }
 
         val completeTaskOutcome = task.definitionKey?.let { Outcome(it, outcome.id, outcome.name) }
         if (completeTaskOutcome == null) {
-            log.warn { "Task with id = ${taskId} has no outcome = ${outcome}!" }
+            log.warn { "Task with id = $taskId has no outcome = $outcome!" }
             return
         }
 
         AuthContext.runAsFull(userId) {
-            procTaskService.completeTask(CompleteTaskData(
-                task = task,
-                outcome = completeTaskOutcome,
-                variables = mapOf(BPMN_COMMENT to comment)
-            ))
+            procTaskService.completeTask(
+                CompleteTaskData(
+                    task = task,
+                    outcome = completeTaskOutcome,
+                    variables = mapOf(BPMN_COMMENT to comment)
+                )
+            )
         }
     }
 }

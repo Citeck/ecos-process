@@ -1,10 +1,10 @@
 package ru.citeck.ecos.process.domain.bpmn.xml
 
-//import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
-//import kotlin.test.Test
+// import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
+// import kotlin.test.Test
 
 // TODO: check after java 17 migration
-//class BpmnXmlUtilsTest {
+// class BpmnXmlUtilsTest {
 //
 //    @Test
 //    fun `bpmn xml with many attributes should read without error`() {
@@ -21,4 +21,4 @@ package ru.citeck.ecos.process.domain.bpmn.xml
 //            """.trimIndent()
 //        )
 //    }
-//}
+// }

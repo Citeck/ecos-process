@@ -3001,7 +3001,6 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
 
-
         verify(process).hasFinished("endEventBase")
         verify(bpmnEcosEventTestAction, Mockito.times(1)).callAction(
             org.mockito.kotlin.check {
@@ -3010,7 +3009,6 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
     }
-
 
     @Test
     fun `bpmn event intermediate throw`() {
