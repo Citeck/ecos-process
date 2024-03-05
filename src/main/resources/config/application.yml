@@ -39,6 +39,10 @@ ecos-app:
   name: ECOS Process
 
 ecos-process:
+  bpmn:
+    elements:
+      listener:
+        enabled: true
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000

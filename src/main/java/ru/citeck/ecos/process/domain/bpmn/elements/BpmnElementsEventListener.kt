@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.elements
 
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
@@ -23,6 +24,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.txn.lib.TxnContext
 
 @Component
+@ConditionalOnProperty(name = ["ecos-process.bpmn.elements.listener.enabled"], havingValue = "true")
 class BpmnElementsEventListener(
     eventsService: EventsService,
     private val bpmnElementMutationAsyncProvider: BpmnElementMutationAsyncProvider

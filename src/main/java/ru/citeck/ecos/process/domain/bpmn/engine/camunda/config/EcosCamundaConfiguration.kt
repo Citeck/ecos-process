@@ -22,7 +22,7 @@ class EcosCamundaConfiguration(
 
     @Bean
     fun camundaDataSource(): JdbcDataSource {
-        return ecosDataSourceManager.getDataSource("camunda", JdbcDataSource::class.java, true);
+        return ecosDataSourceManager.getDataSource("camunda", JdbcDataSource::class.java, true)
     }
 
     @Bean

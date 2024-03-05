@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.MLText
@@ -4070,6 +4071,7 @@ class BpmnMonsterTestWithRunProcessTest {
     // ---KPI TESTS ---
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start to end user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4109,6 +4111,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start event to start user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4148,6 +4151,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4187,6 +4191,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start end event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4226,6 +4231,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start to end process`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4265,6 +4271,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4310,6 +4317,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4355,6 +4363,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     @ValueSource(strings = ["store/doc@1", "store/doc@2"])
     fun `kpi with dmn condition true test`(docRef: String) {
         val procId = "test-kpi-with-dmn"

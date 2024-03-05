@@ -81,10 +81,12 @@ class BpmnProcessServiceImpl(
 
         log.debug { "Start process ${processInstance.id} in $time ms" }
 
-        timer.stop(Timer.builder("bpmn.process.start.time")
-            .description("Time to start BPMN process")
-            .tags(listOf(tag))
-            .register(meterRegistry))
+        timer.stop(
+            Timer.builder("bpmn.process.start.time")
+                .description("Time to start BPMN process")
+                .tags(listOf(tag))
+                .register(meterRegistry)
+        )
 
         return processInstance
     }
