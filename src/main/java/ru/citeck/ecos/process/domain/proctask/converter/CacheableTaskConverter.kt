@@ -71,12 +71,13 @@ class CacheableTaskConverter(
                 } else {
                     RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
-                documentRef = if (variables[BPMN_DOCUMENT_REF] != null) {
-                    RecordRef.valueOf(variables[BPMN_DOCUMENT_REF].toString())
-                } else {
-                    RecordRef.EMPTY
-                },
+                documentRef = variables[BPMN_DOCUMENT_REF]?.let {
+                    RecordRef.valueOf(it.toString())
+                } ?: RecordRef.EMPTY,
                 documentType = variables[BPMN_DOCUMENT_TYPE] as? String,
+                documentTypeRef = variables[BPMN_DOCUMENT_TYPE]?.let {
+                    RecordRef.create(AppName.EMODEL, "type", it.toString())
+                } ?: RecordRef.EMPTY,
                 dueDate = dueDate?.toInstant(),
                 followUpDate = followUpDate?.toInstant(),
                 lastComment = localVariables[BPMN_LAST_COMMENT_LOCAL] as? String,

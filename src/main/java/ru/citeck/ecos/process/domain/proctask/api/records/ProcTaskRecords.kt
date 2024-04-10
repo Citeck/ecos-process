@@ -84,12 +84,13 @@ class ProcTaskRecords(
             error("Unsupported language: ${recsQuery.language}")
         }
 
-        val sortBy = recsQuery.getSortByCreated()
-            ?: SortBy(RecordConstants.ATT_CREATED, false)
+        val sortBy = recsQuery.sortBy.ifEmpty {
+            listOf(SortBy(RecordConstants.ATT_CREATED, false))
+        }
 
         val tasksResult = procTaskService.findTasks(
             predicate,
-            listOf(sortBy),
+            sortBy,
             recsQuery.page
         )
         val tasksRefs = tasksResult.entities.map { RecordRef.create(AppName.EPROC, ID, it) }
@@ -343,12 +344,6 @@ class ProcTaskRecords(
             return name.substring(DOCUMENT_FIELD_PREFIX.length)
                 .replace("_".toRegex(), ":")
         }
-    }
-}
-
-fun RecordsQuery.getSortByCreated(): SortBy? {
-    return this.sortBy.firstOrNull {
-        it.attribute == RecordConstants.ATT_CREATED
     }
 }
 

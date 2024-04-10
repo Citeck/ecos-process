@@ -18,6 +18,8 @@ import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.dto.getComment
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_DOCUMENT_TYPE_REF
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.*
@@ -63,9 +65,15 @@ class ProcTaskServiceImpl(
             } else {
                 it
             }
-        }
+        } ?: VoidPredicate.INSTANCE
 
-        val preparedPredicate = PredicateUtils.mapValuePredicates(managerToActorsPredicate) {
+        var preparedPredicate = managerToActorsPredicate.transformDocumentTypeRefToDocumentTypeAtt()
+        preparedPredicate = PredicateUtils.mapValuePredicates(preparedPredicate) {
+
+            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_PRIORITY && it.getValue().isTextual()) {
+                it.setValue(it.getValue().asInt())
+            }
+
             if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
                 var actor = it.getValue().asText()
                 if (actor == "\$CURRENT") {
@@ -90,11 +98,11 @@ class ProcTaskServiceImpl(
                         )
                         if (delegation.delegatedTypes.isNotEmpty()) {
                             delegationConditions.add(
-                                Predicates.inVals(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE, delegation.delegatedTypes)
+                                Predicates.inVals(ATT_DOCUMENT_TYPE, delegation.delegatedTypes)
                             )
                         } else {
                             delegationConditions.add(
-                                Predicates.notEmpty(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE)
+                                Predicates.notEmpty(ATT_DOCUMENT_TYPE)
                             )
                         }
                         actorsVariants.add(AndPredicate.of(delegationConditions))
@@ -420,5 +428,30 @@ class ProcTaskServiceImpl(
                 withMaxItems(300)
             }
         ).getRecords().map { it.getLocalId() }
+    }
+
+    private fun Predicate.transformDocumentTypeRefToDocumentTypeAtt(): Predicate {
+        var predicate = PredicateUtils.mapAttributePredicates(this) {
+            if (it.getAttribute() == ATT_DOCUMENT_TYPE_REF) {
+                it.setAttribute(ATT_DOCUMENT_TYPE)
+            }
+            it
+        } ?: VoidPredicate.INSTANCE
+
+        predicate = PredicateUtils.mapValuePredicates(predicate) {
+            if (it.getAttribute() == ATT_DOCUMENT_TYPE) {
+                it.setValue(EntityRef.valueOf(it.getValue().asText()).getLocalId())
+                val type = when (it.getType()) {
+                    ValuePredicate.Type.CONTAINS,
+                    ValuePredicate.Type.LIKE -> ValuePredicate.Type.EQ
+
+                    else -> it.getType()
+                }
+                it.setType(type)
+            }
+            it
+        } ?: VoidPredicate.INSTANCE
+
+        return predicate
     }
 }

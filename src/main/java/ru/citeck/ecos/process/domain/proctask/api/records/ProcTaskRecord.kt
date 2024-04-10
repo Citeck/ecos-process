@@ -52,6 +52,7 @@ class ProcTaskRecord(
     val processInstanceRef: RecordRef? = null,
     val documentRef: RecordRef? = null,
     val documentType: String? = null,
+    val documentTypeRef: RecordRef? = null,
     val title: MLText? = null,
     val created: Instant? = null,
     val ended: Instant? = null,
