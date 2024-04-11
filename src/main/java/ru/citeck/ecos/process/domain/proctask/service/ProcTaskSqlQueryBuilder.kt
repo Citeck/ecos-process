@@ -266,8 +266,8 @@ class ProcTaskSqlQueryBuilder(
 
             val attType = TASK_ATTS_TYPES[attribute] ?: AttributeType.TEXT
 
-            if (attType == AttributeType.TEXT
-                && (type == ValuePredicate.Type.CONTAINS || type == ValuePredicate.Type.LIKE)
+            if (attType == AttributeType.TEXT &&
+                (type == ValuePredicate.Type.CONTAINS || type == ValuePredicate.Type.LIKE)
             ) {
                 value = DataValue.create("%${value.asText().lowercase()}%")
                 condition.append(" ")
