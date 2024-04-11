@@ -283,9 +283,8 @@ class ProcTaskQueryTest {
             )
         }
 
-        assertThat(found).hasSize(2)
-        assertThat(found[0].getLocalId()).isEqualTo("task2")
-        assertThat(found[1].getLocalId()).isEqualTo("task1")
+        assertThat(found).hasSize(1)
+        assertThat(found[0].getLocalId()).isEqualTo("task1")
     }
 
     @Test
@@ -351,21 +350,21 @@ class ProcTaskQueryTest {
             mapOf(
                 ATT_NAME to "task1",
                 ATT_PRIORITY to 1,
-                ATT_DUE_DATE to Instant.parse("2021-01-01T00:00:00.0Z")
+                ATT_DUE_DATE to Instant.parse("2021-01-01T15:00:00.0Z")
             )
         )
         taskData.add(
             mapOf(
                 ATT_NAME to "task2",
                 ATT_PRIORITY to 2,
-                ATT_DUE_DATE to Instant.parse("2021-01-02T00:00:00.0Z")
+                ATT_DUE_DATE to Instant.parse("2021-01-02T15:00:00.0Z")
             )
         )
         taskData.add(
             mapOf(
                 ATT_NAME to "task3",
                 ATT_PRIORITY to 3,
-                ATT_DUE_DATE to Instant.parse("2021-01-03T00:00:00.0Z")
+                ATT_DUE_DATE to Instant.parse("2021-01-03T15:00:00.0Z")
             )
         )
 
