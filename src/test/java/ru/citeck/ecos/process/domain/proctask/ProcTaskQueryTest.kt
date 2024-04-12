@@ -263,7 +263,7 @@ class ProcTaskQueryTest {
             queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
-                    Predicates.eq(ATT_DUE_DATE, Instant.parse("2021-01-02T00:00:00.0Z"))
+                    Predicates.eq(ATT_DUE_DATE, Instant.parse("2021-01-02T15:00:00.0Z"))
                 )
             )
         }
