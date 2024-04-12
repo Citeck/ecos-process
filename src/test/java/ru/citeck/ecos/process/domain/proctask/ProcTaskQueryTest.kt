@@ -298,12 +298,6 @@ class ProcTaskQueryTest {
             )
         }
 
-        taskService.createTaskQuery()
-            .list()
-            .forEach { task ->
-                println("Task: ${task}, priority: ${task.priority}, due date: ${task.dueDate}")
-            }
-
         assertThat(found).hasSize(2)
         assertThat(found).anyMatch { it.getLocalId() == "task2" || it.getLocalId() == "task3" }
     }
