@@ -12,6 +12,8 @@ import ru.citeck.ecos.data.sql.repo.find.DbFindRes
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_ACTORS
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_ASSIGNEE
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.model.*
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
@@ -43,23 +45,34 @@ class ProcTaskSqlQueryBuilder(
         const val ATT_ACTORS = "actors"
         const val ATT_ACTOR = "actor"
         const val ATT_ASSIGNEE = "assignee"
+        const val ATT_NAME = "name"
+        const val ATT_DUE_DATE = "dueDate"
+        const val ATT_PRIORITY = "priority"
         const val ATT_DOCUMENT = "document"
         const val ATT_DOCUMENT_TYPE = "documentType"
+        const val ATT_DOCUMENT_TYPE_REF = "documentTypeRef"
         const val ATT_TASK_KEY = "taskKey"
 
         private val TASK_ATTS_MAPPING = mapOf(
             RecordConstants.ATT_CREATED to "$TASK_ALIAS.${TaskQueryProperty.CREATE_TIME.name}",
             ATT_ASSIGNEE to "$TASK_ALIAS.${TaskQueryProperty.ASSIGNEE.name}",
-            ATT_TASK_KEY to "$TASK_ALIAS.task_def_key_"
+            ATT_TASK_KEY to "$TASK_ALIAS.task_def_key_",
+            ATT_NAME to "$TASK_ALIAS.${TaskQueryProperty.NAME.name}",
+            ATT_DUE_DATE to "$TASK_ALIAS.${TaskQueryProperty.DUE_DATE.name}",
+            ATT_PRIORITY to "$TASK_ALIAS.${TaskQueryProperty.PRIORITY.name}"
         )
 
         private val TASK_ATTS_TYPES = mapOf(
-            RecordConstants.ATT_CREATED to AttributeType.DATETIME
+            RecordConstants.ATT_CREATED to AttributeType.DATETIME,
+            ATT_NAME to AttributeType.TEXT,
+            ATT_DUE_DATE to AttributeType.DATETIME,
+            ATT_PRIORITY to AttributeType.NUMBER
         )
 
         private val PROC_VARIABLES_MAPPING = mapOf(
             ATT_DOCUMENT to BPMN_DOCUMENT_REF,
-            ATT_DOCUMENT_TYPE to BPMN_DOCUMENT_TYPE
+            ATT_DOCUMENT_TYPE to BPMN_DOCUMENT_TYPE,
+            ATT_DOCUMENT_TYPE_REF to "documentTypeRef"
         )
 
         private val log = KotlinLogging.logger {}
@@ -240,17 +253,38 @@ class ProcTaskSqlQueryBuilder(
                 ValuePredicate.Type.GE -> ">="
                 ValuePredicate.Type.LE -> "<="
                 ValuePredicate.Type.EQ -> "="
+                ValuePredicate.Type.LIKE,
+                ValuePredicate.Type.CONTAINS ->
+                    if (value.isNumber()) {
+                        "="
+                    } else {
+                        "LIKE"
+                    }
+
                 else -> return false
             }
 
             val attType = TASK_ATTS_TYPES[attribute] ?: AttributeType.TEXT
-            val predicateValue = castSqlParamValueToListOf(value, attType)
 
-            condition.append(" ")
-                .append(field)
-                .append(" ")
-                .append(operator)
-                .append(" ")
+            if (attType == AttributeType.TEXT &&
+                (type == ValuePredicate.Type.CONTAINS || type == ValuePredicate.Type.LIKE)
+            ) {
+                value = DataValue.create("%${value.asText().lowercase()}%")
+                condition.append(" ")
+                    .append("LOWER(")
+                    .append(field)
+                    .append(") ")
+                    .append(operator)
+                    .append(" ")
+            } else {
+                condition.append(" ")
+                    .append(field)
+                    .append(" ")
+                    .append(operator)
+                    .append(" ")
+            }
+
+            val predicateValue = castSqlParamValueToListOf(value, attType)
             addSqlQueryParams(condition, predicateValue)
             return true
         }
@@ -364,6 +398,15 @@ class ProcTaskSqlQueryBuilder(
                     authoritiesApi.getAuthorityName(value.asText())
                 } else {
                     error("Invalid authority type: $value")
+                }
+            }
+
+            AttributeType.NUMBER -> {
+                when {
+                    value.isIntegralNumber() -> value.asInt()
+                    value.isLong() -> value.asLong()
+                    value.isFloatingPointNumber() -> value.asDouble()
+                    else -> error("Invalid number value: $value")
                 }
             }
 

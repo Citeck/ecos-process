@@ -1,0 +1,22 @@
+id: group-action-change-owner
+type: server-group-action-v2
+name:
+  ru: Изменить исполнителя
+  en: Change owner
+confirm:
+  title:
+    ru: Изменить исполнителя
+    en: Change owner
+  message:
+  formRef: uiserv/form@change-owner-group-action-form
+  formAttributes:
+  attributesMapping:
+    executionParams.config.owner: assignee
+config:
+  targetApp: eproc
+  executionParams:
+    type: change-owner
+features:
+  execForQuery: false
+  execForRecord: false
+  execForRecords: true
