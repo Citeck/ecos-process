@@ -1,0 +1,39 @@
+POST http://enterprise.ecos24.ru/gateway/api/records/query
+Authorization: Bearer {{$auth.token("eis-qa")}}
+Content-Type: application/json
+
+{
+    "query": {
+        "sourceId": "eproc/proc-task",
+        "language": "predicate",
+        "consistency": "EVENTUAL",
+        "query": {
+            "t": "and",
+            "val": [
+                {
+                    "t": "eq",
+                    "att": "actor",
+                    "val": "$CURRENT"
+                },
+                {
+                    "t": "eq",
+                    "att": "documentType",
+                    "val": "assignment-type"
+                }
+            ]
+        },
+        "page": {
+            "maxItems": 30,
+            "skipCount": 0,
+            "page": 1
+        },
+        "sortBy": []
+    },
+    "attributes": {
+        "name": "name",
+        "document": "documentRef",
+        "documentType": "documentType"
+    },
+    "version": 1
+}
+

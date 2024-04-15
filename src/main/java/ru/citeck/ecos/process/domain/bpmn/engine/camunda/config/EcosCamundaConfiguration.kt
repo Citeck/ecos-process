@@ -8,13 +8,22 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.datasource.Camun
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.config.CamundaSystemContextConfiguration
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.config.CamundaResolveVariablesConfiguration
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.config.CamundaScriptEnvResolvesConfiguration
+import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
 import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
+import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager
 
 /**
  * @author Roman Makarskiy
  */
 @Configuration
-class EcosCamundaConfiguration {
+class EcosCamundaConfiguration(
+    private val ecosDataSourceManager: EcosDataSourceManager
+) {
+
+    @Bean
+    fun camundaDataSource(): JdbcDataSource {
+        return ecosDataSourceManager.getDataSource("camunda", JdbcDataSource::class.java, true)
+    }
 
     @Bean
     fun camundaDatasourceConfiguration(): CamundaDatasourceConfiguration {

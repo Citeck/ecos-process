@@ -152,6 +152,7 @@ class CacheableTaskConverter(
                 dueDate = dueDate?.toInstant(),
                 comment = comment,
                 lastComment = lastComment,
+                definitionKey = taskDefinitionKey,
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
                     RecordRef.EMPTY
                 } else {

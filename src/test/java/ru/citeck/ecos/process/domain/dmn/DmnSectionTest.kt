@@ -16,6 +16,7 @@ import ru.citeck.ecos.records3.record.dao.delete.DelStatus
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import kotlin.test.assertEquals
 
@@ -54,7 +55,7 @@ class DmnSectionTest {
         assertEquals("eproc/dmn-section-repo@testSection1", recordRef.toString())
 
         val atts = recordsService.getAtts(recordRef, listOf("name"))
-        assertEquals("testSection1", atts.getId().id)
+        assertEquals("testSection1", atts.getId().getLocalId())
         assertEquals("testSectionName1", atts.getAtts()["name"].asText())
 
         val recordRef2 = recordsService.create(REPO_DATA_SOURCE_ID, testSubSection)
@@ -147,7 +148,7 @@ class DmnSectionTest {
         assertEquals(queryAll().getRecords().size, recordsBefore)
     }
 
-    fun queryAll(): RecsQueryRes<RecordRef> {
+    fun queryAll(): RecsQueryRes<EntityRef> {
         val query = RecordsQuery.create {
             withSourceId(REPO_DATA_SOURCE_ID)
             withQuery(

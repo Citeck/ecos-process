@@ -18,7 +18,6 @@ class BpmnConditionalEventsProcessor(
         private val log = KotlinLogging.logger {}
     }
 
-
     fun processEvent(updated: RecordUpdatedEvent) {
         val time = measureTimeMillis {
             if (updated.record == null || updated.changed == null) {

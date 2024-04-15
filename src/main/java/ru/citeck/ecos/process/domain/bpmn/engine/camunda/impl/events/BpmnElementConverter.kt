@@ -83,11 +83,12 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
     )
     val rev = cnv.procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
-    log.warn {
-        "Process definition revision is null. TaskId: $id, name: $name, executionId: $executionId, " +
-            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId " +
-            " procDefId, procDefRef, procDeploymentVersion will be null"
-    }
+    // TODO: fix
+//    log.warn {
+//        "Process definition revision is null. TaskId: $id, name: $name, executionId: $executionId, " +
+//            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId " +
+//            " procDefId, procDefRef, procDeploymentVersion will be null"
+//    }
 
     val outcome = getOutcome()
     val userTaskLaInfo = getUserTaskLaInfo()
