@@ -107,7 +107,9 @@ class BpmnKpiSettings(
     var kpiAsNumber: Long? = null,
 
     var countKpi: Long? = null,
-    var countPeriod: String? = ""
+    var countPeriod: String? = "",
+
+    var manualOverrideDisplayKpi: String? = ""
 ) {
 
     fun getRef(): EntityRef {

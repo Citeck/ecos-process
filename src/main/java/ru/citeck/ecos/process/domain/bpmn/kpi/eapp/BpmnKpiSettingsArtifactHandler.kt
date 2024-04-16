@@ -68,7 +68,8 @@ class BpmnKpiSettingsArtifactHandler(
                             durationKpi = it.durationKpi,
                             durationKpiTimeType = it.durationKpiTimeType,
                             countKpi = it.countKpi,
-                            countPeriod = it.countPeriod
+                            countPeriod = it.countPeriod,
+                            manualOverrideDisplayKpi = it.manualOverrideDisplayKpi
                         )
                     )
                 }
@@ -116,6 +117,9 @@ class BpmnKpiSettingsArtifactHandler(
         val durationKpi: String,
         @AttName("record.durationKpiTimeType")
         val durationKpiTimeType: BpmnDurationKpiTimeType? = null,
+
+        @AttName("record.manualOverrideDisplayKpi!")
+        val manualOverrideDisplayKpi: String,
 
         @AttName("record.countKpi?num")
         val countKpi: Long? = null,
