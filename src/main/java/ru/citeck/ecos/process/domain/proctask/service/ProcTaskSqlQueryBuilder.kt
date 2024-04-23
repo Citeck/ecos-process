@@ -103,11 +103,18 @@ class ProcTaskSqlQueryBuilder(
                     if (field.isNullOrBlank()) {
                         false
                     } else {
-                        condition.append(" (")
-                            .append(field)
-                            .append(" IS NULL OR ")
-                            .append(field)
-                            .append(" = '') ")
+                        val fieldType = TASK_ATTS_TYPES[predicate.getAttribute()] ?: AttributeType.TEXT
+                        if (fieldType == AttributeType.TEXT) {
+                            condition.append(" (")
+                                .append(field)
+                                .append(" IS NULL OR ")
+                                .append(field)
+                                .append(" = '') ")
+                        } else {
+                            condition.append(" ")
+                                .append(field)
+                                .append(" IS NULL ")
+                        }
                         true
                     }
                 } else {

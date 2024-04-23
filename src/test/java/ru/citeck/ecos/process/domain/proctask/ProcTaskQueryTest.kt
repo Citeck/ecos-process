@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.TaskService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -188,10 +189,11 @@ class ProcTaskQueryTest {
             )
         }
 
-        assertThat(found).hasSize(3)
-        assertThat(found[0].getLocalId()).isEqualTo("task3")
-        assertThat(found[1].getLocalId()).isEqualTo("task2")
-        assertThat(found[2].getLocalId()).isEqualTo("task1")
+        assertThat(found).hasSize(4)
+        assertThat(found[0].getLocalId()).isEqualTo("task4")
+        assertThat(found[1].getLocalId()).isEqualTo("task3")
+        assertThat(found[2].getLocalId()).isEqualTo("task2")
+        assertThat(found[3].getLocalId()).isEqualTo("task1")
     }
 
     @Test
@@ -205,10 +207,11 @@ class ProcTaskQueryTest {
             )
         }
 
-        assertThat(found).hasSize(3)
+        assertThat(found).hasSize(4)
         assertThat(found[0].getLocalId()).isEqualTo("task1")
         assertThat(found[1].getLocalId()).isEqualTo("task2")
         assertThat(found[2].getLocalId()).isEqualTo("task3")
+        assertThat(found[3].getLocalId()).isEqualTo("task4")
     }
 
     @Test
@@ -222,10 +225,11 @@ class ProcTaskQueryTest {
             )
         }
 
-        assertThat(found).hasSize(3)
-        assertThat(found[0].getLocalId()).isEqualTo("task3")
-        assertThat(found[1].getLocalId()).isEqualTo("task2")
-        assertThat(found[2].getLocalId()).isEqualTo("task1")
+        assertThat(found).hasSize(4)
+        assertThat(found[0].getLocalId()).isEqualTo("task4")
+        assertThat(found[1].getLocalId()).isEqualTo("task3")
+        assertThat(found[2].getLocalId()).isEqualTo("task2")
+        assertThat(found[3].getLocalId()).isEqualTo("task1")
     }
 
     @Test
@@ -239,10 +243,11 @@ class ProcTaskQueryTest {
             )
         }
 
-        assertThat(found).hasSize(3)
+        assertThat(found).hasSize(4)
         assertThat(found[0].getLocalId()).isEqualTo("task1")
         assertThat(found[1].getLocalId()).isEqualTo("task2")
         assertThat(found[2].getLocalId()).isEqualTo("task3")
+        assertThat(found[3].getLocalId()).isEqualTo("task4")
     }
 
     @Test
@@ -306,6 +311,34 @@ class ProcTaskQueryTest {
     }
 
     @Test
+    fun `filter by due date is empty`() {
+        val found = AuthContext.runAsFull(HERMIONE_USER) {
+            queryTasks(
+                Predicates.and(
+                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
+                    Predicates.empty(ATT_DUE_DATE)
+                )
+            )
+        }
+
+        assertThat(found).hasSize(1)
+    }
+
+    @Test
+    fun `filter by due date is not empty`() {
+        val found = AuthContext.runAsFull(HERMIONE_USER) {
+            queryTasks(
+                Predicates.and(
+                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
+                    Predicates.notEmpty(ATT_DUE_DATE)
+                )
+            )
+        }
+
+        assertThat(found).hasSize(3)
+    }
+
+    @Test
     fun `filter task by name`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
             queryTasks(
@@ -331,7 +364,7 @@ class ProcTaskQueryTest {
             )
         }
 
-        assertThat(found).hasSize(3)
+        assertThat(found).hasSize(4)
     }
 
     private fun queryTasks(predicate: Predicate, sortBy: SortBy? = null): List<EntityRef> {
@@ -369,13 +402,23 @@ class ProcTaskQueryTest {
                 ATT_DUE_DATE to Instant.parse("2021-01-03T15:00:00.0Z")
             )
         )
+        taskData.add(
+            mapOf(
+                ATT_NAME to "task4",
+                ATT_PRIORITY to 4
+            )
+        )
 
         taskData.forEach {
             val task = taskService.newTask(it["name"].toString())
             task.name = it[ATT_NAME] as String
-            task.dueDate = Date.from(it[ATT_DUE_DATE] as Instant)
+
             task.priority = it[ATT_PRIORITY] as Int
             task.assignee = HERMIONE_USER
+
+            it[ATT_DUE_DATE]?.let { dueDate ->
+                task.dueDate = Date.from(dueDate as Instant)
+            }
 
             taskService.saveTask(task)
         }
