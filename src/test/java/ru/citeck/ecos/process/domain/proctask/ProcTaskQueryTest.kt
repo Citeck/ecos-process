@@ -307,7 +307,7 @@ class ProcTaskQueryTest {
         }
 
         assertThat(found).hasSize(2)
-        assertThat(found).anyMatch { it.getLocalId() == "task2" || it.getLocalId() == "task3" }
+        assertThat(found.map { it.getLocalId() }).containsAll(listOf("task2", "task3"))
     }
 
     @Test
@@ -336,6 +336,52 @@ class ProcTaskQueryTest {
         }
 
         assertThat(found).hasSize(3)
+    }
+
+    @Test
+    fun `filter by due date is equals today`() {
+        assertDoesNotThrow {
+            val found = AuthContext.runAsFull(HERMIONE_USER) {
+                queryTasks(
+                    Predicates.and(
+                        Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
+                        Predicates.eq(ATT_DUE_DATE, "\$TODAY")
+                    )
+                )
+            }
+
+            assertThat(found).hasSize(0)
+        }
+    }
+
+    @Test
+    fun `filter by due date time range absolute`() {
+        val found = AuthContext.runAsFull(HERMIONE_USER) {
+            queryTasks(
+                Predicates.and(
+                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
+                    Predicates.eq(ATT_DUE_DATE, "2021-01-01T09:00:00.0Z/2021-01-02T20:00:00.0Z")
+                )
+            )
+        }
+
+        assertThat(found).hasSize(2)
+        assertThat(found.map { it.getLocalId() }).containsAll(listOf("task1", "task2"))
+    }
+
+    @Test
+    fun `filter by due date time range relatively`() {
+        val found = AuthContext.runAsFull(HERMIONE_USER) {
+            queryTasks(
+                Predicates.and(
+                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
+                    Predicates.eq(ATT_DUE_DATE, "-P100000D/\$NOW")
+                )
+            )
+        }
+
+        assertThat(found).hasSize(3)
+        assertThat(found[0].getLocalId()).isEqualTo("task1", "task2", "task3")
     }
 
     @Test

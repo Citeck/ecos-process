@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.data.sql.records.utils.DbDateUtils
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
 import ru.citeck.ecos.model.lib.comments.dto.CommentDto
 import ru.citeck.ecos.model.lib.comments.dto.CommentTag
@@ -74,7 +75,29 @@ class ProcTaskServiceImpl(
                 it.setValue(it.getValue().asInt())
             }
 
-            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
+            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_DUE_DATE && it.getValue().isTextual()) {
+                val value = it.getValue()
+                val textVal = DbDateUtils.normalizeDateTimePredicateValue(
+                    value.asText(),
+                    true
+                )
+                val rangeDelimIdx = textVal.indexOf('/')
+
+                val newPred = if (rangeDelimIdx > 0 && textVal.length > rangeDelimIdx + 1) {
+
+                    val rangeFrom = textVal.substring(0, rangeDelimIdx)
+                    val rangeTo = textVal.substring(rangeDelimIdx + 1)
+
+                    AndPredicate.of(
+                        ValuePredicate.ge(it.getAttribute(), rangeFrom),
+                        ValuePredicate.lt(it.getAttribute(), rangeTo)
+                    )
+                } else {
+                    ValuePredicate(it.getAttribute(), it.getType(), textVal)
+                }
+
+                newPred
+            } else if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
                 var actor = it.getValue().asText()
                 if (actor == "\$CURRENT") {
                     actor = AuthContext.getCurrentUser()
