@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
@@ -35,6 +36,8 @@ class BpmnProcessLatestRecords(
 
     companion object {
         const val ID = "bpmn-proc-latest"
+
+        private val log = KotlinLogging.logger {}
     }
 
     override fun getId(): String {
@@ -78,7 +81,7 @@ class BpmnProcessLatestRecords(
         return result
     }
 
-    override fun getRecordsAtts(recordIds: List<String>): List<Any> {
+    override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
         return camundaRepositoryService
             .getLatestProcessDefinitionsByKeys(recordIds)
             .map {

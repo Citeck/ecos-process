@@ -49,7 +49,7 @@ class DmnDecisionLatestRecords(
         return result
     }
 
-    override fun getRecordsAtts(recordIds: List<String>): List<Any> {
+    override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
         return camundaRepositoryService
             .getLatestDecisionDefinitionsByKeys(recordIds)
             .map {

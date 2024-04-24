@@ -147,7 +147,7 @@ class BpmnExternalTaskRecords(
         return record.id
     }
 
-    override fun getRecordsAtts(recordIds: List<String>): List<Any> {
+    override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
         return externalTaskService.createExternalTaskQuery()
             .externalTaskIdIn(recordIds.toSet())
             .list()

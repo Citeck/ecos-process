@@ -224,8 +224,8 @@ class BpmnProcessDefEngineRecords(
         }
     }
 
-    override fun getRecordsAtts(recordIds: List<String>): List<Any> {
-        val atts: List<IdentifiableRecord>
+    override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
+        val atts: List<IdentifiableRecord?>
         val attsTime = measureTimeMillis {
             atts = camundaRepositoryService
                 .createProcessDefinitionQuery()

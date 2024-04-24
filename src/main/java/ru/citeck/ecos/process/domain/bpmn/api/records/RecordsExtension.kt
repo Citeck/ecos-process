@@ -8,9 +8,9 @@ interface IdentifiableRecord {
     fun getIdentificator(): String
 }
 
-fun <T : IdentifiableRecord> List<T>.sortByIds(ids: List<String>): List<T> {
+fun <T : IdentifiableRecord> List<T>.sortByIds(ids: List<String>): List<T?> {
     val map = associateBy { it.getIdentificator() }
-    return ids.mapNotNull { map[it] }
+    return ids.map { map[it] }
 }
 
 fun <T : Enum<T>> LocalRecordAtts.toActionEnum(type: Class<T>): T? {
