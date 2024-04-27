@@ -91,7 +91,7 @@ class BpmnProcessServiceImpl(
             processInstance = instance
 
             log.trace {
-                "Start process ${processInstance.id} times: " +
+                "Start process ${processInstance.id} times: \n" +
                     "getDefinitionIdTime=$getDefinitionIdTime, \n" +
                     "getDefTime=$getDefTime, \n" +
                     "startProcessTime=$startProcessTime, \n" +

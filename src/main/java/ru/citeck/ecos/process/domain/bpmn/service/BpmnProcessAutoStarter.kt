@@ -33,7 +33,7 @@ class BpmnProcessAutoStarter(
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
-            withTransactional(true)
+            withTransactional(false)
             withAction { handleStartProcessEvent(it) }
             withFilter(
                 Predicates.and(
@@ -47,7 +47,7 @@ class BpmnProcessAutoStarter(
         eventsService.addListener<EventData> {
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
-            withTransactional(true)
+            withTransactional(false)
             withAction { handleStartProcessEvent(it) }
             withFilter(
                 Predicates.and(
