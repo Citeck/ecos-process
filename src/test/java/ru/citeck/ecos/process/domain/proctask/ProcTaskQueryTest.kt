@@ -61,7 +61,8 @@ class ProcTaskQueryTest {
         }
         for (i in 1..2) {
             createTask(
-                assignee = HARRY_USER, candidateUsers = listOf(HARRY_USER),
+                assignee = HARRY_USER,
+                candidateUsers = listOf(HARRY_USER),
                 candidateGroups = listOf(HOGWARTS_GROUP)
             )
         }
@@ -74,7 +75,8 @@ class ProcTaskQueryTest {
         }
         for (i in 1..2) {
             createTask(
-                assignee = RON_USER, candidateUsers = listOf(RON_USER),
+                assignee = RON_USER,
+                candidateUsers = listOf(RON_USER),
                 candidateGroups = listOf(HOGWARTS_GROUP)
             )
         }
@@ -91,7 +93,8 @@ class ProcTaskQueryTest {
         }
         for (i in 1..2) {
             createTask(
-                assignee = VOLDEMORT_USER, candidateUsers = listOf(VOLDEMORT_USER),
+                assignee = VOLDEMORT_USER,
+                candidateUsers = listOf(VOLDEMORT_USER),
                 candidateGroups = listOf(DEATH_EATERS_GROUP)
             )
         }

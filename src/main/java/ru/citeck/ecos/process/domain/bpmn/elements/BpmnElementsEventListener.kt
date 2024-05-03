@@ -77,9 +77,7 @@ class BpmnElementsEventListener(
             }
         }
     }
-
 }
-
 
 @Configuration
 class BpmnElementMutateTaskExecutorConfig {
@@ -121,7 +119,7 @@ class BpmnElementMutationAsyncProvider(
                 "Process instance id is empty for event: $event"
             }
 
-            log.trace { "Complete task element. Event: $event"}
+            log.trace { "Complete task element. Event: $event" }
 
             val existingElement = recordsService.queryOne(
                 RecordsQuery.create {
@@ -153,7 +151,7 @@ class BpmnElementMutationAsyncProvider(
                 "Process instance id is empty for event: $event"
             }
 
-            log.trace { "React on delete task event: $event"}
+            log.trace { "React on delete task event: $event" }
 
             val existingElement = recordsService.queryOne(
                 RecordsQuery.create {
