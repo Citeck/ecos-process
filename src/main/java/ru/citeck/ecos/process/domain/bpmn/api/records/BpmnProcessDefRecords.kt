@@ -12,6 +12,7 @@ import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
+import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
@@ -445,8 +446,11 @@ class BpmnProcessDefRecords(
             }
 
             if (record.action == BpmnProcessDefActions.DEPLOY.toString()) {
-                if (!perms.hasDeployPerms()) {
-                    error("Permissions denied for deploy: $procDefRef")
+                check(perms.hasDeployPerms()) {
+                    "Permissions denied for deploy: $procDefRef"
+                }
+                check(record.processDefId.isNotBlank()) {
+                    "Process definition id cannot be blank for $procDefRef"
                 }
 
                 log.debug { "Deploy to camunda:\n $newCamundaDefinitionStr" }
