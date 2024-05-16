@@ -8,11 +8,13 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.type.RecordChangedEvent
+import ru.citeck.ecos.process.domain.bpmn.elements.config.BPMN_PROCESS_ELEMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional.BpmnConditionalEventsProcessor
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional.RecordUpdatedEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventProcessor
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.*
@@ -64,7 +66,8 @@ class BpmnEventSubscriptionService(
     }
 
     fun addSubscriptionsForDefRev(procDefRevId: UUID) {
-        val deployedSubscriptionsData = camundaEventSubscriptionFinder.getDeployedSubscriptionsDataByProcDefRevId(procDefRevId)
+        val deployedSubscriptionsData =
+            camundaEventSubscriptionFinder.getDeployedSubscriptionsDataByProcDefRevId(procDefRevId)
         val combinedSubscriptions = deployedSubscriptionsData.subscriptions.combine()
 
         log.debug { "Add subscriptions for procDefRevId: $procDefRevId, subscriptions: \n$combinedSubscriptions" }
@@ -119,11 +122,17 @@ class BpmnEventSubscriptionService(
                 "eventTypes: $listenerEventNames, atts: $attributes"
         }
 
+        val excludeBpmnElementsOptimizationPredicate = Predicates.notEq(
+            "record._type?id",
+            "${AppName.EMODEL}/type@$BPMN_PROCESS_ELEMENT_TYPE"
+        )
+
         val addedListeners = listenerEventNames.map { listenerEventName ->
             eventsService.addListener<ObjectData> {
                 withDataClass(ObjectData::class.java)
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
+                withFilter(excludeBpmnElementsOptimizationPredicate)
                 withTransactional(true)
                 withAction { event ->
                     log.debug { "Receive subscription event: \n${Json.mapper.toPrettyString(event)}" }
@@ -171,6 +180,7 @@ class BpmnEventSubscriptionService(
             withFilter(predicateFilterByTypes)
             withTransactional(true)
             withAction { updated ->
+                log.debug { "Receive subscription conditional event: \n${Json.mapper.toPrettyString(updated)}" }
                 bpmnConditionalEventsProcessor.processEvent(updated)
             }
         }

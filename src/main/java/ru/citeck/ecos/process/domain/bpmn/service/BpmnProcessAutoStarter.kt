@@ -15,6 +15,7 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import kotlin.system.measureTimeMillis
 
 @Component
 class BpmnProcessAutoStarter(
@@ -59,19 +60,23 @@ class BpmnProcessAutoStarter(
     }
 
     private fun handleStartProcessEvent(eventData: EventData) {
-        log.debug { "Received event: $eventData" }
+        val time = measureTimeMillis {
+            log.debug { "Received event: $eventData" }
 
-        if (eventData.eventRef == RecordRef.EMPTY) {
-            log.warn { "Cannot auto start process for empty eventRef: $eventData" }
-            return
+            if (eventData.eventRef == RecordRef.EMPTY) {
+                log.warn { "Cannot auto start process for empty eventRef: $eventData" }
+                return
+            }
+
+            if (eventData.typeRef == RecordRef.EMPTY) {
+                log.warn { "Cannot auto start process for empty typeRef: $eventData" }
+                return
+            }
+
+            startProcessIfRequired(eventData.eventRef, eventData.typeRef)
         }
 
-        if (eventData.typeRef == RecordRef.EMPTY) {
-            log.warn { "Cannot auto start process for empty typeRef: $eventData" }
-            return
-        }
-
-        startProcessIfRequired(eventData.eventRef, eventData.typeRef)
+        log.trace { "Handled start process event for record ${eventData.eventRef} in $time ms" }
     }
 
     private fun startProcessIfRequired(record: EntityRef, type: EntityRef) {

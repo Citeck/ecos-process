@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.session.GenericManagerFactoryWithKey;
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.events.CustomEventSubscriptionManager;
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.session.GenericManagerFactoryWithKey;
 import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource;
-import ru.citeck.ecos.webapp.lib.spring.context.datasource.EcosDataSourceManager;
 
 import java.util.Collections;
 
@@ -23,11 +22,12 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
     implements CamundaDatasourceConfiguration {
 
     @Autowired
-    protected EcosDataSourceManager dataSourceManager;
-
-    @Autowired
     @Qualifier("camundaTransactionManager")
     protected PlatformTransactionManager transactionManager;
+
+    @Autowired
+    @Qualifier("camundaDataSource")
+    protected JdbcDataSource camundaDataSource;
 
     @Override
     public void preInit(SpringProcessEngineConfiguration configuration) {
@@ -35,11 +35,10 @@ public class CamundaCustomDataSourceConfiguration extends AbstractCamundaConfigu
 
         configuration.setTransactionManager(transactionManager);
 
-        JdbcDataSource dataSource = dataSourceManager.getDataSource("camunda", JdbcDataSource.class, true);
-        if (dataSource.isManaged()) {
+        if (camundaDataSource.isManaged()) {
             configuration.setTransactionsExternallyManaged(true);
         }
-        configuration.setDataSource(dataSource.getJavaDataSource());
+        configuration.setDataSource(camundaDataSource.getJavaDataSource());
 
         configuration.setDatabaseType(database.getType());
         configuration.setDatabaseSchemaUpdate(database.getSchemaUpdate());

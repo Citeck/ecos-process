@@ -11,7 +11,6 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
@@ -101,14 +100,14 @@ class BpmnProcessDefVersionRecords(
         return result
     }
 
-    override fun getRecordsAtts(recordIds: List<String>): List<Any> {
+    override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
         val revisions = procDefService.getProcessDefRevs(recordIds.map { UUID.fromString(it) })
             .map {
                 it.toVersionRecord()
             }
             .sortByIds(recordIds)
 
-        val uniqueProcDefs = revisions.map { it.procDefId }.distinct()
+        val uniqueProcDefs = revisions.map { it?.procDefId }.distinct()
         check(uniqueProcDefs.size == 1) {
             "Support get atts of revision only for one process definition"
         }
@@ -143,9 +142,9 @@ class BpmnProcessDefVersionRecords(
             name = MLText.EMPTY,
             comment = comment,
             modifier = if (createdBy.isNullOrBlank()) {
-                RecordRef.EMPTY
+                EntityRef.EMPTY
             } else {
-                RecordRef.create(AppName.EMODEL, "person", createdBy)
+                EntityRef.create(AppName.EMODEL, "person", createdBy)
             },
             format = format,
             tags = let {
@@ -179,7 +178,7 @@ class BpmnProcessDefVersionRecords(
         val format: String = "",
         val procDefId: String,
         val tags: List<String> = emptyList(),
-        val editLink: String = EDIT_BPMN_PROC_LINK.format(RecordRef.create(AppName.EPROC, ID, id)),
+        val editLink: String = EDIT_BPMN_PROC_LINK.format(EntityRef.create(AppName.EPROC, ID, id)),
 
         private val dto: ProcDefRevDto
     ) : IdentifiableRecord {
@@ -237,7 +236,7 @@ class BpmnProcessDefVersionRecords(
 }
 
 private fun ProcDefRevDto.getProcessDefVersionsRef(): EntityRef {
-    return RecordRef.create(AppName.EPROC, BpmnProcessDefVersionRecords.ID, id.toString())
+    return EntityRef.create(AppName.EPROC, BpmnProcessDefVersionRecords.ID, id.toString())
 }
 
 data class VersionQuery(

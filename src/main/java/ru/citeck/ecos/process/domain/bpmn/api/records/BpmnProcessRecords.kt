@@ -144,7 +144,7 @@ class BpmnProcessRecords(
         if (isAlfProcessDef(record.id)) {
             val alfRef = RecordRef.create(AppName.ALFRESCO, "workflow", "def_${record.id}")
             val res = recordsService.mutate(alfRef, record.attributes)
-            return res.id
+            return res.getLocalId()
         }
 
         val action = record.toActionEnumOrDefault(MutateAction::class.java, MutateAction.START)

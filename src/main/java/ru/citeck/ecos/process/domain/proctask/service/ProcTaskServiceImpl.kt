@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.data.sql.records.utils.DbDateUtils
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
 import ru.citeck.ecos.model.lib.comments.dto.CommentDto
 import ru.citeck.ecos.model.lib.comments.dto.CommentTag
@@ -18,6 +19,8 @@ import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.dto.getComment
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_DOCUMENT_TYPE_REF
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.*
@@ -63,10 +66,38 @@ class ProcTaskServiceImpl(
             } else {
                 it
             }
-        }
+        } ?: VoidPredicate.INSTANCE
 
-        val preparedPredicate = PredicateUtils.mapValuePredicates(managerToActorsPredicate) {
-            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
+        var preparedPredicate = managerToActorsPredicate.transformDocumentTypeRefToDocumentTypeAtt()
+        preparedPredicate = PredicateUtils.mapValuePredicates(preparedPredicate) {
+
+            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_PRIORITY && it.getValue().isTextual()) {
+                it.setValue(it.getValue().asInt())
+            }
+
+            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_DUE_DATE && it.getValue().isTextual()) {
+                val value = it.getValue()
+                val textVal = DbDateUtils.normalizeDateTimePredicateValue(
+                    value.asText(),
+                    true
+                )
+                val rangeDelimIdx = textVal.indexOf('/')
+
+                val newPred = if (rangeDelimIdx > 0 && textVal.length > rangeDelimIdx + 1) {
+
+                    val rangeFrom = textVal.substring(0, rangeDelimIdx)
+                    val rangeTo = textVal.substring(rangeDelimIdx + 1)
+
+                    AndPredicate.of(
+                        ValuePredicate.ge(it.getAttribute(), rangeFrom),
+                        ValuePredicate.lt(it.getAttribute(), rangeTo)
+                    )
+                } else {
+                    ValuePredicate(it.getAttribute(), it.getType(), textVal)
+                }
+
+                newPred
+            } else if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_ACTOR && it.getValue().isTextual()) {
                 var actor = it.getValue().asText()
                 if (actor == "\$CURRENT") {
                     actor = AuthContext.getCurrentUser()
@@ -90,11 +121,11 @@ class ProcTaskServiceImpl(
                         )
                         if (delegation.delegatedTypes.isNotEmpty()) {
                             delegationConditions.add(
-                                Predicates.inVals(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE, delegation.delegatedTypes)
+                                Predicates.inVals(ATT_DOCUMENT_TYPE, delegation.delegatedTypes)
                             )
                         } else {
                             delegationConditions.add(
-                                Predicates.notEmpty(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE)
+                                Predicates.notEmpty(ATT_DOCUMENT_TYPE)
                             )
                         }
                         actorsVariants.add(AndPredicate.of(delegationConditions))
@@ -420,5 +451,30 @@ class ProcTaskServiceImpl(
                 withMaxItems(300)
             }
         ).getRecords().map { it.getLocalId() }
+    }
+
+    private fun Predicate.transformDocumentTypeRefToDocumentTypeAtt(): Predicate {
+        var predicate = PredicateUtils.mapAttributePredicates(this) {
+            if (it.getAttribute() == ATT_DOCUMENT_TYPE_REF) {
+                it.setAttribute(ATT_DOCUMENT_TYPE)
+            }
+            it
+        } ?: VoidPredicate.INSTANCE
+
+        predicate = PredicateUtils.mapValuePredicates(predicate) {
+            if (it.getAttribute() == ATT_DOCUMENT_TYPE) {
+                it.setValue(EntityRef.valueOf(it.getValue().asText()).getLocalId())
+                val type = when (it.getType()) {
+                    ValuePredicate.Type.CONTAINS,
+                    ValuePredicate.Type.LIKE -> ValuePredicate.Type.EQ
+
+                    else -> it.getType()
+                }
+                it.setType(type)
+            }
+            it
+        } ?: VoidPredicate.INSTANCE
+
+        return predicate
     }
 }

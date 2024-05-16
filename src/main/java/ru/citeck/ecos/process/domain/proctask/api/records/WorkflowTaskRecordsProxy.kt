@@ -86,7 +86,7 @@ class WorkflowTaskRecordsProxy(
             }
         }
 
-        return recordsService.mutate(toMutate).map { it.id }
+        return recordsService.mutate(toMutate).map { it.getLocalId() }
     }
 
     private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery, sortBy: List<SortBy>, page: QueryPage): RecsQueryRes<*> {

@@ -32,3 +32,8 @@ val DEFAULT_IN_VARIABLES_PROPAGATION_TO_CALL_ACTIVITY = listOf(
     BPMN_DOCUMENT_TYPE,
     BPMN_WORKFLOW_INITIATOR
 )
+
+const val BPMN_EXECUTION_ID = "executionId"
+const val BPMN_PROCESS_INSTANCE_ID = "procInstanceId"
+const val BPMN_ELEMENT_ID = "elementId"
+const val BPMN_ELEMENT_DEF_ID = "elementDefId"

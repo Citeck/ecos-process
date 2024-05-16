@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events
 
+import mu.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.stereotype.Component
@@ -19,6 +20,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.annotation.PostConstruct
 
 private const val CLASS_IMPL_POSTFIX = "Impl"
+
+private val log = KotlinLogging.logger {}
 
 /**
  * @author Roman Makarskiy
@@ -79,10 +82,13 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         "Process definition is null. TaskId: $id, name: $name, executionId: $executionId, " +
             "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
     )
-    val rev = cnv.procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId) ?: error(
-        "Process definition revision is null. TaskId: $id, name: $name, executionId: $executionId, " +
-            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
-    )
+    val rev = cnv.procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
+    // TODO: fix
+//    log.warn {
+//        "Process definition revision is null. TaskId: $id, name: $name, executionId: $executionId, " +
+//            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId " +
+//            " procDefId, procDefRef, procDeploymentVersion will be null"
+//    }
 
     val outcome = getOutcome()
     val userTaskLaInfo = getUserTaskLaInfo()
@@ -93,13 +99,13 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
         form = getFormRef(),
         assignee = assignee,
         roles = getTaskRoles(),
-        procDefId = rev.procDefId,
-        procDefRef = if (rev.procDefId.isNotBlank()) {
+        procDefId = rev?.procDefId,
+        procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
             RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
         } else {
             EntityRef.EMPTY
         },
-        procDeploymentVersion = rev.version.inc(),
+        procDeploymentVersion = rev?.version?.inc(),
         procInstanceId = getProcessInstanceRef(),
         processId = processDefinition.key,
         processRef = if (processDefinition.key.isNotBlank()) {

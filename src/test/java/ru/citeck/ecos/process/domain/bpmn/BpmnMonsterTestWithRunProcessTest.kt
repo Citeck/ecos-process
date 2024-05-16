@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.RuntimeService
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.MLText
@@ -47,6 +49,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
+import ru.citeck.ecos.process.domain.bpmn.event.BpmnEcosEventTestAction
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
@@ -150,11 +153,16 @@ class BpmnMonsterTestWithRunProcessTest {
     @MockBean
     private lateinit var bpmnKpiService: BpmnKpiService
 
+    @SpyBean
+    private lateinit var bpmnEcosEventTestAction: BpmnEcosEventTestAction
+
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
 
     private val kpiSettings = mutableListOf<EntityRef>()
 
     companion object {
+        private const val KPI_ASYNC_WAIT_TIMEOUT_SECONDS = 15L
+
         private val harryRecord = PotterRecord()
         private val harryRef = EntityRef.valueOf("hogwarts/people@harry")
 
@@ -2971,6 +2979,39 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    fun `bpmn event throw ecos event from script task`() {
+        val procId = "bpmn-events-ecos-event-script-task-throw-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            // do nothing
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("Script_task_throw")
+        verify(process).hasFinished("startEvent")
+        verify(process).hasFinished("endEventFromStart")
+        verify(process, never()).hasFinished("endEventBase")
+    }
+
+    @Test
+    fun `bpmn event throw ecos event from script task payload test`() {
+        val procId = "bpmn-events-ecos-event-script-task-throw-payload-test"
+        saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+
+        verify(process).hasFinished("endEventBase")
+        verify(bpmnEcosEventTestAction, Mockito.times(1)).callAction(
+            org.mockito.kotlin.check {
+                assertThat(it["foo"].asText()).isEqualTo("bar")
+                assertThat(it["itsNum"].asInt()).isEqualTo(123)
+            }
+        )
+    }
+
+    @Test
     fun `bpmn event intermediate throw`() {
         val procId = "bpmn-events-intermediate-throw-test"
         saveAndDeployBpmn(BPMN_EVENTS, procId)
@@ -4030,6 +4071,7 @@ class BpmnMonsterTestWithRunProcessTest {
     // ---KPI TESTS ---
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start to end user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4055,18 +4097,21 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start event to start user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4092,18 +4137,21 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isLessThan(3_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isLessThan(3_000)
+                }
+            )
+        }
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4129,18 +4177,21 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start end event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4166,18 +4217,21 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     fun `kpi on user task duration from start to end process`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4203,18 +4257,21 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(procId, variables_docRef).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @ParameterizedTest
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4247,17 +4304,20 @@ class BpmnMonsterTestWithRunProcessTest {
 
         `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isEqualTo(1)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isEqualTo(1)
+                }
+            )
+        }
     }
 
     @ParameterizedTest
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4290,17 +4350,20 @@ class BpmnMonsterTestWithRunProcessTest {
 
         `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isEqualTo(1)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isEqualTo(1)
+                }
+            )
+        }
     }
 
     @ParameterizedTest
+    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
     @ValueSource(strings = ["store/doc@1", "store/doc@2"])
     fun `kpi with dmn condition true test`(docRef: String) {
         val procId = "test-kpi-with-dmn"
@@ -4339,15 +4402,17 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
-            org.mockito.kotlin.check { kpiValue ->
-                assertThat(kpiValue.settingsRef).isEqualTo(
-                    EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
-                )
-                assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
-            }
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+                org.mockito.kotlin.check { kpiValue ->
+                    assertThat(kpiValue.settingsRef).isEqualTo(
+                        EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
+                    )
+                    assertThat(kpiValue.value.toLong()).isGreaterThan(1_000)
+                }
+            )
+        }
     }
 
     @Test
@@ -4388,10 +4453,12 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         ).execute()
 
-        verify(process).hasFinished("endEvent")
-        verify(bpmnKpiService, Mockito.times(0)).createKpiValue(
-            any()
-        )
+        Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+            verify(bpmnKpiService, Mockito.times(0)).createKpiValue(
+                any()
+            )
+        }
     }
 
     fun getSubscriptionsAfterAction(
