@@ -215,6 +215,7 @@ object BpmnIO {
             def.otherAttributes[BPMN_PROP_FORM_REF] = formRef.toString()
             def.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
             def.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
+            def.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED] = autoDeleteEnabled.toString()
             def.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
             def.otherAttributes[BPMN_PROP_DEF_STATE] = ProcDefRevDataState.CONVERTED.toString()
 

@@ -33,6 +33,7 @@ class BpmnMutateDataProcessor(
         var name = mutateRecord.name
         var workingCopySourceRef = EntityRef.EMPTY
         var autoStartEnabled = mutateRecord.autoStartEnabled
+        var autoDeleteEnabled = mutateRecord.autoDeleteEnabled
         var enabled = mutateRecord.enabled
 
         if (mutateRecord.isModuleCopy()) {
@@ -43,6 +44,7 @@ class BpmnMutateDataProcessor(
 
             procDef.otherAttributes[BPMN_PROP_ENABLED] = false.toString()
             procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = false.toString()
+            procDef.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED] = true.toString()
             procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
 
             val lastRevisionId: UUID = getLastRevisionId(mutateRecord.id)
@@ -56,6 +58,7 @@ class BpmnMutateDataProcessor(
 
             statedInitialDefinition = BpmnXmlUtils.writeToString(procDef)
             autoStartEnabled = false
+            autoDeleteEnabled = true
             enabled = false
         }
 
@@ -81,6 +84,7 @@ class BpmnMutateDataProcessor(
                 processDefId = draftDefinition.otherAttributes[BPMN_PROP_PROCESS_DEF_ID]!!
                 enabled = draftDefinition.otherAttributes[BPMN_PROP_ENABLED].toBoolean()
                 autoStartEnabled = draftDefinition.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean()
+                autoDeleteEnabled = draftDefinition.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED].toBoolean()
 
                 newEcosDefinition = statedInitialDefinition
             } else {
@@ -99,6 +103,7 @@ class BpmnMutateDataProcessor(
                 processDefId = ecosBpmnDefinition.id
                 enabled = ecosBpmnDefinition.enabled
                 autoStartEnabled = ecosBpmnDefinition.autoStartEnabled
+                autoDeleteEnabled = ecosBpmnDefinition.autoDeleteEnabled
 
                 newEcosDefinition = BpmnIO.exportEcosBpmnToString(ecosBpmnDefinition)
                 newCamundaDefinitionStr = BpmnIO.exportCamundaBpmnToString(ecosBpmnDefinition)
@@ -122,6 +127,7 @@ class BpmnMutateDataProcessor(
             workingCopySourceRef = workingCopySourceRef,
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
+            autoDeleteEnabled = autoDeleteEnabled,
             sectionRef = sectionRef,
             createdFromVersion = mutateRecord.createdFromVersion,
             image = mutateRecord.imageBytes,
@@ -223,6 +229,7 @@ data class BpmnMutateData(
     val workingCopySourceRef: EntityRef = EntityRef.EMPTY,
     val enabled: Boolean,
     val autoStartEnabled: Boolean,
+    val autoDeleteEnabled: Boolean,
     val sectionRef: EntityRef,
     val createdFromVersion: EntityRef = EntityRef.EMPTY,
     val image: ByteArray?,

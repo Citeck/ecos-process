@@ -56,6 +56,8 @@ public class ProcDefWithDataDto {
 
     private Boolean autoStartEnabled;
 
+    private Boolean autoDeleteEnabled;
+
     private EntityRef sectionRef = EntityRef.EMPTY;
 
     private EntityRef createdFromVersion = EntityRef.EMPTY;
@@ -80,6 +82,7 @@ public class ProcDefWithDataDto {
         this.workingCopySourceRef = other.workingCopySourceRef;
         this.enabled = other.enabled;
         this.autoStartEnabled = other.autoStartEnabled;
+        this.autoDeleteEnabled = other.autoDeleteEnabled;
         setSectionRef(other.sectionRef);
     }
 
@@ -100,6 +103,7 @@ public class ProcDefWithDataDto {
         this.workingCopySourceRef = def.getWorkingCopySourceRef();
         this.enabled = def.getEnabled();
         this.autoStartEnabled = def.getAutoStartEnabled();
+        this.autoDeleteEnabled = def.getAutoDeleteEnabled();
         setSectionRef(def.getSectionRef());
     }
 
@@ -213,6 +217,14 @@ public class ProcDefWithDataDto {
 
     public void setAutoStartEnabled(Boolean autoStartEnabled) {
         this.autoStartEnabled = autoStartEnabled;
+    }
+
+    public Boolean getAutoDeleteEnabled() {
+        return autoDeleteEnabled;
+    }
+
+    public void setAutoDeleteEnabled(Boolean autoDeleteEnabled) {
+        this.autoDeleteEnabled = autoDeleteEnabled;
     }
 
     public EntityRef getSectionRef() {

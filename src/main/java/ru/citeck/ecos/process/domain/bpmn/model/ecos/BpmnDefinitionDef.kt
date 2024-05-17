@@ -16,6 +16,7 @@ data class BpmnDefinitionDef(
 
     val enabled: Boolean,
     val autoStartEnabled: Boolean,
+    val autoDeleteEnabled: Boolean,
 
     val definitionsId: String,
 

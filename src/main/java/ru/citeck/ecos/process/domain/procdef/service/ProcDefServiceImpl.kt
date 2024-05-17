@@ -119,6 +119,7 @@ class ProcDefServiceImpl(
             currentProcDef.created = now
             currentProcDef.enabled = processDef.enabled
             currentProcDef.autoStartEnabled = processDef.autoStartEnabled
+            currentProcDef.autoDeleteEnabled = processDef.autoDeleteEnabled
             currentProcDef.sectionRef = processDef.sectionRef.toString()
 
             currentProcDef = procDefRepo.save<ProcDefEntity>(currentProcDef)
@@ -145,6 +146,7 @@ class ProcDefServiceImpl(
             currentProcDef.modified = now
             currentProcDef.enabled = processDef.enabled
             currentProcDef.autoStartEnabled = processDef.autoStartEnabled
+            currentProcDef.autoDeleteEnabled = processDef.autoDeleteEnabled
             currentProcDef.sectionRef = processDef.sectionRef.toString()
 
             newRevision.version = currentProcDef.lastRev!!.version + 1
@@ -291,6 +293,7 @@ class ProcDefServiceImpl(
                 procDefEntity.name = mapper.toString(dto.name)
                 procDefEntity.enabled = dto.enabled
                 procDefEntity.autoStartEnabled = dto.autoStartEnabled
+                procDefEntity.autoDeleteEnabled = dto.autoDeleteEnabled
                 procDefEntity.modified = Instant.now()
                 procDefEntity.sectionRef = dto.sectionRef.toString()
 
@@ -317,6 +320,7 @@ class ProcDefServiceImpl(
             procType = procType,
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
+            autoDeleteEnabled = autoDeleteEnabled,
             sectionRef = sectionRef,
             createdFromVersion = createdFromVersion
         )
@@ -344,6 +348,7 @@ class ProcDefServiceImpl(
                 currentProcDef.modified = now
                 currentProcDef.enabled = enabled
                 currentProcDef.autoStartEnabled = autoStartEnabled
+                currentProcDef.autoDeleteEnabled = autoDeleteEnabled
                 currentProcDef.sectionRef = sectionRef.toString()
             }
 

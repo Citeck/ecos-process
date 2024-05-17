@@ -74,6 +74,7 @@ class BpmnProcessArtifactHandler(
             definition = stringDef,
             enabled = false,
             autoStartEnabled = false,
+            autoDeleteEnabled = true,
             action = if (isRAW) {
                 BpmnProcessDefActions.DRAFT.name
             } else {

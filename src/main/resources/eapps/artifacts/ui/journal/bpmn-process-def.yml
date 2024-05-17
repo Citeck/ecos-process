@@ -33,3 +33,6 @@ columns:
 
   - id: autoStartEnabled
     name: { ru: Автоматический старт процесса, en: Auto start process }
+
+  - id: autoDeleteEnabled
+    name: { ru: Автоматическое удаление процесса, en: Auto delete process}

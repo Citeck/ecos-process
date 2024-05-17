@@ -33,6 +33,7 @@ class ProcDefEntity {
     var modified: Instant? = null
     var enabled: Boolean? = null
     var autoStartEnabled: Boolean? = null
+    var autoDeleteEnabled: Boolean? = null
     var sectionRef: String? = null
 
     @DBRef(lazy = true)

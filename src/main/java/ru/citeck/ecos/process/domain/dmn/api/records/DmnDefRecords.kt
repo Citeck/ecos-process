@@ -325,6 +325,7 @@ class DmnDefRecords(
                     it.workingCopySourceRef,
                     it.enabled,
                     it.autoStartEnabled,
+                    it.autoDeleteEnabled,
                     it.sectionRef,
                     it.created,
                     it.modified

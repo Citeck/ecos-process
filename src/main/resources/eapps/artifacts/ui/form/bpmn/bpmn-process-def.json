@@ -137,6 +137,22 @@
                 "optionalWhenDisabled": false,
                 "type": "checkbox",
                 "input": true
+              },
+              {
+                "label": {
+                  "ru": "Автоматическое удаление процесса",
+                  "en": "Auto delete process"
+                },
+                "key": "autoDeleteEnabled",
+                "tooltip": {
+                  "ru": "При удалении объекта указанного типа, процесс будет удален автоматически",
+                  "en": "When deleting an object of the specified type, the process will be deleted automatically"
+                },
+                "defaultValue": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "checkbox",
+                "input": true
               }
             ],
             "clearOnHide": true,

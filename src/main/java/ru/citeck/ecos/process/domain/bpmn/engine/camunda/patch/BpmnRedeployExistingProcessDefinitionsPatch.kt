@@ -60,6 +60,7 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
                     definition = stringDef,
                     enabled = false,
                     autoStartEnabled = false,
+                    autoDeleteEnabled = true,
                     action = BpmnProcessDefActions.DEPLOY.toString(),
                     sectionRef = EntityRef.EMPTY,
                     imageBytes = null

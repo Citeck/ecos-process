@@ -288,6 +288,7 @@ class BpmnProcessDefRecords(
                     it.workingCopySourceRef,
                     it.enabled,
                     it.autoStartEnabled,
+                    it.autoDeleteEnabled,
                     it.sectionRef,
                     it.created,
                     it.modified
@@ -309,6 +310,7 @@ class BpmnProcessDefRecords(
                 false,
                 "",
                 false,
+                true,
                 EntityRef.EMPTY,
                 null
             )
@@ -326,6 +328,7 @@ class BpmnProcessDefRecords(
                 enabled = procDef.enabled,
                 action = "",
                 autoStartEnabled = procDef.autoStartEnabled,
+                autoDeleteEnabled = procDef.autoDeleteEnabled,
                 sectionRef = procDef.sectionRef,
                 imageBytes = procDef.image,
                 moduleId = recordId
@@ -388,6 +391,7 @@ class BpmnProcessDefRecords(
                     id = processDefId,
                     enabled = enabled,
                     autoStartEnabled = autoStartEnabled,
+                    autoDeleteEnabled = autoDeleteEnabled,
                     name = name,
                     data = newEcosDefinition ?: BpmnXmlUtils.writeToString(
                         BpmnIO.generateDefaultDef(mutateData)
@@ -414,6 +418,7 @@ class BpmnProcessDefRecords(
                 currentProc.name = name
                 currentProc.enabled = enabled
                 currentProc.autoStartEnabled = autoStartEnabled
+                currentProc.autoDeleteEnabled = autoDeleteEnabled
                 currentProc.sectionRef = sectionRef
                 currentProc.createdFromVersion = createdFromVersion
                 currentProc.image = image
@@ -432,6 +437,7 @@ class BpmnProcessDefRecords(
                         procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = workingCopySourceRef.toString()
                         procDef.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
                         procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
+                        procDef.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED] = autoDeleteEnabled.toString()
                         procDef.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
 
                         currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
@@ -592,6 +598,10 @@ class BpmnProcessDefRecords(
             return procDef.autoStartEnabled
         }
 
+        fun getAutoDeleteEnabled(): Boolean {
+            return procDef.autoDeleteEnabled
+        }
+
         fun getData(): ByteArray? {
             return getDefinition()?.toByteArray(StandardCharsets.UTF_8)
         }
@@ -713,6 +723,7 @@ class BpmnProcessDefRecords(
         var enabled: Boolean,
         var action: String = "",
         var autoStartEnabled: Boolean,
+        var autoDeleteEnabled: Boolean,
         var sectionRef: EntityRef,
         var imageBytes: ByteArray?,
         var createdFromVersion: EntityRef = EntityRef.EMPTY,

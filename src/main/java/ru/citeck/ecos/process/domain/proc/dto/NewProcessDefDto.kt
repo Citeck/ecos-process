@@ -16,6 +16,7 @@ data class NewProcessDefDto(
     val image: ByteArray?,
     val enabled: Boolean = false,
     val autoStartEnabled: Boolean = false,
+    val autoDeleteEnabled: Boolean = true,
     val sectionRef: EntityRef = EntityRef.EMPTY,
     val createdFromVersion: EntityRef = EntityRef.EMPTY,
 ) {
@@ -57,6 +58,7 @@ data class NewProcessDefDto(
     override fun toString(): String {
         return "NewProcessDefDto(id='$id', name=$name, procType='$procType', format='$format', " +
             "alfType=$alfType, ecosTypeRef=$ecosTypeRef, formRef=$formRef, enabled=$enabled, " +
-            "autoStartEnabled=$autoStartEnabled, sectionRef=$sectionRef, createdFromVersion=$createdFromVersion)"
+            "autoStartEnabled=$autoStartEnabled, autoDeleteEnabled=$autoDeleteEnabled, " +
+            "sectionRef=$sectionRef, createdFromVersion=$createdFromVersion)"
     }
 }

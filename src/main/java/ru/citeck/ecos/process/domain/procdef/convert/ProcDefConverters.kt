@@ -42,6 +42,7 @@ fun ProcDefEntity.toDto(): ProcDefDto {
     procDefDto.workingCopySourceRef = RecordRef.valueOf(workingCopySourceRef)
     procDefDto.enabled = enabled ?: false
     procDefDto.autoStartEnabled = autoStartEnabled ?: false
+    procDefDto.autoDeleteEnabled = autoDeleteEnabled ?: true
     procDefDto.format = lastRev?.format ?: ""
     procDefDto.sectionRef = EntityRef.valueOf(sectionRef).ifEmpty {
         EntityRef.create(EprocApp.NAME, procDefDto.procType + "-section", "DEFAULT")
