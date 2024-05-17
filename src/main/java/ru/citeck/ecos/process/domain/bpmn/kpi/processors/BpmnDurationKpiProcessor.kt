@@ -138,7 +138,8 @@ class BpmnDurationKpiProcessor(
                     withSortBy(SortBy(RecordConstants.ATT_CREATED, false))
                 },
                 ElementInfo::class.java
-            ).getRecords().firstOrNull() ?: return@forEach
+            ).getRecords().firstOrNull()
+                ?: error("Cannot find source element for stakeholder: \n${stakeholder.toPrettyString()}")
 
             calcKpi(stakeholder, foundSourceElement)?.let { kpiValue ->
                 log.trace { "Create duration kpiValue: $kpiValue for stakeholder: \n${stakeholder.toPrettyString()}" }

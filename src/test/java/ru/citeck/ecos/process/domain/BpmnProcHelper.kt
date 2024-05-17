@@ -19,7 +19,6 @@ import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
@@ -130,7 +129,7 @@ fun uploadNewVersionFromResource(resource: String, id: String, comment: String, 
 }
 
 fun uploadNewVersion(content: String, id: String, comment: String, replace: Pair<String, String>) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)).apply {
         // Does not matter, we check field is not empty and increase major version
         this["version:version"] = "someVersion"
         this["version:comment"] = comment
@@ -142,7 +141,7 @@ fun uploadNewVersion(content: String, id: String, comment: String, replace: Pair
 }
 
 fun copyBpmnModule(id: String, moduleId: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)).apply {
         this["moduleId"] = moduleId
     }
 
@@ -155,7 +154,7 @@ fun saveBpmnWithActionAndReplaceDefinition(
     action: BpmnProcessDefActions?,
     replace: Pair<String, String>
 ) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = ResourceUtils.getFile("classpath:$resource")
             .readText(StandardCharsets.UTF_8)
@@ -170,7 +169,7 @@ fun saveBpmnWithActionAndReplaceDefinition(
 }
 
 fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
         this["processDefId"] = id
         this["definition"] = bpmnData
         this["action"] = BpmnProcessDefActions.DEPLOY.toString()
@@ -188,7 +187,7 @@ fun saveAndDeployDmnFromResource(resource: String, id: String) {
 }
 
 fun saveAndDeployDmnFromString(dmnData: String, id: String) {
-    val recordAtts = RecordAtts(RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, "")).apply {
+    val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, "")).apply {
         this["defId"] = id
         this["definition"] = dmnData
         this["action"] = DmnDefActions.DEPLOY.toString()
