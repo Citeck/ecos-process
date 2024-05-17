@@ -13,7 +13,7 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getConditionalEventSubscriptionsByProcessInstanceIds
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNamesLikeStart
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.convert.toDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity

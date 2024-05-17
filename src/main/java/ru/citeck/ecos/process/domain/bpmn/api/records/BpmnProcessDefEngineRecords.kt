@@ -9,9 +9,9 @@ import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.repository.ProcessDefinitionQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.service.ActivityStatistics
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessStatistics
-import ru.citeck.ecos.process.domain.bpmn.service.IncidentStatistics
+import ru.citeck.ecos.process.domain.bpmn.process.ActivityStatistics
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessStatistics
+import ru.citeck.ecos.process.domain.bpmn.process.IncidentStatistics
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils

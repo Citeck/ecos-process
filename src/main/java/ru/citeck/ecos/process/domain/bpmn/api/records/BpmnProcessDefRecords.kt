@@ -12,7 +12,6 @@ import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
-import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX

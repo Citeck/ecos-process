@@ -1,12 +1,12 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
@@ -17,14 +17,16 @@ import ru.citeck.ecos.process.domain.cleanDefinitions
 import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.util.concurrent.TimeUnit
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class BpmnStartDifferentProcessInOneDefinitionTest {
+class BpmnStartProcessAsyncTest {
 
     companion object {
-        private const val PROC_ID = "start-different-process-from-one-definition-test"
+        private const val PROC_ID = "bpmn-start-async-test"
+        private const val TIMEOUT = 5_000L
     }
 
     @Autowired
@@ -39,22 +41,22 @@ class BpmnStartDifferentProcessInOneDefinitionTest {
         )
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["1", "2"])
-    fun `should start different process in one definition`(processIdx: String) {
-        bpmnProcessService.startProcess(
+    @Test
+    fun `start bpmn process async test`() {
+        val businessKey = "start-bpmn-process-async-test"
+
+        bpmnProcessService.startProcessAsync(
             StartProcessRequest(
-                "process_different_$processIdx",
-                "test_business_key_$processIdx",
+                PROC_ID,
+                businessKey,
                 emptyMap()
             )
         )
 
-        val foundProcess = bpmnProcessService.getProcessInstancesForBusinessKey(
-            "test_business_key_$processIdx"
-        )
-
-        assertThat(foundProcess).hasSize(1)
+        Awaitility.await().atMost(TIMEOUT, TimeUnit.MILLISECONDS).untilAsserted {
+            val foundProcess = bpmnProcessService.getProcessInstancesForBusinessKey(businessKey)
+            assertThat(foundProcess).hasSize(1)
+        }
     }
 
     @AfterAll
