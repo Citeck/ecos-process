@@ -61,7 +61,7 @@ class ProcTaskServiceImpl(
         val managerToActorsPredicate = PredicateUtils.mapValuePredicates(predicate) {
             if (it.getAttribute() == "actorManager") {
                 val manager = it.getValue().asText()
-                val subordinates = getSubordinatesList(manager)
+                val subordinates = getAllSubordinates(manager)
                 Predicates.inVals("actor", subordinates)
             } else {
                 it
@@ -434,6 +434,17 @@ class ProcTaskServiceImpl(
 
         camundaTaskService.removeVariableLocal(taskId, BPMN_TASK_CANDIDATES_USER_ORIGINAL)
         camundaTaskService.removeVariableLocal(taskId, BPMN_TASK_CANDIDATES_GROUP_ORIGINAL)
+    }
+
+    private fun getAllSubordinates(manager: String, results: MutableSet<String> = LinkedHashSet()): Set<String> {
+        val subordinates = getSubordinatesList(manager)
+        if (subordinates.isNotEmpty()) {
+            results.addAll(subordinates)
+            for (subordinate in subordinates) {
+                getAllSubordinates("emodel/person@$subordinate", results)
+            }
+        }
+        return results
     }
 
     private fun getSubordinatesList(manager: String): Collection<String> {
