@@ -18,7 +18,7 @@ ecos-process:
     kpi:
       mutation-processor:
         consumer:
-          count: 1
+          count: 2
           prefetch: 20
     elements:
       listener:
@@ -26,10 +26,10 @@ ecos-process:
       mutation-processor:
         consumer:
           count: 1
-          prefetch: 20
+          prefetch: 8
     async-start-process:
       consumer:
-        count: 1
+        count: 4
         prefetch: 20
 
 context:

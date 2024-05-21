@@ -13,6 +13,17 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_ACTIVITY_ELEMENT_START
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_FLOW_ELEMENT_TAKE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toRawFlowElement
+import ru.citeck.ecos.txn.lib.TxnContext
+
+private const val BPMN_ELEMENT_BEFORE_COMMIT_ORDER = 1000.0f
+
+private fun sendBpmnElementBeforeCommit(unit: () -> Unit) {
+    TxnContext.doBeforeCommit(BPMN_ELEMENT_BEFORE_COMMIT_ORDER) {
+        AuthContext.runAsSystem {
+            unit.invoke()
+        }
+    }
+}
 
 @Component
 class BpmnFlowElementTakeEventExecutionListener(
@@ -34,11 +45,10 @@ class BpmnFlowElementTakeEventExecutionListener(
             return
         }
 
-        AuthContext.runAsSystem {
-            val rawFlowElement = execution.toRawFlowElement()
+        val rawFlowElement = execution.toRawFlowElement()
+        log.trace { "Send raw bpmn element take to queue:\n $rawFlowElement" }
 
-            log.trace { "Send raw bpmn element take to queue:\n $rawFlowElement" }
-
+        sendBpmnElementBeforeCommit {
             bpmnElementsToQueuePublisher.sendToQueue(
                 BpmnElementProcessingRequest(DataValue.of(rawFlowElement), BPMN_EVENT_FLOW_ELEMENT_TAKE)
             )
@@ -66,10 +76,10 @@ class BpmnActivityStartEventExecutionListener(
             return
         }
 
-        AuthContext.runAsSystem {
-            val rawFlowElement = execution.toRawFlowElement()
-            log.trace { "Send raw bpmn element start to queue:\n $rawFlowElement" }
+        val rawFlowElement = execution.toRawFlowElement()
+        log.trace { "Send raw bpmn element start to queue:\n $rawFlowElement" }
 
+        sendBpmnElementBeforeCommit {
             bpmnElementsToQueuePublisher.sendToQueue(
                 BpmnElementProcessingRequest(DataValue.of(rawFlowElement), BPMN_EVENT_ACTIVITY_ELEMENT_START)
             )
@@ -97,10 +107,10 @@ class BpmnActivityEndEventExecutionListener(
             return
         }
 
-        AuthContext.runAsSystem {
-            val rawFlowElement = execution.toRawFlowElement()
-            log.trace { "Send raw bpmn element end to queue:\n $rawFlowElement" }
+        val rawFlowElement = execution.toRawFlowElement()
+        log.trace { "Send raw bpmn element end to queue:\n $rawFlowElement" }
 
+        sendBpmnElementBeforeCommit {
             bpmnElementsToQueuePublisher.sendToQueue(
                 BpmnElementProcessingRequest(DataValue.of(rawFlowElement), BPMN_EVENT_ACTIVITY_ELEMENT_END)
             )

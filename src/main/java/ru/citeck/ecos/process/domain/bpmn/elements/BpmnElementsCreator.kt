@@ -308,6 +308,8 @@ class BpmnElementMutationAsyncProcessor(
                     Predicates.and(
                         Predicates.eq(BPMN_ELEMENT_DEF_ID, event.elementDefId),
                         Predicates.eq(BPMN_PROCESS_INSTANCE_ID, event.procInstanceId.toString()),
+                        // Its not ideal solution, but activity flow element does not have elementId in camunda engine
+                        Predicates.empty("completed")
                     )
                 )
             }
