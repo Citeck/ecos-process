@@ -45,7 +45,7 @@ ecos-process:
         hazelcast:
           timeToLiveSeconds: 3
           maxSizeConfig:
-            size: 100
+            size: 300
           evictionPolicy: LRU
     async-start-process:
       consumer:
