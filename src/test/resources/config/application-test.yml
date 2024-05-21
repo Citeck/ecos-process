@@ -1,4 +1,3 @@
-
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -14,10 +13,24 @@ ecos-process:
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
+# Increase consumers count for parallel processing after fix bug with parallel recordRef insert
   bpmn:
+    kpi:
+      mutation-processor:
+        consumer:
+          count: 1
+          prefetch: 20
     elements:
       listener:
         enabled: true
+      mutation-processor:
+        consumer:
+          count: 1
+          prefetch: 20
+    async-start-process:
+      consumer:
+        count: 1
+        prefetch: 20
 
 context:
   initializer:

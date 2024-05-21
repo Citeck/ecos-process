@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.service
+package ru.citeck.ecos.process.domain.bpmn.process
 
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE

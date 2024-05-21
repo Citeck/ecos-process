@@ -40,9 +40,29 @@ ecos-app:
 
 ecos-process:
   bpmn:
+    first-enabled-proc-def:
+      cache:
+        hazelcast:
+          timeToLiveSeconds: 3
+          maxSizeConfig:
+            size: 300
+          evictionPolicy: LRU
+    async-start-process:
+      consumer:
+        count: 4
+        prefetch: 250
+    kpi:
+      mutation-processor:
+        consumer:
+          count: 2
+          prefetch: 250
     elements:
       listener:
         enabled: true
+      mutation-processor:
+        consumer:
+          count: 8
+          prefetch: 250
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
@@ -64,6 +84,10 @@ ecos-process:
 
 ecos:
   webapp:
+    task:
+      executors:
+        bpmn-rabbitmq:
+          corePoolSize: 32
     dataSources:
       camunda:
         url: jdbc:postgresql://localhost:14523/ecos_camunda
@@ -75,6 +99,13 @@ ecos:
         username: process
         password: processpassword
         xa: true
+      bpmn-rabbitmq:
+        executor: bpmn-rabbitmq
+        name: BPMN rabbitmq connection
+        type: rabbitmq
+        host: ${ecos.webapp.dataSources.main-rabbitmq.host}
+        username: ${ecos.webapp.dataSources.main-rabbitmq.username}
+        password: ${ecos.webapp.dataSources.main-rabbitmq.password}
 
 camunda:
   bpm:

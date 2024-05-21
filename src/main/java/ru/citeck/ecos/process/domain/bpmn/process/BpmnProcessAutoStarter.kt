@@ -1,17 +1,13 @@
-package ru.citeck.ecos.process.domain.bpmn.service
+package ru.citeck.ecos.process.domain.bpmn.process
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.type.RecordCreatedEvent
 import ru.citeck.ecos.events2.type.RecordDraftStatusChangedEvent
-import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -21,7 +17,8 @@ import kotlin.system.measureTimeMillis
 class BpmnProcessAutoStarter(
     eventsService: EventsService,
     private val procDefService: ProcDefService,
-    private val bpmnProcessService: BpmnProcessService
+    private val bpmnProcessService: BpmnProcessService,
+    private val cachedFirstEnabledProcessDefFinder: CachedFirstEnabledProcessDefFinder
 ) {
 
     companion object {
@@ -33,7 +30,7 @@ class BpmnProcessAutoStarter(
         eventsService.addListener<EventData> {
             withEventType(RecordCreatedEvent.TYPE)
             withDataClass(EventData::class.java)
-            withTransactional(true)
+            withTransactional(false)
             withAction { handleStartProcessEvent(it) }
             withFilter(
                 Predicates.and(
@@ -47,7 +44,7 @@ class BpmnProcessAutoStarter(
         eventsService.addListener<EventData> {
             withEventType(RecordDraftStatusChangedEvent.TYPE)
             withDataClass(EventData::class.java)
-            withTransactional(true)
+            withTransactional(false)
             withAction { handleStartProcessEvent(it) }
             withFilter(
                 Predicates.and(
@@ -63,12 +60,12 @@ class BpmnProcessAutoStarter(
         val time = measureTimeMillis {
             log.debug { "Received event: $eventData" }
 
-            if (eventData.eventRef == RecordRef.EMPTY) {
+            if (eventData.eventRef == EntityRef.EMPTY) {
                 log.warn { "Cannot auto start process for empty eventRef: $eventData" }
                 return
             }
 
-            if (eventData.typeRef == RecordRef.EMPTY) {
+            if (eventData.typeRef == EntityRef.EMPTY) {
                 log.warn { "Cannot auto start process for empty typeRef: $eventData" }
                 return
             }
@@ -82,7 +79,7 @@ class BpmnProcessAutoStarter(
     private fun startProcessIfRequired(record: EntityRef, type: EntityRef) {
         log.debug { "Processing record: $record, type: $type for auto start process" }
 
-        val procDef = resolveFirstEnabledProcessDefByTypeHierarchy(type)
+        val procDef = cachedFirstEnabledProcessDefFinder.find(type.toString())
         if (procDef == null) {
             log.debug { "Process definition not found for $type" }
             return
@@ -101,19 +98,20 @@ class BpmnProcessAutoStarter(
         log.debug { "Auto start process for ${procDef.id}, vars: $processVariables" }
 
         // Auto-start process working only for process, which procDef.id = process.id
-        bpmnProcessService.startProcess(procDef.id, record.toString(), processVariables)
-    }
-
-    private fun resolveFirstEnabledProcessDefByTypeHierarchy(type: EntityRef): ProcDefWithDataDto? {
-        val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, type, emptyList()) ?: return null
-        return procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procRev.procDefId))
+        bpmnProcessService.startProcessAsync(
+            StartProcessRequest(
+                procDef.id,
+                record.toString(),
+                processVariables
+            )
+        )
     }
 
     data class EventData(
         @AttName("record?id")
-        var eventRef: EntityRef = RecordRef.EMPTY,
+        var eventRef: EntityRef = EntityRef.EMPTY,
 
         @AttName("record._type?id")
-        var typeRef: EntityRef = RecordRef.EMPTY
+        var typeRef: EntityRef = EntityRef.EMPTY
     )
 }

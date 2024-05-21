@@ -27,7 +27,8 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.api.records.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -165,12 +166,14 @@ class BpmnProcessPermissionsTest {
             )
 
             return bpmnProcessService.startProcess(
-                procId,
-                procId,
-                mapOf(
-                    "user" to user,
-                    "process" to procId,
-                    TEST_ATT_STR to "testStrValue"
+                StartProcessRequest(
+                    procId,
+                    procId,
+                    mapOf(
+                        "user" to user,
+                        "process" to procId,
+                        TEST_ATT_STR to "testStrValue"
+                    )
                 )
             )
         }

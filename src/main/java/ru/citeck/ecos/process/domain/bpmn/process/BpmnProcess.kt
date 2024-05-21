@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.service
+package ru.citeck.ecos.process.domain.bpmn.process
 
 import org.camunda.bpm.engine.history.HistoricProcessInstance
 import org.camunda.bpm.engine.repository.ProcessDefinition
@@ -9,9 +9,17 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
+const val BPMN_ASYNC_START_PROCESS_QUEUE_NAME = "bpmn-process-async-start-process"
+
+// retry ~5 min
+const val BPMN_ASYNC_START_PROCESS_QUEUE_RETRY_COUNT = 1200
+const val BPMN_ASYNC_START_PROCESS_QUEUE_RETRY_DELAY_MS = 500L
+
 interface BpmnProcessService {
 
-    fun startProcess(processKey: String, businessKey: String? = null, variables: Map<String, Any?>): ProcessInstance
+    fun startProcessAsync(request: StartProcessRequest)
+
+    fun startProcess(request: StartProcessRequest): ProcessInstance
 
     fun deleteProcessInstance(
         processInstanceId: String,
@@ -47,6 +55,12 @@ interface BpmnProcessService {
 
     fun getProcessDefinitionsByKey(processKey: String): List<ProcessDefinition>
 }
+
+data class StartProcessRequest(
+    val processKey: String,
+    val businessKey: String? = null,
+    val variables: Map<String, Any?> = emptyMap()
+)
 
 data class ProcessInstanceQuery(
     val businessKey: String = "",
