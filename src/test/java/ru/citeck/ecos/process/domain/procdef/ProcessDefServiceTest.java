@@ -102,6 +102,7 @@ public class ProcessDefServiceTest {
             null,
             true,
             false,
+            true,
             EntityRef.EMPTY,
             EntityRef.EMPTY
         );
@@ -196,6 +197,7 @@ public class ProcessDefServiceTest {
                 null,
                 true,
                 false,
+                true,
                 EntityRef.valueOf(sectionRef),
                 EntityRef.EMPTY
             );
