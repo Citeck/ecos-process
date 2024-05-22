@@ -22,10 +22,10 @@ ecos-process:
           prefetch: 20
     elements:
       listener:
-        enabled: true
+        enabled: false
       mutation-processor:
         consumer:
-          count: 1
+          count: 4
           prefetch: 8
     async-start-process:
       consumer:
