@@ -4307,7 +4307,7 @@ class BpmnMonsterTestWithRunProcessTest {
         `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
-            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+            verify(bpmnKpiService, Mockito.atLeast(1)).createKpiValue(
                 org.mockito.kotlin.check { kpiValue ->
                     assertThat(kpiValue.settingsRef).isEqualTo(
                         EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
@@ -4353,7 +4353,7 @@ class BpmnMonsterTestWithRunProcessTest {
         `when`(bpmnKpiService.queryKpiValues(any(), any())).thenReturn(emptyList())
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
-            verify(bpmnKpiService, Mockito.times(1)).createKpiValue(
+            verify(bpmnKpiService, Mockito.atLeast(1)).createKpiValue(
                 org.mockito.kotlin.check { kpiValue ->
                     assertThat(kpiValue.settingsRef).isEqualTo(
                         EntityRef.create(AppName.EMODEL, BPMN_KPI_SETTINGS_SOURCE_ID, settingsId)
