@@ -4,11 +4,8 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.type.RecordDeletedEvent
-import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
-import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
-import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
+import ru.citeck.ecos.process.domain.bpmn.process.CachedFirstEnabledProcessDefFinder
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -16,8 +13,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 @Component
 class BpmnProcessAutoDelete(
     eventsService: EventsService,
-    private val procDefService: ProcDefService,
-    private val bpmnProcessService: BpmnProcessService
+    private val bpmnProcessService: BpmnProcessService,
+    private val cachedFirstEnabledProcessDefFinder: CachedFirstEnabledProcessDefFinder
 ) {
 
     companion object {
@@ -41,7 +38,7 @@ class BpmnProcessAutoDelete(
 
     private fun handleDeleteProcessEvent(eventData: EventData) {
         log.debug { "Received event: $eventData" }
-        val processDef = findProcessDef(eventData.typeRef)
+        val processDef = cachedFirstEnabledProcessDefFinder.find(eventData.typeRef.toString())
         if (processDef == null) {
             log.debug { "Process definition not found for ${eventData.typeRef}" }
             return
@@ -59,11 +56,6 @@ class BpmnProcessAutoDelete(
             bpmnProcessService.deleteProcessInstance(it)
             log.debug { "Process $it was successfully deleted" }
         }
-    }
-
-    private fun findProcessDef(type: EntityRef): ProcDefWithDataDto? {
-        val procDef = procDefService.findProcDef(BPMN_PROC_TYPE, type, emptyList()) ?: return null
-        return procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procDef.procDefId))
     }
 
     data class EventData(
