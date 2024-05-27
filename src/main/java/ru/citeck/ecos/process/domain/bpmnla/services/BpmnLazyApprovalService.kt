@@ -20,11 +20,14 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
-import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
+import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.txn.lib.TxnContext
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
@@ -40,7 +43,8 @@ class BpmnLazyApprovalService(
     private val camundaExtensions: CamundaExtensions,
     private val ecosConfigService: EcosConfigService,
     private val notificationService: NotificationService,
-    private val mailUtils: MailUtils
+    private val mailUtils: MailUtils,
+    private val recordsService: RecordsService
 ) : BpmnLazyApprovalRemoteApi {
 
     private val hasLicense = EcosLicense.getForEntLib {
@@ -159,14 +163,15 @@ class BpmnLazyApprovalService(
             return fillLazyApprovalReport(MailProcessingCode.OUTCOME_NOT_FOUND, task)
         }
 
+        val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
+        val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
+        recordAtt.setAtt(outcomeForTask, true)
+        recordAtt.setAtt(BPMN_COMMENT, comment)
+
         return try {
             TxnContext.doInNewTxn {
                 AuthContext.runAsFull(userId) {
-                    procTaskService.completeTask(CompleteTaskData(
-                        task = task,
-                        outcome = completeTaskOutcome,
-                        variables = mapOf(BPMN_COMMENT to comment)
-                    ))
+                    recordsService.mutate(recordAtt)
                 }
 
                 fillLazyApprovalReport(MailProcessingCode.OK, task)
