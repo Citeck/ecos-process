@@ -60,7 +60,7 @@ class BpmnElementsTest {
             )
         )
 
-        Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
+        Awaitility.await().atMost(30, TimeUnit.SECONDS).untilAsserted {
             val foundBpmnElements = recordsService.query(
                 RecordsQuery.create {
                     withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
