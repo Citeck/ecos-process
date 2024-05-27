@@ -454,6 +454,55 @@
             "customConditional": "show = data.laEnabled == true;",
             "type": "selectJournal",
             "input": true
+          },
+          {
+            "label": {
+              "ru": "Включить отчеты о выполнении согласований через почту",
+              "en": "Enable reports on the lazy approval"
+            },
+            "key": "laReportEnabled",
+            "clearOnHide": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.laEnabled == true;",
+            "type": "checkbox",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Шаблон уведомления при успешном согласовании",
+              "en": "Success report notification template "
+            },
+            "key": "laSuccessReportNotificationTemplate",
+            "hideCreateButton": true,
+            "hideEditRowButton": true,
+            "clearOnHide": false,
+            "modalTitle": "",
+            "journalId": "notification-templates",
+            "queryData": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.laEnabled == true && data.laReportEnabled == true;",
+            "type": "selectJournal",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Шаблон уведомления при неудачном согласовании",
+              "en": "Error report notification template"
+            },
+            "key": "laErrorReportNotificationTemplate",
+            "hideCreateButton": true,
+            "hideEditRowButton": true,
+            "clearOnHide": false,
+            "modalTitle": "",
+            "journalId": "notification-templates",
+            "queryData": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.laEnabled == true && data.laReportEnabled == true;",
+            "type": "selectJournal",
+            "input": true
           }
         ]
       },

@@ -168,7 +168,7 @@ class CamundaExtensions(
 
     internal fun getUserTaskLaInfo(key: Pair<String, String>): UserTaskLaInfo {
         val taskDefinition = taskDeployedCamundaDefCache.get(key).task
-            ?: return UserTaskLaInfo(false, null, null)
+            ?: return UserTaskLaInfo()
 
         return UserTaskLaInfo(
             laEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_ENABLED].toBoolean(),
@@ -177,7 +177,16 @@ class CamundaExtensions(
             },
             laNotificationTemplate = RecordRef.valueOf(
                 taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
-            )
+            ),
+            laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
+            laSuccessReportNotificationTemplate =
+            taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                RecordRef.valueOf(it)
+            },
+            laErrorReportNotificationTemplate =
+            taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                RecordRef.valueOf(it)
+            }
         )
     }
 
