@@ -11,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
 import ru.citeck.ecos.process.domain.cleanDefinitions
 import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.saveBpmnWithAction
@@ -42,9 +43,11 @@ class BpmnStartDifferentProcessInOneDefinitionTest {
     @ValueSource(strings = ["1", "2"])
     fun `should start different process in one definition`(processIdx: String) {
         bpmnProcessService.startProcess(
-            "process_different_$processIdx",
-            "test_business_key_$processIdx",
-            emptyMap()
+            StartProcessRequest(
+                "process_different_$processIdx",
+                "test_business_key_$processIdx",
+                emptyMap()
+            )
         )
 
         val foundProcess = bpmnProcessService.getProcessInstancesForBusinessKey(

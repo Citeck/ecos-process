@@ -1,4 +1,3 @@
-
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -15,9 +14,28 @@ ecos-process:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
   bpmn:
+    kpi:
+      mutation-processor:
+        consumer:
+          count: 2
+          prefetch: 20
+          retry:
+            max-attempts: 3
     elements:
       listener:
         enabled: true
+      mutation-processor:
+        consumer:
+          count: 4
+          prefetch: 8
+          retry:
+            max-attempts: 3
+    async-start-process:
+      consumer:
+        count: 4
+        prefetch: 20
+        retry:
+          max-attempts: 3
 
 context:
   initializer:

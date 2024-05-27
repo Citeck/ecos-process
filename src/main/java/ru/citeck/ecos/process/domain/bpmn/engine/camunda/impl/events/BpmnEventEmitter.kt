@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 
@@ -36,30 +35,6 @@ class BpmnEventEmitter(
             source = appName
             eventType = BPMN_EVENT_PROCESS_START
             eventClass = ProcessStartEvent::class.java
-        }
-    )
-
-    private val flowElementsStartEmitter = eventsService.getEmitter(
-        EmitterConfig.create<FlowElementEvent> {
-            source = appName
-            eventType = BPMN_EVENT_ACTIVITY_ELEMENT_START
-            eventClass = FlowElementEvent::class.java
-        }
-    )
-
-    private val flowElementsEndEmitter = eventsService.getEmitter(
-        EmitterConfig.create<FlowElementEvent> {
-            source = appName
-            eventType = BPMN_EVENT_ACTIVITY_ELEMENT_END
-            eventClass = FlowElementEvent::class.java
-        }
-    )
-
-    private val flowElementsTakeEmitter = eventsService.getEmitter(
-        EmitterConfig.create<FlowElementEvent> {
-            source = appName
-            eventType = BPMN_EVENT_FLOW_ELEMENT_TAKE
-            eventClass = FlowElementEvent::class.java
         }
     )
 
@@ -97,18 +72,6 @@ class BpmnEventEmitter(
 
     fun emitProcessStart(event: ProcessStartEvent) {
         processStartEmitter.emit(event)
-    }
-
-    fun emitElementStart(event: FlowElementEvent) {
-        flowElementsStartEmitter.emit(event)
-    }
-
-    fun emitElementEnd(event: FlowElementEvent) {
-        flowElementsEndEmitter.emit(event)
-    }
-
-    fun emitFlowElementTake(event: FlowElementEvent) {
-        flowElementsTakeEmitter.emit(event)
     }
 
     fun emitUserTaskCreateEvent(event: UserTaskEvent) {

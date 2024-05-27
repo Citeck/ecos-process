@@ -20,7 +20,7 @@ import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnDurationKpiTimeType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiSettings
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX

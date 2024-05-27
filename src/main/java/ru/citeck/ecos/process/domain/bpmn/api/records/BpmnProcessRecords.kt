@@ -15,11 +15,14 @@ import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.bpmn.process.ActivityStatistics
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.ProcessInstanceQuery
+import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
 import ru.citeck.ecos.process.domain.bpmn.service.*
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -119,12 +122,12 @@ class BpmnProcessRecords(
 
     override fun getRecordAtts(recordId: String): Any? {
         if (isAlfProcessDef(recordId)) {
-            var ref = RecordRef.valueOf(recordId)
-            if (ref.appName.isBlank()) {
+            var ref = EntityRef.valueOf(recordId)
+            if (ref.getAppName().isBlank()) {
                 ref = ref.withAppName(AppName.ALFRESCO)
             }
 
-            if (ref.sourceId.isBlank()) {
+            if (ref.getSourceId().isBlank()) {
                 ref = ref.withSourceId("workflow")
             }
 
@@ -142,7 +145,7 @@ class BpmnProcessRecords(
 
     override fun mutate(record: LocalRecordAtts): String {
         if (isAlfProcessDef(record.id)) {
-            val alfRef = RecordRef.create(AppName.ALFRESCO, "workflow", "def_${record.id}")
+            val alfRef = EntityRef.create(AppName.ALFRESCO, "workflow", "def_${record.id}")
             val res = recordsService.mutate(alfRef, record.attributes)
             return res.getLocalId()
         }
@@ -238,9 +241,11 @@ class BpmnProcessRecords(
         log.debug { "Starting process ${record.id}, businessKey: $businessKey with variables: \n$processVariables" }
 
         return bpmnProcessService.startProcess(
-            record.id,
-            businessKey,
-            processVariables.toMap()
+            StartProcessRequest(
+                record.id,
+                businessKey,
+                processVariables.toMap()
+            )
         )
     }
 

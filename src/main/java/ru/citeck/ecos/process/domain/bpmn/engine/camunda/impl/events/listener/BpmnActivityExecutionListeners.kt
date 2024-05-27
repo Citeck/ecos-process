@@ -3,15 +3,32 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.listener
 import mu.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.ExecutionListener
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toFlowElement
-import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.process.domain.bpmn.elements.BpmnElementProcessingRequest
+import ru.citeck.ecos.process.domain.bpmn.elements.BpmnElementsToQueuePublisher
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_ACTIVITY_ELEMENT_END
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_ACTIVITY_ELEMENT_START
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_FLOW_ELEMENT_TAKE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toRawFlowElement
+import ru.citeck.ecos.txn.lib.TxnContext
+
+private const val BPMN_ELEMENT_BEFORE_COMMIT_ORDER = 1000.0f
+
+private fun sendBpmnElementBeforeCommit(unit: () -> Unit) {
+    TxnContext.doBeforeCommit(BPMN_ELEMENT_BEFORE_COMMIT_ORDER) {
+        AuthContext.runAsSystem {
+            unit.invoke()
+        }
+    }
+}
 
 @Component
 class BpmnFlowElementTakeEventExecutionListener(
-    private val emitter: BpmnEventEmitter
+    @Autowired(required = false)
+    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?
 ) : ExecutionListener {
 
     companion object {
@@ -19,25 +36,30 @@ class BpmnFlowElementTakeEventExecutionListener(
     }
 
     override fun notify(execution: DelegateExecution) {
+        if (bpmnElementsToQueuePublisher == null) {
+            return
+        }
+
         val flowElement = execution.bpmnModelElementInstance
         if (flowElement == null || flowElement.id.isNullOrBlank()) {
             return
         }
 
-        AuthContext.runAsSystem {
-            RequestContext.doWithTxn {
-                val converterFlowElement = execution.toFlowElement()
-                log.trace { "Emit take flow element:\n $converterFlowElement" }
+        val rawFlowElement = execution.toRawFlowElement()
+        log.trace { "Send raw bpmn element take to queue:\n $rawFlowElement" }
 
-                emitter.emitFlowElementTake(converterFlowElement)
-            }
+        sendBpmnElementBeforeCommit {
+            bpmnElementsToQueuePublisher.sendToQueue(
+                BpmnElementProcessingRequest(DataValue.of(rawFlowElement), BPMN_EVENT_FLOW_ELEMENT_TAKE)
+            )
         }
     }
 }
 
 @Component
 class BpmnActivityStartEventExecutionListener(
-    private val emitter: BpmnEventEmitter
+    @Autowired(required = false)
+    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?
 ) : ExecutionListener {
 
     companion object {
@@ -45,25 +67,30 @@ class BpmnActivityStartEventExecutionListener(
     }
 
     override fun notify(execution: DelegateExecution) {
+        if (bpmnElementsToQueuePublisher == null) {
+            return
+        }
+
         val flowElement = execution.bpmnModelElementInstance
         if (flowElement == null || flowElement.id.isNullOrBlank()) {
             return
         }
 
-        AuthContext.runAsSystem {
-            RequestContext.doWithTxn {
-                val converterFlowElement = execution.toFlowElement()
-                log.trace { "Emit start element:\n $converterFlowElement" }
+        val rawFlowElement = execution.toRawFlowElement()
+        log.trace { "Send raw bpmn element start to queue:\n $rawFlowElement" }
 
-                emitter.emitElementStart(converterFlowElement)
-            }
+        sendBpmnElementBeforeCommit {
+            bpmnElementsToQueuePublisher.sendToQueue(
+                BpmnElementProcessingRequest(DataValue.of(rawFlowElement), BPMN_EVENT_ACTIVITY_ELEMENT_START)
+            )
         }
     }
 }
 
 @Component
 class BpmnActivityEndEventExecutionListener(
-    private val emitter: BpmnEventEmitter
+    @Autowired(required = false)
+    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?
 ) : ExecutionListener {
 
     companion object {
@@ -71,18 +98,22 @@ class BpmnActivityEndEventExecutionListener(
     }
 
     override fun notify(execution: DelegateExecution) {
+        if (bpmnElementsToQueuePublisher == null) {
+            return
+        }
+
         val flowElement = execution.bpmnModelElementInstance
         if (flowElement == null || flowElement.id.isNullOrBlank()) {
             return
         }
 
-        AuthContext.runAsSystem {
-            RequestContext.doWithTxn {
-                val converterFlowElement = execution.toFlowElement()
-                log.trace { "Emit end element:\n $converterFlowElement" }
+        val rawFlowElement = execution.toRawFlowElement()
+        log.trace { "Send raw bpmn element end to queue:\n $rawFlowElement" }
 
-                emitter.emitElementEnd(converterFlowElement)
-            }
+        sendBpmnElementBeforeCommit {
+            bpmnElementsToQueuePublisher.sendToQueue(
+                BpmnElementProcessingRequest(DataValue.of(rawFlowElement), BPMN_EVENT_ACTIVITY_ELEMENT_END)
+            )
         }
     }
 }

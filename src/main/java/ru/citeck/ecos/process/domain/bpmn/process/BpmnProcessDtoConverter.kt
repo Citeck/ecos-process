@@ -1,4 +1,4 @@
-package ru.citeck.ecos.process.domain.bpmn.service
+package ru.citeck.ecos.process.domain.bpmn.process
 
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.CalledProcessInstanceDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.IncidentStatisticsDto

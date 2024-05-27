@@ -12,7 +12,6 @@ import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
-import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
@@ -102,9 +101,10 @@ class BpmnProcessDefRecords(
         if (recsQuery.language != PredicateService.LANGUAGE_PREDICATE) {
             return null
         }
+        val queryPredicate = recsQuery.getQuery(Predicate::class.java)
 
         val predicate = Predicates.and(
-            recsQuery.getQuery(Predicate::class.java),
+            queryPredicate,
             Predicates.eq("procType", BPMN_PROC_TYPE)
         )
 
@@ -166,8 +166,16 @@ class BpmnProcessDefRecords(
 
         if (isMoreRecordsRequired && remoteWebAppsApi.isAppAvailable(AppName.ALFRESCO)) {
 
-            val alfDefinitions = loadAllDefinitionsFromAlfresco()
-            result.addAll(alfDefinitions)
+            // maybe should be changed to checking predicate directly without DTO
+            val queryDto = PredicateUtils.convertToDto(
+                queryPredicate,
+                ProcDefQueryPredicateDto::class.java,
+                true
+            )
+            var alfDefinitions = loadAllDefinitionsFromAlfresco()
+            if (queryDto.sectionRef.isNotEmpty()) {
+                alfDefinitions = alfDefinitions.filter { it.getSectionRef() == queryDto.sectionRef }
+            }
             totalCount += alfDefinitions.size
         }
 
@@ -849,5 +857,9 @@ class BpmnProcessDefRecords(
     inner class SectionPathPart(
         val code: String?,
         var name: MLText?
+    )
+
+    class ProcDefQueryPredicateDto(
+        val sectionRef: EntityRef = EntityRef.EMPTY
     )
 }

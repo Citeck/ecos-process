@@ -14,6 +14,6 @@ class JdbcDataSourceConfig {
     @Bean
     @Primary
     fun jdbcDataSource(ecosDataSourceManager: EcosDataSourceManager): JdbcDataSource {
-        return ecosDataSourceManager.getDataSource(AppName.EPROC, JdbcDataSource::class.java, true)
+        return ecosDataSourceManager.getDataSource(AppName.EPROC, JdbcDataSource::class.java)
     }
 }
