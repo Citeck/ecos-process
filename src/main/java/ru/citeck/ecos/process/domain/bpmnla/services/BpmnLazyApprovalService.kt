@@ -19,7 +19,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
-import ru.citeck.ecos.process.domain.bpmn.service.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
