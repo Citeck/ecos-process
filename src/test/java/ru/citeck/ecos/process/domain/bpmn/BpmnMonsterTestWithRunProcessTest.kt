@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
@@ -107,7 +106,6 @@ private const val BUSINESS_KEY = "businesskey"
  */
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class], properties = ["ecos-process.bpmn.elements.listener.enabled=true"])
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class BpmnMonsterTestWithRunProcessTest {
 
     @Autowired

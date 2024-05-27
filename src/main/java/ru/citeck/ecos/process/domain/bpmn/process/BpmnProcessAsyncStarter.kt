@@ -19,7 +19,10 @@ class BpmnProcessAsyncStarter(
     private val consumersCount: Int,
 
     @Value("\${ecos-process.bpmn.async-start-process.consumer.prefetch}")
-    private val prefetch: Int
+    private val prefetch: Int,
+
+    @Value("\${ecos-process.bpmn.async-start-process.consumer.retry.max-attempts}")
+    private val maxAttempts: Int,
 ) {
     companion object {
         private val log = KotlinLogging.logger {}
@@ -33,7 +36,7 @@ class BpmnProcessAsyncStarter(
                 channel.addConsumerWithRetrying(
                     BPMN_ASYNC_START_PROCESS_QUEUE_NAME,
                     StartProcessRequest::class.java,
-                    BPMN_ASYNC_START_PROCESS_QUEUE_RETRY_COUNT,
+                    maxAttempts,
                 ) { request, _ ->
                     onMessageReceived(request.getContent(), "consumer-$i")
                 }

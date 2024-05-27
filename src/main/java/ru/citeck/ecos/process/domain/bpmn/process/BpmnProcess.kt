@@ -12,7 +12,6 @@ import java.time.Instant
 const val BPMN_ASYNC_START_PROCESS_QUEUE_NAME = "bpmn-process-async-start-process"
 
 // retry ~5 min
-const val BPMN_ASYNC_START_PROCESS_QUEUE_RETRY_COUNT = 1200
 const val BPMN_ASYNC_START_PROCESS_QUEUE_RETRY_DELAY_MS = 500L
 
 interface BpmnProcessService {

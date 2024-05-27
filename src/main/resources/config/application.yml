@@ -51,11 +51,15 @@ ecos-process:
       consumer:
         count: 4
         prefetch: 250
+        retry:
+          max-attempts: 1200
     kpi:
       mutation-processor:
         consumer:
           count: 2
           prefetch: 250
+          retry:
+            max-attempts: 1200
     elements:
       listener:
         enabled: true
@@ -63,6 +67,8 @@ ecos-process:
         consumer:
           count: 8
           prefetch: 250
+          retry:
+            max-attempts: 1200
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
