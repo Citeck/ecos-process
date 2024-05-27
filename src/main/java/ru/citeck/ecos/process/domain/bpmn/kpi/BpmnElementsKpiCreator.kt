@@ -28,7 +28,6 @@ import java.time.Instant
 const val BPMN_ELEMENTS_KPI_QUEUE_NAME = "bpmn-elements-kpi-queue"
 
 // retry ~5 min
-const val BPMN_ELEMENTS_KPI_QUEUE_RETRY_COUNT = 1200
 const val BPMN_ELEMENTS_KPI_QUEUE_DELAY_MS = 500L
 
 data class BpmnElementsKpiProcessingRequest(
@@ -147,7 +146,10 @@ class BpmnElementsKpiMutationAsyncProcessor(
     private val consumersCount: Int,
 
     @Value("\${ecos-process.bpmn.kpi.mutation-processor.consumer.prefetch}")
-    private val prefetch: Int
+    private val prefetch: Int,
+
+    @Value("\${ecos-process.bpmn.kpi.mutation-processor.consumer.retry.max-attempts}")
+    private val maxAttempts: Int,
 ) {
 
     companion object {
@@ -162,7 +164,7 @@ class BpmnElementsKpiMutationAsyncProcessor(
                 channel.addConsumerWithRetrying(
                     BPMN_ELEMENTS_KPI_QUEUE_NAME,
                     BpmnElementsKpiProcessingRequest::class.java,
-                    BPMN_ELEMENTS_KPI_QUEUE_RETRY_COUNT
+                    maxAttempts
                 ) { request, _ ->
                     AuthContext.runAsSystem {
                         TxnContext.doInNewTxn {

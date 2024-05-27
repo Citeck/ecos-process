@@ -20,19 +20,19 @@ import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(EcosSpringExtension::class)
-@SpringBootTest(classes = [EprocApp::class])
+@SpringBootTest(classes = [EprocApp::class], properties = ["ecos-process.bpmn.elements.listener.enabled=true"])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class BpmnStartProcessAsyncTest {
+class BpmnElementsTest {
 
     companion object {
-        private const val PROC_ID_START_ASYNC = "bpmn-start-async-test"
-        private const val PROC_ID_START_ASYNC_WITH_ERROR = "start-bpmn-process-async-with-error-test"
-        private const val TIMEOUT = 5_000L
+        private const val PROC_ID = "bpmn-elements-multiple-time-in-one-flow"
     }
 
     @Autowired
@@ -44,60 +44,38 @@ class BpmnStartProcessAsyncTest {
     @BeforeAll
     fun setUp() {
         saveBpmnWithAction(
-            "test/bpmn/$PROC_ID_START_ASYNC.bpmn.xml",
-            PROC_ID_START_ASYNC,
-            BpmnProcessDefActions.DEPLOY
-        )
-
-        saveBpmnWithAction(
-            "test/bpmn/$PROC_ID_START_ASYNC_WITH_ERROR.bpmn.xml",
-            PROC_ID_START_ASYNC_WITH_ERROR,
+            "test/bpmn/$PROC_ID.bpmn.xml",
+            PROC_ID,
             BpmnProcessDefActions.DEPLOY
         )
     }
 
     @Test
-    fun `start bpmn process async test`() {
-        val businessKey = "start-bpmn-process-async-test"
-
-        bpmnProcessService.startProcessAsync(
+    fun `running bpmn process multiple time on one flow should fill element end time correct`() {
+        bpmnProcessService.startProcess(
             StartProcessRequest(
-                PROC_ID_START_ASYNC,
-                businessKey,
-                emptyMap()
-            )
-        )
-
-        Awaitility.await().atMost(TIMEOUT, TimeUnit.MILLISECONDS).untilAsserted {
-            val foundProcess = bpmnProcessService.getProcessInstancesForBusinessKey(businessKey)
-            assertThat(foundProcess).hasSize(1)
-        }
-    }
-
-    @Test
-    fun `start bpmn process async with error should not create bpmn elements`() {
-        bpmnProcessService.startProcessAsync(
-            StartProcessRequest(
-                PROC_ID_START_ASYNC_WITH_ERROR,
+                PROC_ID,
                 null,
                 emptyMap()
             )
         )
 
-        TimeUnit.SECONDS.sleep(5)
-
-        val foundBpmnElements = recordsService.query(
-            RecordsQuery.create {
-                withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
-                withQuery(
-                    Predicates.and(
-                        Predicates.eq(BPMN_ELEMENT_DEF_ID, "StartEvent_async_bpmn_error")
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
+            val foundBpmnElements = recordsService.query(
+                RecordsQuery.create {
+                    withSourceId(BPMN_ELEMENTS_REPO_SOURCE_ID)
+                    withQuery(
+                        Predicates.and(
+                            Predicates.eq(BPMN_ELEMENT_DEF_ID, "Activity_script_increment_counter")
+                        )
                     )
-                )
-            }
-        ).getRecords()
+                },
+                BpmnElementData::class.java
+            ).getRecords()
 
-        assertThat(foundBpmnElements).isEmpty()
+            assertThat(foundBpmnElements).hasSize(5)
+            assertThat(foundBpmnElements).allMatch { it.endTime != null }
+        }
     }
 
     @AfterAll
@@ -105,4 +83,9 @@ class BpmnStartProcessAsyncTest {
         cleanDeployments()
         cleanDefinitions()
     }
+
+    data class BpmnElementData(
+        @AttName("completed")
+        var endTime: Instant?
+    )
 }

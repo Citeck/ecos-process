@@ -30,7 +30,6 @@ import ru.citeck.ecos.txn.lib.TxnContext
 const val BPMN_ELEMENT_PROCESSING_QUEUE_NAME = "bpmn-element-processing-flow"
 
 // retry ~5 min
-const val BPMN_ELEMENT_PROCESSING_QUEUE_RETRY_COUNT = 1200
 const val BPMN_ELEMENT_PROCESSING_QUEUE_DELAY_MS = 500L
 
 data class BpmnElementProcessingRequest(
@@ -112,7 +111,10 @@ class BpmnElementMutationAsyncProcessor(
     private val consumersCount: Int,
 
     @Value("\${ecos-process.bpmn.elements.mutation-processor.consumer.prefetch}")
-    private val prefetch: Int
+    private val prefetch: Int,
+
+    @Value("\${ecos-process.bpmn.elements.mutation-processor.consumer.retry.max-attempts}")
+    private val maxAttempts: Int,
 ) {
 
     companion object {
@@ -127,7 +129,7 @@ class BpmnElementMutationAsyncProcessor(
                 channel.addConsumerWithRetrying(
                     BPMN_ELEMENT_PROCESSING_QUEUE_NAME,
                     BpmnElementProcessingRequest::class.java,
-                    BPMN_ELEMENT_PROCESSING_QUEUE_RETRY_COUNT
+                    maxAttempts
                 ) { request, _ ->
                     onMessageReceived(request.getContent(), "consumer-$i")
                 }
@@ -308,6 +310,8 @@ class BpmnElementMutationAsyncProcessor(
                     Predicates.and(
                         Predicates.eq(BPMN_ELEMENT_DEF_ID, event.elementDefId),
                         Predicates.eq(BPMN_PROCESS_INSTANCE_ID, event.procInstanceId.toString()),
+                        // Its not ideal solution, but activity flow element does not have elementId in camunda engine
+                        Predicates.empty("completed")
                     )
                 )
             }
