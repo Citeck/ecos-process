@@ -6,4 +6,8 @@
 
     <root level="WARN"/>
 
+    <logger name="org.camunda.bpm.engine.context" level="OFF" />
+    <logger name="ru.citeck.ecos.rabbitmq.RabbitMqChannel" level="OFF" />
+    <logger name="ru.citeck.ecos.data.sql.datasource.DbDataSourceImpl" level="OFF" />
+
 </configuration>
