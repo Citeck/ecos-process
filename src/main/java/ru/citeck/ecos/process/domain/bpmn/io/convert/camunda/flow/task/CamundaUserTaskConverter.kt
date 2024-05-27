@@ -115,7 +115,6 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             element.laErrorReportNotificationTemplate?.let {
                 otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE] = it.toString()
             }
-
         }
     }
 

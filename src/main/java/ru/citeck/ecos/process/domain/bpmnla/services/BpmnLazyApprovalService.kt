@@ -126,8 +126,13 @@ class BpmnLazyApprovalService(
         return meta
     }
 
-    override fun approveTask(taskId: String, taskOutcome: String, userId: String, token: String, comment: String)
-        : LazyApprovalReportDto {
+    override fun approveTask(
+        taskId: String,
+        taskOutcome: String,
+        userId: String,
+        token: String,
+        comment: String
+    ): LazyApprovalReportDto {
         val task = procTaskService.getTaskById(taskId)
 
         if (task == null) {
@@ -186,7 +191,11 @@ class BpmnLazyApprovalService(
         return fillLazyApprovalReport(code, null, task)
     }
 
-    private fun fillLazyApprovalReport(code: MailProcessingCode, errorMessage: String?, task: ProcTaskDto?): LazyApprovalReportDto {
+    private fun fillLazyApprovalReport(
+        code: MailProcessingCode,
+        errorMessage: String?,
+        task: ProcTaskDto?
+    ): LazyApprovalReportDto {
 
         val report = LazyApprovalReportDto(
             processingCode = code,

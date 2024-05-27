@@ -4091,7 +4091,10 @@ class BpmnMonsterTestWithRunProcessTest {
     // ---KPI TESTS ---
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start to end user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4131,7 +4134,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start event to start user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4171,7 +4177,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4211,7 +4220,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start end event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4251,7 +4263,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start to end process`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4291,7 +4306,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4337,7 +4355,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4383,7 +4404,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     @ValueSource(strings = ["store/doc@1", "store/doc@2"])
     fun `kpi with dmn condition true test`(docRef: String) {
         val procId = "test-kpi-with-dmn"
@@ -4580,7 +4604,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    fun `approve lazy approval task without la`() {
+    fun `create task without lazy approval should not send la notification`() {
         val procId = "test-lazy-approval-without-la-simple-process"
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
@@ -4606,7 +4630,7 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    fun `approve lazy approval task with wrong user`() {
+    fun `approve lazy approval task with wrong user should not allow complete task`() {
         val procId = "test-lazy-approval-simple-process"
         val defaultCommentKey = "lazy-approval-default-comment"
         val mailForAnswerKey = "lazy-approval-mail-for-reply"
@@ -4634,8 +4658,6 @@ class BpmnMonsterTestWithRunProcessTest {
             )
 
             assertThat(approvalReport.processingCode).isEqualTo(MailProcessingCode.EXCEPTION)
-
-            it.complete()
         }
 
         AuthContext.runAs(EmptyAuth) {
@@ -4647,11 +4669,11 @@ class BpmnMonsterTestWithRunProcessTest {
             ).execute()
         }
 
-        verify(process).hasFinished("endEventApproved")
+        verify(process, never()).hasFinished("endEventApproved")
     }
 
     @Test
-    fun `approve lazy approval task with wrong token`() {
+    fun `approve lazy approval task with wrong token should not allow complete task`() {
         val procId = "test-lazy-approval-simple-process"
         val defaultCommentKey = "lazy-approval-default-comment"
         val mailForAnswerKey = "lazy-approval-mail-for-reply"
@@ -4679,8 +4701,6 @@ class BpmnMonsterTestWithRunProcessTest {
             )
 
             assertThat(approvalReport.processingCode).isEqualTo(MailProcessingCode.TOKEN_NOT_FOUND)
-
-            it.complete()
         }
 
         AuthContext.runAs(EmptyAuth) {
@@ -4692,7 +4712,7 @@ class BpmnMonsterTestWithRunProcessTest {
             ).execute()
         }
 
-        verify(process).hasFinished("endEventApproved")
+        verify(process, never()).hasFinished("endEventApproved")
     }
 
     fun getSubscriptionsAfterAction(
