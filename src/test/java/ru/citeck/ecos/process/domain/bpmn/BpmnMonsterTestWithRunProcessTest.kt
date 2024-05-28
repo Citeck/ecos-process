@@ -35,9 +35,13 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.config.lib.service.EcosConfigService
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
+import ru.citeck.ecos.lazyapproval.model.MailProcessingCode
+import ru.citeck.ecos.license.EcosTestLicense
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
@@ -57,6 +61,7 @@ import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiService
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
+import ru.citeck.ecos.process.domain.bpmnla.services.BpmnLazyApprovalService
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
@@ -94,6 +99,8 @@ private const val SERVICE_TASK = "servicetask"
 private const val CONDITIONAL = "conditional"
 private const val CALL_ACTIVITY = "callactivity"
 private const val BUSINESS_KEY = "businesskey"
+
+private const val FOLDER_LA = "bpmnla"
 
 /**
  * Why all tests places on one monster class?
@@ -135,6 +142,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Autowired
     private lateinit var runtimeService: RuntimeService
 
+    @SpyBean
+    private lateinit var bpmnLazyApprovalService: BpmnLazyApprovalService
+
     @Mock
     private lateinit var process: ProcessScenario
 
@@ -152,6 +162,9 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @MockBean
     private lateinit var bpmnKpiService: BpmnKpiService
+
+    @MockBean
+    private lateinit var ecosConfigService: EcosConfigService
 
     @SpyBean
     private lateinit var bpmnEcosEventTestAction: BpmnEcosEventTestAction
@@ -171,6 +184,9 @@ class BpmnMonsterTestWithRunProcessTest {
 
         private val petyaRecord = UserPetyaRecord()
         private val petyaRef = EntityRef.valueOf("emodel/person@petya")
+
+        private val germanRecord = UserGermanRecord()
+        private val germanRef = EntityRef.valueOf("emodel/person@german")
 
         private val usersGroupRecord = UsersGroupRecord()
         private val usersGroupRef = EntityRef.valueOf("emodel/authority-group@users")
@@ -235,6 +251,10 @@ class BpmnMonsterTestWithRunProcessTest {
                 .addRecord(
                     petyaRef.getLocalId(),
                     petyaRecord
+                )
+                .addRecord(
+                    germanRef.getLocalId(),
+                    germanRecord
                 )
                 .build()
         )
@@ -4071,7 +4091,10 @@ class BpmnMonsterTestWithRunProcessTest {
     // ---KPI TESTS ---
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start to end user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4111,7 +4134,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start event to start user task`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4151,7 +4177,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4191,7 +4220,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start end event to user task end`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4231,7 +4263,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     fun `kpi on user task duration from start to end process`() {
         val procId = "test-kpi-duration"
         val settingsId = UUID.randomUUID().toString()
@@ -4271,7 +4306,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4317,7 +4355,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     @ValueSource(
         strings = [
             "startEvent", "subProcess", "startEventSubProcess", "userTask", "endEventSubProcess",
@@ -4363,7 +4404,10 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @ParameterizedTest
-    @EnabledIf(expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}", loadContext = true)
+    @EnabledIf(
+        expression = "#{environment['ecos-process.bpmn.elements.listener.enabled'] == 'true'}",
+        loadContext = true
+    )
     @ValueSource(strings = ["store/doc@1", "store/doc@2"])
     fun `kpi with dmn condition true test`(docRef: String) {
         val procId = "test-kpi-with-dmn"
@@ -4461,6 +4505,216 @@ class BpmnMonsterTestWithRunProcessTest {
         }
     }
 
+    // --- LAZY APPROVAL TESTS ---
+
+    @Test
+    fun `send lazy approval notification`() {
+        val procId = "test-lazy-approval-simple-process"
+        val defaultCommentKey = "lazy-approval-default-comment"
+        val mailForAnswerKey = "lazy-approval-mail-for-reply"
+        val taskTokenName = "tokenLA"
+
+        EcosTestLicense.updateContent().addFeature("lazy-approval").update()
+
+        saveAndDeployBpmn(FOLDER_LA, procId)
+
+        val additionalMeta = mutableMapOf<String, Any>()
+
+        `when`(ecosConfigService.getValue(defaultCommentKey)).thenReturn(DataValue.create("comment"))
+        `when`(ecosConfigService.getValue(mailForAnswerKey)).thenReturn(DataValue.create("testLa@mail.test"))
+
+        `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
+            additionalMeta["task_id"] = it.id
+            additionalMeta["task_token"] = procTaskService.getVariableLocal(it.id, taskTokenName).toString()
+            additionalMeta["default_comment"] = ecosConfigService.getValue(defaultCommentKey).asText()
+            additionalMeta["mail_for_answer"] = ecosConfigService.getValue(mailForAnswerKey).asText()
+
+            it.complete()
+        }
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).execute()
+        }
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .recipients(listOf(germanRecord.email))
+            .templateRef(EntityRef.valueOf("notifications/template@test-la-not"))
+            .additionalMeta(additionalMeta)
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(
+                    NotificationEqualsWrapper(
+                        notification
+                    )
+                )
+            }
+        )
+
+        verify(process).hasFinished("endEventApproved")
+    }
+
+    @Test
+    fun `approve lazy approval task`() {
+        val procId = "test-lazy-approval-simple-process"
+        val defaultCommentKey = "lazy-approval-default-comment"
+        val mailForAnswerKey = "lazy-approval-mail-for-reply"
+        val taskTokenName = "tokenLA"
+
+        EcosTestLicense.updateContent().addFeature("lazy-approval").update()
+
+        saveAndDeployBpmn(FOLDER_LA, procId)
+
+        val additionalMeta = mutableMapOf<String, Any>()
+
+        `when`(ecosConfigService.getValue(defaultCommentKey)).thenReturn(DataValue.create("comment"))
+        `when`(ecosConfigService.getValue(mailForAnswerKey)).thenReturn(DataValue.create("testLa@mail.test"))
+
+        `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
+            additionalMeta["task_id"] = it.id
+            additionalMeta["task_token"] = procTaskService.getVariableLocal(it.id, taskTokenName).toString()
+
+            bpmnLazyApprovalService.approveTask(
+                taskId = it.id,
+                taskOutcome = "Approve",
+                userId = "german",
+                token = procTaskService.getVariableLocal(it.id, taskTokenName).toString(),
+                comment = "comment"
+            )
+        }
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).execute()
+        }
+
+        verify(process).hasFinished("endEventApproved")
+    }
+
+    @Test
+    fun `create task without lazy approval should not send la notification`() {
+        val procId = "test-lazy-approval-without-la-simple-process"
+
+        EcosTestLicense.updateContent().addFeature("lazy-approval").update()
+
+        saveAndDeployBpmn(FOLDER_LA, procId)
+
+        `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
+            it.complete()
+        }
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).execute()
+        }
+
+        verify(bpmnLazyApprovalService, never()).sendNotification(any())
+
+        verify(process).hasFinished("endEventApproved")
+    }
+
+    @Test
+    fun `approve lazy approval task with wrong user should not allow complete task`() {
+        val procId = "test-lazy-approval-simple-process"
+        val defaultCommentKey = "lazy-approval-default-comment"
+        val mailForAnswerKey = "lazy-approval-mail-for-reply"
+        val taskTokenName = "tokenLA"
+
+        EcosTestLicense.updateContent().addFeature("lazy-approval").update()
+
+        saveAndDeployBpmn(FOLDER_LA, procId)
+
+        val additionalMeta = mutableMapOf<String, Any>()
+
+        `when`(ecosConfigService.getValue(defaultCommentKey)).thenReturn(DataValue.create("comment"))
+        `when`(ecosConfigService.getValue(mailForAnswerKey)).thenReturn(DataValue.create("testLa@mail.test"))
+
+        `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
+            additionalMeta["task_id"] = it.id
+            additionalMeta["task_token"] = procTaskService.getVariableLocal(it.id, taskTokenName).toString()
+
+            val approvalReport = bpmnLazyApprovalService.approveTask(
+                taskId = it.id,
+                taskOutcome = "Approve",
+                userId = "petya",
+                token = procTaskService.getVariableLocal(it.id, taskTokenName).toString(),
+                comment = "comment"
+            )
+
+            assertThat(approvalReport.processingCode).isEqualTo(MailProcessingCode.EXCEPTION)
+        }
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).execute()
+        }
+
+        verify(process, never()).hasFinished("endEventApproved")
+    }
+
+    @Test
+    fun `approve lazy approval task with wrong token should not allow complete task`() {
+        val procId = "test-lazy-approval-simple-process"
+        val defaultCommentKey = "lazy-approval-default-comment"
+        val mailForAnswerKey = "lazy-approval-mail-for-reply"
+        val taskTokenName = "tokenLA"
+
+        EcosTestLicense.updateContent().addFeature("lazy-approval").update()
+
+        saveAndDeployBpmn(FOLDER_LA, procId)
+
+        val additionalMeta = mutableMapOf<String, Any>()
+
+        `when`(ecosConfigService.getValue(defaultCommentKey)).thenReturn(DataValue.create("comment"))
+        `when`(ecosConfigService.getValue(mailForAnswerKey)).thenReturn(DataValue.create("testLa@mail.test"))
+
+        `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
+            additionalMeta["task_id"] = it.id
+            additionalMeta["task_token"] = procTaskService.getVariableLocal(it.id, taskTokenName).toString()
+
+            val approvalReport = bpmnLazyApprovalService.approveTask(
+                taskId = it.id,
+                taskOutcome = "Approve",
+                userId = "german",
+                token = "bed-token",
+                comment = "comment"
+            )
+
+            assertThat(approvalReport.processingCode).isEqualTo(MailProcessingCode.TOKEN_NOT_FOUND)
+        }
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).execute()
+        }
+
+        verify(process, never()).hasFinished("endEventApproved")
+    }
+
     fun getSubscriptionsAfterAction(
         incomingEventData: IncomingEventData,
         action: () -> Unit
@@ -4555,6 +4809,11 @@ class BpmnMonsterTestWithRunProcessTest {
 
         @AttName("_type")
         val type: EntityRef = EntityRef.valueOf("emodel/type@document")
+    )
+
+    class UserGermanRecord(
+        @AttName("email")
+        val email: String = "german@mail.ru"
     )
 }
 

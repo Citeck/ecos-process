@@ -35,7 +35,10 @@ data class BpmnUserTaskDef(
 
     val laEnabled: Boolean = false,
     val laNotificationType: NotificationType? = null,
-    val laNotificationTemplate: RecordRef? = null
+    val laNotificationTemplate: RecordRef? = null,
+    val laReportEnabled: Boolean = false,
+    val laSuccessReportNotificationTemplate: RecordRef? = null,
+    val laErrorReportNotificationTemplate: RecordRef? = null
 
 ) : Validated {
 
