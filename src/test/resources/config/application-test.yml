@@ -13,11 +13,12 @@ ecos-process:
   timers:
     delay-after-fail-ms: 600000
     update-rate-ms: 30000
+# increase consumer count after fix concurrent recordRef insert error
   bpmn:
     kpi:
       mutation-processor:
         consumer:
-          count: 2
+          count: 1
           prefetch: 20
           retry:
             max-attempts: 3
@@ -26,13 +27,13 @@ ecos-process:
         enabled: true
       mutation-processor:
         consumer:
-          count: 4
+          count: 1
           prefetch: 8
           retry:
             max-attempts: 3
     async-start-process:
       consumer:
-        count: 4
+        count: 1
         prefetch: 20
         retry:
           max-attempts: 3
