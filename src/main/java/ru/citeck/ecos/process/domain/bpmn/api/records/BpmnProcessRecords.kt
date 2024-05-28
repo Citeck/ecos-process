@@ -274,9 +274,9 @@ class BpmnProcessRecords(
         val skipIoMapping = record.getAtt(ATT_ON_DELETE_SKIP_IO_MAPPING).asBoolean()
 
         bpmnProcessService.deleteProcessInstance(
-            record.id,
-            skipCustomListener,
-            skipIoMapping
+            processInstanceId = record.id,
+            skipCustomListener = skipCustomListener,
+            skipIoMappings = skipIoMapping
         )
     }
 

@@ -148,12 +148,13 @@ class BpmnProcessServiceImpl(
 
     override fun deleteProcessInstance(
         processInstanceId: String,
+        reason: String?,
         skipCustomListener: Boolean,
         skipIoMappings: Boolean
     ) {
         camundaRuntimeService.deleteProcessInstance(
             processInstanceId,
-            null,
+            reason,
             skipCustomListener,
             true,
             skipIoMappings,

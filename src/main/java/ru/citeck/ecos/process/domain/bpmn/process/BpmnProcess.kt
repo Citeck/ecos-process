@@ -22,6 +22,7 @@ interface BpmnProcessService {
 
     fun deleteProcessInstance(
         processInstanceId: String,
+        reason: String? = null,
         skipCustomListener: Boolean = false,
         skipIoMappings: Boolean = false
     )

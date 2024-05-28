@@ -53,7 +53,7 @@ class BpmnProcessAutoDelete(
             it.processInstanceId
         }
         processList.forEach {
-            bpmnProcessService.deleteProcessInstance(it)
+            bpmnProcessService.deleteProcessInstance(processInstanceId = it, reason = "document has been deleted")
             log.debug { "Process $it was successfully deleted" }
         }
     }

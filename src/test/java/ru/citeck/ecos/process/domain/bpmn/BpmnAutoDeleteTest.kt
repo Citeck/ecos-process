@@ -1,11 +1,13 @@
 package ru.citeck.ecos.process.domain.bpmn
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
@@ -22,6 +24,8 @@ import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class BpmnAutoDeleteTest {
 
     @Autowired
@@ -45,17 +49,23 @@ class BpmnAutoDeleteTest {
         private val testType2Ref = EntityRef.valueOf("emodel/$testType2Id@2")
     }
 
-    @BeforeEach
+    @BeforeAll
     fun setUp() {
-        typesRegistry.setValue(testType1Id, TypeDef.create {
-            withId(testType1Id)
-            withParentRef(ModelUtils.getTypeRef("user-base"))
-        })
+        typesRegistry.setValue(
+            testType1Id,
+            TypeDef.create {
+                withId(testType1Id)
+                withParentRef(ModelUtils.getTypeRef("user-base"))
+            }
+        )
 
-        typesRegistry.setValue(testType2Id, TypeDef.create {
-            withId(testType2Id)
-            withParentRef(ModelUtils.getTypeRef("user-base"))
-        })
+        typesRegistry.setValue(
+            testType2Id,
+            TypeDef.create {
+                withId(testType2Id)
+                withParentRef(ModelUtils.getTypeRef("user-base"))
+            }
+        )
 
         recordsService.register(
             RecordsDaoBuilder.create("emodel/$testType1Id")
