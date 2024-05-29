@@ -4563,6 +4563,61 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    fun `send lazy approval notification with custom template`() {
+        val procId = "test-lazy-approval-with-custom-template-process"
+        val defaultCommentKey = "lazy-approval-default-comment"
+        val mailForAnswerKey = "lazy-approval-mail-for-reply"
+        val taskTokenName = "tokenLA"
+
+        EcosTestLicense.updateContent().addFeature("lazy-approval").update()
+
+        saveAndDeployBpmn(FOLDER_LA, procId)
+
+        val additionalMeta = mutableMapOf<String, Any>()
+
+        `when`(ecosConfigService.getValue(defaultCommentKey)).thenReturn(DataValue.create("comment"))
+        `when`(ecosConfigService.getValue(mailForAnswerKey)).thenReturn(DataValue.create("testLa@mail.test"))
+
+        `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
+            additionalMeta["task_id"] = it.id
+            additionalMeta["task_token"] = procTaskService.getVariableLocal(it.id, taskTokenName).toString()
+            additionalMeta["default_comment"] = ecosConfigService.getValue(defaultCommentKey).asText()
+            additionalMeta["mail_for_answer"] = ecosConfigService.getValue(mailForAnswerKey).asText()
+
+            it.complete()
+        }
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).execute()
+        }
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .recipients(listOf(germanRecord.email))
+            .templateRef(EntityRef.valueOf("notifications/template@test-la-notification"))
+            .additionalMeta(additionalMeta)
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(
+                    NotificationEqualsWrapper(
+                        notification
+                    )
+                )
+            }
+        )
+
+        verify(process).hasFinished("endEventApproved")
+    }
+
+    @Test
     fun `approve lazy approval task`() {
         val procId = "test-lazy-approval-simple-process"
         val defaultCommentKey = "lazy-approval-default-comment"

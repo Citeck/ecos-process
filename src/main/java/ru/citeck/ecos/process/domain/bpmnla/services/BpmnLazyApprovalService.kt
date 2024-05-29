@@ -81,9 +81,26 @@ class BpmnLazyApprovalService(
 
         val taskEvent = delegateTask.toTaskEvent()
 
+        fun getTemplateRef(): EntityRef? {
+            if (!taskEvent.laManualNotificationTemplateEnabled) {
+                return taskEvent.laNotificationTemplate
+            }
+
+            val manualNotificationTemplate = taskEvent.laManualNotificationTemplate
+            if (manualNotificationTemplate.isNullOrBlank()) {
+                return null
+            }
+
+            val executionVariable = findExecutionVariable(manualNotificationTemplate)
+            return EntityRef.valueOf(
+                if (executionVariable != null) delegateTask.execution.getVariable(executionVariable)
+                else manualNotificationTemplate
+            )
+        }
+
         when (taskEvent.laNotificationType) {
             NotificationType.EMAIL_NOTIFICATION -> {
-                val templateRef = taskEvent.laNotificationTemplate
+                val templateRef = getTemplateRef()
                 if (templateRef == null) {
                     log.warn { "Notification template is null for task = ${delegateTask.taskDefinitionKey}" }
                     return
@@ -216,5 +233,11 @@ class BpmnLazyApprovalService(
         }
 
         return report
+    }
+
+    fun findExecutionVariable(input: String): String? {
+        val regex = Regex("^\\$\\{(.*)}$")
+        val matchResult = regex.find(input)
+        return matchResult?.groupValues?.get(1)
     }
 }
