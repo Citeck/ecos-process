@@ -77,11 +77,22 @@ data class BpmnUserTaskDef(
             )
         }
 
-        if (laEnabled && (laNotificationType == null && laManualNotificationTemplate.isNullOrEmpty())) {
-            throw EcosBpmnElementDefinitionException(
-                id,
-                "Lazy approval notification type cannot be empty if lazy approval is enabled."
-            )
+        if (laEnabled) {
+            if (laNotificationType == null) {
+                throw EcosBpmnElementDefinitionException(
+                    id,
+                    "Lazy approval notification type cannot be empty if lazy approval is enabled."
+                )
+            }
+
+            if (laNotificationType == NotificationType.EMAIL_NOTIFICATION &&
+                (laNotificationTemplate == null && laManualNotificationTemplate.isNullOrEmpty())
+            ) {
+                throw EcosBpmnElementDefinitionException(
+                    id,
+                    "Lazy approval with email notification type must have a template."
+                )
+            }
         }
     }
 }

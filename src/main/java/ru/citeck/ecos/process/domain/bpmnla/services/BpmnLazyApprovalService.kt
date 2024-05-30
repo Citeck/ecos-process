@@ -93,8 +93,11 @@ class BpmnLazyApprovalService(
 
             val executionVariable = findExecutionVariable(manualNotificationTemplate)
             return EntityRef.valueOf(
-                if (executionVariable != null) delegateTask.execution.getVariable(executionVariable)
-                else manualNotificationTemplate
+                if (executionVariable != null) {
+                    delegateTask.execution.getVariable(executionVariable)
+                } else {
+                    manualNotificationTemplate
+                }
             )
         }
 
@@ -235,7 +238,7 @@ class BpmnLazyApprovalService(
         return report
     }
 
-    fun findExecutionVariable(input: String): String? {
+    private fun findExecutionVariable(input: String): String? {
         val regex = Regex("^\\$\\{(.*)}$")
         val matchResult = regex.find(input)
         return matchResult?.groupValues?.get(1)

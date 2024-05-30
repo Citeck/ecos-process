@@ -4,9 +4,7 @@
   "title": {
     "en": "BPMN User Task Form"
   },
-  "description": {
-    "en": "4"
-  },
+  "description": {},
   "customModule": "",
   "typeRef": "",
   "width": "lg",

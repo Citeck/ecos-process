@@ -67,9 +67,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             },
             laManualNotificationTemplateEnabled =
             element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
-            laManualNotificationTemplate = element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE]?.let {
-                it
-            },
+            laManualNotificationTemplate = element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
             laReportEnabled = element.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             element.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
