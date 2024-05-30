@@ -182,12 +182,6 @@ class BpmnLazyApprovalService(
             return fillLazyApprovalReport(MailProcessingCode.TOKEN_NOT_FOUND, task)
         }
 
-        val completeTaskOutcome = task.definitionKey?.let { Outcome(it, outcome.id, outcome.name) }
-        if (completeTaskOutcome == null) {
-            log.warn { "Task with id = $taskId has no outcome = $outcome!" }
-            return fillLazyApprovalReport(MailProcessingCode.OUTCOME_NOT_FOUND, task)
-        }
-
         val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
         val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
         recordAtt.setAtt(outcomeForTask, true)
