@@ -58,11 +58,17 @@ class ProcTaskServiceImpl(
         sortBy: List<SortBy>,
         page: QueryPage
     ): DbFindRes<String> {
+        var isManagerWithoutSubordinates = false
         val managerToActorsPredicate = PredicateUtils.mapValuePredicates(predicate) {
             if (it.getAttribute() == "actorManager") {
                 val manager = it.getValue().asText()
                 val subordinates = getAllSubordinates(manager)
-                Predicates.inVals("actor", subordinates)
+                if (subordinates.isNotEmpty()) {
+                    Predicates.inVals("actor", subordinates)
+                } else {
+                    isManagerWithoutSubordinates = true
+                    VoidPredicate.INSTANCE
+                }
             } else {
                 it
             }
@@ -140,6 +146,10 @@ class ProcTaskServiceImpl(
         } ?: VoidPredicate.INSTANCE
 
         if (predicate is VoidPredicate && !AuthContext.isRunAsSystemOrAdmin()) {
+            return DbFindRes.empty()
+        }
+
+        if (isManagerWithoutSubordinates && !AuthContext.isRunAsSystem()) {
             return DbFindRes.empty()
         }
 
