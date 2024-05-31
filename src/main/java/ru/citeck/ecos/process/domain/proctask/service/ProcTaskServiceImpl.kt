@@ -74,6 +74,10 @@ class ProcTaskServiceImpl(
             }
         } ?: VoidPredicate.INSTANCE
 
+        if (isManagerWithoutSubordinates) {
+            return DbFindRes.empty()
+        }
+
         var preparedPredicate = managerToActorsPredicate.transformDocumentTypeRefToDocumentTypeAtt()
         preparedPredicate = PredicateUtils.mapValuePredicates(preparedPredicate) {
 
@@ -146,10 +150,6 @@ class ProcTaskServiceImpl(
         } ?: VoidPredicate.INSTANCE
 
         if (predicate is VoidPredicate && !AuthContext.isRunAsSystemOrAdmin()) {
-            return DbFindRes.empty()
-        }
-
-        if (isManagerWithoutSubordinates && !AuthContext.isRunAsSystem()) {
             return DbFindRes.empty()
         }
 
