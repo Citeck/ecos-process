@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
@@ -28,6 +29,8 @@ import java.util.concurrent.TimeUnit
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class], properties = ["ecos-process.bpmn.elements.listener.enabled=true"])
+// TODO: remove DirtiesContext
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BpmnElementsTest {
 
