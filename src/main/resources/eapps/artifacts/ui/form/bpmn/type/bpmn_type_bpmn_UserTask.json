@@ -438,6 +438,41 @@
           },
           {
             "label": {
+              "ru": "Ручной ввод шаблона уведомления",
+              "en": "Manually entering a notification template"
+            },
+            "key": "laManualNotificationTemplateEnabled",
+            "clearOnHide": false,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.laEnabled == true;",
+            "type": "checkbox",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Шаблон уведомления",
+              "en": "Notification template"
+            },
+            "key": "laManualNotificationTemplate",
+            "tooltip": {
+              "ru": "Имя переменной процесса или recordRef шаблона уведомления. \n\nНапример:\nnotifications/template@some-template\n${someVariable}"
+            },
+            "validate": {
+              "required": true
+            },
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.laManualNotificationTemplateEnabled == true;",
+            "type": "textfield",
+            "input": true,
+            "inputMasks": [
+              {}
+            ]
+          },
+          {
+            "label": {
               "ru": "Шаблон уведомления",
               "en": "Notification template"
             },
@@ -451,7 +486,7 @@
             "queryData": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
-            "customConditional": "show = data.laEnabled == true;",
+            "customConditional": "show = data.laEnabled == true\n  && data.laManualNotificationTemplateEnabled != true;",
             "type": "selectJournal",
             "input": true
           },

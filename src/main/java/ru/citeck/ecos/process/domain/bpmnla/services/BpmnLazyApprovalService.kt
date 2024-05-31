@@ -81,9 +81,29 @@ class BpmnLazyApprovalService(
 
         val taskEvent = delegateTask.toTaskEvent()
 
+        fun getTemplateRef(): EntityRef? {
+            if (!taskEvent.laManualNotificationTemplateEnabled) {
+                return taskEvent.laNotificationTemplate
+            }
+
+            val manualNotificationTemplate = taskEvent.laManualNotificationTemplate
+            if (manualNotificationTemplate.isNullOrBlank()) {
+                return null
+            }
+
+            val executionVariable = findExecutionVariable(manualNotificationTemplate)
+            return EntityRef.valueOf(
+                if (executionVariable != null) {
+                    delegateTask.execution.getVariable(executionVariable)
+                } else {
+                    manualNotificationTemplate
+                }
+            )
+        }
+
         when (taskEvent.laNotificationType) {
             NotificationType.EMAIL_NOTIFICATION -> {
-                val templateRef = taskEvent.laNotificationTemplate
+                val templateRef = getTemplateRef()
                 if (templateRef == null) {
                     log.warn { "Notification template is null for task = ${delegateTask.taskDefinitionKey}" }
                     return
@@ -162,12 +182,6 @@ class BpmnLazyApprovalService(
             return fillLazyApprovalReport(MailProcessingCode.TOKEN_NOT_FOUND, task)
         }
 
-        val completeTaskOutcome = task.definitionKey?.let { Outcome(it, outcome.id, outcome.name) }
-        if (completeTaskOutcome == null) {
-            log.warn { "Task with id = $taskId has no outcome = $outcome!" }
-            return fillLazyApprovalReport(MailProcessingCode.OUTCOME_NOT_FOUND, task)
-        }
-
         val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
         val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
         recordAtt.setAtt(outcomeForTask, true)
@@ -216,5 +230,11 @@ class BpmnLazyApprovalService(
         }
 
         return report
+    }
+
+    private fun findExecutionVariable(input: String): String? {
+        val regex = Regex("^\\$\\{(.*)}$")
+        val matchResult = regex.find(input)
+        return matchResult?.groupValues?.get(1)
     }
 }

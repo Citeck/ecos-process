@@ -165,6 +165,8 @@ fun DelegateTask.toTaskEvent(): UserTaskEvent {
             laEnabled = userTaskLaInfo.laEnabled,
             laNotificationType = userTaskLaInfo.laNotificationType,
             laNotificationTemplate = userTaskLaInfo.laNotificationTemplate,
+            laManualNotificationTemplateEnabled = userTaskLaInfo.laManualNotificationTemplateEnabled,
+            laManualNotificationTemplate = userTaskLaInfo.laManualNotificationTemplate,
             laReportEnabled = userTaskLaInfo.laReportEnabled,
             laSuccessReportNotificationTemplate = userTaskLaInfo.laSuccessReportNotificationTemplate,
             laErrorReportNotificationTemplate = userTaskLaInfo.laErrorReportNotificationTemplate

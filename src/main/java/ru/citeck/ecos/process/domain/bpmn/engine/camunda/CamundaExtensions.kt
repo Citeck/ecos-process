@@ -178,6 +178,9 @@ class CamundaExtensions(
             laNotificationTemplate = RecordRef.valueOf(
                 taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
             ),
+            laManualNotificationTemplateEnabled =
+            taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
+            laManualNotificationTemplate = taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
             laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {

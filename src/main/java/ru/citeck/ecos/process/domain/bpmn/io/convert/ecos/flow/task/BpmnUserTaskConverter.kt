@@ -65,6 +65,9 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             laNotificationTemplate = element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]?.let {
                 RecordRef.valueOf(it)
             },
+            laManualNotificationTemplateEnabled =
+            element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
+            laManualNotificationTemplate = element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
             laReportEnabled = element.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             element.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
@@ -106,6 +109,13 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             }
             element.laNotificationTemplate?.let {
                 otherAttributes.putIfNotBlank(BPMN_PROP_LA_NOTIFICATION_TEMPLATE, it.toString())
+            }
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED,
+                element.laManualNotificationTemplateEnabled.toString()
+            )
+            element.laManualNotificationTemplate?.let {
+                otherAttributes.putIfNotBlank(BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE, it)
             }
             otherAttributes.putIfNotBlank(BPMN_PROP_LA_REPORT_ENABLED, element.laReportEnabled.toString())
             element.laSuccessReportNotificationTemplate?.let {

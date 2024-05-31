@@ -35,6 +35,8 @@ data class UserTaskEvent(
     var laEnabled: Boolean = false,
     var laNotificationType: NotificationType? = null,
     var laNotificationTemplate: RecordRef? = null,
+    var laManualNotificationTemplateEnabled: Boolean = false,
+    var laManualNotificationTemplate: String? = null,
     var laReportEnabled: Boolean = false,
     var laSuccessReportNotificationTemplate: RecordRef? = null,
     var laErrorReportNotificationTemplate: RecordRef? = null,
