@@ -19,7 +19,7 @@ ecos-process:
       mutation-processor:
         consumer:
           count: 1
-          prefetch: 20
+          prefetch: 1
           retry:
             max-attempts: 3
     elements:
@@ -28,13 +28,13 @@ ecos-process:
       mutation-processor:
         consumer:
           count: 1
-          prefetch: 8
+          prefetch: 1
           retry:
             max-attempts: 3
     async-start-process:
       consumer:
         count: 1
-        prefetch: 20
+        prefetch: 1
         retry:
           max-attempts: 3
 
