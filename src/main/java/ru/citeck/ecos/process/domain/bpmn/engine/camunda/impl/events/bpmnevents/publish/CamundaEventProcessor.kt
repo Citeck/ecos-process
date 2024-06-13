@@ -24,8 +24,7 @@ import kotlin.system.measureTimeMillis
 class CamundaEventProcessor(
     private val exploder: CamundaEventExploder,
     private val eventSubscriptionFinder: CamundaEventSubscriptionFinder,
-    private val predicateService: PredicateService,
-    private val recordsTemplateService: RecordsTemplateService
+    private val predicateService: PredicateService
 ) {
 
     companion object {
