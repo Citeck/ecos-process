@@ -6,6 +6,7 @@ import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.TmplUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.records2.meta.RecordsTemplateService
@@ -120,11 +121,18 @@ class CamundaEventProcessor(
         recAtts.setAtts(this)
         val attsElement = RecordAttsEventElement(recAtts)
 
-        val resolvedFilter = recordsTemplateService.resolve(
-            predicate,
-            this
-        )
-
+        val predicateTemplateAtts = TmplUtils.getAtts(predicate)
+        val resolvedFilter = if (predicateTemplateAtts.isEmpty()) {
+            predicate
+        } else {
+            val predicateElementAtts = attsElement.getAttributes(predicateTemplateAtts.toList())
+            val predicateAtts = ObjectData.create()
+            predicateTemplateAtts.forEach {
+                predicateAtts[it] = predicateElementAtts.getAttribute(it)
+            }
+            TmplUtils.applyAtts(predicate, predicateAtts)
+                ?: error("Apply atts can't be performed. Predicate: $predicate Attributes: $predicateAtts")
+        }
         return predicateService.isMatch(attsElement, resolvedFilter)
     }
 }
@@ -164,7 +172,7 @@ private class RecordAttsEventElementAtts(private val atts: RecordAtts) : Element
 
     override fun getAttribute(name: String): Any {
         if (name.startsWith("_meta.")) {
-            return atts.get("_meta").get(name.substringAfter("_meta."))
+            return atts["_meta"][name.substringAfter("_meta.")]
         }
         return atts.getAtt(name)
     }
