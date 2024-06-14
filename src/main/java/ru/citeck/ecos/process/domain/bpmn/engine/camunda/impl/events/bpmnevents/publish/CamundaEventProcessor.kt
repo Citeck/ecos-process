@@ -9,7 +9,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.TmplUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
-import ru.citeck.ecos.records2.meta.RecordsTemplateService
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.element.Element
