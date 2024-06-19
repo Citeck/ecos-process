@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import mu.KotlinLogging
-import org.apache.commons.lang3.time.FastDateFormat
 import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.runtime.Job
 import org.camunda.bpm.engine.runtime.JobQuery
@@ -23,6 +22,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
+import java.time.ZonedDateTime
 import java.util.*
 
 @Component
@@ -191,7 +191,8 @@ class BpmnJobRecords(
     }
 
     private fun getFormatNewDueDate(newDueDate: String): Date {
-        return FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss").parse(newDueDate)
+        val zoneDateTime = ZonedDateTime.parse(newDueDate)
+        return Date.from(zoneDateTime.toInstant())
     }
 
     private inner class BpmnJobRecord(
