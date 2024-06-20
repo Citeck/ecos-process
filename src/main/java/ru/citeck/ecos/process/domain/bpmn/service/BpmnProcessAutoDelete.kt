@@ -49,9 +49,10 @@ class BpmnProcessAutoDelete(
             return
         }
 
-        val processList = bpmnProcessService.getProcessInstancesForBusinessKey(eventData.recordRef.toString()).map {
-            it.processInstanceId
-        }
+        val processList = bpmnProcessService.getProcessInstancesForBusinessKey(eventData.recordRef.toString())
+            .filter { it.processInstanceId == it.rootProcessInstanceId }
+            .map { it.processInstanceId }
+
         processList.forEach {
             bpmnProcessService.deleteProcessInstance(processInstanceId = it, reason = "document has been deleted")
             log.debug { "Process $it was successfully deleted" }
