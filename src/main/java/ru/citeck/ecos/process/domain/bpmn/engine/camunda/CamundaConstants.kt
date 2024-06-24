@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda
 const val BPMN_DOCUMENT = "document"
 const val BPMN_DOCUMENT_REF = "documentRef"
 const val BPMN_DOCUMENT_TYPE = "documentType"
+const val BPMN_DOCUMENT_STATUS = "documentStatus"
 const val BPMN_BUSINESS_KEY = "execution.businessKey"
 const val BPMN_EVENT = "event"
 const val BPMN_NAME_ML = "nameMl"

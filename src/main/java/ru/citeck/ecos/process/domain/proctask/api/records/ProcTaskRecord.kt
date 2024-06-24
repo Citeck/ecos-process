@@ -5,8 +5,14 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_STATUS
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSyncService
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_ATT_PREFIX
 import ru.citeck.ecos.process.domain.proctask.dto.AuthorityDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.process.domain.proctask.service.TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP
@@ -18,8 +24,11 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
 import java.time.Instant
 import javax.annotation.PostConstruct
 
@@ -34,7 +43,10 @@ private const val ATT_PREVIEW_INFO_JSON = "previewInfo${ScalarType.JSON_SCHEMA}"
 @Component
 class ProcTaskRecordServiceProvider(
     val recordsService: RecordsService,
-    val procTaskService: ProcTaskService
+    val procTaskService: ProcTaskService,
+    val procTaskAttsSyncService: ProcTaskAttsSyncService,
+    val authoritiesApi: EcosAuthoritiesApi,
+    val ecosTypesRegistry: EcosTypesRegistry
 ) {
 
     @PostConstruct
@@ -210,10 +222,36 @@ class ProcTaskRecord(
             return documentAtts.getAtt(name.removePrefix(DOCUMENT_FIELD_PREFIX))
         }
 
-        if (!historic && engineAtts.contains(name)) {
-            val value = prv.procTaskService.getVariable(id, name)
+        if (name.removePrefix(TASK_DOCUMENT_ATT_PREFIX) == BPMN_DOCUMENT_STATUS) {
+            val status = prv.procTaskService.getVariable(id, name) as String?
+            val documentType = prv.procTaskService.getVariable(id, BPMN_DOCUMENT_TYPE) as String?
+            if (status.isNullOrBlank() || documentType.isNullOrBlank()) {
+                return null
+            }
 
+            val typeInfo = prv.ecosTypesRegistry.getTypeInfo(ModelUtils.getTypeRef(documentType))
+
+            return typeInfo?.model?.statuses?.find { it.id == status }
+
+        }
+
+        if (!historic && engineAtts.contains(name)) {
+            // TODO: optimize this
             log.debug { "procTaskRecord $id request to task engine variables $id = $name. Possible performance issues" }
+
+            val value = prv.procTaskService.getVariable(id, name)
+            val attType = prv.procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
+
+            if (value is String) {
+                return when (attType) {
+                    AttributeType.ASSOC -> value.toEntityRef()
+                    AttributeType.AUTHORITY,
+                    AttributeType.PERSON,
+                    AttributeType.AUTHORITY_GROUP -> prv.authoritiesApi.getAuthorityRef(value)
+
+                    else -> value
+                }
+            }
 
             return value
         }

@@ -12,20 +12,14 @@ import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.clearTasks
-import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.service.ATT_CURRENT_USER_WITH_AUTH
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_DUE_DATE
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_NAME
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_PRIORITY
-import ru.citeck.ecos.records2.predicate.PredicateService
-import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.process.domain.queryTasks
 import ru.citeck.ecos.records2.predicate.model.Predicates
-import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
-import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.time.Instant
 import java.util.*
@@ -33,9 +27,6 @@ import java.util.*
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 class ProcTaskQueryTest {
-
-    @Autowired
-    private lateinit var recordsService: RecordsService
 
     @Autowired
     private lateinit var taskService: TaskService
@@ -381,7 +372,7 @@ class ProcTaskQueryTest {
         }
 
         assertThat(found).hasSize(3)
-        assertThat(found[0].getLocalId()).isEqualTo("task1", "task2", "task3")
+        assertThat(found.map { it.getLocalId() }).containsAll(listOf("task1", "task2", "task3"))
     }
 
     @Test
@@ -411,18 +402,6 @@ class ProcTaskQueryTest {
         }
 
         assertThat(found).hasSize(4)
-    }
-
-    private fun queryTasks(predicate: Predicate, sortBy: SortBy? = null): List<EntityRef> {
-        return recordsService.query(
-            RecordsQuery.create {
-                withSourceId(ProcTaskRecords.ID)
-                withLanguage(PredicateService.LANGUAGE_PREDICATE)
-                withQuery(predicate)
-                withSortBy(sortBy)
-                withPage(QueryPage(10_000, 0, null))
-            }
-        ).getRecords()
     }
 
     private fun createTaskForFilterAndSort() {

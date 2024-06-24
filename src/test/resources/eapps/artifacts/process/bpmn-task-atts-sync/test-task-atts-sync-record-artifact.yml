@@ -1,0 +1,21 @@
+---
+id: test-task-atts-sync-record-artifact
+name: test task atts sync record artifact
+enabled: true
+source: RECORD
+attributesSync:
+  - id: name
+    type: TEXT
+    ecosTypes:
+      - typeRef: emodel/type@doc
+        attribute: name
+  - id: sum
+    type: NUMBER
+    ecosTypes:
+      - typeRef: emodel/type@doc
+        attribute: sum
+  - id: count
+    type: NUMBER
+    ecosTypes:
+      - typeRef: emodel/type@doc
+        attribute: count

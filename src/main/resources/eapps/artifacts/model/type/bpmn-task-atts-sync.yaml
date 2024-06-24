@@ -1,0 +1,39 @@
+---
+id: bpmn-task-atts-sync
+name:
+  en: BPMN Task Attributes Sync
+  ru: Синхронизация атрибутов задач BPMN
+formRef: uiserv/form@bpmn-task-atts-sync
+sourceId: eproc/bpmn-task-atts-sync
+journalRef: uiserv/journal@bpmn-task-atts-sync
+defaultCreateVariant: true
+system: true
+actions:
+  - uiserv/action@download-text-yml
+  - uiserv/action@edit
+  - uiserv/action@edit-json
+  - uiserv/action@delete
+
+model:
+  attributes:
+    - id: enabled
+      name:
+        ru: Включено
+        en: Enabled
+      type: BOOLEAN
+    - id: name
+      name:
+        ru: Название
+        en: Name
+    - id: source
+      name:
+        ru: Источник
+        en: Source
+      type: TEXT
+    - id: attributesSync
+      name:
+        ru: Атрибуты
+        en: Attributes
+      type: JSON
+      multiple: true
+

@@ -1,0 +1,529 @@
+{
+  "id": "bpmn-task-atts-sync",
+  "formKey": "",
+  "title": {
+    "en": "BPMN task atts sync"
+  },
+  "description": {},
+  "customModule": "",
+  "typeRef": "emodel/type@bpmn-task-document-atts-sync",
+  "width": "lg",
+  "system": false,
+  "i18n": {
+    "ru": {},
+    "en": {}
+  },
+  "definition": {
+    "components": [
+      {
+        "scrollableContent": true,
+        "key": "panel2",
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "enabled"
+            },
+            "key": "enabled",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "checkbox",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "name"
+            },
+            "key": "name",
+            "validate": {
+              "required": true
+            },
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "textfield",
+            "input": true,
+            "inputMasks": [
+              {}
+            ]
+          },
+          {
+            "label": {
+              "ru": "Источник",
+              "en": "Source"
+            },
+            "key": "source",
+            "validate": {
+              "required": true
+            },
+            "dataSrc": "values",
+            "data": {
+              "values": [
+                {
+                  "label": {
+                    "ru": "Record",
+                    "en": "Record"
+                  },
+                  "value": "RECORD"
+                },
+                {
+                  "label": {
+                    "ru": "Тип",
+                    "en": "Type"
+                  },
+                  "value": "TYPE"
+                }
+              ],
+              "headers": [
+                {}
+              ]
+            },
+            "optionalWhenDisabled": false,
+            "type": "ecosSelect",
+            "input": true,
+            "defaultValue": "RECORD"
+          },
+          {
+            "label": {
+              "ru": "Атрибуты",
+              "en": "Attributes"
+            },
+            "key": "attributesSync",
+            "multiple": true,
+            "validate": {
+              "minLength": "",
+              "maxLength": ""
+            },
+            "disableAddingRemovingRows": false,
+            "addAnother": "Добавить атрибут",
+            "addAnotherPosition": "bottom",
+            "removePlacement": "col",
+            "defaultOpen": false,
+            "layoutFixed": false,
+            "enableRowGroups": false,
+            "reorder": false,
+            "defaultValue": [
+              {
+                "container": {
+                  "fieldId3": "",
+                  "fieldType3": "",
+                  "dataGrid2": [
+                    {
+                      "typeRef4": "",
+                      "attribute5": []
+                    }
+                  ]
+                },
+                "id": "",
+                "type": "",
+                "ecosTypes": [
+                  {
+                    "typeRef": "",
+                    "attribute": [],
+                    "typeData": {
+                      "attributes": null
+                    }
+                  }
+                ]
+              }
+            ],
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "datagrid",
+            "input": true,
+            "components": [
+              {
+                "key": "panel",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "panel",
+                "input": false,
+                "components": [
+                  {
+                    "label": "",
+                    "key": "columns3",
+                    "columns": [
+                      {
+                        "components": [
+                          {
+                            "label": {
+                              "ru": "Id",
+                              "en": "Id"
+                            },
+                            "key": "id",
+                            "validate": {
+                              "required": true,
+                              "pattern": "(^$|[_a-zA-Z][_\\w-.:]*)"
+                            },
+                            "defaultValue": "",
+                            "refreshOn": [],
+                            "optionalWhenDisabled": false,
+                            "type": "textfield",
+                            "input": true,
+                            "row": "0-0",
+                            "inputMasks": [
+                              {}
+                            ]
+                          }
+                        ],
+                        "type": "column",
+                        "input": false,
+                        "key": "column",
+                        "index": 0,
+                        "md": 8
+                      },
+                      {
+                        "index": 1,
+                        "type": "column",
+                        "input": false,
+                        "key": "column",
+                        "components": [
+                          {
+                            "label": {
+                              "ru": "Тип атрибута",
+                              "en": "Attribute Type"
+                            },
+                            "key": "type",
+                            "validate": {
+                              "required": true
+                            },
+                            "dataSrc": "values",
+                            "data": {
+                              "values": [
+                                {
+                                  "label": {
+                                    "ru": "Text",
+                                    "en": "DATETIME"
+                                  },
+                                  "value": "TEXT"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Person",
+                                    "en": "Person"
+                                  },
+                                  "value": "PERSON"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Group",
+                                    "en": "Group"
+                                  },
+                                  "value": "AUTHORITY_GROUP"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Authority",
+                                    "en": "Authority"
+                                  },
+                                  "value": "AUTHORITY"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Association",
+                                    "en": "Association"
+                                  },
+                                  "value": "ASSOC"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Number",
+                                    "en": "Number"
+                                  },
+                                  "value": "NUMBER"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Boolean",
+                                    "en": "Boolean"
+                                  },
+                                  "value": "BOOLEAN"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "Date",
+                                    "en": "Date"
+                                  },
+                                  "value": "DATE"
+                                },
+                                {
+                                  "label": {
+                                    "ru": "DateTime",
+                                    "en": "DateTime"
+                                  },
+                                  "value": "DATETIME"
+                                }
+                              ],
+                              "headers": [
+                                {}
+                              ]
+                            },
+                            "defaultValue": "",
+                            "optionalWhenDisabled": false,
+                            "type": "ecosSelect",
+                            "input": true,
+                            "row": "0-1"
+                          }
+                        ],
+                        "md": 4
+                      }
+                    ],
+                    "oneColumnInViewMode": false,
+                    "type": "columns",
+                    "input": false
+                  },
+                  {
+                    "label": {
+                      "ru": "Типы",
+                      "en": "Types"
+                    },
+                    "key": "ecosTypes",
+                    "multiple": true,
+                    "validate": {
+                      "minLength": "",
+                      "maxLength": ""
+                    },
+                    "disableAddingRemovingRows": false,
+                    "addAnother": "Добавить тип",
+                    "addAnotherPosition": "bottom",
+                    "removePlacement": "col",
+                    "defaultOpen": false,
+                    "layoutFixed": false,
+                    "enableRowGroups": false,
+                    "reorder": false,
+                    "defaultValue": [
+                      {
+                        "typeRef4": "",
+                        "attribute5": [],
+                        "typeRef": "",
+                        "attribute": [],
+                        "typeData": {
+                          "attributes": null
+                        }
+                      }
+                    ],
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "datagrid",
+                    "input": true,
+                    "components": [
+                      {
+                        "key": "columns",
+                        "columns": [
+                          {
+                            "components": [
+                              {
+                                "label": {
+                                  "ru": "Тип",
+                                  "en": "Type"
+                                },
+                                "key": "typeRef",
+                                "validate": {
+                                  "required": true
+                                },
+                                "modalTitle": "",
+                                "journalId": "ecos-types",
+                                "queryData": "",
+                                "refreshOn": [],
+                                "optionalWhenDisabled": false,
+                                "type": "selectJournal",
+                                "input": true
+                              }
+                            ],
+                            "type": "column",
+                            "input": false,
+                            "key": "column",
+                            "index": 0,
+                            "md": 4
+                          },
+                          {
+                            "index": 1,
+                            "type": "column",
+                            "input": false,
+                            "key": "column",
+                            "components": [
+                              {
+                                "label": {
+                                  "ru": "Атрибут",
+                                  "en": "Attribute"
+                                },
+                                "key": "attribute",
+                                "validate": {
+                                  "required": true
+                                },
+                                "dataSrc": "custom",
+                                "data": {
+                                  "custom": "let res = _.get(row, 'typeData.attributes') || [];\nif (!res.length) {\n  res = [];\n} else {\n  res = [...res, { value: '_status', label: 'Статус' }, { value: '_parent', label: 'Родитель' }];\n}\nvalues = res;",
+                                  "headers": [
+                                    {}
+                                  ]
+                                },
+                                "optionalWhenDisabled": false,
+                                "customConditional": "show = data.source === 'RECORD';",
+                                "type": "ecosSelect",
+                                "input": true
+                              },
+                              {
+                                "label": "Type Data",
+                                "source": {
+                                  "type": "record",
+                                  "record": {
+                                    "id": "{{row.typeRef}}",
+                                    "attributes": {
+                                      "attributes": "model.attributes[]{label:name,value:id}"
+                                    }
+                                  },
+                                  "forceLoad": false
+                                },
+                                "update": {
+                                  "type": "any-change",
+                                  "rate": 500
+                                },
+                                "key": "typeData",
+                                "type": "asyncData",
+                                "input": true
+                              },
+                              {
+                                "label": {
+                                  "ru": "Атрибут",
+                                  "en": "Attribute"
+                                },
+                                "key": "recordExpressionAttribute",
+                                "tooltip": {
+                                  "ru": "Records выражение",
+                                  "en": "Records expression"
+                                },
+                                "validate": {
+                                  "required": true,
+                                  "pattern": "([a-zA-Z0-9():?\\[\\]{}._\\$\\-]+$)"
+                                },
+                                "refreshOn": [],
+                                "optionalWhenDisabled": false,
+                                "customConditional": "show = data.source === 'TYPE';",
+                                "type": "textfield",
+                                "input": true,
+                                "inputMasks": [
+                                  {}
+                                ]
+                              }
+                            ],
+                            "md": 8
+                          }
+                        ],
+                        "oneColumnInViewMode": false,
+                        "type": "columns",
+                        "input": false,
+                        "row": "0-0"
+                      }
+                    ],
+                    "rowGroups": [
+                      {}
+                    ]
+                  }
+                ],
+                "row": "0-0"
+              }
+            ],
+            "rowGroups": [
+              {}
+            ]
+          }
+        ]
+      },
+      {
+        "key": "columns2",
+        "columns": [
+          {
+            "components": [
+              {
+                "label": "Cancel",
+                "action": "event",
+                "state": "",
+                "showValidations": false,
+                "event": "cancel",
+                "block": true,
+                "type": "button",
+                "input": true,
+                "key": "submit2",
+                "conditional": {
+                  "show": null,
+                  "when": null
+                }
+              }
+            ],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "md": 3,
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 0
+          },
+          {
+            "components": [],
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 1,
+            "md": 3
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "label": "Column",
+            "components": [],
+            "clearOnHide": true,
+            "conditional": {
+              "show": null,
+              "when": null
+            },
+            "index": 2
+          },
+          {
+            "md": 3,
+            "type": "column",
+            "input": false,
+            "key": "column",
+            "index": 3,
+            "components": [
+              {
+                "label": {
+                  "ru": "Создать",
+                  "en": "Submit"
+                },
+                "key": "submit",
+                "state": "",
+                "theme": "primary",
+                "block": true,
+                "disableOnInvalid": true,
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true
+              }
+            ]
+          }
+        ],
+        "oneColumnInViewMode": false,
+        "type": "columns",
+        "input": false
+      }
+    ],
+    "formId": "bpmn-task-atts-sync"
+  },
+  "attributes": {},
+  "notExists": false
+}

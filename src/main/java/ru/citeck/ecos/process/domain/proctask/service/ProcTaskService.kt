@@ -21,6 +21,10 @@ interface ProcTaskService {
 
     fun getTasksByDocumentForCurrentUser(document: String): List<ProcTaskDto>
 
+    fun getTaskIdsByDocumentType(documentType: String): List<String>
+
+    fun getTaskIdsByDocumentType(documentType: String, skipCount: Int, maxCount: Int): List<String>
+
     fun getTaskById(taskId: String): ProcTaskDto?
 
     fun getTasksByIds(taskIds: List<String>): List<ProcTaskDto?>
@@ -33,7 +37,11 @@ interface ProcTaskService {
 
     fun getVariablesLocal(taskId: String): Map<String, Any?>
 
+    fun setVariablesLocal(taskId: String, variables: Map<String, Any?>)
+
     fun getVariableLocal(taskId: String, variableName: String): Any?
+
+    fun getVariablesLocal(taskId: String, variableNames: List<String>): Map<String, Any?>
 
     fun claimTask(taskId: String, userId: String)
 
