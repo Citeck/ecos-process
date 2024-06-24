@@ -3733,7 +3733,9 @@ class BpmnMonsterTestWithRunProcessTest {
             variables_docRef
         ).execute()
 
-        verify(process).hasFinished("endEvent")
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
+            verify(process).hasFinished("endEvent")
+        }
     }
 
     @Test

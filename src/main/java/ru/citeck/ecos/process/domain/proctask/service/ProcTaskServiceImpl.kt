@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.data.sql.records.utils.DbDateUtils
 import ru.citeck.ecos.data.sql.repo.find.DbFindRes
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.comments.dto.CommentDto
 import ru.citeck.ecos.model.lib.comments.dto.CommentTag
 import ru.citeck.ecos.model.lib.comments.dto.CommentTagType
@@ -14,6 +15,7 @@ import ru.citeck.ecos.model.lib.comments.service.CommentsService
 import ru.citeck.ecos.model.lib.delegation.dto.AuthDelegation
 import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSyncService
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
@@ -42,7 +44,8 @@ class ProcTaskServiceImpl(
     private val cacheableTaskConverter: CacheableTaskConverter,
     private val delegationService: DelegationService,
     private val commentsService: CommentsService,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+    private val procTaskAttsSyncService: ProcTaskAttsSyncService
 ) : ProcTaskService {
 
     companion object {
@@ -85,7 +88,8 @@ class ProcTaskServiceImpl(
                 it.setValue(it.getValue().asInt())
             }
 
-            if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_DUE_DATE && it.getValue().isTextual()) {
+            val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(it.getAttribute())
+            if ((attType == AttributeType.DATE || attType == AttributeType.DATETIME) && it.getValue().isTextual()) {
                 val value = it.getValue()
                 val textVal = DbDateUtils.normalizeDateTimePredicateValue(
                     value.asText(),
@@ -153,7 +157,7 @@ class ProcTaskServiceImpl(
             return DbFindRes.empty()
         }
 
-        return ProcTaskSqlQueryBuilder(authoritiesApi, camundaTaskService)
+        return ProcTaskSqlQueryBuilder(authoritiesApi, camundaTaskService, procTaskAttsSyncService)
             .addConditions(preparedPredicate)
             .setPage(page.skipCount, page.maxItems)
             .setSorting(sortBy)
@@ -194,6 +198,24 @@ class ProcTaskServiceImpl(
         return getTasksByDocument(document).filter {
             it.isCurrentUserTaskActorOrDelegate()
         }
+    }
+
+    override fun getTaskIdsByDocumentType(documentType: String): List<String> {
+        return camundaTaskService.createTaskQuery()
+            .processVariableValueEquals(BPMN_DOCUMENT_TYPE, documentType)
+            .list()
+            .map {
+                it.id
+            }
+    }
+
+    override fun getTaskIdsByDocumentType(documentType: String, skipCount: Int, maxCount: Int): List<String> {
+        return camundaTaskService.createTaskQuery()
+            .processVariableValueEquals(BPMN_DOCUMENT_TYPE, documentType)
+            .listPage(skipCount, maxCount)
+            .map {
+                it.id
+            }
     }
 
     override fun getTaskById(taskId: String): ProcTaskDto? {
@@ -359,6 +381,14 @@ class ProcTaskServiceImpl(
 
     override fun getVariablesLocal(taskId: String): Map<String, Any?> {
         return camundaTaskService.getVariablesLocal(taskId)
+    }
+
+    override fun getVariablesLocal(taskId: String, variableNames: List<String>): Map<String, Any?> {
+        return camundaTaskService.getVariablesLocal(taskId, variableNames)
+    }
+
+    override fun setVariablesLocal(taskId: String, variables: Map<String, Any?>) {
+        camundaTaskService.setVariablesLocal(taskId, variables)
     }
 
     override fun getVariableLocal(taskId: String, variableName: String): Any? {

@@ -19,12 +19,20 @@ import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_ATT_PREFIX
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_TYPE_ATT_PREFIX
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskAttsSyncSource
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttribute
+import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_SOURCE_ID
 import ru.citeck.ecos.records2.predicate.PredicateService
+import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
@@ -122,6 +130,25 @@ fun createDurationKpiSettings(
     return helper.recordsService.create(BPMN_KPI_SETTINGS_SOURCE_ID_WITH_APP, kpiSettings)
 }
 
+fun createAttsSync(
+    id: String,
+    enabled: Boolean,
+    source: TaskAttsSyncSource,
+    name: String,
+    attributesSync: List<TaskSyncAttribute>
+): EntityRef {
+    val attsSync = mapOf(
+        "id" to id,
+        "enabled" to enabled,
+        "source" to source,
+        "name" to name,
+        "typeRef" to typeRef,
+        "attributesSync" to attributesSync
+    )
+
+    return helper.recordsService.create(PROC_TASK_ATTS_SYNC_SOURCE_ID, attsSync)
+}
+
 fun uploadNewVersionFromResource(resource: String, id: String, comment: String, replace: Pair<String, String>) {
     val content = ResourceUtils.getFile("classpath:$resource")
         .readText(StandardCharsets.UTF_8)
@@ -133,8 +160,7 @@ fun uploadNewVersion(content: String, id: String, comment: String, replace: Pair
         // Does not matter, we check field is not empty and increase major version
         this["version:version"] = "someVersion"
         this["version:comment"] = comment
-        this["_content"] = content
-            .replace(replace.first, replace.second)
+        this["_content"] = content.replace(replace.first, replace.second)
     }
 
     helper.recordsService.mutate(recordAtts)
@@ -383,3 +409,18 @@ fun queryMigrationPlan(
         ).getRecords()
     }
 }
+
+fun queryTasks(predicate: Predicate, sortBy: SortBy? = null): List<EntityRef> {
+    return helper.recordsService.query(
+        RecordsQuery.create {
+            withSourceId(ProcTaskRecords.ID)
+            withLanguage(PredicateService.LANGUAGE_PREDICATE)
+            withQuery(predicate)
+            withSortBy(sortBy)
+            withPage(QueryPage(10_000, 0, null))
+        }
+    ).getRecords()
+}
+
+fun String.withDocPrefix() = TASK_DOCUMENT_ATT_PREFIX + this
+fun String.withDocTypePrefix() = TASK_DOCUMENT_TYPE_ATT_PREFIX + this

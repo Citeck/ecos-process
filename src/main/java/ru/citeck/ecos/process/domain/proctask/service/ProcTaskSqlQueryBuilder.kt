@@ -12,6 +12,9 @@ import ru.citeck.ecos.data.sql.repo.find.DbFindRes
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSyncService
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_ATT_PREFIX
+import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_TYPE_ATT_PREFIX
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_ACTORS
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_ASSIGNEE
 import ru.citeck.ecos.records2.RecordConstants
@@ -34,7 +37,8 @@ const val ATT_CURRENT_USER = "\$CURRENT_USER"
  */
 class ProcTaskSqlQueryBuilder(
     private val authoritiesApi: EcosAuthoritiesApi,
-    private val taskService: TaskService
+    private val taskService: TaskService,
+    private val procTaskAttsSyncService: ProcTaskAttsSyncService
 ) {
 
     companion object {
@@ -98,6 +102,8 @@ class ProcTaskSqlQueryBuilder(
             is EmptyPredicate -> {
                 if (PROC_VARIABLES_MAPPING.containsKey(predicate.getAttribute())) {
                     addEmptyVariableCondition(PROC_VARIABLES_MAPPING[predicate.getAttribute()], true)
+                } else if (predicate.getAttribute().isAttFromSync()) {
+                    addEmptyVariableCondition(predicate.getAttribute(), false)
                 } else if (TASK_ATTS_MAPPING.containsKey(predicate.getAttribute())) {
                     val field = TASK_ATTS_MAPPING[predicate.getAttribute()]
                     if (field.isNullOrBlank()) {
@@ -247,7 +253,16 @@ class ProcTaskSqlQueryBuilder(
             return true
         } else if (PROC_VARIABLES_MAPPING.containsKey(attribute)) {
 
-            return addVariableCondition(PROC_VARIABLES_MAPPING[attribute], value, type, true)
+            return addVariableCondition(
+                PROC_VARIABLES_MAPPING[attribute],
+                value,
+                type,
+                isProcessVar = true,
+                isRuVariable = true
+            )
+        } else if (attribute.isAttFromSync()) {
+
+            return addVariableCondition(attribute, value, type, isProcessVar = false, isRuVariable = true)
         } else if (TASK_ATTS_MAPPING.containsKey(attribute)) {
 
             val field = TASK_ATTS_MAPPING[attribute]
@@ -303,10 +318,11 @@ class ProcTaskSqlQueryBuilder(
         name: String?,
         isProcessVar: Boolean
     ): Boolean {
-
         if (name.isNullOrBlank()) {
             return false
         }
+
+        val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
 
         condition.append(" NOT EXISTS(SELECT id_ FROM act_ru_variable WHERE name_ = '$name' AND ")
         if (isProcessVar) {
@@ -315,9 +331,14 @@ class ProcTaskSqlQueryBuilder(
             condition.append("$TASK_ALIAS.id_ = task_id_")
         }
         condition.append(
-            " AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='string' " +
-                "AND text_ IS NOT NULL AND text_ != ''"
+            " AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='${attType.getTaskAttType()}' " +
+                "AND ${attType.getTaskAttColumn()} IS NOT NULL "
         )
+
+        if (attType == AttributeType.TEXT) {
+            condition.append("AND text_ != ''")
+        }
+
         condition.append(")")
         return true
     }
@@ -325,14 +346,14 @@ class ProcTaskSqlQueryBuilder(
     private fun addVariableCondition(
         name: String?,
         value: DataValue,
-        type: ValuePredicate.Type,
-        isProcessVar: Boolean
+        predicateType: ValuePredicate.Type,
+        isProcessVar: Boolean,
+        isRuVariable: Boolean = false
     ): Boolean {
 
-        if (name.isNullOrBlank() || type != ValuePredicate.Type.EQ && type != ValuePredicate.Type.IN) {
+        if (name.isNullOrBlank()) {
             return false
         }
-        val values = castSqlParamValueToListOf(value, AttributeType.TEXT)
 
         condition.append(" EXISTS(SELECT id_ FROM act_ru_variable WHERE name_ = '$name' AND ")
         if (isProcessVar) {
@@ -340,24 +361,77 @@ class ProcTaskSqlQueryBuilder(
         } else {
             condition.append("$TASK_ALIAS.id_ = task_id_")
         }
-        condition.append(" AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='string' AND text_")
-        if (values.size == 1) {
-            condition.append(" = ")
-            addSqlQueryParams(condition, values)
-        } else {
-            condition.append(" IN (")
-            addSqlQueryParams(condition, values)
-            condition.append(")")
-        }
-        condition.append(")")
 
+        val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
+        val taskAttType = attType.getTaskAttType()
+
+        condition.append(" AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='$taskAttType' AND ")
+
+        val taskColumn = attType.getTaskAttColumn(predicateType)
+        condition.append(taskColumn)
+
+        val values = castSqlParamValueToListOf(value, attType, isRuVariable = isRuVariable)
+        when (predicateType) {
+            ValuePredicate.Type.EQ -> {
+                if (values.size == 1) {
+                    condition.append(" = ")
+                    addSqlQueryParams(condition, values)
+                } else {
+                    condition.append(" IN (")
+                    addSqlQueryParams(condition, values)
+                    condition.append(")")
+                }
+            }
+
+            ValuePredicate.Type.GT -> {
+                condition.append(" > ")
+                addSqlQueryParams(condition, values)
+            }
+
+            ValuePredicate.Type.LT -> {
+                condition.append(" < ")
+                addSqlQueryParams(condition, values)
+            }
+
+            ValuePredicate.Type.GE -> {
+                condition.append(" >= ")
+                addSqlQueryParams(condition, values)
+            }
+
+            ValuePredicate.Type.LE -> {
+                condition.append(" <= ")
+                addSqlQueryParams(condition, values)
+            }
+
+            ValuePredicate.Type.IN -> {
+                condition.append(" IN (")
+                addSqlQueryParams(condition, values)
+                condition.append(")")
+            }
+
+            ValuePredicate.Type.CONTAINS,
+            ValuePredicate.Type.LIKE -> {
+                if (attType == AttributeType.TEXT) {
+                    condition.append(" LIKE ")
+                    addSqlQueryParams(condition, values.map { "%$it%".lowercase() })
+                } else {
+                    condition.append(" LIKE ")
+                    addSqlQueryParams(condition, values.map { "%$it%" })
+                }
+            }
+
+            else -> return false
+        }
+
+        condition.append(")")
         return true
     }
 
     private fun castSqlParamValueToListOf(
         value: DataValue,
         type: AttributeType,
-        result: MutableList<Any?> = ArrayList()
+        result: MutableList<Any?> = ArrayList(),
+        isRuVariable: Boolean = false
     ): List<Any?> {
         if (value.isTextual() && value.asText() == ATT_CURRENT_USER_WITH_AUTH) {
             return AuthContext.getCurrentUserWithAuthorities()
@@ -377,6 +451,19 @@ class ProcTaskSqlQueryBuilder(
             result.add(null)
         }
         val convertedValue: Any = when (type) {
+            // act_ru_variable store boolean as long_, 0 or 1
+            AttributeType.BOOLEAN -> {
+                if (isRuVariable) {
+                    if (value.asBoolean()) {
+                        1
+                    } else {
+                        0
+                    }
+                } else {
+                    value
+                }
+            }
+
             AttributeType.DATETIME,
             AttributeType.DATE -> {
                 val dateTime = if (value.isTextual()) {
@@ -393,13 +480,21 @@ class ProcTaskSqlQueryBuilder(
                 } else {
                     error("Unknown date or datetime value: '$value'")
                 }
-                if (type == AttributeType.DATE) {
-                    dateTime.toLocalDate()
+
+                // act_ru_variable store date as long_, milliseconds
+                if (isRuVariable) {
+                    dateTime.toInstant().toEpochMilli()
                 } else {
-                    dateTime
+                    if (type == AttributeType.DATE) {
+                        dateTime.toLocalDate()
+                    } else {
+                        dateTime
+                    }
                 }
             }
 
+            AttributeType.PERSON,
+            AttributeType.AUTHORITY_GROUP,
             AttributeType.AUTHORITY -> {
                 if (value.isTextual()) {
                     authoritiesApi.getAuthorityName(value.asText())
@@ -520,4 +615,37 @@ class ProcTaskSqlQueryBuilder(
 
         return DbFindRes(tasks, totalCount)
     }
+
+    private fun AttributeType.getTaskAttType(): String {
+        return when (this) {
+            AttributeType.DATE,
+            AttributeType.DATETIME -> "date"
+
+            AttributeType.NUMBER -> "double"
+            AttributeType.BOOLEAN -> "boolean"
+            else -> "string"
+        }
+    }
+
+    private fun AttributeType.getTaskAttColumn(predicateType: ValuePredicate.Type? = null): String {
+        return when (this) {
+            AttributeType.TEXT -> {
+                if (predicateType == ValuePredicate.Type.CONTAINS || predicateType == ValuePredicate.Type.LIKE) {
+                    "LOWER(text_)"
+                } else {
+                    "text_"
+                }
+            }
+
+            AttributeType.NUMBER -> "double_"
+            AttributeType.DATE,
+            AttributeType.DATETIME,
+            AttributeType.BOOLEAN -> "long_"
+
+            else -> "text_"
+        }
+    }
+
+    private fun String.isAttFromSync(): Boolean = this.startsWith(TASK_DOCUMENT_ATT_PREFIX) ||
+        this.startsWith(TASK_DOCUMENT_TYPE_ATT_PREFIX)
 }
