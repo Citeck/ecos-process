@@ -40,8 +40,6 @@ class CamundaMyBatisExtension(
 
     @PostConstruct
     private fun init() {
-        ext = this
-
         factory = BpmnMyBatisExtendedSessionFactory()
         factory.initFromProcessEngineConfiguration(processEngineConfiguration, transactionManager)
     }
@@ -187,30 +185,44 @@ class CamundaMyBatisExtension(
     }
 }
 
-private lateinit var ext: CamundaMyBatisExtension
-
-fun HistoryService.getHistoricTasksByIds(ids: List<String>): List<HistoricTaskInstance> {
-    return ext.getHistoricTasksByIds(ids)
+fun HistoryService.getHistoricTasksByIds(
+    ids: List<String>,
+    camundaMyBatisExtension: CamundaMyBatisExtension
+): List<HistoricTaskInstance> {
+    return camundaMyBatisExtension.getHistoricTasksByIds(ids)
 }
 
-fun RuntimeService.getEventSubscriptionsByEventNames(eventNames: List<String>): List<EventSubscriptionEntity> {
-    return ext.getEventSubscriptionsByEventNames(eventNames)
+fun RuntimeService.getEventSubscriptionsByEventNames(
+    eventNames: List<String>,
+    camundaMyBatisExtension: CamundaMyBatisExtension
+): List<EventSubscriptionEntity> {
+    return camundaMyBatisExtension.getEventSubscriptionsByEventNames(eventNames)
 }
 
-fun RuntimeService.getEventSubscriptionsByEventNamesLikeStart(eventNames: List<String>): List<EventSubscriptionEntity> {
-    return ext.getEventSubscriptionsByEventNamesLikeStart(eventNames)
+fun RuntimeService.getEventSubscriptionsByEventNamesLikeStart(
+    eventNames: List<String>,
+    camundaMyBatisExtension: CamundaMyBatisExtension
+): List<EventSubscriptionEntity> {
+    return camundaMyBatisExtension.getEventSubscriptionsByEventNamesLikeStart(eventNames)
 }
 
 fun RuntimeService.getConditionalEventSubscriptionsByProcessInstanceIds(
-    processInstanceIds: List<String>
+    processInstanceIds: List<String>,
+    camundaMyBatisExtension: CamundaMyBatisExtension
 ): List<EventSubscriptionEntity> {
-    return ext.getConditionalEventSubscriptionsByProcessInstanceIds(processInstanceIds)
+    return camundaMyBatisExtension.getConditionalEventSubscriptionsByProcessInstanceIds(processInstanceIds)
 }
 
-fun RepositoryService.getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {
-    return ext.getLatestDecisionDefinitionsByKeys(keys)
+fun RepositoryService.getLatestDecisionDefinitionsByKeys(
+    keys: List<String>,
+    camundaMyBatisExtension: CamundaMyBatisExtension
+): List<DecisionDefinitionEntity> {
+    return camundaMyBatisExtension.getLatestDecisionDefinitionsByKeys(keys)
 }
 
-fun RepositoryService.getLatestProcessDefinitionsByKeys(keys: List<String>): List<ProcessDefinitionEntity> {
-    return ext.getLatestProcessDefinitionsByKeys(keys)
+fun RepositoryService.getLatestProcessDefinitionsByKeys(
+    keys: List<String>,
+    camundaMyBatisExtension: CamundaMyBatisExtension
+): List<ProcessDefinitionEntity> {
+    return camundaMyBatisExtension.getLatestProcessDefinitionsByKeys(keys)
 }

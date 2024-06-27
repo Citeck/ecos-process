@@ -56,7 +56,6 @@ class TaskAttsSyncSettingsChangeListener(
                             return@runAsSystem
                         }
 
-
                         procTaskAttsSynchronizer.fullSyncForSettingsAsync(it.record)
                     }
                 }

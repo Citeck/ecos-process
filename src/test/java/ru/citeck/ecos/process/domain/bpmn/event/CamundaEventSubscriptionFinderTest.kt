@@ -1,18 +1,17 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
 import com.hazelcast.core.HazelcastInstance
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
@@ -20,7 +19,6 @@ const val SUBSCRIPTION = "subscription"
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CamundaEventSubscriptionFinderTest {
 
     @Autowired
@@ -29,9 +27,13 @@ class CamundaEventSubscriptionFinderTest {
     @Autowired
     private lateinit var hazelCast: HazelcastInstance
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
+    @BeforeEach
     @AfterEach
     fun clearSubscriptions() {
-        cleanDefinitions()
+        helper.fullCleanEventSubscriptions()
     }
 
     @Test
@@ -46,8 +48,8 @@ class CamundaEventSubscriptionFinderTest {
 
         assertThat(cache).hasSize(0)
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
-        saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
         camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
 
         assertThat(cache).hasSize(2)
@@ -58,8 +60,8 @@ class CamundaEventSubscriptionFinderTest {
         val procId = "test-subscriptions-start-signal-event"
         val procIdModified = "test-subscriptions-start-signal-event_2"
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
-        saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
 
         val eventSubscription = EventSubscription(
             elementId = "startEvent",
@@ -98,7 +100,7 @@ class CamundaEventSubscriptionFinderTest {
     @Test
     fun `find all deployed subscriptions of signal boundary non interrupting event with current document`() {
         val procId = "test-subscriptions-boundary-non-interrupting-signal-events"
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
         val foundSubscription = subscriptionsData.subscriptions
@@ -118,7 +120,7 @@ class CamundaEventSubscriptionFinderTest {
     @Test
     fun `find all deployed subscriptions of signal boundary event with current document`() {
         val procId = "test-subscriptions-boundary-signal-events"
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
         val foundSubscription = subscriptionsData.subscriptions
@@ -139,7 +141,7 @@ class CamundaEventSubscriptionFinderTest {
     @Test
     fun `final all deployed subscriptions of end signal event`() {
         val procId = "test-subscriptions-end-signal-events"
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
         val foundSubscription = subscriptionsData.subscriptions
@@ -159,7 +161,7 @@ class CamundaEventSubscriptionFinderTest {
     @Test
     fun `final all deployed subscriptions of throw signal event`() {
         val procId = "test-subscriptions-throw-signal-events"
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
         val foundSubscription = subscriptionsData.subscriptions
@@ -180,7 +182,7 @@ class CamundaEventSubscriptionFinderTest {
     fun `find all deployed subscriptions of start signal events with event sub process`() {
         val procId = "test-subscriptions-start-signals-event-subprocess-events"
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
         val foundSubscription = subscriptionsData.subscriptions
@@ -205,7 +207,7 @@ class CamundaEventSubscriptionFinderTest {
     fun `find all deployed subscriptions of pool participant with hierarchy sub process`() {
         val procId = "test-subscriptions-pool-participants-with-hierarchy-subprocess-events"
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
         val foundSubscription = subscriptionsData.subscriptions
@@ -240,7 +242,7 @@ class CamundaEventSubscriptionFinderTest {
     fun `check conditional events ecos types in deployed subscriptions data `() {
         val procId = "test-conditional-event-subscriptions"
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val subscriptionsData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
 

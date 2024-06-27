@@ -47,7 +47,8 @@ class ProcDefServiceImpl(
     private val procStateRepo: ProcStateRepository,
     private val tenantService: ProcTenantService,
     private val recordsService: RecordsService,
-    private val procDefEventEmitter: ProcDefEventEmitter
+    private val procDefEventEmitter: ProcDefEventEmitter,
+    private val procDefRevDataProvider: ProcDefRevDataProvider
 ) : ProcDefService {
 
     companion object {
@@ -219,7 +220,7 @@ class ProcDefServiceImpl(
         return findAllProcDefEntities(predicate ?: VoidPredicate.INSTANCE, max, skip).map { entity: ProcDefEntity ->
             val procDefDto = entity.toDto()
             val procDefRevDto = entity.lastRev!!.toDto()
-            ProcDefWithDataDto(procDefDto, procDefRevDto)
+            ProcDefWithDataDto(procDefDto, procDefRevDto, procDefRevDataProvider)
         }
     }
 
@@ -477,7 +478,7 @@ class ProcDefServiceImpl(
         val currentTenant = tenantService.getCurrent()
         val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, id.type, id.id)
         return procDefEntity?.let { def: ProcDefEntity ->
-            ProcDefWithDataDto(def.toDto(), def.lastRev!!.toDto())
+            ProcDefWithDataDto(def.toDto(), def.lastRev!!.toDto(), procDefRevDataProvider)
         }
     }
 

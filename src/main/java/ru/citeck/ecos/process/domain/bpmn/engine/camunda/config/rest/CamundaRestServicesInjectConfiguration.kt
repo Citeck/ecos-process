@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.rest
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.rest.MigrationRestService
 import org.camunda.bpm.engine.rest.impl.MigrationRestServiceImpl
 import org.camunda.bpm.engine.rest.impl.ProcessInstanceRestServiceImpl
@@ -13,7 +14,9 @@ import org.camunda.bpm.engine.rest.ProcessInstanceRestService as EngineProcessIn
 private const val DEFAULT_ENGINE_NAME = "default"
 
 @Configuration
-class CamundaRestServicesInjectConfiguration {
+class CamundaRestServicesInjectConfiguration(
+    private val processEngine: ProcessEngine
+) {
 
     companion object {
         private val mapper = ObjectMapper()
@@ -22,16 +25,16 @@ class CamundaRestServicesInjectConfiguration {
     @Bean
     @Profile("!test")
     fun camundaCockpitProcessInstanceRestService(): CockpitProcessInstanceRestService {
-        return CockpitProcessInstanceRestService(DEFAULT_ENGINE_NAME)
+        return CockpitProcessInstanceRestService(processEngine.name)
     }
 
     @Bean
     fun camundaProcessInstanceRestService(): EngineProcessInstanceRestService {
-        return ProcessInstanceRestServiceImpl(DEFAULT_ENGINE_NAME, mapper)
+        return ProcessInstanceRestServiceImpl(processEngine.name, mapper)
     }
 
     @Bean
     fun camundaMigrationRestService(): MigrationRestService {
-        return MigrationRestServiceImpl(DEFAULT_ENGINE_NAME, mapper)
+        return MigrationRestServiceImpl(processEngine.name, mapper)
     }
 }

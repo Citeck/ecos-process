@@ -41,3 +41,7 @@ ecos-process:
 context:
   initializer:
     classes: ru.citeck.ecos.process.config.MongoInitializer
+
+camunda:
+  bpm:
+    generate-unique-process-engine-name: true

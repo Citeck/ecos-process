@@ -65,6 +65,11 @@ class BpmnEventSubscriptionService(
         }.start()
     }
 
+    fun clean() {
+        eventListeners.clear()
+        conditionalEventListener.clear()
+    }
+
     fun addSubscriptionsForDefRev(procDefRevId: UUID) {
         val deployedSubscriptionsData =
             camundaEventSubscriptionFinder.getDeployedSubscriptionsDataByProcDefRevId(procDefRevId)

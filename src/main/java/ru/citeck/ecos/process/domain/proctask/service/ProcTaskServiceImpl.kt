@@ -17,7 +17,7 @@ import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSyncService
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
-import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
+import ru.citeck.ecos.process.domain.proctask.converter.TaskConverter
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.dto.getComment
@@ -45,7 +45,9 @@ class ProcTaskServiceImpl(
     private val delegationService: DelegationService,
     private val commentsService: CommentsService,
     private val recordsService: RecordsService,
-    private val procTaskAttsSyncService: ProcTaskAttsSyncService
+    private val procTaskAttsSyncService: ProcTaskAttsSyncService,
+    private val taskConverter: TaskConverter,
+    private val taskActorsUtils: TaskActorsUtils
 ) : ProcTaskService {
 
     companion object {
@@ -169,7 +171,7 @@ class ProcTaskServiceImpl(
             .processInstanceId(processInstanceId)
             .initializeFormKeys()
             .list()
-            .map { it.toProcTask() }
+            .map { taskConverter.toProcTask(it) }
     }
 
     override fun getTasksByProcessForCurrentUser(processInstanceId: String): List<ProcTaskDto> {
@@ -178,7 +180,7 @@ class ProcTaskServiceImpl(
         }
 
         return getTasksByProcess(processInstanceId).filter {
-            it.isCurrentUserTaskActorOrDelegate()
+            taskActorsUtils.isCurrentUserTaskActorOrDelegate(it)
         }
     }
 
@@ -187,7 +189,7 @@ class ProcTaskServiceImpl(
             .processVariableValueEquals(BPMN_DOCUMENT_REF, document)
             .initializeFormKeys()
             .list()
-            .map { it.toProcTask() }
+            .map { taskConverter.toProcTask(it) }
     }
 
     override fun getTasksByDocumentForCurrentUser(document: String): List<ProcTaskDto> {
@@ -196,7 +198,7 @@ class ProcTaskServiceImpl(
         }
 
         return getTasksByDocument(document).filter {
-            it.isCurrentUserTaskActorOrDelegate()
+            taskActorsUtils.isCurrentUserTaskActorOrDelegate(it)
         }
     }
 
@@ -225,7 +227,7 @@ class ProcTaskServiceImpl(
                 .taskId(taskId)
                 .initializeFormKeys()
                 .singleResult()
-                ?.toProcTask()
+                ?.let { taskConverter.toProcTask(it) }
         }
 
         log.trace { "Get Camunda Task by id: time=$time ms" }
@@ -243,7 +245,7 @@ class ProcTaskServiceImpl(
                 .map {
                     val procTask: ProcTaskDto?
                     val time = measureTimeMillis {
-                        procTask = it.toProcTask()
+                        procTask = taskConverter.toProcTask(it)
                     }
 
                     log.trace { "Task to procTask: $time ms" }

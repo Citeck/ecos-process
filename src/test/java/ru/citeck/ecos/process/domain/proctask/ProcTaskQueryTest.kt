@@ -11,13 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.clearTasks
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.proctask.service.ATT_CURRENT_USER_WITH_AUTH
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_DUE_DATE
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_NAME
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_PRIORITY
-import ru.citeck.ecos.process.domain.queryTasks
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -31,6 +30,9 @@ class ProcTaskQueryTest {
     @Autowired
     private lateinit var taskService: TaskService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     companion object {
         private const val HARRY_USER = "harry"
         private const val RON_USER = "ron"
@@ -43,7 +45,7 @@ class ProcTaskQueryTest {
 
     @BeforeEach
     fun setUp() {
-        clearTasks()
+        helper.clearTasks()
 
         for (i in 1..7) {
             createTask(HARRY_USER)
@@ -100,14 +102,14 @@ class ProcTaskQueryTest {
 
     @AfterEach
     fun tearDown() {
-        clearTasks()
+        helper.clearTasks()
     }
 
     @Test
     fun `should find all task for user harry`() {
 
         val found = AuthContext.runAsFull(HARRY_USER, listOf(HOGWARTS_GROUP)) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
             )
         }
@@ -119,7 +121,7 @@ class ProcTaskQueryTest {
     fun `should find all task for user ron`() {
 
         val found = AuthContext.runAsFull(RON_USER, listOf(HOGWARTS_GROUP)) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
             )
         }
@@ -131,7 +133,7 @@ class ProcTaskQueryTest {
     fun `should find all task for user voldemort`() {
 
         val found = AuthContext.runAsFull(VOLDEMORT_USER, listOf(DEATH_EATERS_GROUP)) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
             )
         }
@@ -143,7 +145,7 @@ class ProcTaskQueryTest {
     fun `should find task for assignee user harry`() {
 
         val found = AuthContext.runAsFull(HARRY_USER, listOf(HOGWARTS_GROUP)) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.notEmpty(ProcTaskSqlQueryBuilder.ATT_ASSIGNEE)
@@ -158,7 +160,7 @@ class ProcTaskQueryTest {
     fun `should find task for group hogwarts exclude explicit assignee`() {
 
         val found = AuthContext.runAsFull("some-user", listOf(HOGWARTS_GROUP)) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.empty(ProcTaskSqlQueryBuilder.ATT_ASSIGNEE)
@@ -172,7 +174,7 @@ class ProcTaskQueryTest {
     @Test
     fun `query tasks with sort by priority desc`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
                 ),
@@ -190,7 +192,7 @@ class ProcTaskQueryTest {
     @Test
     fun `query tasks with sort by priority asc`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
                 ),
@@ -208,7 +210,7 @@ class ProcTaskQueryTest {
     @Test
     fun `query tasks with sort by due date desc`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
                 ),
@@ -226,7 +228,7 @@ class ProcTaskQueryTest {
     @Test
     fun `query tasks with sort by due date asc`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
                 ),
@@ -244,7 +246,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter tasks by priority`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.eq(ATT_PRIORITY, 2)
@@ -259,7 +261,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter tasks by due date`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.eq(ATT_DUE_DATE, Instant.parse("2021-01-02T15:00:00.0Z"))
@@ -274,7 +276,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter by due date le`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.le(ATT_DUE_DATE, Instant.parse("2021-01-02T00:00:00.0Z"))
@@ -289,7 +291,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter by due date ge`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.ge(ATT_DUE_DATE, Instant.parse("2021-01-02T00:00:00.0Z"))
@@ -304,7 +306,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter by due date is empty`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.empty(ATT_DUE_DATE)
@@ -318,7 +320,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter by due date is not empty`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.notEmpty(ATT_DUE_DATE)
@@ -333,7 +335,7 @@ class ProcTaskQueryTest {
     fun `filter by due date is equals today`() {
         assertDoesNotThrow {
             val found = AuthContext.runAsFull(HERMIONE_USER) {
-                queryTasks(
+                helper.queryTasks(
                     Predicates.and(
                         Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                         Predicates.eq(ATT_DUE_DATE, "\$TODAY")
@@ -348,7 +350,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter by due date time range absolute`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.eq(ATT_DUE_DATE, "2021-01-01T09:00:00.0Z/2021-01-02T20:00:00.0Z")
@@ -363,7 +365,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter by due date time range relatively`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.eq(ATT_DUE_DATE, "-P100000D/\$NOW")
@@ -378,7 +380,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter task by name`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.eq(ATT_NAME, "task2")
@@ -393,7 +395,7 @@ class ProcTaskQueryTest {
     @Test
     fun `filter task by name contains`() {
         val found = AuthContext.runAsFull(HERMIONE_USER) {
-            queryTasks(
+            helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
                     Predicates.contains(ATT_NAME, "task")

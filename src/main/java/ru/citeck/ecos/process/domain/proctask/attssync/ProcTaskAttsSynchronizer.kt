@@ -163,7 +163,7 @@ class ProcTaskAttsSynchronizer(
 
                         val newTaskAtts = getNewAttributesForSync(documentRef, syncSettingsTyped, msg.syncMode)
 
-                        log.trace { "New atts for ${task}: $newTaskAtts" }
+                        log.trace { "New atts for $task: $newTaskAtts" }
 
                         procTaskService.setVariablesLocal(task, newTaskAtts)
                     }
@@ -246,9 +246,12 @@ class ProcTaskAttsSynchronizer(
                 }
             }
 
-            val result = recordsService.getAtts(document, attsToRequest.associate {
-                it.requestAtt to it.requestAttSchema
-            }).getAtts()
+            val result = recordsService.getAtts(
+                document,
+                attsToRequest.associate {
+                    it.requestAtt to it.requestAttSchema
+                }
+            ).getAtts()
 
             attsToRequest.forEach { (taskAtt, requestAtt, _, clazz) ->
                 val resultValue = result[requestAtt]
@@ -256,7 +259,6 @@ class ProcTaskAttsSynchronizer(
 
                 newTaskAtts[TASK_DOCUMENT_ATT_PREFIX + taskAtt] = asObj
             }
-
         }
 
         val fillTypeAtts = fun() {
@@ -279,9 +281,12 @@ class ProcTaskAttsSynchronizer(
                 )
             }
 
-            val result = recordsService.getAtts(syncSettingsTyped.typeRef, attsToRequest.map {
-                it.requestAttSchema
-            }).getAtts()
+            val result = recordsService.getAtts(
+                syncSettingsTyped.typeRef,
+                attsToRequest.map {
+                    it.requestAttSchema
+                }
+            ).getAtts()
 
             attsToRequest.forEach { (taskAtt, requestAtt, _, clazz) ->
                 val resultValue = result[requestAtt]

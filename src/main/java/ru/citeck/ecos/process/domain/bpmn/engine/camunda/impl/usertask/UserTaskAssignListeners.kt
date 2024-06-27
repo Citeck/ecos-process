@@ -8,45 +8,30 @@ import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ASSIGNEE_ELEMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
-import javax.annotation.PostConstruct
 
 private const val COLLECTION_START_PREFIX = "["
 private const val COLLECTION_END_PREFIX = "]"
 
-private lateinit var utils: UserTaskListenerUtils
-
 private val log = KotlinLogging.logger {}
 
 @Component
-class ManualRecipientsModeUserTaskAssignListener : TaskListener {
+class ManualRecipientsModeUserTaskAssignListener(
+    private val userTaskListenerUtils: UserTaskListenerUtils
+) : TaskListener {
 
     override fun notify(delegateTask: DelegateTask) {
-        convertAssigneeStorageToTaskRecipients(delegateTask)
+        userTaskListenerUtils.convertAssigneeStorageToTaskRecipients(delegateTask)
     }
 }
 
 @Component
-class RecipientsFromRolesUserTaskAssignListener : TaskListener {
+class RecipientsFromRolesUserTaskAssignListener(
+    private val userTaskListenerUtils: UserTaskListenerUtils
+) : TaskListener {
 
     override fun notify(delegateTask: DelegateTask) {
-        convertAssigneeStorageToTaskRecipients(delegateTask)
+        userTaskListenerUtils.convertAssigneeStorageToTaskRecipients(delegateTask)
     }
-}
-
-private fun convertAssigneeStorageToTaskRecipients(delegateTask: DelegateTask) {
-    val assignee = delegateTask.assignee
-    if (assignee.isNullOrBlank()) {
-        return
-    }
-
-    val candidatesRaw = assignee.split(BPMN_CAMUNDA_COLLECTION_SEPARATOR)
-
-    log.debug { "candidatesRaw: $candidatesRaw" }
-
-    val candidatesNames = utils.getCandidateAuthorityNames(candidatesRaw)
-
-    delegateTask.assignee = null
-    fillTaskRecipients(candidatesNames, delegateTask)
 }
 
 private fun fillTaskRecipients(candidateNames: List<String>, delegateTask: DelegateTask) {
@@ -84,16 +69,27 @@ class MultiInstanceAutoModeUserTaskAssignListener : TaskListener {
 }
 
 @Component
-internal class UserTaskListenerUtils(
+class UserTaskListenerUtils(
     val authorityService: EcosAuthoritiesApi
 ) {
 
-    @PostConstruct
-    private fun init() {
-        utils = this
+    fun convertAssigneeStorageToTaskRecipients(delegateTask: DelegateTask) {
+        val assignee = delegateTask.assignee
+        if (assignee.isNullOrBlank()) {
+            return
+        }
+
+        val candidatesRaw = assignee.split(BPMN_CAMUNDA_COLLECTION_SEPARATOR)
+
+        log.debug { "candidatesRaw: $candidatesRaw" }
+
+        val candidatesNames = getCandidateAuthorityNames(candidatesRaw)
+
+        delegateTask.assignee = null
+        fillTaskRecipients(candidatesNames, delegateTask)
     }
 
-    fun getCandidateAuthorityNames(candidates: List<String>): List<String> {
+    private fun getCandidateAuthorityNames(candidates: List<String>): List<String> {
         return authorityService.getAuthorityNames(
             candidates
                 .asSequence()

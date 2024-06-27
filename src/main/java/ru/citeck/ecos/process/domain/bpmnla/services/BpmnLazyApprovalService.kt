@@ -14,9 +14,9 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.CamundaExtensions
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toTaskEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
@@ -39,12 +39,15 @@ class BpmnLazyApprovalService(
     private val procHistoricTaskService: ProcHistoricTaskService,
     @Lazy
     private val bpmnProcessService: BpmnProcessService,
-    @Lazy
-    private val camundaExtensions: CamundaExtensions,
     private val ecosConfigService: EcosConfigService,
     private val notificationService: NotificationService,
     private val mailUtils: MailUtils,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+
+    @Lazy
+    private val bpmnElementConverter: BpmnElementConverter,
+    @Lazy
+    private val taskDefinitionUtils: TaskDefinitionUtils
 ) : BpmnLazyApprovalRemoteApi {
 
     private val hasLicense = EcosLicense.getForEntLib {
@@ -79,7 +82,7 @@ class BpmnLazyApprovalService(
             return
         }
 
-        val taskEvent = delegateTask.toTaskEvent()
+        val taskEvent = bpmnElementConverter.toUserTaskEvent(delegateTask)
 
         fun getTemplateRef(): EntityRef? {
             if (!taskEvent.laManualNotificationTemplateEnabled) {
@@ -223,7 +226,7 @@ class BpmnLazyApprovalService(
             bpmnProcessService.getProcessDefinitionByProcessInstanceId(it)?.id
         }
         if (taskDefinitionKey?.isNotBlank() == true && processDefinitionId?.isNotBlank() == true) {
-            val taskInfo = camundaExtensions.getUserTaskLaInfo(processDefinitionId to taskDefinitionKey)
+            val taskInfo = taskDefinitionUtils.getUserTaskLaInfo(processDefinitionId to taskDefinitionKey)
             report.laReportEnabled = taskInfo.laReportEnabled
             report.laSuccessReportNotificationTemplate = taskInfo.laSuccessReportNotificationTemplate ?: EntityRef.EMPTY
             report.laErrorReportNotificationTemplate = taskInfo.laErrorReportNotificationTemplate ?: EntityRef.EMPTY

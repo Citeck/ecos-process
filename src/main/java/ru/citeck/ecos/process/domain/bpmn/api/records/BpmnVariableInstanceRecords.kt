@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EXECUTION_ID
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -33,7 +33,8 @@ import java.util.*
 
 @Component
 class BpmnVariableInstanceRecords(
-    private val camundaRuntimeService: RuntimeService
+    private val camundaRuntimeService: RuntimeService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordMutateDao, RecordDeleteDao {
 
     companion object {
@@ -67,7 +68,12 @@ class BpmnVariableInstanceRecords(
             "Mutate bpmn variable: \n${Json.mapper.toPrettyString(mutateData)}"
         }
 
-        check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(mutateData.executionId)) {
+        check(
+            bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_EDIT,
+                mutateData.executionId
+            )
+        ) {
             "User has no permission to edit process instance: ${mutateData.executionId}"
         }
 
@@ -156,7 +162,8 @@ class BpmnVariableInstanceRecords(
             .singleResult() ?: error("Variable with id '$recordId' not found")
 
         if (AuthContext.isNotRunAsSystemOrAdmin()) {
-            val allowDelete = BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(
+            val allowDelete = bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_EDIT,
                 variableInstance.processInstanceId
             )
             if (!allowDelete) {
@@ -176,7 +183,11 @@ class BpmnVariableInstanceRecords(
             "Process instance must be specified"
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(query.processInstance.getLocalId())) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_READ,
+                query.processInstance.getLocalId()
+            )
+        ) {
             return RecsQueryRes()
         }
 
@@ -251,7 +262,11 @@ class BpmnVariableInstanceRecords(
             }
 
         if (variable != null && AuthContext.isNotRunAsSystemOrAdmin()) {
-            val allowRead = BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(variable.getProcessInstanceId())
+            val allowRead =
+                bpmnPermissionResolver.isAllowForProcessInstanceId(
+                    BpmnPermission.PROC_INSTANCE_READ,
+                    variable.getProcessInstanceId()
+                )
             if (!allowRead) {
                 return null
             }

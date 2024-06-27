@@ -4,21 +4,6 @@ import org.camunda.bpm.cockpit.impl.plugin.base.dto.CalledProcessInstanceDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.IncidentStatisticsDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.ProcessInstanceDto
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.query.ProcessInstanceQueryDto
-import org.springframework.stereotype.Component
-import ru.citeck.ecos.records3.RecordsService
-import javax.annotation.PostConstruct
-
-@Component
-internal class BpmnProcDtoConverterServiceProvider(
-    val recordsService: RecordsService
-) {
-    @PostConstruct
-    private fun init() {
-        srv = this
-    }
-}
-
-private lateinit var srv: BpmnProcDtoConverterServiceProvider
 
 fun ProcessInstanceQuery.toCamundaQuery(): ProcessInstanceQueryDto {
     val query = ProcessInstanceQueryDto()

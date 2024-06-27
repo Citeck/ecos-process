@@ -4,9 +4,10 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.service.isAllow
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -30,7 +31,9 @@ private const val EDIT_BPMN_PROC_LINK = "bpmn-editor?recordRef=%s"
 @Component
 class BpmnProcessDefVersionRecords(
     private val procDefService: ProcDefService,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
@@ -57,7 +60,8 @@ class BpmnProcessDefVersionRecords(
 
     override fun saveMutatedRec(record: BpmnProcessDefRecords.BpmnMutateRecord): String {
         check(
-            BpmnPermission.WRITE.isAllow(
+            bpmnPermissionResolver.isAllow(
+                BpmnPermission.WRITE,
                 EntityRef.Companion.create(
                     AppName.EPROC,
                     BpmnProcessDefRecords.ID,
@@ -81,7 +85,7 @@ class BpmnProcessDefVersionRecords(
             "Process definition id is required"
         }
 
-        if (!BpmnPermission.READ.isAllow(query.record)) {
+        if (!bpmnPermissionResolver.isAllow(BpmnPermission.READ, query.record)) {
             return RecsQueryRes<VersionRecord>()
         }
 
@@ -112,7 +116,8 @@ class BpmnProcessDefVersionRecords(
             "Support get atts of revision only for one process definition"
         }
         check(
-            BpmnPermission.READ.isAllow(
+            bpmnPermissionResolver.isAllow(
+                BpmnPermission.READ,
                 EntityRef.Companion.create(
                     AppName.EPROC,
                     BpmnProcessDefRecords.ID,
@@ -227,7 +232,7 @@ class BpmnProcessDefVersionRecords(
          */
         @get:AttName("data")
         val data: ByteArray
-            get() = dto.data
+            get() = dto.loadData(procDefRevDataProvider)
 
         override fun getIdentificator(): String {
             return id

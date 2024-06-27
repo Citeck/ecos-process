@@ -20,16 +20,14 @@ import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.BpmnProcHelperJava
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.cleanDeployments
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.process.domain.saveAndDeployBpmnFromResource
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -66,6 +64,9 @@ class BpmnProcessDefRecordsPermissionsTest {
 
     @Autowired
     private lateinit var typesRegistry: EcosTypesRegistry
+
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
 
     @SpyBean
     private lateinit var bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider
@@ -413,7 +414,7 @@ class BpmnProcessDefRecordsPermissionsTest {
         val procId = "definition-test-bpmn-process"
 
         AuthContext.runAsSystem {
-            saveAndDeployBpmnFromResource(
+            helper.saveAndDeployBpmnFromResource(
                 "test/bpmn/$procId.bpmn.xml",
                 procId
             )
@@ -431,7 +432,7 @@ class BpmnProcessDefRecordsPermissionsTest {
 
         assertThrows<IllegalStateException> {
             AuthContext.runAs(user = user) {
-                saveAndDeployBpmnFromResource(
+                helper.saveAndDeployBpmnFromResource(
                     "test/bpmn/$procId.bpmn.xml",
                     procId
                 )
@@ -452,7 +453,7 @@ class BpmnProcessDefRecordsPermissionsTest {
         val procId = "definition-test-bpmn-process"
 
         AuthContext.runAs(user = USER_WITH_DEPLOY_PERMS) {
-            saveAndDeployBpmnFromResource(
+            helper.saveAndDeployBpmnFromResource(
                 "test/bpmn/$procId.bpmn.xml",
                 procId
             )
@@ -466,8 +467,8 @@ class BpmnProcessDefRecordsPermissionsTest {
     @AfterAll
     fun afterAll() {
 
-        cleanDeployments()
-        cleanDefinitions()
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
 
         val bpmnTypeBefore = bpmnTypeBefore
         if (bpmnTypeBefore == null) {

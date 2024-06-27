@@ -86,13 +86,13 @@ public class ProcDefWithDataDto {
         setSectionRef(other.sectionRef);
     }
 
-    public ProcDefWithDataDto(ProcDefDto def, ProcDefRevDto rev) {
+    public ProcDefWithDataDto(ProcDefDto def, ProcDefRevDto rev, ProcDefRevDataProvider dataProvider) {
         this.id = def.getId();
         this.name = def.getName();
         this.procType = def.getProcType();
         this.revisionId = def.getRevisionId();
         this.format = rev.getFormat();
-        this.data = rev.getData();
+        this.data = rev.loadData(dataProvider);
         this.image = rev.getImage();
         this.ecosTypeRef = def.getEcosTypeRef();
         this.alfType = def.getAlfType();

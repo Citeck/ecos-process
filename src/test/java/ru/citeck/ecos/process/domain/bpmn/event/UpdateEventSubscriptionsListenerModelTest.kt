@@ -1,36 +1,30 @@
 package ru.citeck.ecos.process.domain.bpmn.event
 
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.saveAndDeployBpmn
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class UpdateEventSubscriptionsListenerModelTest {
 
     @Autowired
     private lateinit var eventsService: EventsService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     @BeforeEach
     fun clear() {
-        cleanDefinitions()
-
-        eventsService.getListeners().forEach {
-            it.value.listeners.forEach { listener ->
-                eventsService.removeListener(listener.config.id)
-            }
-        }
+        helper.fullCleanEventSubscriptions()
     }
 
     @Test
@@ -38,7 +32,7 @@ class UpdateEventSubscriptionsListenerModelTest {
         val processModel = "test-process-with-events-model"
         val processModel2 = "test-process-with-events-model-2"
 
-        saveAndDeployBpmn(SUBSCRIPTION, processModel)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, processModel)
         val firstDeployListeners = eventsService.getListeners()
 
         assertThat(firstDeployListeners["signal-name-a1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
@@ -55,7 +49,7 @@ class UpdateEventSubscriptionsListenerModelTest {
             ).addDefaultEventAtts()
         )
 
-        saveAndDeployBpmn(SUBSCRIPTION, processModel2)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, processModel2)
         val secondDeployListeners = eventsService.getListeners()
 
         assertThat(secondDeployListeners["signal-name-a1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
@@ -85,7 +79,7 @@ class UpdateEventSubscriptionsListenerModelTest {
         val processModel = "process-with-events-model-with-existing-type"
         val processModel2 = "process-with-events-model-with-existing-type-2"
 
-        saveAndDeployBpmn(SUBSCRIPTION, processModel)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, processModel)
         val firstDeployListeners = eventsService.getListeners()
 
         assertThat(firstDeployListeners["signal-name-ex1"]!!.attributes).containsExactlyInAnyOrderElementsOf(
@@ -103,7 +97,7 @@ class UpdateEventSubscriptionsListenerModelTest {
             )
         }
 
-        saveAndDeployBpmn(SUBSCRIPTION, processModel2)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, processModel2)
         val secondDeployListeners = eventsService.getListeners()
 
         assertThat(secondDeployListeners["signal-name-ex1"]!!.attributes).containsExactlyInAnyOrderElementsOf(

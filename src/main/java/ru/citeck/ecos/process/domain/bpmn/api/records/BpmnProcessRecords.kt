@@ -44,7 +44,8 @@ import java.time.Instant
 class BpmnProcessRecords(
     private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService,
-    private val camundaProcessInstanceRestService: ProcessInstanceRestService
+    private val camundaProcessInstanceRestService: ProcessInstanceRestService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordsQueryDao,
@@ -75,7 +76,11 @@ class BpmnProcessRecords(
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         val procQuery = recsQuery.toProcessInstanceQuery()
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(procQuery.bpmnDefEngine)) {
+        if (!bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                BpmnPermission.PROC_INSTANCE_READ,
+                procQuery.bpmnDefEngine
+            )
+        ) {
             return RecsQueryRes()
         }
 
@@ -134,7 +139,7 @@ class BpmnProcessRecords(
             return ref
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(recordId)) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(BpmnPermission.PROC_INSTANCE_READ, recordId)) {
             return null
         }
 
@@ -154,7 +159,7 @@ class BpmnProcessRecords(
 
         return when (action) {
             MutateAction.START -> {
-                check(BpmnPermission.PROC_INSTANCE_RUN.isAllowForProcessKey(record.id)) {
+                check(bpmnPermissionResolver.isAllowForProcessKey(BpmnPermission.PROC_INSTANCE_RUN, record.id)) {
                     "User ${AuthContext.getCurrentUser()} has no permission to start process instance: ${record.id}"
                 }
 
@@ -163,7 +168,12 @@ class BpmnProcessRecords(
             }
 
             MutateAction.UPDATE -> {
-                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
+                check(
+                    bpmnPermissionResolver.isAllowForProcessInstanceId(
+                        BpmnPermission.PROC_INSTANCE_EDIT,
+                        record.id
+                    )
+                ) {
                     "User ${AuthContext.getCurrentUser()} has no permission to update process instance: ${record.id}"
                 }
 
@@ -172,7 +182,12 @@ class BpmnProcessRecords(
             }
 
             MutateAction.DELETE -> {
-                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
+                check(
+                    bpmnPermissionResolver.isAllowForProcessInstanceId(
+                        BpmnPermission.PROC_INSTANCE_EDIT,
+                        record.id
+                    )
+                ) {
                     "User ${AuthContext.getCurrentUser()} has no permission to delete process instance: ${record.id}"
                 }
 
@@ -181,7 +196,12 @@ class BpmnProcessRecords(
             }
 
             MutateAction.SUSPEND -> {
-                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
+                check(
+                    bpmnPermissionResolver.isAllowForProcessInstanceId(
+                        BpmnPermission.PROC_INSTANCE_EDIT,
+                        record.id
+                    )
+                ) {
                     "User ${AuthContext.getCurrentUser()} has no permission to suspend process instance: ${record.id}"
                 }
 
@@ -190,7 +210,12 @@ class BpmnProcessRecords(
             }
 
             MutateAction.ACTIVATE -> {
-                check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(record.id)) {
+                check(
+                    bpmnPermissionResolver.isAllowForProcessInstanceId(
+                        BpmnPermission.PROC_INSTANCE_EDIT,
+                        record.id
+                    )
+                ) {
                     "User ${AuthContext.getCurrentUser()} has no permission to activate process instance: ${record.id}"
                 }
 
@@ -199,7 +224,12 @@ class BpmnProcessRecords(
             }
 
             MutateAction.MODIFY -> {
-                check(BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForProcessInstanceId(record.id)) {
+                check(
+                    bpmnPermissionResolver.isAllowForProcessInstanceId(
+                        BpmnPermission.PROC_INSTANCE_MIGRATE,
+                        record.id
+                    )
+                ) {
                     "User ${AuthContext.getCurrentUser()} has no permission to move token of process instance: " +
                         record.id
                 }

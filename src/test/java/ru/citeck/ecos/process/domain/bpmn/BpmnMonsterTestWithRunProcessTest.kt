@@ -6,10 +6,12 @@ import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.camunda.bpm.engine.HistoryService
+import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.ProcessEngineException
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
+import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.init
 import org.camunda.bpm.scenario.ProcessScenario
 import org.camunda.bpm.scenario.Scenario
 import org.camunda.bpm.scenario.Scenario.run
@@ -142,6 +144,12 @@ class BpmnMonsterTestWithRunProcessTest {
     @Autowired
     private lateinit var runtimeService: RuntimeService
 
+    @Autowired
+    private lateinit var processEngine: ProcessEngine
+
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     @SpyBean
     private lateinit var bpmnLazyApprovalService: BpmnLazyApprovalService
 
@@ -216,6 +224,8 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @BeforeEach
     fun setUp() {
+        init(processEngine)
+
         recordsService.register(
             RecordsDaoBuilder.create("hogwarts/people")
                 .addRecord(
@@ -285,7 +295,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @AfterEach
     fun clearSubscriptions() {
-        cleanDefinitions()
+        helper.cleanDefinitions()
         camundaMyBatisExtension.deleteAllEventSubscriptions()
         recordsService.delete(kpiSettings)
     }
@@ -295,13 +305,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `complete simple task`() {
         val procId = "test-user-task-role"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -309,14 +319,14 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task form ref check`() {
         val procId = "test-user-task-role"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasFormKey("uiserv/form@test-bpmn-form-task")
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -324,14 +334,14 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task priority check`() {
         val procId = "test-user-task-priority"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it.priority).isEqualTo(TaskPriority.HIGH.toCamundaCode())
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -339,7 +349,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task priority expression check`() {
         val procId = "test-user-task-priority-expression"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it.priority).isEqualTo(TaskPriority.LOW.toCamundaCode())
@@ -352,7 +362,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "priority" to 3
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -360,7 +370,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment by roles`() {
         val procId = "test-user-task-role"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
@@ -371,7 +381,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -379,7 +389,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task multi instance auto mode - assignment by roles`() {
         val procId = "test-user-task-role-multi-instance"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -398,7 +408,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -407,7 +417,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task multi instance parallel auto mode - assignment by roles`() {
         val procId = "test-user-task-role-multi-instance-parallel"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -426,7 +436,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -435,7 +445,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual multi instance collection`() {
         val procId = "test-user-task-manual-collection-multi-instance"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -457,7 +467,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf("recipients" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER))
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -466,7 +476,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual multi instance parallel collection`() {
         val procId = "test-user-task-manual-collection-multi-instance-parallel"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -488,7 +498,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             mapOf("recipients" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER))
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -497,7 +507,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual multi instance loop`() {
         val procId = "test-user-task-manual-loop-multi-instance"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -520,7 +530,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
 
-        run(process).startByKey(procId).execute()
+        run(process).startByKey(procId).engine(processEngine).execute()
 
         verify(process, times(4)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -529,7 +539,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual multi instance loop parallel`() {
         val procId = "test-user-task-manual-loop-multi-instance-parallel"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -552,7 +562,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
 
-        run(process).startByKey(procId).execute()
+        run(process).startByKey(procId).engine(processEngine).execute()
 
         verify(process, times(4)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -561,7 +571,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual`() {
         val procId = "test-user-task-assign-manual"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
@@ -572,7 +582,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -580,7 +590,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual with expressions`() {
         val procId = "test-user-task-assign-manual-with-expressions"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
@@ -602,7 +612,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -610,7 +620,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task assignment manual single recipient with expressions`() {
         val procId = "test-user-task-assign-single-manual-with-expressions"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser("userFromVariable")
@@ -626,7 +636,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "recipientsFromIncomeProcessVariables" to listOf("userFromVariable", "GROUP_fromVariable")
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -634,7 +644,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task ml text name`() {
         val procId = "test-user-task-ml-name"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val doc = "doc@ml"
 
@@ -657,7 +667,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to doc
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -665,7 +675,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task ml text name single lang`() {
         val procId = "test-user-task-ml-name-single-lang"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val doc = "doc@ml-single-lang"
 
@@ -687,7 +697,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to doc
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -695,7 +705,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task empty json ml text should return default name`() {
         val procId = "test-user-task-ml-empty-json"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val doc = "doc@ml-empty-json"
 
@@ -717,7 +727,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to doc
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -725,7 +735,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task blank ml text should return default name`() {
         val procId = "test-user-task-ml-blank"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val doc = "doc@ml-blank"
 
@@ -747,7 +757,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to doc
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -755,7 +765,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task without json ml text should return default name`() {
         val procId = "test-user-task-without-ml-json"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val doc = "doc@without-ml-json"
 
@@ -777,7 +787,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to doc
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -785,7 +795,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task due date explicit text`() {
         val procId = "test-user-task-due-date-explicit"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val expectedFollowUpDate = Instant.parse("2023-02-07T15:00:00.0Z")
         val expectedDueDate = Instant.parse("2023-02-07T21:30:00.0Z")
@@ -806,7 +816,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -814,7 +824,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `task due date from variables`() {
         val procId = "test-user-task-due-date-from-variables"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         val expectedFollowUpDate = Instant.parse("2023-02-07T15:00:00.0Z")
         val expectedDueDate = Instant.parse("2023-02-07T21:30:00.0Z")
@@ -835,7 +845,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -845,7 +855,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `script task set variables`() {
         val procId = "test-script-task-set-variables"
-        saveAndDeployBpmn("scripttask", procId)
+        helper.saveAndDeployBpmn("scripttask", procId)
 
         val scenario = run(process).startByKey(
             procId,
@@ -853,7 +863,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "foo" to "foo"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("fooBar", "foo bar")
         assertThat(scenario.instance(process)).variables().containsEntry("newVariable", "new var from script")
@@ -864,14 +874,14 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `script task can running without document ref`() {
         val procId = "test-script-task-set-variables"
-        saveAndDeployBpmn("scripttask", procId)
+        helper.saveAndDeployBpmn("scripttask", procId)
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 "foo" to "foo"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("fooBar", "foo bar")
         assertThat(scenario.instance(process)).variables().containsEntry("newVariable", "new var from script")
@@ -882,14 +892,14 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `script task get document variables`() {
         val procId = "test-script-task-get-document-variables"
-        saveAndDeployBpmn("scripttask", procId)
+        helper.saveAndDeployBpmn("scripttask", procId)
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 BPMN_DOCUMENT_REF to harryRef.toString()
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("loadedName", harryRecord.name)
         assertThat(scenario.instance(process)).variables().containsEntry("loadedEmail", harryRecord.email)
@@ -900,14 +910,14 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `script task check role service`() {
         val procId = "test-script-task-check-role-service"
-        saveAndDeployBpmn("scripttask", procId)
+        helper.saveAndDeployBpmn("scripttask", procId)
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 BPMN_DOCUMENT_REF to harryRef.toString()
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("userNames", mockRoleUserNames)
         assertThat(scenario.instance(process)).variables().containsEntry("groupNames", mockRoleGroupNames)
@@ -921,7 +931,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition javascript compare variable variant top`() {
         val procId = "test-gateway-condition-javascript"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -929,7 +939,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "top",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endTop")
     }
@@ -937,7 +947,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition javascript compare variable variant bottom`() {
         val procId = "test-gateway-condition-javascript"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -945,7 +955,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "bottom",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endBottom")
     }
@@ -953,7 +963,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition javascript none of the conditions are true, should go to default flow`() {
         val procId = "test-gateway-condition-javascript"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -961,7 +971,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "no-one-flow",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endDefault")
     }
@@ -969,7 +979,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition expression compare variable variant top`() {
         val procId = "test-gateway-condition-expression"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -977,7 +987,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "top",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endTop")
     }
@@ -985,7 +995,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition expression compare variable variant bottom`() {
         val procId = "test-gateway-condition-expression"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -993,7 +1003,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "bottom",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endBottom")
     }
@@ -1001,7 +1011,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition expression none of the conditions are true, should go to default flow`() {
         val procId = "test-gateway-condition-expression"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -1009,7 +1019,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "flow" to "no-one-flow",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endDefault")
     }
@@ -1017,7 +1027,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition task outcome variant done`() {
         val procId = "test-gateway-condition-task-outcome"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         val taskOutcome = Outcome("userTask", "done", MLText.EMPTY)
 
@@ -1031,7 +1041,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 taskOutcome.outcomeId() to taskOutcome.value,
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endDone")
     }
@@ -1039,7 +1049,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition task outcome variant cancel`() {
         val procId = "test-gateway-condition-task-outcome"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         val taskOutcome = Outcome("userTask", "cancel", MLText.EMPTY)
 
@@ -1053,7 +1063,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 taskOutcome.outcomeId() to taskOutcome.value,
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endCancel")
     }
@@ -1061,7 +1071,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway condition task outcome, complete task with incorrect outcome should throw exception`() {
         val procId = "test-gateway-condition-task-outcome"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         val taskOutcome = Outcome("userTask", "incorrect_task_outcome", MLText.EMPTY)
 
@@ -1076,14 +1086,14 @@ class BpmnMonsterTestWithRunProcessTest {
                     BPMN_DOCUMENT_REF to docRef.toString(),
                     taskOutcome.outcomeId() to taskOutcome.value,
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
     }
 
     @Test
     fun `gateway inclusive gateway all flows`() {
         val procId = "test-inclusive-gateway"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -1091,7 +1101,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "foo" to "bar",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_all_event")
         verify(process).hasFinished("end_condition_event")
@@ -1100,7 +1110,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway inclusive only all event flow`() {
         val procId = "test-inclusive-gateway"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         run(process).startByKey(
             procId,
@@ -1108,7 +1118,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "foo" to "not_bar",
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_all_event")
         verify(process, never()).hasFinished("end_condition_event")
@@ -1117,7 +1127,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway event based first variant`() {
         val procId = "test-event-based-gateway"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         `when`(process.waitsAtEventBasedGateway("event_based_gateway")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -1128,7 +1138,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("Event_first")
         verify(process, never()).hasFinished("Event_second")
@@ -1138,7 +1148,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `gateway event based second variant`() {
         val procId = "test-event-based-gateway"
-        saveAndDeployBpmn(GATEWAY, procId)
+        helper.saveAndDeployBpmn(GATEWAY, procId)
 
         `when`(process.waitsAtEventBasedGateway("event_based_gateway")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -1149,7 +1159,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("Event_second")
         verify(process, never()).hasFinished("Event_first")
@@ -1161,7 +1171,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `set status of document`() {
         val procId = "test-set-status"
-        saveAndDeployBpmn("status", procId)
+        helper.saveAndDeployBpmn("status", procId)
 
         val docRef = RecordRef.valueOf(docRef.toString())
 
@@ -1170,7 +1180,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to docRef.toString()
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end")
         verify(statusSetter, Mockito.times(1)).setStatus(docRef, "approval")
@@ -1188,7 +1198,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `sub process simple`() {
         val procId = "test-sub-process"
-        saveAndDeployBpmn(SUB_PROCESS, procId)
+        helper.saveAndDeployBpmn(SUB_PROCESS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             assertThat(it).hasCandidateUser(USER_IVAN)
@@ -1205,7 +1215,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to docRef.toString()
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endSubProcess")
         verify(process).hasFinished("endEvent")
@@ -1214,7 +1224,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `sub process multi instance sequential`() {
         val procId = "test-sub-process-multi-instance-sequential"
-        saveAndDeployBpmn(SUB_PROCESS, procId)
+        helper.saveAndDeployBpmn(SUB_PROCESS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -1239,7 +1249,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process, times(3)).hasFinished("endSubProcess")
@@ -1249,7 +1259,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `sub process multi instance parallel`() {
         val procId = "test-sub-process-multi-instance-parallel"
-        saveAndDeployBpmn(SUB_PROCESS, procId)
+        helper.saveAndDeployBpmn(SUB_PROCESS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -1274,7 +1284,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "testCandidateCollection" to listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process, times(3)).hasFinished("endSubProcess")
@@ -1286,7 +1296,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task with template`() {
         val procId = "test-send-task-with-template"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
@@ -1294,7 +1304,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1326,7 +1336,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task with explicit text`() {
         val procId = "test-send-task-with-explicit-text"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
@@ -1334,7 +1344,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1367,7 +1377,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task role recipients check`() {
         val procId = "test-send-task-recipients-check"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
@@ -1375,7 +1385,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1409,7 +1419,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task role recipients roles with expression check`() {
         val procId = "test-send-task-recipients-roles-with-expressions-check"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
@@ -1417,7 +1427,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1451,13 +1461,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task without document check`() {
         val procId = "test-send-task-without-document-check"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
                 procId,
                 emptyMap()
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1488,13 +1498,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task expression recipients check`() {
         val procId = "test-send-task-recipients-expression"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
                 procId,
                 emptyMap()
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1530,13 +1540,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task expression user and group recipients check`() {
         val procId = "test-send-task-recipients-expression-user-group"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
                 procId,
                 emptyMap()
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1573,13 +1583,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task one line expression user and group recipients check`() {
         val procId = "test-send-task-recipients-one-expression-user-group"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
                 procId,
                 emptyMap()
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1616,7 +1626,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `send task configuration check`() {
         val procId = "test-send-task-configuration-check"
-        saveAndDeployBpmn(SEND_TASK, procId)
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
 
         AuthContext.runAs(EmptyAuth) {
             run(process).startByKey(
@@ -1624,7 +1634,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -1660,13 +1670,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `timer boundary non interrupting`() {
         val procId = "test-timer-boundary-non-interrupting"
-        saveAndDeployBpmn(TIMER, procId)
+        helper.saveAndDeployBpmn(TIMER, procId)
 
         `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
             task.defer("P2DT12H") { task.complete() }
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, times(2)).hasFinished("remindSendTask")
         verify(process).hasFinished("endEvent")
@@ -1675,7 +1685,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `timer value from expression`() {
         val procId = "test-timer-value-from-expression"
-        saveAndDeployBpmn(TIMER, procId)
+        helper.saveAndDeployBpmn(TIMER, procId)
 
         `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
             task.defer("P4DT12H") { task.complete() }
@@ -1687,7 +1697,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to docRef.toString(),
                 "timeValue" to "R/P1D"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, times(4)).hasFinished("remindSendTask")
         verify(process).hasFinished("endEvent")
@@ -1696,13 +1706,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `timer boundary duration interrupting - done task flow`() {
         val procId = "test-timer-boundary-duration-interrupting"
-        saveAndDeployBpmn(TIMER, procId)
+        helper.saveAndDeployBpmn(TIMER, procId)
 
         `when`(process.waitsAtUserTask("approverTask")).thenReturn {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("taskDoneFlow")
         verify(process, never()).hasFinished("taskExpiredFlow")
@@ -1711,13 +1721,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `timer boundary duration interrupting - expired task flow`() {
         val procId = "test-timer-boundary-duration-interrupting"
-        saveAndDeployBpmn(TIMER, procId)
+        helper.saveAndDeployBpmn(TIMER, procId)
 
         `when`(process.waitsAtUserTask("approverTask")).thenReturn { task ->
             task.defer("P3DT12H") { }
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         assertThat(getActiveTasksCountForProcess(procId)).isEqualTo(0)
 
@@ -1729,7 +1739,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `timer intermediate catch`() {
         val procId = "test-timer-intermediate-catch"
-        saveAndDeployBpmn(TIMER, procId)
+        helper.saveAndDeployBpmn(TIMER, procId)
 
         `when`(process.waitsAtTimerIntermediateEvent("timer")).thenReturn {
             // Do nothing means process moves forward because of the timers
@@ -1738,7 +1748,7 @@ class BpmnMonsterTestWithRunProcessTest {
             task.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -1748,7 +1758,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `historic tasks order validation`() {
         val procId = "test-user-task-role-multi-instance"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -1762,7 +1772,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -1787,7 +1797,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `historic tasks order validation with not exists tasks`() {
         val notExistsTask = "notExistsTask"
         val procId = "test-user-task-role-multi-instance"
-        saveAndDeployBpmn(USER_TASK, procId)
+        helper.saveAndDeployBpmn(USER_TASK, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn(
             {
@@ -1801,7 +1811,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         )
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, times(3)).hasCompleted("userTask")
         verify(process).hasFinished("endEvent")
@@ -1831,7 +1841,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `pool with single participant and multiple lines - check call all activities on lines`() {
         val procId = "test-pool-single-participants-with-multiple-lines"
-        saveAndDeployBpmn(POOL, procId)
+        helper.saveAndDeployBpmn(POOL, procId)
 
         `when`(process.waitsAtUserTask("userTask_1")).thenReturn {
             it.complete()
@@ -1844,7 +1854,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val scenario = run(process).startByKey(
             procId,
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, times(1)).hasCompleted("userTask_1")
         verify(process, times(1)).hasCompleted("userTask_2")
@@ -1858,12 +1868,12 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `pool with child lanes set`() {
         val procId = "test-child-lanes"
-        saveAndDeployBpmn(POOL, procId)
+        helper.saveAndDeployBpmn(POOL, procId)
 
         run(process).startByKey(
             procId,
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_event")
     }
@@ -1877,8 +1887,8 @@ class BpmnMonsterTestWithRunProcessTest {
         val subscriptions = getSubscriptionsAfterAction(
             IncomingEventData(eventName = "ecos.comment.create")
         ) {
-            saveAndDeployBpmn(SUBSCRIPTION, procId)
-            saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
+            helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
+            helper.saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
         }
 
         val eventSubscription = EventSubscription(
@@ -1919,8 +1929,8 @@ class BpmnMonsterTestWithRunProcessTest {
         val subscriptions = getSubscriptionsAfterAction(
             IncomingEventData(eventName = "ecos.comment.create")
         ) {
-            saveAndDeployBpmn(SUBSCRIPTION, procId)
-            saveAndDeployBpmn(SUBSCRIPTION, procIdVersion2)
+            helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
+            helper.saveAndDeployBpmn(SUBSCRIPTION, procIdVersion2)
         }
 
         assertThat(subscriptions).hasSize(1)
@@ -1950,7 +1960,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-subscriptions-event-boundary"
         val document = docRef.toString()
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
             IncomingEventData(
@@ -2000,7 +2010,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to document
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         val subscriptionWhenTaskComplete = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
             IncomingEventData(
@@ -2019,7 +2029,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-subscriptions-event-boundary-parallel"
         val document = docRef.toString()
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
             IncomingEventData(
@@ -2092,7 +2102,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to document
             )
-        ).execute()
+        ).engine(processEngine).execute()
     }
 
     @Test
@@ -2100,7 +2110,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-subscriptions-event-boundary-parallel-with-same-events"
         val document = docRef.toString()
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
             IncomingEventData(
@@ -2161,7 +2171,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to document
             )
-        ).execute()
+        ).engine(processEngine).execute()
     }
 
     @Test
@@ -2169,7 +2179,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-subscriptions-multiple-start-signals-with-diff-predicate"
         val document = docRef.toString()
 
-        saveAndDeployBpmn(SUBSCRIPTION, procId)
+        helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
 
         val existingSubscriptions = camundaEventSubscriptionFinder.getActualCamundaSubscriptions(
             IncomingEventData(
@@ -2233,7 +2243,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to document
             )
-        ).execute()
+        ).engine(processEngine).execute()
     }
 
     // --- BPMN EVENTS TESTS ---
@@ -2241,7 +2251,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual current document`() {
         val procId = "bpmn-events-manual-current-document-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2252,7 +2262,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2260,7 +2270,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual current document must not call while document not match`() {
         val procId = "bpmn-events-manual-current-document-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2271,7 +2281,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2279,7 +2289,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual current document must not call while event name not match`() {
         val procId = "bpmn-events-manual-current-document-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2290,7 +2300,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2298,7 +2308,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual any document`() {
         val procId = "bpmn-events-manual-any-document-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2307,7 +2317,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2315,7 +2325,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual any document must not call while event name not match`() {
         val procId = "bpmn-events-manual-any-document-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2324,7 +2334,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2332,7 +2342,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual filter by type`() {
         val procId = "bpmn-events-manual-filter-by-type-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2343,7 +2353,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2351,7 +2361,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual filter by type must not call while type not match`() {
         val procId = "bpmn-events-manual-filter-by-type-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -2362,7 +2372,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2370,7 +2380,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual filter by document from variable`() {
         val procId = "bpmn-events-manual-filter-by-document-from-variable-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val filterDocument = docRef.toString()
 
@@ -2389,7 +2399,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to harryRef.toString(),
                 "docForFilter" to filterDocument
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2397,7 +2407,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event manual filter by document from variable must not call while document not match`() {
         val procId = "bpmn-events-manual-filter-by-document-from-variable-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val filterDocument = docRef.toString()
 
@@ -2416,7 +2426,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 BPMN_DOCUMENT_REF to harryRef.toString(),
                 "docForFilter" to filterDocument
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2424,7 +2434,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event predefined`() {
         val procId = "bpmn-events-predefined-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2436,7 +2446,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2444,7 +2454,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event predefined must not call while event is not match`() {
         val procId = "bpmn-events-predefined-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendUpdateCommentEvent(
@@ -2457,7 +2467,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2465,7 +2475,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event predefined attributes test`() {
         val procId = "bpmn-events-predefined-variables-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val commentRecord = EntityRef.valueOf("eproc/comment@1")
         val commentText = "test comment"
@@ -2480,7 +2490,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().extracting("event").extracting {
             it as BpmnDataValue
@@ -2506,7 +2516,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event meta attributes test`() {
         val procId = "bpmn-events-predefined-variables-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val commentRecord = EntityRef.valueOf("eproc/comment@1")
         val commentText = "test comment"
@@ -2521,7 +2531,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().extracting("event").extracting {
             it as BpmnDataValue
@@ -2547,7 +2557,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event user model attributes test`() {
         val procId = "bpmn-events-predefined-user-model-variables-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val commentRecord = EntityRef.valueOf("eproc/comment@1")
         val commentText = "test comment"
@@ -2562,7 +2572,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        val scenario = run(process).startByKey(procId, variables_docRef).execute()
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().extracting("event").extracting {
             it as BpmnDataValue
@@ -2578,7 +2588,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event user model variables predicate`() {
         val procId = "bpmn-events-user-model-variables-predicate-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2590,7 +2600,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2598,7 +2608,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event user model variables predicate not match`() {
         val procId = "bpmn-events-user-model-variables-predicate-false-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2610,7 +2620,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2618,7 +2628,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event predefined model variables predicate`() {
         val procId = "bpmn-events-predefined-variables-predicate-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2630,7 +2640,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2638,7 +2648,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event predefined model variables predicate not match`() {
         val procId = "bpmn-events-predefined-variables-predicate-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2650,7 +2660,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2658,7 +2668,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event meta variables predicate`() {
         val procId = "bpmn-events-meta-variables-predicate-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2670,7 +2680,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2678,7 +2688,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event meta variables predicate not match`() {
         val procId = "bpmn-events-meta-variables-predicate-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2691,7 +2701,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -2699,7 +2709,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event user model variables predicate with expression`() {
         val procId = "bpmn-events-user-model-variables-predicate-with-expression-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2711,7 +2721,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2719,7 +2729,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event intermediate catch`() {
         val procId = "bpmn-events-intermediate-catch-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtSignalIntermediateCatchEvent("event_catch")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2731,7 +2741,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -2739,7 +2749,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event boundary non interrupting`() {
         val procId = "bpmn-events-boundary-non-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("task")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2751,7 +2761,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("boundaryEvent")
         verify(process).hasFinished("endEventFromBoundary")
@@ -2762,7 +2772,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event boundary non interrupting multiple times`() {
         val procId = "bpmn-events-boundary-non-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val repeatCount = 3
 
@@ -2778,7 +2788,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process, times(repeatCount)).hasFinished("boundaryEvent")
         verify(process, times(repeatCount)).hasFinished("endEventFromBoundary")
@@ -2789,7 +2799,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event boundary interrupting`() {
         val procId = "bpmn-events-boundary-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("task")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2801,7 +2811,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("boundaryEvent")
         verify(process).hasFinished("endEventFromBoundary")
@@ -2812,7 +2822,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start non interrupting`() {
         val procId = "bpmn-events-start-non-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2824,7 +2834,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("startEvent")
         verify(process).hasFinished("endEventFromStart")
@@ -2834,7 +2844,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start non interrupting multiple times`() {
         val procId = "bpmn-events-start-non-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         val repeatCount = 3
 
@@ -2850,7 +2860,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process, times(repeatCount)).hasFinished("startEvent")
         verify(process, times(repeatCount)).hasFinished("endEventFromStart")
@@ -2860,7 +2870,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start interrupting`() {
         val procId = "bpmn-events-start-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2872,7 +2882,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("startEvent")
         verify(process).hasFinished("endEventFromStart")
@@ -2882,7 +2892,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start interrupting multiple times`() {
         val procId = "bpmn-events-start-interrupting-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             repeat(3) {
@@ -2896,7 +2906,7 @@ class BpmnMonsterTestWithRunProcessTest {
             }
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process, times(1)).hasFinished("startEvent")
         verify(process, times(1)).hasFinished("endEventFromStart")
@@ -2906,7 +2916,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start same events with different predicates no one calls`() {
         val procId = "bpmn-events-start-same-with-diff-predicates-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2919,7 +2929,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("event_main_end")
         verify(process, never()).hasFinished("event_end_1")
@@ -2929,7 +2939,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start same events with different predicates first path`() {
         val procId = "bpmn-events-start-same-with-diff-predicates-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2942,7 +2952,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("event_main_end")
         verify(process).hasFinished("event_end_1")
@@ -2953,7 +2963,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start same events with different predicates second path`() {
         val procId = "bpmn-events-start-same-with-diff-predicates-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2966,7 +2976,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("event_main_end")
         verify(process).hasFinished("event_end_2")
@@ -2977,7 +2987,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event start same events with different predicates third path`() {
         val procId = "bpmn-events-start-same-with-diff-predicates-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             bpmnEventHelper.sendCreateCommentEvent(
@@ -2990,7 +3000,7 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("event_main_end")
         verify(process).hasFinished("event_end_3")
@@ -3001,13 +3011,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event throw ecos event from script task`() {
         val procId = "bpmn-events-ecos-event-script-task-throw-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             // do nothing
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("Script_task_throw")
         verify(process).hasFinished("startEvent")
@@ -3018,9 +3028,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event throw ecos event from script task payload test`() {
         val procId = "bpmn-events-ecos-event-script-task-throw-payload-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEventBase")
         verify(bpmnEcosEventTestAction, Mockito.times(1)).callAction(
@@ -3034,13 +3044,13 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event intermediate throw`() {
         val procId = "bpmn-events-intermediate-throw-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             // do nothing
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("eventThrow")
         verify(process).hasFinished("startEvent")
@@ -3051,9 +3061,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event end throw`() {
         val procId = "bpmn-events-end-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endThrow")
         verify(process).hasFinished("startEvent")
@@ -3063,9 +3073,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event end throw to start event - with filter by current document`() {
         val procId = "bpmn-events-end-with-current-document-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endThrow")
         verify(process).hasFinished("startEvent")
@@ -3075,9 +3085,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event end throw to start event - with filter by document type`() {
         val procId = "bpmn-events-end-with-filter-by-document-type-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endThrow")
         verify(process).hasFinished("startEvent")
@@ -3087,9 +3097,9 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn event end throw to start event - with filter by document type not match`() {
         val procId = "bpmn-events-end-with-filter-by-document-type-false-test"
-        saveAndDeployBpmn(BPMN_EVENTS, procId)
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endThrow")
         verify(process, never()).hasFinished("startEvent")
@@ -3101,7 +3111,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `bpmn complete all active tasks with default outcome`() {
         val procId = "test-complete-all-tasks"
-        saveAndDeployBpmnFromResource("test/bpmn/services/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/services/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("task_1")).thenReturn {
             bpmnEventHelper.sendManualEvent(
@@ -3112,7 +3122,7 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         }
 
-        run(process).startByKey(procId, docRef.toString(), variables_docRef).execute()
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("task_1")
         verify(process).hasFinished("task_2")
@@ -3130,15 +3140,15 @@ class BpmnMonsterTestWithRunProcessTest {
     @ValueSource(strings = ["green", "yellow", "red"])
     fun `simple dmn decision test`(color: String) {
         val procId = "simple-dmn-test"
-        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
-        saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        helper.saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 "color" to color
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         val colorActionMapping = mapOf(
             "green" to "go",
@@ -3154,15 +3164,15 @@ class BpmnMonsterTestWithRunProcessTest {
     @ValueSource(strings = ["green", "yellow", "red"])
     fun `simple dmn decision with dmn decision ref test`(color: String) {
         val procId = "simple-dmn-test-with-dmn-decision-ref"
-        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
-        saveAndDeployDmnFromResource("test/dmn/simple-dmn-test.dmn.xml", "simple-dmn-test")
+        helper.saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        helper.saveAndDeployDmnFromResource("test/dmn/simple-dmn-test.dmn.xml", "simple-dmn-test")
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 "color" to color
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         val colorActionMapping = mapOf(
             "green" to "go",
@@ -3177,24 +3187,24 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `dmn with specific decision version`() {
         val procId = "dmn-test-specific-version"
-        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
 
         val dmnVersion1 = ResourceUtils.getFile("classpath:test/dmn/$procId.dmn.xml")
             .readText(StandardCharsets.UTF_8)
-        saveAndDeployDmnFromString(dmnVersion1, procId)
+        helper.saveAndDeployDmnFromString(dmnVersion1, procId)
 
         val dmnVersion2 = dmnVersion1.replace("version 1", "version 2")
-        saveAndDeployDmnFromString(dmnVersion2, procId)
+        helper.saveAndDeployDmnFromString(dmnVersion2, procId)
 
         val dmnVersion3 = dmnVersion1.replace("version 1", "version 3")
-        saveAndDeployDmnFromString(dmnVersion3, procId)
+        helper.saveAndDeployDmnFromString(dmnVersion3, procId)
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 "any_input" to "any_value"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("result_var", "version 2")
 
@@ -3204,26 +3214,26 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `dmn with specific decision version tag`() {
         val procId = "dmn-test-specific-version-tag"
-        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
 
         val dmnVersionTag1 = ResourceUtils.getFile("classpath:test/dmn/$procId.dmn.xml")
             .readText(StandardCharsets.UTF_8)
-        saveAndDeployDmnFromString(dmnVersionTag1, procId)
+        helper.saveAndDeployDmnFromString(dmnVersionTag1, procId)
 
         val dmnVersionTag2 = dmnVersionTag1.replace("vt_version_tag_1", "vt_version_tag_2")
             .replace("version tag 1", "version tag 2")
-        saveAndDeployDmnFromString(dmnVersionTag2, procId)
+        helper.saveAndDeployDmnFromString(dmnVersionTag2, procId)
 
         val dmnVersionTag3 = dmnVersionTag1.replace("vt_version_tag_1", "vt_version_tag_3")
             .replace("version tag 1", "version tag 3")
-        saveAndDeployDmnFromString(dmnVersionTag3, procId)
+        helper.saveAndDeployDmnFromString(dmnVersionTag3, procId)
 
         val scenario = run(process).startByKey(
             procId,
             mapOf(
                 "any_input" to "any_value"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("result_var", "version tag 2")
 
@@ -3233,8 +3243,8 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `dmn test with required decisions and input with feel`() {
         val procId = "dmn-test-multiple-input-expression"
-        saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
-        saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/dmn/$procId.bpmn.xml", procId)
+        helper.saveAndDeployDmnFromResource("test/dmn/$procId.dmn.xml", procId)
 
         val scenario = run(process).startByKey(
             procId,
@@ -3243,7 +3253,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 "guestCount" to 10,
                 "guestsWithChildren" to true
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         scenario.instance(process)
 
@@ -3261,11 +3271,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test service task with expression and result variable`() {
         val procId = "test-service-task-expression"
 
-        saveAndDeployBpmn(SERVICE_TASK, procId)
+        helper.saveAndDeployBpmn(SERVICE_TASK, procId)
 
         val scenario = run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
 
@@ -3278,11 +3288,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event`() {
         val procId = "test-catch-error-from-service-task"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_event_error")
         verify(process, never()).hasFinished("end_event_success")
@@ -3292,11 +3302,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with different catch code should not be catched`() {
         val procId = "test-catch-error-with-different-catch-code-from-service-task"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("end_event_success")
         verify(process, never()).hasFinished("end_event_error")
@@ -3306,11 +3316,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with different catch code should be catched from error event without code`() {
         val procId = "test-catch-error-with-different-catch-code-and-catch-all-event"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_event_error_catch_all")
         verify(process, never()).hasFinished("end_event_error")
@@ -3321,14 +3331,14 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with multiple catch code - catch code 1`() {
         val procId = "test-catch-error-with-multiple-catch"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId,
             mapOf(
                 "code" to "code_1"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_event_code_1")
         verify(process, never()).hasFinished("end_event_code_2")
@@ -3339,14 +3349,14 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error event with multiple catch code - catch code 2`() {
         val procId = "test-catch-error-with-multiple-catch"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId,
             mapOf(
                 "code" to "code_2"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("end_event_code_2")
         verify(process, never()).hasFinished("end_event_code_1")
@@ -3357,11 +3367,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test error start event sub process`() {
         val procId = "test-error-start-event-sub-process"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         val scenario = run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
 
@@ -3372,11 +3382,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test error boundary event sub process`() {
         val procId = "test-error-boundary-event-sub-process"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEventCatch")
         verify(process, never()).hasFinished("endEvent")
@@ -3386,11 +3396,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test catch error with code and message variables`() {
         val procId = "test-catch-error-with-variables"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         val scenario = run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("codeVariable", "its code")
         assertThat(scenario.instance(process)).variables().containsEntry("msgVariable", "its message")
@@ -3403,11 +3413,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test error start event sub process - check message from variable`() {
         val procId = "test-error-start-event-sub-process-message-from-prop"
 
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         val scenario = run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsEntry("foo", "bar")
         assertThat(scenario.instance(process)).variables().containsEntry("codeVariable", "error-code")
@@ -3421,7 +3431,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Test
     fun `terminate event should terminate process`() {
         val procId = "test-terminate-event"
-        saveAndDeployBpmn(ERROR, procId)
+        helper.saveAndDeployBpmn(ERROR, procId)
 
         val doc = "doc@terminate"
 
@@ -3430,7 +3440,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to doc
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
 
@@ -3444,7 +3454,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition expression catch event`() {
         val procId = "test-conditional-event-expression"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3452,7 +3462,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3461,14 +3471,14 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition expression catch event with predefined variable`() {
         val procId = "test-conditional-event-expression"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         run(process).startByKey(
             procId,
             mapOf(
                 "foo" to "bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3477,7 +3487,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition script catch event`() {
         val procId = "test-conditional-event-script"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3488,7 +3498,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 "foo" to "not_bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3497,14 +3507,14 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition script catch event with predefined variable`() {
         val procId = "test-conditional-event-script"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         run(process).startByKey(
             procId,
             mapOf(
                 "foo" to "bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3513,7 +3523,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with variable name`() {
         val procId = "test-conditional-event-variable-name"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3521,7 +3531,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3530,7 +3540,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with variable name not match`() {
         val procId = "test-conditional-event-variable-name-not-match"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3538,7 +3548,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -3547,7 +3557,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with event - create`() {
         val procId = "test-conditional-event-variable-name-event-create"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3555,7 +3565,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3564,7 +3574,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with event - update`() {
         val procId = "test-conditional-event-variable-name-event-update"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3575,7 +3585,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 "foo" to "not_bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3584,7 +3594,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with event - delete`() {
         val procId = "test-conditional-event-variable-name-event-delete"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.removeVariable(it.processInstanceId, "foo")
@@ -3595,7 +3605,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 "foo" to "bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3604,7 +3614,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with multiple events`() {
         val procId = "test-conditional-event-variable-name-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3615,7 +3625,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 "foo" to "not_bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3624,7 +3634,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test condition catch event with events not match`() {
         val procId = "test-conditional-event-variable-name-event-not-match"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
             runtimeService.setVariable(it.processInstanceId, "foo", "bar")
@@ -3635,7 +3645,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 "foo" to "not_bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -3644,7 +3654,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test conditional intermediate catch event react on document change`() {
         val procId = "test-conditional-document-intermediate-catch-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
 
@@ -3667,7 +3677,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             docRef.toString(),
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3676,7 +3686,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `conditional event should not react on document change if reaction flag is false`() {
         val procId = "test-conditional-disabled-document-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
 
@@ -3699,7 +3709,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             docRef.toString(),
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -3708,7 +3718,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test conditional event with document variables react on document change`() {
         val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
 
@@ -3731,7 +3741,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             docRef.toString(),
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -3742,7 +3752,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test conditional event with multiple document variables react on document change`() {
         val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
 
@@ -3768,7 +3778,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             docRef.toString(),
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3777,7 +3787,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test conditional event with document variables should not react on another variable change`() {
         val procId = "test-conditional-document-intermediate-catch-with-document-variables-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtConditionalIntermediateEvent("conditionalEvent")).thenReturn {
 
@@ -3800,7 +3810,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             docRef.toString(),
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
     }
@@ -3809,7 +3819,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test conditional boundary event react on document change`() {
         val procId = "test-conditional-document-boundary-event"
 
-        saveAndDeployBpmn(CONDITIONAL, procId)
+        helper.saveAndDeployBpmn(CONDITIONAL, procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
 
@@ -3832,7 +3842,7 @@ class BpmnMonsterTestWithRunProcessTest {
             procId,
             docRef.toString(),
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process, never()).hasFinished("endEvent")
         verify(process).hasFinished("endFromEvent")
@@ -3844,11 +3854,11 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity with participant`() {
         val procId = "test-call-activity-with-participant"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endMain")
     }
@@ -3857,12 +3867,12 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity with incorrect called element should throw`() {
         val procId = "test-call-activity-with-incorrect-called-element"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         assertThrows<ProcessEngineException> {
             run(process).startByKey(
                 procId
-            ).execute()
+            ).engine(processEngine).execute()
         }
     }
 
@@ -3870,12 +3880,12 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity with separate process`() {
         val procId = "test-call-activity-separate-process"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
-        saveAndDeployBpmn(CALL_ACTIVITY, "test-call-activity-separate-process-called")
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, "test-call-activity-separate-process-called")
 
         run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3890,7 +3900,7 @@ class BpmnMonsterTestWithRunProcessTest {
             BPMN_DOCUMENT_TYPE to "docType"
         )
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
@@ -3906,7 +3916,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             processInitVariables
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3915,7 +3925,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity variables should not propagation without specifying`() {
         val procId = "test-call-activity-default-variables-propagation"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
@@ -3932,7 +3942,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 "foo" to "bar"
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3946,7 +3956,7 @@ class BpmnMonsterTestWithRunProcessTest {
             "inputVar2" to 2
         )
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
@@ -3961,7 +3971,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             processInitVariables
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -3970,7 +3980,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity input specified variables propagation`() {
         val procId = "test-call-activity-input-specified-variables-propagation"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
@@ -3996,7 +4006,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 "thisVariableShouldNotPropagation" to "notPropagation"
             )
 
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -4005,13 +4015,13 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity output all variables propagation`() {
         val procId = "test-call-activity-output-all-variables-propagation"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
         val scenario = run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsAllEntriesOf(
             mapOf(
@@ -4027,13 +4037,13 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `test call activity output specified variables propagation`() {
         val procId = "test-call-activity-output-specified-variables-propagation"
 
-        saveAndDeployBpmn(CALL_ACTIVITY, procId)
+        helper.saveAndDeployBpmn(CALL_ACTIVITY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
         val scenario = run(process).startByKey(
             procId
-        ).execute()
+        ).engine(processEngine).execute()
 
         assertThat(scenario.instance(process)).variables().containsAllEntriesOf(
             mapOf(
@@ -4052,7 +4062,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `resolve business key by document test`() {
         val procId = "test-resolve-business-key"
 
-        saveAndDeployBpmn(BUSINESS_KEY, procId)
+        helper.saveAndDeployBpmn(BUSINESS_KEY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
@@ -4064,7 +4074,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             variables_docRef
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -4073,7 +4083,7 @@ class BpmnMonsterTestWithRunProcessTest {
     fun `resolve business key by source business key test`() {
         val procId = "test-resolve-business-key"
 
-        saveAndDeployBpmn(BUSINESS_KEY, procId)
+        helper.saveAndDeployBpmn(BUSINESS_KEY, procId)
 
         `when`(process.runsCallActivity("CallActivity")).thenReturn(Scenario.use(childProcess))
 
@@ -4085,7 +4095,7 @@ class BpmnMonsterTestWithRunProcessTest {
         run(process).startByKey(
             procId,
             docRef.toString()
-        ).execute()
+        ).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
@@ -4102,7 +4112,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4113,14 +4123,14 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4145,7 +4155,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4156,14 +4166,14 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4188,7 +4198,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4199,14 +4209,14 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4231,7 +4241,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4242,14 +4252,14 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4274,7 +4284,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4285,14 +4295,14 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4323,7 +4333,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.COUNT,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4332,13 +4342,13 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
 
@@ -4372,7 +4382,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.COUNT,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4381,13 +4391,13 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
 
         `when`(process.waitsAtUserTask("userTask")).thenReturn {
             it.complete()
         }
 
-        run(process).startByKey(procId, variables_docRef).execute()
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
 
@@ -4417,7 +4427,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4433,8 +4443,8 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
-        saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
@@ -4446,7 +4456,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to docRef
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4468,7 +4478,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val settingsId = UUID.randomUUID().toString()
 
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = settingsId,
                 kpiType = BpmnKpiType.DURATION,
                 process = EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, procId),
@@ -4484,8 +4494,8 @@ class BpmnMonsterTestWithRunProcessTest {
             )
         )
 
-        saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
-        saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
+        helper.saveAndDeployBpmnFromResource("test/bpmn/kpi/$procId.bpmn.xml", procId)
+        helper.saveAndDeployDmnFromResource("test/dmn/$dmnId.dmn.xml", dmnId)
 
         `when`(process.waitsAtUserTask("Activity_user_task")).thenReturn {
             TimeUnit.SECONDS.sleep(3)
@@ -4497,7 +4507,7 @@ class BpmnMonsterTestWithRunProcessTest {
             mapOf(
                 BPMN_DOCUMENT_REF to docRef3.toString()
             )
-        ).execute()
+        ).engine(processEngine).execute()
 
         Awaitility.await().atMost(KPI_ASYNC_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS).untilAsserted {
             verify(process).hasFinished("endEvent")
@@ -4518,7 +4528,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
 
-        saveAndDeployBpmn(FOLDER_LA, procId)
+        helper.saveAndDeployBpmn(FOLDER_LA, procId)
 
         val additionalMeta = mutableMapOf<String, Any>()
 
@@ -4540,7 +4550,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -4573,7 +4583,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
 
-        saveAndDeployBpmn(FOLDER_LA, procId)
+        helper.saveAndDeployBpmn(FOLDER_LA, procId)
 
         val additionalMeta = mutableMapOf<String, Any>()
 
@@ -4595,7 +4605,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         val notification = Notification.Builder()
@@ -4628,7 +4638,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
 
-        saveAndDeployBpmn(FOLDER_LA, procId)
+        helper.saveAndDeployBpmn(FOLDER_LA, procId)
 
         val additionalMeta = mutableMapOf<String, Any>()
 
@@ -4654,7 +4664,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         verify(process).hasFinished("endEventApproved")
@@ -4666,7 +4676,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
 
-        saveAndDeployBpmn(FOLDER_LA, procId)
+        helper.saveAndDeployBpmn(FOLDER_LA, procId)
 
         `when`(process.waitsAtUserTask("testLazyApproveTask")).thenReturn {
             it.complete()
@@ -4678,7 +4688,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         verify(bpmnLazyApprovalService, never()).sendNotification(any())
@@ -4695,7 +4705,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
 
-        saveAndDeployBpmn(FOLDER_LA, procId)
+        helper.saveAndDeployBpmn(FOLDER_LA, procId)
 
         val additionalMeta = mutableMapOf<String, Any>()
 
@@ -4723,7 +4733,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         verify(process, never()).hasFinished("endEventApproved")
@@ -4738,7 +4748,7 @@ class BpmnMonsterTestWithRunProcessTest {
 
         EcosTestLicense.updateContent().addFeature("lazy-approval").update()
 
-        saveAndDeployBpmn(FOLDER_LA, procId)
+        helper.saveAndDeployBpmn(FOLDER_LA, procId)
 
         val additionalMeta = mutableMapOf<String, Any>()
 
@@ -4766,7 +4776,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 mapOf(
                     BPMN_DOCUMENT_REF to docRef.toString()
                 )
-            ).execute()
+            ).engine(processEngine).execute()
         }
 
         verify(process, never()).hasFinished("endEventApproved")
