@@ -15,6 +15,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -37,8 +38,9 @@ import java.util.*
 
 @Component
 class CmmnProcDefRecords(
-    val procDefService: ProcDefService,
-    val cmmnProcDefImporter: CmmnProcDefImporter
+    private val procDefService: ProcDefService,
+    private val cmmnProcDefImporter: CmmnProcDefImporter,
+    private val procDefRevDataProvider: ProcDefRevDataProvider
 ) : RecordsQueryDao,
     RecordAttsDao,
     RecordDeleteDao,
@@ -298,7 +300,7 @@ class CmmnProcDefRecords(
         fun getDefinition(): String? {
             val rev = procDefService.getProcessDefRev(CMMN_PROC_TYPE, procDef.revisionId) ?: return null
             if (rev.format == CmmnFormat.ECOS_CMMN.code) {
-                return mapper.read(rev.data, CmmnProcessDef::class.java)?.let {
+                return mapper.read(rev.loadData(procDefRevDataProvider), CmmnProcessDef::class.java)?.let {
                     try {
                         CmmnIO.exportEcosCmmnToString(it)
                     } catch (e: Exception) {
@@ -308,7 +310,7 @@ class CmmnProcDefRecords(
                     }
                 }
             }
-            return String(rev.data, StandardCharsets.UTF_8)
+            return String(rev.loadData(procDefRevDataProvider), StandardCharsets.UTF_8)
         }
 
         @AttName("?json")
@@ -317,7 +319,7 @@ class CmmnProcDefRecords(
             if (rev.format != CmmnFormat.ECOS_CMMN.code) {
                 error("Json representation allowed only for ECOS_CMMN processes")
             }
-            return mapper.read(rev.data, CmmnProcessDef::class.java)
+            return mapper.read(rev.loadData(procDefRevDataProvider), CmmnProcessDef::class.java)
         }
 
         @AttName(RecordConstants.ATT_TYPE)

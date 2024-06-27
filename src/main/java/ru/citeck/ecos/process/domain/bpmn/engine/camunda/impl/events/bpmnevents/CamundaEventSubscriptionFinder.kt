@@ -10,11 +10,13 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getConditionalEventSubscriptionsByProcessInstanceIds
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNamesLikeStart
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.convert.toDto
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
@@ -35,7 +37,9 @@ class CamundaEventSubscriptionFinder(
     private val camundaRuntimeService: RuntimeService,
     private val procDefService: ProcDefService,
     private val procDefRevRepo: ProcDefRevRepository,
-    private val cachedEventSubscriptionProvider: CachedEventSubscriptionProvider
+    private val cachedEventSubscriptionProvider: CachedEventSubscriptionProvider,
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val camundaMyBatisExtension: CamundaMyBatisExtension
 ) {
 
     companion object {
@@ -59,7 +63,7 @@ class CamundaEventSubscriptionFinder(
                         return@forEach
                     }
 
-                    val deployedData = defRev.parseDeployedSubscriptionsData()
+                    val deployedData = defRev.parseDeployedSubscriptionsData(procDefRevDataProvider)
                     eventDefsOfDeploymentId[defRev.deploymentId!!] = deployedData.subscriptions
                     ecosTypes.addAll(deployedData.conditionalEventsEcosTypes)
 
@@ -101,7 +105,10 @@ class CamundaEventSubscriptionFinder(
             }
 
             result =
-                camundaRuntimeService.getEventSubscriptionsByEventNamesLikeStart(composedEventNames).mapNotNull { sub ->
+                camundaRuntimeService.getEventSubscriptionsByEventNamesLikeStart(
+                    composedEventNames,
+                    camundaMyBatisExtension
+                ).mapNotNull { sub ->
 
                     log.debug { "Process subscription: \n$sub" }
 
@@ -137,7 +144,10 @@ class CamundaEventSubscriptionFinder(
                 it.processInstanceId
             }
 
-            result = camundaRuntimeService.getConditionalEventSubscriptionsByProcessInstanceIds(processes)
+            result = camundaRuntimeService.getConditionalEventSubscriptionsByProcessInstanceIds(
+                processes,
+                camundaMyBatisExtension
+            )
                 .mapNotNull { sub ->
                     val deploymentId = getProcDefDeploymentIdForSubscription(sub)
                     if (deploymentId.isBlank()) {
@@ -213,13 +223,14 @@ class CamundaEventSubscriptionFinder(
         val procDefRev = procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDefRevId)
             ?: error("Process definition revision not found by id: $procDefRevId")
 
-        return procDefRev.parseDeployedSubscriptionsData()
+        return procDefRev.parseDeployedSubscriptionsData(procDefRevDataProvider)
     }
 }
 
 @Component
 class CachedEventSubscriptionProvider(
     private val procDefService: ProcDefService,
+    private val procDefRevDataProvider: ProcDefRevDataProvider
 ) {
 
     companion object {
@@ -234,7 +245,7 @@ class CachedEventSubscriptionProvider(
             return emptyList()
         }
 
-        return defRev.parseDeployedSubscriptionsData().subscriptions
+        return defRev.parseDeployedSubscriptionsData(procDefRevDataProvider).subscriptions
     }
 
     @Cacheable(cacheNames = [BPMN_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME])
@@ -245,7 +256,7 @@ class CachedEventSubscriptionProvider(
             return emptyList()
         }
 
-        return defRev.getBpmnConditionalEvents()
+        return defRev.getBpmnConditionalEvents(procDefRevDataProvider)
     }
 
     @CachePut(cacheNames = [BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME], key = "#deploymentId")
@@ -262,8 +273,10 @@ const val BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME =
 const val BPMN_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME =
     "bpmn-conditional-event-subscriptions-by-deployment-id-cache"
 
-private fun ProcDefRevDto.parseDeployedSubscriptionsData(): DeployedSubscriptionsData {
-    val defXml = String(this.data, Charsets.UTF_8)
+private fun ProcDefRevDto.parseDeployedSubscriptionsData(
+    dataProvider: ProcDefRevDataProvider
+): DeployedSubscriptionsData {
+    val defXml = String(this.loadData(dataProvider), Charsets.UTF_8)
     val definition = try {
         BpmnIO.importEcosBpmn(defXml)
     } catch (e: Exception) {
@@ -296,8 +309,8 @@ private fun ProcDefRevDto.parseDeployedSubscriptionsData(): DeployedSubscription
     return DeployedSubscriptionsData(notEmptyTypes, subscriptions)
 }
 
-fun ProcDefRevDto.getBpmnConditionalEvents(): List<ConditionalEvent> {
-    val defXml = String(this.data, Charsets.UTF_8)
+private fun ProcDefRevDto.getBpmnConditionalEvents(dataProvider: ProcDefRevDataProvider): List<ConditionalEvent> {
+    val defXml = String(this.loadData(dataProvider), Charsets.UTF_8)
 
     return try {
         BpmnIO.importEcosBpmn(defXml).conditionalEventDefsMeta.map { conditionalEvent ->

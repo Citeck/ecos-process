@@ -14,19 +14,16 @@ import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.createAttsSync
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.attssync.TaskAttsSyncSource
 import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttribute
 import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttributeType
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
-import ru.citeck.ecos.process.domain.withDocPrefix
-import ru.citeck.ecos.process.domain.withDocTypePrefix
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -76,7 +73,6 @@ class ProcTaskSyncedAttsQueryTest {
         )
     }
 
-    private val taskAttsSync = mutableListOf<EntityRef>()
     private val startedProcesIds = mutableListOf<String>()
 
     @Autowired
@@ -88,13 +84,18 @@ class ProcTaskSyncedAttsQueryTest {
     @Autowired
     private lateinit var ecosTypeRegistry: EcosTypesRegistry
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
 
     private lateinit var typeDef: TypeDef
 
     @BeforeAll
     fun setUp() {
-        saveBpmnWithAction(
+        helper.cleanTaskAttsSyncSettings()
+
+        helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID_SIMPLE_TASK.bpmn.xml",
             PROC_ID_SIMPLE_TASK,
             BpmnProcessDefActions.DEPLOY
@@ -178,126 +179,121 @@ class ProcTaskSyncedAttsQueryTest {
             typeDef
         )
 
-        taskAttsSync.add(
-            createAttsSync(
-                id = "test-task-atts-document-sync-query",
-                enabled = true,
-                source = TaskAttsSyncSource.RECORD,
-                name = "test-task-atts-document-sync-query",
-                attributesSync = listOf(
-                    TaskSyncAttribute(
-                        id = "name",
-                        type = AttributeType.TEXT,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "name"
-                            )
+        helper.createAttsSync(
+            id = "test-task-atts-document-sync-query",
+            enabled = true,
+            source = TaskAttsSyncSource.RECORD,
+            name = "test-task-atts-document-sync-query",
+            attributesSync = listOf(
+                TaskSyncAttribute(
+                    id = "name",
+                    type = AttributeType.TEXT,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "name"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "description",
-                        type = AttributeType.TEXT,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "description"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "description",
+                    type = AttributeType.TEXT,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "description"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "sum",
-                        type = AttributeType.NUMBER,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "sum"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "sum",
+                    type = AttributeType.NUMBER,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "sum"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "date",
-                        type = AttributeType.DATE,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "date"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "date",
+                    type = AttributeType.DATE,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "date"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "dateTime",
-                        type = AttributeType.DATETIME,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "dateTime"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "dateTime",
+                    type = AttributeType.DATETIME,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "dateTime"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "documentAssoc",
-                        type = AttributeType.ASSOC,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "documentAssoc"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "documentAssoc",
+                    type = AttributeType.ASSOC,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "documentAssoc"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "bool",
-                        type = AttributeType.BOOLEAN,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                attribute = "bool"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "bool",
+                    type = AttributeType.BOOLEAN,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            attribute = "bool"
                         )
                     )
                 )
             )
         )
 
-        taskAttsSync.add(
-            createAttsSync(
-                id = "test-task-atts-document-type-sync",
-                enabled = true,
-                source = TaskAttsSyncSource.TYPE,
-                name = "test-task-atts-document-type-sync",
-                attributesSync = listOf(
-                    TaskSyncAttribute(
-                        id = "procedure",
-                        type = AttributeType.TEXT,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                recordExpressionAttribute = "config.procedure"
-                            )
+        helper.createAttsSync(
+            id = "test-task-atts-document-type-sync",
+            enabled = true,
+            source = TaskAttsSyncSource.TYPE,
+            name = "test-task-atts-document-type-sync",
+            attributesSync = listOf(
+                TaskSyncAttribute(
+                    id = "procedure",
+                    type = AttributeType.TEXT,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            recordExpressionAttribute = "config.procedure"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "urgency",
-                        type = AttributeType.NUMBER,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                recordExpressionAttribute = "config.urgency?num"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "urgency",
+                    type = AttributeType.NUMBER,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            recordExpressionAttribute = "config.urgency?num"
                         )
-                    ),
-                    TaskSyncAttribute(
-                        id = "code",
-                        type = AttributeType.TEXT,
-                        ecosTypes = listOf(
-                            TaskSyncAttributeType(
-                                typeRef = docRecord.type,
-                                recordExpressionAttribute = "config.code"
-                            )
+                    )
+                ),
+                TaskSyncAttribute(
+                    id = "code",
+                    type = AttributeType.TEXT,
+                    ecosTypes = listOf(
+                        TaskSyncAttributeType(
+                            typeRef = docRecord.type,
+                            recordExpressionAttribute = "config.code"
                         )
                     )
                 )
-
             )
         )
 
@@ -318,7 +314,7 @@ class ProcTaskSyncedAttsQueryTest {
 
     @AfterAll
     fun clean() {
-        recordsService.delete(taskAttsSync)
+        helper.cleanTaskAttsSyncSettings()
         startedProcesIds.forEach {
             bpmnProcessService.deleteProcessInstance(it)
         }
@@ -907,8 +903,6 @@ class ProcTaskSyncedAttsQueryTest {
         val found = queryTasks(
             Predicates.eq("procedure".withDocTypePrefix(), TYPE_PROCEDURE)
         )
-
-
 
         assertThat(found).hasSize(6)
         assertThat(found.map { it.docRef }).containsExactlyInAnyOrder(

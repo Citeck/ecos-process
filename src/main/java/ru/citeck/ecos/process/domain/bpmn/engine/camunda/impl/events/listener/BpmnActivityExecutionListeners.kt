@@ -9,10 +9,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.elements.BpmnElementProcessingRequest
 import ru.citeck.ecos.process.domain.bpmn.elements.BpmnElementsToQueuePublisher
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_ACTIVITY_ELEMENT_END
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_ACTIVITY_ELEMENT_START
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_FLOW_ELEMENT_TAKE
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.toRawFlowElement
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.*
 import ru.citeck.ecos.txn.lib.TxnContext
 
 private const val BPMN_ELEMENT_BEFORE_COMMIT_ORDER = 1000.0f
@@ -28,7 +25,8 @@ private fun sendBpmnElementBeforeCommit(unit: () -> Unit) {
 @Component
 class BpmnFlowElementTakeEventExecutionListener(
     @Autowired(required = false)
-    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?
+    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?,
+    private val bpmnElementConverter: BpmnElementConverter
 ) : ExecutionListener {
 
     companion object {
@@ -45,7 +43,7 @@ class BpmnFlowElementTakeEventExecutionListener(
             return
         }
 
-        val rawFlowElement = execution.toRawFlowElement()
+        val rawFlowElement = bpmnElementConverter.toRawFlowElement(execution)
         log.trace { "Send raw bpmn element take to queue:\n $rawFlowElement" }
 
         sendBpmnElementBeforeCommit {
@@ -59,7 +57,8 @@ class BpmnFlowElementTakeEventExecutionListener(
 @Component
 class BpmnActivityStartEventExecutionListener(
     @Autowired(required = false)
-    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?
+    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?,
+    private val bpmnElementConverter: BpmnElementConverter
 ) : ExecutionListener {
 
     companion object {
@@ -76,7 +75,7 @@ class BpmnActivityStartEventExecutionListener(
             return
         }
 
-        val rawFlowElement = execution.toRawFlowElement()
+        val rawFlowElement = bpmnElementConverter.toRawFlowElement(execution)
         log.trace { "Send raw bpmn element start to queue:\n $rawFlowElement" }
 
         sendBpmnElementBeforeCommit {
@@ -90,7 +89,8 @@ class BpmnActivityStartEventExecutionListener(
 @Component
 class BpmnActivityEndEventExecutionListener(
     @Autowired(required = false)
-    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?
+    private val bpmnElementsToQueuePublisher: BpmnElementsToQueuePublisher?,
+    private val bpmnElementConverter: BpmnElementConverter
 ) : ExecutionListener {
 
     companion object {
@@ -107,7 +107,7 @@ class BpmnActivityEndEventExecutionListener(
             return
         }
 
-        val rawFlowElement = execution.toRawFlowElement()
+        val rawFlowElement = bpmnElementConverter.toRawFlowElement(execution)
         log.trace { "Send raw bpmn element end to queue:\n $rawFlowElement" }
 
         sendBpmnElementBeforeCommit {

@@ -8,8 +8,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForBpmnDefEngine
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -29,7 +28,8 @@ import kotlin.system.measureTimeMillis
 
 @Component
 class BpmnIncidentRecords(
-    private val camundaRuntimeService: RuntimeService
+    private val camundaRuntimeService: RuntimeService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -59,7 +59,12 @@ class BpmnIncidentRecords(
         check(incident != null) {
             "Incident with id ${record.id} not found"
         }
-        check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(incident.processInstanceId)) {
+        check(
+            bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_EDIT,
+                incident.processInstanceId
+            )
+        ) {
             "User has no permission to edit process instance ${incident.processInstanceId}"
         }
 
@@ -85,9 +90,9 @@ class BpmnIncidentRecords(
 
             val procId = query.bpmnProcess.getLocalId()
             if (procId.isNotBlank()) {
-                BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(procId)
+                bpmnPermissionResolver.isAllowForProcessInstanceId(BpmnPermission.PROC_INSTANCE_READ, procId)
             } else {
-                BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(query.bpmnDefEngine)
+                bpmnPermissionResolver.isAllowForBpmnDefEngine(BpmnPermission.PROC_INSTANCE_READ, query.bpmnDefEngine)
             }
         }
         if (!hasReadPerms) {
@@ -174,7 +179,11 @@ class BpmnIncidentRecords(
             .incidentId(recordId)
             .singleResult()
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(incident.processInstanceId)) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_READ,
+                incident.processInstanceId
+            )
+        ) {
             return null
         }
 

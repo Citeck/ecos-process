@@ -6,7 +6,7 @@ import org.camunda.bpm.engine.runtime.Job
 import org.camunda.bpm.engine.runtime.JobQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -27,7 +27,8 @@ import java.util.*
 
 @Component
 class BpmnJobRecords(
-    private val managementService: ManagementService
+    private val managementService: ManagementService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
 
     companion object {
@@ -50,7 +51,11 @@ class BpmnJobRecords(
             "Process id must be specified"
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(jobQuery.bpmnProcess.getLocalId())) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_READ,
+                jobQuery.bpmnProcess.getLocalId()
+            )
+        ) {
             return RecsQueryRes()
         }
 
@@ -134,7 +139,11 @@ class BpmnJobRecords(
 
         return map {
             val processInstanceId = it.processInstanceId
-            if (BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processInstanceId)) {
+            if (bpmnPermissionResolver.isAllowForProcessInstanceId(
+                    BpmnPermission.PROC_INSTANCE_READ,
+                    processInstanceId
+                )
+            ) {
                 it
             } else {
                 EmptyIdentifiableRecord(it.id)
@@ -153,7 +162,12 @@ class BpmnJobRecords(
         check(job != null) {
             "Job with id ${record.id} not found"
         }
-        check(BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(job.processInstanceId)) {
+        check(
+            bpmnPermissionResolver.isAllowForProcessInstanceId(
+                BpmnPermission.PROC_INSTANCE_EDIT,
+                job.processInstanceId
+            )
+        ) {
             "User has no permissions to edit process instance: ${job.processInstanceId}"
         }
 

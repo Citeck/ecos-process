@@ -9,4 +9,6 @@
     <logger name="org.camunda.bpm.engine.context" level="OFF" />
     <logger name="ru.citeck.ecos.rabbitmq.RabbitMqChannel" level="OFF" />
     <logger name="ru.citeck.ecos.data.sql.datasource.DbDataSourceImpl" level="OFF" />
+    <logger name="ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService" level="OFF" />
+
 </configuration>

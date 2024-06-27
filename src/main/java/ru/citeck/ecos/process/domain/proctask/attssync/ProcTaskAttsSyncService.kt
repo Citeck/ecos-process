@@ -27,6 +27,11 @@ class ProcTaskAttsSyncService(
     private val ecosTypesRegistry: EcosTypesRegistry
 ) {
 
+    fun removeSyncSettings(ref: EntityRef) {
+        recordsService.delete(ref)
+        procTaskSyncCache.evictTaskSyncAttributesCache()
+    }
+
     fun getSyncSettings(ref: EntityRef): TaskAttsSyncSettingsMeta? {
         return recordsService.getAtts(ref, TaskAttsSyncSettingsMeta::class.java)
     }

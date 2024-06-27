@@ -6,65 +6,57 @@ import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessDefFinder
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import javax.annotation.PostConstruct
 
 @Component
 class BpmnPermissionResolver(
-    val recordsService: RecordsService,
-    val bpmnProcessDefFinder: BpmnProcessDefFinder
+    private val recordsService: RecordsService,
+    private val bpmnProcessDefFinder: BpmnProcessDefFinder
 ) {
 
-    @PostConstruct
-    private fun init() {
-        bpmnPermissionResolver = this
-    }
-}
+    fun isAllow(permission: BpmnPermission, bpmnProcessDef: EntityRef): Boolean {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return true
+        }
 
-private lateinit var bpmnPermissionResolver: BpmnPermissionResolver
-
-fun BpmnPermission.isAllow(bpmnProcessDef: EntityRef): Boolean {
-    if (AuthContext.isRunAsSystemOrAdmin()) {
-        return true
+        return recordsService.getAtt(
+            bpmnProcessDef,
+            permission.getAttribute()
+        ).asBoolean()
     }
 
-    return bpmnPermissionResolver.recordsService.getAtt(
-        bpmnProcessDef,
-        getAttribute()
-    ).asBoolean()
-}
+    fun isAllowForBpmnDefEngine(permission: BpmnPermission, bpmnDefEngine: EntityRef): Boolean {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return true
+        }
 
-fun BpmnPermission.isAllowForBpmnDefEngine(bpmnDefEngine: EntityRef): Boolean {
-    if (AuthContext.isRunAsSystemOrAdmin()) {
-        return true
+        val bpmnProcessDef = bpmnProcessDefFinder.getByBpmnDefEngine(bpmnDefEngine)
+        return isAllow(permission, bpmnProcessDef)
     }
 
-    val bpmnProcessDef = bpmnPermissionResolver.bpmnProcessDefFinder.getByBpmnDefEngine(bpmnDefEngine)
-    return isAllow(bpmnProcessDef)
-}
+    fun isAllowForProcessInstanceId(permission: BpmnPermission, processInstanceId: String): Boolean {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return true
+        }
 
-fun BpmnPermission.isAllowForProcessInstanceId(processInstanceId: String): Boolean {
-    if (AuthContext.isRunAsSystemOrAdmin()) {
-        return true
+        val bpmnProcessDef = bpmnProcessDefFinder.getByProcessInstanceId(processInstanceId)
+        return isAllow(permission, bpmnProcessDef)
     }
 
-    val bpmnProcessDef = bpmnPermissionResolver.bpmnProcessDefFinder.getByProcessInstanceId(processInstanceId)
-    return isAllow(bpmnProcessDef)
-}
+    fun isAllowForDeploymentId(permission: BpmnPermission, deploymentId: String): Boolean {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return true
+        }
 
-fun BpmnPermission.isAllowForDeploymentId(deploymentId: String): Boolean {
-    if (AuthContext.isRunAsSystemOrAdmin()) {
-        return true
+        val bpmnProcessDef = bpmnProcessDefFinder.getByDeploymentId(deploymentId)
+        return isAllow(permission, bpmnProcessDef)
     }
 
-    val bpmnProcessDef = bpmnPermissionResolver.bpmnProcessDefFinder.getByDeploymentId(deploymentId)
-    return isAllow(bpmnProcessDef)
-}
+    fun isAllowForProcessKey(permission: BpmnPermission, processKey: String): Boolean {
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return true
+        }
 
-fun BpmnPermission.isAllowForProcessKey(processKey: String): Boolean {
-    if (AuthContext.isRunAsSystemOrAdmin()) {
-        return true
+        val bpmnProcessDef = bpmnProcessDefFinder.getByProcessKey(processKey)
+        return isAllow(permission, bpmnProcessDef)
     }
-
-    val bpmnProcessDef = bpmnPermissionResolver.bpmnProcessDefFinder.getByProcessKey(processKey)
-    return isAllow(bpmnProcessDef)
 }

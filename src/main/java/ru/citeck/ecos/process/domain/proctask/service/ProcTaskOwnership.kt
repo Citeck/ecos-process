@@ -15,7 +15,8 @@ const val TASK_OWNERSHIP_REASSIGN_ALLOWED_GROUP = "GROUP_WORKFLOW_TASKS_REASSIGN
 class ProcTaskOwnership(
     private val procTaskService: ProcTaskService,
     private val delegationService: DelegationService,
-    private val recordsService: RecordsService
+    private val recordsService: RecordsService,
+    private val taskActorsUtils: TaskActorsUtils
 ) {
 
     companion object {
@@ -64,7 +65,7 @@ class ProcTaskOwnership(
             return
         }
 
-        if (task.isCurrentUserTaskActorOrDelegate()) {
+        if (taskActorsUtils.isCurrentUserTaskActorOrDelegate(task)) {
             return
         }
 

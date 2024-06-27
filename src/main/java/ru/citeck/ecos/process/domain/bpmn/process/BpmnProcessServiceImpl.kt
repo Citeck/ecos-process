@@ -92,7 +92,10 @@ class BpmnProcessServiceImpl(
                 val definition: ProcDefWithDataDto
                 val getDefTime = measureTimeMillis {
                     definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, definitionId))
-                        ?: throw IllegalArgumentException("Process definition with id $definitionId not found")
+                        ?: throw IllegalArgumentException(
+                            "Process definition with id $definitionId not found for " +
+                                "process key $processKey"
+                        )
                 }
 
                 check(definition.enabled) {

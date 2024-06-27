@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.CalledProcessInstanceMeta
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -17,7 +17,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class BpmnCalledProcessInstanceRecords(
-    private val bpmnProcessService: BpmnProcessService
+    private val bpmnProcessService: BpmnProcessService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(), RecordsQueryDao {
 
     companion object {
@@ -34,7 +35,7 @@ class BpmnCalledProcessInstanceRecords(
             "Process id must be specified"
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processId)) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(BpmnPermission.PROC_INSTANCE_READ, processId)) {
             return RecsQueryRes<Any>()
         }
 

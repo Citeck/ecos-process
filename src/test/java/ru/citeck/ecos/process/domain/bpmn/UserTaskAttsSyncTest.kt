@@ -14,18 +14,15 @@ import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.*
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.createAttsSync
 import ru.citeck.ecos.process.domain.proctask.attssync.*
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_ATTS
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
-import ru.citeck.ecos.process.domain.withDocPrefix
-import ru.citeck.ecos.process.domain.withDocTypePrefix
 import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
@@ -89,6 +86,9 @@ class UserTaskAttsSyncTest {
     @Autowired
     private lateinit var ecosTypeRegistry: EcosTypesRegistry
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
     private lateinit var childDocumentRecordsDao: InMemRecordsDao<Any>
 
@@ -111,7 +111,9 @@ class UserTaskAttsSyncTest {
 
     @BeforeEach
     fun setUp() {
-        saveBpmnWithAction(
+        helper.cleanTaskAttsSyncSettings()
+
+        helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID_SIMPLE_TASK.bpmn.xml",
             PROC_ID_SIMPLE_TASK,
             BpmnProcessDefActions.DEPLOY
@@ -223,7 +225,7 @@ class UserTaskAttsSyncTest {
 
     @AfterEach
     fun clean() {
-        recordsService.delete(taskAttsSync)
+        helper.cleanTaskAttsSyncSettings()
         startedProcesIds.forEach {
             bpmnProcessService.deleteProcessInstance(it)
         }
@@ -632,7 +634,6 @@ class UserTaskAttsSyncTest {
         createSyncSettings()
         startProcess()
 
-
         val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
 
         // check initial value
@@ -798,7 +799,7 @@ class UserTaskAttsSyncTest {
 
     private fun createSyncSettings(enabled: Boolean = true) {
         taskAttsSync.add(
-            createAttsSync(
+            helper.createAttsSync(
                 id = "test-task-atts-document-record-sync",
                 enabled = enabled,
                 source = TaskAttsSyncSource.RECORD,
@@ -879,7 +880,7 @@ class UserTaskAttsSyncTest {
         )
 
         taskAttsSync.add(
-            createAttsSync(
+            helper.createAttsSync(
                 id = "test-task-atts-document-type-sync",
                 enabled = enabled,
                 source = TaskAttsSyncSource.TYPE,

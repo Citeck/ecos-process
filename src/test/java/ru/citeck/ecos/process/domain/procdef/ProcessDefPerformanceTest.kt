@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefVersionRecords
 import ru.citeck.ecos.process.domain.bpmn.api.records.VersionQuery
-import ru.citeck.ecos.process.domain.getBpmnProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
@@ -47,6 +47,9 @@ class ProcessDefPerformanceTest {
     @Autowired
     private lateinit var recordsService: RecordsService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     private val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, "test-id")
     private val procAnotherDefRef = ProcDefRef.create(BPMN_PROC_TYPE, "test-id-another")
 
@@ -60,14 +63,14 @@ class ProcessDefPerformanceTest {
     @BeforeAll
     fun setUp() {
         procDefService.uploadProcDef(
-            getBpmnProcessDefDto(
+            helper.getBpmnProcessDefDto(
                 "test/bpmn/large-test-process.bpmn.xml",
                 procDefRef.id
             )
         )
 
         procDefService.uploadProcDef(
-            getBpmnProcessDefDto(
+            helper.getBpmnProcessDefDto(
                 "test/bpmn/large-test-process.bpmn.xml",
                 procAnotherDefRef.id
             )

@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DEF_STATE
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
@@ -24,7 +25,8 @@ private const val ARTIFACT_TYPE = "process/bpmn"
 class BpmnProcessArtifactHandler(
     private val recordsService: RecordsService,
     private val procDefService: ProcDefService,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+    private val procDefRevDataProvider: ProcDefRevDataProvider
 ) : EcosArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String) {
@@ -42,9 +44,9 @@ class BpmnProcessArtifactHandler(
                 ?: error("Revision not found for procDef: ${dto.id}")
 
             val data = if (rev.dataState == ProcDefRevDataState.RAW) {
-                String(rev.data)
+                String(rev.loadData(procDefRevDataProvider))
             } else {
-                validateFormatAndGetEcosBpmnString(rev.data)
+                validateFormatAndGetEcosBpmnString(rev.loadData(procDefRevDataProvider))
             }
 
             listener.accept(BinArtifact("${rev.procDefId}.bpmn.xml", ObjectData.create(), data.toByteArray()))

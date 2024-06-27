@@ -10,14 +10,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ELEMENT_DEF_ID
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.cleanDeployments
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
@@ -41,15 +39,18 @@ class BpmnStartProcessAsyncTest {
     @Autowired
     private lateinit var recordsService: RecordsService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     @BeforeAll
     fun setUp() {
-        saveBpmnWithAction(
+        helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID_START_ASYNC.bpmn.xml",
             PROC_ID_START_ASYNC,
             BpmnProcessDefActions.DEPLOY
         )
 
-        saveBpmnWithAction(
+        helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID_START_ASYNC_WITH_ERROR.bpmn.xml",
             PROC_ID_START_ASYNC_WITH_ERROR,
             BpmnProcessDefActions.DEPLOY
@@ -102,7 +103,7 @@ class BpmnStartProcessAsyncTest {
 
     @AfterAll
     fun tearDown() {
-        cleanDeployments()
-        cleanDefinitions()
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
     }
 }

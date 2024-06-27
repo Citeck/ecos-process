@@ -8,7 +8,6 @@ import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.process.common.toPrettyString
@@ -18,7 +17,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ELEMENT_ID
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_PROCESS_INSTANCE_ID
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FullFulFlowElementEvent
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.RawFlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.ds.RabbitMqConnection
@@ -36,16 +34,6 @@ data class BpmnElementProcessingRequest(
     val event: DataValue,
     val eventType: String
 )
-
-private fun DataValue.toUserTaskEvent(): UserTaskEvent {
-    return Json.mapper.convert(this, UserTaskEvent::class.java)
-        ?: error("Cannot convert event $this to UserTaskEvent")
-}
-
-private fun DataValue.toRawFlowElementEvent(): RawFlowElementEvent {
-    return Json.mapper.convert(this, RawFlowElementEvent::class.java)
-        ?: error("Cannot convert event $this to FlowElementEvent")
-}
 
 @Component
 @ConditionalOnProperty(name = ["ecos-process.bpmn.elements.listener.enabled"], havingValue = "true")
@@ -107,6 +95,8 @@ class BpmnElementMutationAsyncProcessor(
     @Qualifier("bpmnRabbitmqConnection")
     bpmnRabbitmqConnection: RabbitMqConnection,
 
+    private val bpmnElementConverter: BpmnElementConverter,
+
     @Value("\${ecos-process.bpmn.elements.mutation-processor.consumer.count}")
     private val consumersCount: Int,
 
@@ -146,32 +136,35 @@ class BpmnElementMutationAsyncProcessor(
             TxnContext.doInNewTxn {
                 when (request.eventType) {
                     BPMN_EVENT_USER_TASK_CREATE -> {
-                        val event = request.event.toUserTaskEvent()
+                        val event = bpmnElementConverter.toUserTaskEvent(request.event)
                         createTaskElement(event, false)
                     }
 
                     BPMN_EVENT_USER_TASK_COMPLETE -> {
-                        val event = request.event.toUserTaskEvent()
+                        val event = bpmnElementConverter.toUserTaskEvent(request.event)
                         completeTask(event)
                     }
 
                     BPMN_EVENT_USER_TASK_DELETE -> {
-                        val event = request.event.toUserTaskEvent()
+                        val event = bpmnElementConverter.toUserTaskEvent(request.event)
                         reactOnDeleteTaskEvent(event)
                     }
 
                     BPMN_EVENT_ACTIVITY_ELEMENT_START -> {
-                        val event = request.event.toRawFlowElementEvent().toFullFullFlowElement()
+                        val rawFlowElementEvent = bpmnElementConverter.toRawFlowElement(request.event)
+                        val event = bpmnElementConverter.toFullFulFlowElement(rawFlowElementEvent)
                         createStartActivityFlowElement(event)
                     }
 
                     BPMN_EVENT_ACTIVITY_ELEMENT_END -> {
-                        val event = request.event.toRawFlowElementEvent().toFullFullFlowElement()
+                        val rawFlowElementEvent = bpmnElementConverter.toRawFlowElement(request.event)
+                        val event = bpmnElementConverter.toFullFulFlowElement(rawFlowElementEvent)
                         creteEndActivityFlowElement(event)
                     }
 
                     BPMN_EVENT_FLOW_ELEMENT_TAKE -> {
-                        val event = request.event.toRawFlowElementEvent().toFullFullFlowElement()
+                        val rawFlowElementEvent = bpmnElementConverter.toRawFlowElement(request.event)
+                        val event = bpmnElementConverter.toFullFulFlowElement(rawFlowElementEvent)
                         createTakeFlowElement(event)
                     }
 
