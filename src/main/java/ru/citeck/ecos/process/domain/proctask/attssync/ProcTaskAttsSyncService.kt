@@ -27,13 +27,22 @@ class ProcTaskAttsSyncService(
     private val ecosTypesRegistry: EcosTypesRegistry
 ) {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     fun removeSyncSettings(ref: EntityRef) {
         recordsService.delete(ref)
         procTaskSyncCache.evictTaskSyncAttributesCache()
     }
 
     fun getSyncSettings(ref: EntityRef): TaskAttsSyncSettingsMeta? {
-        return recordsService.getAtts(ref, TaskAttsSyncSettingsMeta::class.java)
+        return try {
+            recordsService.getAtts(ref, TaskAttsSyncSettingsMeta::class.java)
+        } catch (e: Exception) {
+            log.debug("Failed to get sync settings: $ref", e)
+            return null
+        }
     }
 
     fun getTaskAttTypeOrTextDefault(attName: String): AttributeType {
