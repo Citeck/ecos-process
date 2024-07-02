@@ -148,7 +148,7 @@ class ProcTaskRecords(
             procTaskService.getTasksByIds(procRefs).map {
                 val record: ProcTaskRecord?
                 val toRecordTime = measureTimeMillis {
-                    record = it?.let { taskDto -> taskConverter.toRecord(taskDto) }
+                    record = it?.let { taskDto -> taskConverter.toRecord(taskDto, this) }
                 }
 
                 log.trace { "To record: $toRecordTime ms" }

@@ -20,8 +20,6 @@ internal val log = KotlinLogging.logger {}
 class TaskConverter(
     private val cacheableTaskConverter: CacheableTaskConverter,
     private val recordsService: RecordsService,
-    @Lazy
-    private val procTaskRecords: ProcTaskRecords
 ) {
 
     fun toProcTask(task: Task): ProcTaskDto {
@@ -34,7 +32,7 @@ class TaskConverter(
         return dto
     }
 
-    fun toRecord(procTaskDto: ProcTaskDto): ProcTaskRecords.ProcTaskRecord {
+    fun toRecord(procTaskDto: ProcTaskDto, procTaskRecords: ProcTaskRecords): ProcTaskRecords.ProcTaskRecord {
         with(procTaskDto) {
             return procTaskRecords.ProcTaskRecord(
                 id = id,

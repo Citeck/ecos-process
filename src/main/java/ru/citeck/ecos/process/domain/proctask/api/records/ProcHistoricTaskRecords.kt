@@ -27,7 +27,8 @@ import kotlin.system.measureTimeMillis
 class ProcHistoricTaskRecords(
     private val camundaHistoryService: HistoryService,
     private val procHistoricTaskService: ProcHistoricTaskService,
-    private val taskConverter: TaskConverter
+    private val taskConverter: TaskConverter,
+    private val procTaskRecords: ProcTaskRecords
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
@@ -85,7 +86,7 @@ class ProcHistoricTaskRecords(
         val result: List<ProcTaskRecords.ProcTaskRecord?>
         val time = measureTimeMillis {
             result = procHistoricTaskService.getHistoricTasksByIds(recordIds).map {
-                it?.let { historicTask -> taskConverter.toRecord(historicTask) }
+                it?.let { historicTask -> taskConverter.toRecord(historicTask, procTaskRecords) }
             }
         }
 
