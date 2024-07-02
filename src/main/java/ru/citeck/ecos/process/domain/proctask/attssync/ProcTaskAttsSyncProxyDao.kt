@@ -18,7 +18,11 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
 
         val currentRequestAttributesIds = mutableSetOf<String>()
-        val existsAttributes = findExistsAttributesWithoutIds(records.map { it.id })
+        val existsAttributes = findExistsAttributesWithoutIds(records.map {
+            it.id.ifEmpty {
+                it.getAtt("id").asText()
+            }
+        })
 
         for (record in records) {
             if (record.hasAtt("attributesSync")) {
