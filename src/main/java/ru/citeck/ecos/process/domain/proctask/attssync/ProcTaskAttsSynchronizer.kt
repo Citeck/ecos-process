@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
 import mu.KotlinLogging
-import org.apache.commons.lang3.time.FastDateFormat
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Lazy
@@ -37,8 +36,6 @@ class ProcTaskAttsSynchronizer(
 
     companion object {
         private val log = KotlinLogging.logger {}
-
-        private val dateFormat: FastDateFormat = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ssXXX")
 
         private const val TASK_ATTS_SYNC_QUEUE = "bpmn-task-atts-sync"
 
@@ -94,7 +91,7 @@ class ProcTaskAttsSynchronizer(
 
                 var afterValue = newAttributes[requestAtt]
                 if (isDateAtt(requestAtt, typeInfo) && afterValue is String) {
-                    afterValue = dateFormat.parse(afterValue)
+                    afterValue = Json.mapper.convert(afterValue, Date::class.java)
                 }
 
                 atts[TASK_DOCUMENT_ATT_PREFIX + taskAtt] = afterValue
