@@ -354,7 +354,7 @@
                                 },
                                 "dataSrc": "custom",
                                 "data": {
-                                  "custom": "let res = _.get(row, 'typeData.attributes') || [];\nif (!res.length) {\n  res = [];\n} else {\n  res = [...res, { value: '_status', label: 'Статус' }, { value: '_parent', label: 'Родитель' }];\n}\nvalues = res;",
+                                  "custom": "let res = _.get(row, 'typeData.attributes') || [];\nif (!res.length) {\n  res = [];\n} else {\n  res = [...res, { value: '_status', label: 'Статус' }, { value: '_created', label: 'Дата создания' }];\n}\nvalues = res;",
                                   "headers": [
                                     {}
                                   ]

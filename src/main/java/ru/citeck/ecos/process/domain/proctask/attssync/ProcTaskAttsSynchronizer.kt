@@ -16,6 +16,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.ds.RabbitMqConnection
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -208,6 +209,18 @@ class ProcTaskAttsSynchronizer(
                             requestAtt = StatusConstants.ATT_STATUS,
                             requestAttSchema = StatusConstants.ATT_STATUS_STR,
                             requestAttClass = String::class.java
+                        )
+                    )
+                    return@forEach
+                }
+
+                if (requestAtt == RecordConstants.ATT_CREATED) {
+                    attsToRequest.add(
+                        RequestAtt(
+                            taskAtt = taskAtt,
+                            requestAtt = RecordConstants.ATT_CREATED,
+                            requestAttSchema = RecordConstants.ATT_CREATED,
+                            requestAttClass = Date::class.java
                         )
                     )
                     return@forEach

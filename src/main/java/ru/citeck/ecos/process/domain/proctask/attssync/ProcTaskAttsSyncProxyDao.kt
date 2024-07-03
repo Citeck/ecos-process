@@ -1,6 +1,8 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_SOURCE_ID
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -15,7 +17,13 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
     PROC_TASK_ATTS_SYNC_REPO_SOURCE_ID
 ) {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
+
+        log.debug { "Mutate task atts sync: \n${Json.mapper.toPrettyString(records)}" }
 
         val currentRequestAttributesIds = mutableSetOf<String>()
         val existsAttributes = findExistsAttributesWithoutIds(records.map {
