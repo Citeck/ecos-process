@@ -37,6 +37,10 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
                 val attsSync = record.getAtt("attributesSync")
                 for (attSync in attsSync) {
                     val attSyncId = attSync["id"].asText()
+                    if (attSyncId.isBlank()) {
+                        continue
+                    }
+
                     val existAttribute = existsAttributes[attSyncId]
 
                     require(existAttribute == null) {
