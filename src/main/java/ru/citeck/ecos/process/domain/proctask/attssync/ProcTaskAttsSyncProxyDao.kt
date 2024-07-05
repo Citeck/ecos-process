@@ -85,10 +85,11 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
                             TaskAttsSyncSource.RECORD -> ecosType.attribute
                             TaskAttsSyncSource.TYPE -> ecosType.recordExpressionAttribute
                         }
-                        att?.let { Pair(attSync.id, syncSetting.id.toString()) }
+                        att?.let { attSync.id to syncSetting.id.toString() }
                     }
                 }
             }
+            .toSet()
             .groupBy({ it.first }, { it.second.toEntityRef() })
     }
 }
