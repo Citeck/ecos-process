@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "emodel/bpmn-task-atts-sync"
+source-id: "bpmn-task-atts-sync"
 
 name:
   ru: Синхронизация атрибутов задач BPMN

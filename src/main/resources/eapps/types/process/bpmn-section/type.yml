@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "eproc/bpmn-section"
+source-id: "bpmn-section"
 
 name:
   ru: BPMN section

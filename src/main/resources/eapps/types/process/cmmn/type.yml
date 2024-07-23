@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "eproc/cmmn-def"
+source-id: "cmmn-def"
 
 name:
   ru: CMMN Сценарий
