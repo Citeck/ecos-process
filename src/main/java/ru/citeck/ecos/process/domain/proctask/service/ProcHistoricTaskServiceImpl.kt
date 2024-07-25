@@ -3,8 +3,9 @@ package ru.citeck.ecos.process.domain.proctask.service
 import mu.KotlinLogging
 import org.camunda.bpm.engine.HistoryService
 import org.springframework.stereotype.Service
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getHistoricTasksByIds
-import ru.citeck.ecos.process.domain.proctask.converter.toProcTask
+import ru.citeck.ecos.process.domain.proctask.converter.TaskConverter
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import kotlin.system.measureTimeMillis
 
@@ -13,7 +14,9 @@ import kotlin.system.measureTimeMillis
  */
 @Service
 class ProcHistoricTaskServiceImpl(
-    private val camundaHistoryService: HistoryService
+    private val camundaHistoryService: HistoryService,
+    private val camundaMyBatisExtension: CamundaMyBatisExtension,
+    private val taskConverter: TaskConverter
 ) : ProcHistoricTaskService {
 
     companion object {
@@ -21,10 +24,10 @@ class ProcHistoricTaskServiceImpl(
     }
 
     override fun getHistoricTaskById(taskId: String): ProcTaskDto? {
-        return camundaHistoryService.createHistoricTaskInstanceQuery()
+        val historicTask = camundaHistoryService.createHistoricTaskInstanceQuery()
             .taskId(taskId)
             .singleResult()
-            ?.toProcTask()
+        return historicTask?.let { taskConverter.toProcTask(it) }
     }
 
     override fun getHistoricTasksByIds(ids: List<String>): List<ProcTaskDto?> {
@@ -32,7 +35,8 @@ class ProcHistoricTaskServiceImpl(
 
         val tasks: Map<String, ProcTaskDto>
         val getTasksTime = measureTimeMillis {
-            tasks = camundaHistoryService.getHistoricTasksByIds(ids).associate { it.id to it.toProcTask() }
+            tasks = camundaHistoryService.getHistoricTasksByIds(ids, camundaMyBatisExtension)
+                .associate { it.id to taskConverter.toProcTask(it) }
         }
 
         val result = mutableListOf<ProcTaskDto?>()

@@ -172,13 +172,8 @@ class SendNotificationDelegate : JavaDelegate {
             }
         }
 
-        val emailsFromRoles = AuthContext.runAsSystem {
-            camundaRoleService.getEmails(document, roles)
-        }
-
-        val emailsFromExpression = AuthContext.run {
-            mailUtils.getEmails(fromExpression)
-        }
+        val emailsFromRoles = camundaRoleService.getEmails(document, roles)
+        val emailsFromExpression = mailUtils.getEmails(fromExpression)
 
         return emailsFromRoles + emailsFromExpression
     }

@@ -11,6 +11,7 @@ import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.common.section.SectionType
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
@@ -22,9 +23,9 @@ import ru.citeck.ecos.process.domain.dmnsection.dto.DmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
-import ru.citeck.ecos.process.domain.procdef.perms.ProcDefPermsValue
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -55,7 +56,9 @@ const val DMN_RESOURCE_NAME_POSTFIX = ".dmn"
 class DmnDefRecords(
     private val procDefService: ProcDefService,
     private val procDefEventEmitter: ProcDefEventEmitter,
-    private val camundaRepoService: RepositoryService
+    private val camundaRepoService: RepositoryService,
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -348,9 +351,9 @@ class DmnDefRecords(
         private val procDef: ProcDefDto
     ) {
 
-        private val permsValue by lazy { ProcDefPermsValue(this, SectionType.DMN) }
+        private val permsValue by lazy { bpmnProcessDefRecords.ProcDefPermsValue(this, SectionType.DMN) }
 
-        fun getPermissions(): ProcDefPermsValue {
+        fun getPermissions(): BpmnProcessDefRecords.ProcDefPermsValue {
             return permsValue
         }
 
@@ -387,7 +390,7 @@ class DmnDefRecords(
 
         fun getDefinition(): String? {
             val rev = procDefService.getProcessDefRev(DMN_PROC_TYPE, procDef.revisionId) ?: return null
-            return String(rev.data, StandardCharsets.UTF_8)
+            return String(rev.loadData(procDefRevDataProvider), StandardCharsets.UTF_8)
         }
 
         @AttName("model")
@@ -486,7 +489,7 @@ class DmnDefRecords(
         return RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, this)
     }
 
-    private fun EntityRef.getPerms(): ProcDefPermsValue {
-        return ProcDefPermsValue(this, SectionType.DMN)
+    private fun EntityRef.getPerms(): BpmnProcessDefRecords.ProcDefPermsValue {
+        return bpmnProcessDefRecords.ProcDefPermsValue(this, SectionType.DMN)
     }
 }

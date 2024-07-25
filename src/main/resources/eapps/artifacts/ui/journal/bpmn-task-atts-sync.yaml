@@ -1,0 +1,23 @@
+---
+id: "bpmn-task-atts-sync"
+name:
+  ru: 'Синхронизация атрибутов задач BPMN'
+  en: 'BPMN Task Attributes Sync'
+typeRef: emodel/type@bpmn-task-atts-sync
+system: true
+columns:
+  - id: enabled
+    name:
+      ru: Включено
+      en: Enabled
+    type: BOOLEAN
+  - id: name
+    name:
+      ru: Название
+      en: Name
+  - id: attributes
+    name:
+      ru: Атрибуты
+      en: Attributes
+    type: TEXT
+    multiple: true

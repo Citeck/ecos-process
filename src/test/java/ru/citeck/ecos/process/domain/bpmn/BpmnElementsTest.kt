@@ -9,16 +9,13 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ELEMENT_DEF_ID
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.cleanDeployments
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -29,8 +26,6 @@ import java.util.concurrent.TimeUnit
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class], properties = ["ecos-process.bpmn.elements.listener.enabled=true"])
-// TODO: remove DirtiesContext
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BpmnElementsTest {
 
@@ -44,9 +39,12 @@ class BpmnElementsTest {
     @Autowired
     private lateinit var recordsService: RecordsService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     @BeforeAll
     fun setUp() {
-        saveBpmnWithAction(
+        helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID.bpmn.xml",
             PROC_ID,
             BpmnProcessDefActions.DEPLOY
@@ -83,8 +81,8 @@ class BpmnElementsTest {
 
     @AfterAll
     fun tearDown() {
-        cleanDeployments()
-        cleanDefinitions()
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
     }
 
     data class BpmnElementData(

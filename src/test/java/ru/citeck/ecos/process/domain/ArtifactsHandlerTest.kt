@@ -9,10 +9,10 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.apps.app.service.LocalAppService
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
@@ -27,7 +27,11 @@ import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskAttsSyncSettingsMeta
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskAttsSyncSource
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttribute
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttributeType
+import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_SOURCE_ID
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -46,7 +50,6 @@ private const val BPMN_TEST_DRAFT_PROCESS_ID = "test-draft-process-artifact-hand
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class ArtifactsHandlerTest {
 
     @Autowired
@@ -136,8 +139,8 @@ class ArtifactsHandlerTest {
         assertEquals(BPMN_TEST_PROCESS_ID, definition.id)
         assertEquals(MLText(mapOf(LocaleUtils.toLocale("ru") to "Test process")), definition.name)
 
-        assertEquals(RecordRef.valueOf("uiserv/form@test-bpmn-form"), definition.formRef)
-        assertEquals(RecordRef.valueOf("emodel/type@type-ecos-fin-request"), definition.ecosTypeRef)
+        assertEquals(EntityRef.valueOf("uiserv/form@test-bpmn-form"), definition.formRef)
+        assertEquals(EntityRef.valueOf("emodel/type@type-ecos-fin-request"), definition.ecosTypeRef)
         assertEquals(BPMN_FORMAT, definition.format)
         assertEquals(BPMN_PROC_TYPE, definition.procType)
 
@@ -188,8 +191,8 @@ class ArtifactsHandlerTest {
         assertEquals(BPMN_TEST_DRAFT_PROCESS_ID, definition.id)
         assertEquals(MLText(mapOf(LocaleUtils.toLocale("ru") to "Test draft process")), definition.name)
 
-        assertEquals(RecordRef.valueOf("uiserv/form@ecos-test-form"), definition.formRef)
-        assertEquals(RecordRef.valueOf("emodel/type@test-type"), definition.ecosTypeRef)
+        assertEquals(EntityRef.valueOf("uiserv/form@ecos-test-form"), definition.formRef)
+        assertEquals(EntityRef.valueOf("emodel/type@test-type"), definition.ecosTypeRef)
 
         assertEquals(BPMN_FORMAT, definition.format)
         assertEquals(BPMN_PROC_TYPE, definition.procType)
@@ -243,5 +246,95 @@ class ArtifactsHandlerTest {
         Assertions.assertThat(countSettings.targetBpmnActivityId).isEqualTo("target_id")
         Assertions.assertThat(countSettings.targetBpmnActivityEvent).isEqualTo(BpmnKpiEventType.START)
         Assertions.assertThat(countSettings.countKpi).isEqualTo(30)
+    }
+
+    @Test
+    fun `check task record atts sync meta data after deploy`() {
+        val ref = EntityRef.create(
+            AppName.EPROC,
+            PROC_TASK_ATTS_SYNC_SOURCE_ID,
+            "test-task-atts-sync-record-artifact"
+        )
+        val taskAttsSync = recordsService.getAtts(
+            ref,
+            TaskAttsSyncSettingsMeta::class.java
+        )
+
+        Assertions.assertThat(taskAttsSync.id).isEqualTo(ref)
+        Assertions.assertThat(taskAttsSync.name).isEqualTo("test task atts sync record artifact")
+        Assertions.assertThat(taskAttsSync.enabled).isTrue()
+        Assertions.assertThat(taskAttsSync.source).isEqualTo(TaskAttsSyncSource.RECORD)
+        Assertions.assertThat(taskAttsSync.attributesSync).containsExactlyInAnyOrder(
+            TaskSyncAttribute(
+                id = "name",
+                type = AttributeType.TEXT,
+                ecosTypes = listOf(
+                    TaskSyncAttributeType(
+                        typeRef = EntityRef.valueOf("emodel/type@doc"),
+                        attribute = "name"
+                    )
+                )
+            ),
+            TaskSyncAttribute(
+                id = "sum",
+                type = AttributeType.NUMBER,
+                ecosTypes = listOf(
+                    TaskSyncAttributeType(
+                        typeRef = EntityRef.valueOf("emodel/type@doc"),
+                        attribute = "sum"
+                    )
+                )
+            ),
+            TaskSyncAttribute(
+                id = "count",
+                type = AttributeType.NUMBER,
+                ecosTypes = listOf(
+                    TaskSyncAttributeType(
+                        typeRef = EntityRef.valueOf("emodel/type@doc"),
+                        attribute = "count"
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `check task type atts sync meta data after deploy`() {
+        val ref = EntityRef.create(
+            AppName.EPROC,
+            PROC_TASK_ATTS_SYNC_SOURCE_ID,
+            "test-task-atts-sync-type-artifact"
+        )
+        val taskAttsSync = recordsService.getAtts(
+            ref,
+            TaskAttsSyncSettingsMeta::class.java
+        )
+
+        Assertions.assertThat(taskAttsSync.id).isEqualTo(ref)
+        Assertions.assertThat(taskAttsSync.name).isEqualTo("test task atts sync type artifact")
+        Assertions.assertThat(taskAttsSync.enabled).isTrue()
+        Assertions.assertThat(taskAttsSync.source).isEqualTo(TaskAttsSyncSource.TYPE)
+        Assertions.assertThat(taskAttsSync.attributesSync).containsExactlyInAnyOrder(
+            TaskSyncAttribute(
+                id = "procedure",
+                type = AttributeType.TEXT,
+                ecosTypes = listOf(
+                    TaskSyncAttributeType(
+                        typeRef = EntityRef.valueOf("emodel/type@doc"),
+                        recordExpressionAttribute = "config.procedure"
+                    )
+                )
+            ),
+            TaskSyncAttribute(
+                id = "urgency",
+                type = AttributeType.NUMBER,
+                ecosTypes = listOf(
+                    TaskSyncAttributeType(
+                        typeRef = EntityRef.valueOf("emodel/type@doc"),
+                        recordExpressionAttribute = "config.urgency?num"
+                    )
+                )
+            )
+        )
     }
 }

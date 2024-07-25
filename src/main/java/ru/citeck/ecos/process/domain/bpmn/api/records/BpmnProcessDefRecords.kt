@@ -10,8 +10,10 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.permissions.dto.PermissionType
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
+import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
@@ -27,10 +29,10 @@ import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
-import ru.citeck.ecos.process.domain.procdef.perms.ProcDefPermsValue
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -41,6 +43,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -55,10 +58,18 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import ru.citeck.ecos.webapp.lib.model.perms.ModelRecordPermsComponent
+import ru.citeck.ecos.webapp.lib.perms.EcosPermissionsService
+import ru.citeck.ecos.webapp.lib.perms.RecordPerms
+import ru.citeck.ecos.webapp.lib.perms.component.custom.CustomRecordPermsComponent
 import ru.citeck.ecos.webapp.lib.spring.context.content.EcosContentService
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
+
+private const val PERMS_READ = "read"
+private const val PERMS_WRITE = "write"
+private const val ATT_SECTION_REF_ID = "sectionRef?id"
 
 @Component
 class BpmnProcessDefRecords(
@@ -70,7 +81,11 @@ class BpmnProcessDefRecords(
     private val bpmnEventSubscriptionService: BpmnEventSubscriptionService,
     private val bpmnProcessReportService: BpmnProcessReportService,
     private val ecosContentService: EcosContentService,
-    private val bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider
+    private val bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider,
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    ecosPermissionsService: EcosPermissionsService,
+    customRecordPermsComponent: CustomRecordPermsComponent,
+    modelRecordPermsComponent: ModelRecordPermsComponent,
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -89,6 +104,14 @@ class BpmnProcessDefRecords(
 
         private val log = KotlinLogging.logger {}
     }
+
+    private val permsCalculator = ecosPermissionsService.createCalculator()
+        .withoutDefaultComponents()
+        .addComponent(RootSectionPermsComponent())
+        .addComponent(modelRecordPermsComponent)
+        .addComponent(customRecordPermsComponent)
+        .allowAllForAdmins()
+        .build()
 
     override fun getId() = ID
 
@@ -622,7 +645,7 @@ class BpmnProcessDefRecords(
 
         fun getDefinition(): String? {
             return revision?.let {
-                String(it.data, StandardCharsets.UTF_8)
+                String(it.loadData(procDefRevDataProvider), StandardCharsets.UTF_8)
             }
         }
 
@@ -709,6 +732,56 @@ class BpmnProcessDefRecords(
             }
 
             return result.reversed()
+        }
+    }
+
+    inner class ProcDefPermsValue(
+        private val record: Any,
+        private val sectionType: SectionType
+    ) : AttValue {
+
+        private val recordPerms: RecordPerms by lazy {
+            permsCalculator.getPermissions(record)
+        }
+
+        private val sectionPerms: RecordPerms by lazy {
+            var sectionRef = recordsService.getAtt(record, ATT_SECTION_REF_ID).asText().toEntityRef()
+            if (EntityRef.isEmpty(sectionRef)) {
+                sectionRef = EntityRef.create(AppName.EPROC, sectionType.sourceId, "DEFAULT")
+            }
+            permsCalculator.getPermissions(sectionRef)
+        }
+
+        override fun has(name: String): Boolean {
+            if (AuthContext.isRunAsSystem()) {
+                return true
+            }
+            var hasPermission = recordPerms.hasPermission(name)
+            if (!hasPermission) {
+                hasPermission = sectionPerms.hasPermission(name)
+            }
+            if (!hasPermission && name.equals(PermissionType.WRITE.name, true)) {
+                hasPermission = sectionPerms.hasPermission(sectionType.editInSectionPermissionId)
+            }
+            return hasPermission
+        }
+
+        fun hasReadPerms(): Boolean {
+            if (AuthContext.isRunAsSystem()) {
+                return true
+            }
+            return has(PERMS_READ)
+        }
+
+        fun hasWritePerms(): Boolean {
+            if (AuthContext.isRunAsSystem()) {
+                return true
+            }
+            return has(PERMS_WRITE)
+        }
+
+        fun hasDeployPerms(): Boolean {
+            return has(sectionType.deployPermissionId)
         }
     }
 

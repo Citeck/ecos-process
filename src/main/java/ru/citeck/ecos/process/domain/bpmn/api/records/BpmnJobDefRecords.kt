@@ -4,7 +4,7 @@ import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.management.JobDefinition
 import org.camunda.bpm.engine.management.JobDefinitionQuery
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForBpmnDefEngine
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -19,7 +19,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class BpmnJobDefRecords(
-    private val managementService: ManagementService
+    private val managementService: ManagementService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao {
 
     companion object {
@@ -37,7 +38,11 @@ class BpmnJobDefRecords(
             "Process bpmn def engine id must be specified"
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(jobQuery.bpmnDefEngine)) {
+        if (!bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                BpmnPermission.PROC_INSTANCE_READ,
+                jobQuery.bpmnDefEngine
+            )
+        ) {
             return RecsQueryRes()
         }
 
@@ -76,7 +81,8 @@ class BpmnJobDefRecords(
         return managementService.createJobDefinitionQuery()
             .jobDefinitionId(recordId)
             .singleResult()?.let {
-                if (BpmnPermission.PROC_INSTANCE_READ.isAllowForBpmnDefEngine(
+                if (bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                        BpmnPermission.PROC_INSTANCE_READ,
                         BpmnProcessDefEngineRecords.createRef(it.processDefinitionId)
                     )
                 ) {

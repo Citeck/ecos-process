@@ -6,10 +6,9 @@ import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
 import java.time.Instant
 import java.util.*
-import javax.annotation.PostConstruct
 
 @Component
-internal class ProcDefRevDataProvider(
+class ProcDefRevDataProvider(
     private val procDefRevRepo: ProcDefRevRepository,
     private val tenantService: ProcTenantService
 ) {
@@ -21,14 +20,7 @@ internal class ProcDefRevDataProvider(
         }
         return revEntity.data!!
     }
-
-    @PostConstruct
-    private fun init() {
-        dataProvider = this
-    }
 }
-
-private lateinit var dataProvider: ProcDefRevDataProvider
 
 data class ProcDefRevDto(
     var id: UUID,
@@ -55,11 +47,14 @@ data class ProcDefRevDto(
     /**
      *  Lazy load data to avoid memory leaks
      */
-    val data: ByteArray by lazy { initialData ?: dataProvider.getData(this) }
+    private val _data: Lazy<ByteArray> = lazy { initialData ?: dataProvider!!.getData(this) }
 
-    override fun toString(): String {
-        return "ProcDefRevDto(id=$id, format=$format, procDefId=$procDefId, " +
-            "created=$created, createdBy=$createdBy, deploymentId=$deploymentId, version=$version)"
+    @Transient
+    private var dataProvider: ProcDefRevDataProvider? = null
+
+    fun loadData(dataProvider: ProcDefRevDataProvider): ByteArray {
+        this.dataProvider = dataProvider
+        return _data.value
     }
 }
 

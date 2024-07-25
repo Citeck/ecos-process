@@ -6,7 +6,7 @@ import org.camunda.bpm.engine.history.HistoricTaskInstanceQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_COMPLETED_BY
-import ru.citeck.ecos.process.domain.proctask.converter.toRecord
+import ru.citeck.ecos.process.domain.proctask.converter.TaskConverter
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.RecordRef
@@ -27,6 +27,8 @@ import kotlin.system.measureTimeMillis
 class ProcHistoricTaskRecords(
     private val camundaHistoryService: HistoryService,
     private val procHistoricTaskService: ProcHistoricTaskService,
+    private val taskConverter: TaskConverter,
+    private val procTaskRecords: ProcTaskRecords
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
@@ -76,15 +78,15 @@ class ProcHistoricTaskRecords(
         return result
     }
 
-    override fun getRecordsAtts(recordIds: List<String>): List<ProcTaskRecord?> {
+    override fun getRecordsAtts(recordIds: List<String>): List<ProcTaskRecords.ProcTaskRecord?> {
         if (recordIds.isEmpty()) {
             return emptyList()
         }
 
-        val result: List<ProcTaskRecord?>
+        val result: List<ProcTaskRecords.ProcTaskRecord?>
         val time = measureTimeMillis {
             result = procHistoricTaskService.getHistoricTasksByIds(recordIds).map {
-                it?.toRecord()
+                it?.let { historicTask -> taskConverter.toRecord(historicTask, procTaskRecords) }
             }
         }
 

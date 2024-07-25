@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -24,7 +25,8 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
     private val camundaRepoService: RepositoryService,
     private val procDefService: ProcDefService,
     private val recordsService: RecordsService,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+    private val procDefRevDataProvider: ProcDefRevDataProvider
 ) : Callable<Any> {
 
     companion object {
@@ -48,7 +50,7 @@ class BpmnRedeployExistingProcessDefinitionsPatch(
             .forEach {
                 log.info { "Redeploying process definition: ${it.procDefId}" }
 
-                val stringDef = String(it.data)
+                val stringDef = String(it.loadData(procDefRevDataProvider))
 
                 val bpmnMutateRecord = bpmnProcessDefRecords.BpmnMutateRecord(
                     id = "",

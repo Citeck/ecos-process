@@ -12,6 +12,7 @@ import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnProcDefImporter;
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef;
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 
@@ -27,6 +28,7 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
 
     private final ProcDefService processService;
     private final CmmnProcDefImporter cmmnProcDefImporter;
+    private final ProcDefRevDataProvider procDefRevDataProvider;
 
     @Override
     public void deployArtifact(@NotNull CaseTemplateDto dto) {
@@ -64,11 +66,11 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
             byte[] data;
             if (CmmnFormat.LEGACY_CMMN.getCode().equals(procDefDto.getFormat())) {
 
-                data = rev.getData();
+                data = rev.loadData(procDefRevDataProvider);
 
             } else if (CmmnFormat.ECOS_CMMN.getCode().equals(procDefDto.getFormat())) {
 
-                CmmnProcessDef procDef = Json.getMapper().read(rev.getData(), CmmnProcessDef.class);
+                CmmnProcessDef procDef = Json.getMapper().read(rev.loadData(procDefRevDataProvider), CmmnProcessDef.class);
                 if (procDef == null) {
                     throw new RuntimeException("CMMN process reading failed: " + procDefDto.getId());
                 }

@@ -35,3 +35,11 @@ sections:
       en: KPI values
     config:
       journalId: bpmn-kpi-values
+
+  - type: JOURNAL
+    name:
+      ru: Синхронизация атрибутов задач BPMN
+      en: BPMN Task Attributes Sync
+    config:
+      journalId: bpmn-task-atts-sync
+

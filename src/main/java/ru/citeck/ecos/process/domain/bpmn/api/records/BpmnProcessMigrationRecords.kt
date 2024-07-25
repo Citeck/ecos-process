@@ -9,7 +9,7 @@ import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanDto
 import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanGenerationDto
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForBpmnDefEngine
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
@@ -20,7 +20,10 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
-class BpmnProcessMigrationRecords(private val camundaMigrationRestService: MigrationRestService) :
+class BpmnProcessMigrationRecords(
+    private val camundaMigrationRestService: MigrationRestService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
+) :
     AbstractRecordsDao(),
     RecordsQueryDao,
     RecordMutateDao {
@@ -51,9 +54,11 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
             "Source and target process definition ids are required"
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+        if (!bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                BpmnPermission.PROC_INSTANCE_MIGRATE,
                 BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.sourceProcessDefinitionId)
-            ) || !BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+            ) || !bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                    BpmnPermission.PROC_INSTANCE_MIGRATE,
                     BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.targetProcessDefinitionId)
                 )
         ) {
@@ -91,10 +96,12 @@ class BpmnProcessMigrationRecords(private val camundaMigrationRestService: Migra
         val sourceDefEngine = migrationExecution.migrationPlan.sourceProcessDefinitionId
         val targetDefEngine = migrationExecution.migrationPlan.targetProcessDefinitionId
         check(
-            BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+            bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                BpmnPermission.PROC_INSTANCE_MIGRATE,
                 BpmnProcessDefEngineRecords.createRef(sourceDefEngine)
             ) &&
-                BpmnPermission.PROC_INSTANCE_MIGRATE.isAllowForBpmnDefEngine(
+                bpmnPermissionResolver.isAllowForBpmnDefEngine(
+                    BpmnPermission.PROC_INSTANCE_MIGRATE,
                     BpmnProcessDefEngineRecords.createRef(targetDefEngine)
                 )
         ) {

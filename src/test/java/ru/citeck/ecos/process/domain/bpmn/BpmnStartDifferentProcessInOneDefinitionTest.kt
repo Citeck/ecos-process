@@ -10,18 +10,19 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.cleanDeployments
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BpmnStartDifferentProcessInOneDefinitionTest {
+
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
 
     companion object {
         private const val PROC_ID = "start-different-process-from-one-definition-test"
@@ -32,7 +33,7 @@ class BpmnStartDifferentProcessInOneDefinitionTest {
 
     @BeforeAll
     fun setUp() {
-        saveBpmnWithAction(
+        helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID.bpmn.xml",
             PROC_ID,
             BpmnProcessDefActions.DEPLOY
@@ -59,7 +60,7 @@ class BpmnStartDifferentProcessInOneDefinitionTest {
 
     @AfterAll
     fun tearDown() {
-        cleanDeployments()
-        cleanDefinitions()
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
     }
 }

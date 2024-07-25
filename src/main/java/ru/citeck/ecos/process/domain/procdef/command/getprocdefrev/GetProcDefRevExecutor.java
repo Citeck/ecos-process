@@ -8,6 +8,7 @@ import ru.citeck.ecos.commands.CommandExecutor;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO;
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef;
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
@@ -24,6 +25,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
 
     private final RecordsServiceFactory recordsServices;
     private final ProcDefService procDefService;
+    private final ProcDefRevDataProvider procDefRevDataProvider;
 
     @Nullable
     @Override
@@ -42,7 +44,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
 
         byte[] data;
         if ("ecos-cmmn".equals(procDefRev.getFormat())) {
-            CmmnProcessDef def = Json.getMapper().read(procDefRev.getData(), CmmnProcessDef.class);
+            CmmnProcessDef def = Json.getMapper().read(procDefRev.loadData(procDefRevDataProvider), CmmnProcessDef.class);
             if (def == null) {
                 throw new RuntimeException("Proc def can't be readed: "
                     + procDefRev.getProcDefId() + " "
@@ -54,7 +56,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
                 return cmmnDef.getBytes(StandardCharsets.UTF_8);
             });
         } else {
-            data = procDefRev.getData();
+            data = procDefRev.loadData(procDefRevDataProvider);
         }
 
         resp.setData(data);

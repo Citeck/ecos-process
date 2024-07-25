@@ -1,11 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import mu.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
@@ -31,13 +31,12 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 @Component
 class BpmnProcessLatestRecords(
     private val camundaRepositoryService: RepositoryService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val camundaMyBatisExtension: CamundaMyBatisExtension
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
         const val ID = "bpmn-proc-latest"
-
-        private val log = KotlinLogging.logger {}
     }
 
     override fun getId(): String {
@@ -83,7 +82,7 @@ class BpmnProcessLatestRecords(
 
     override fun getRecordsAtts(recordIds: List<String>): List<Any?> {
         return camundaRepositoryService
-            .getLatestProcessDefinitionsByKeys(recordIds)
+            .getLatestProcessDefinitionsByKeys(recordIds, camundaMyBatisExtension)
             .map {
                 it.toProcessLatestRecord()
             }

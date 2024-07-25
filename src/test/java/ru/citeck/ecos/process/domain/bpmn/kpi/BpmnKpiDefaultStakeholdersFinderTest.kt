@@ -9,9 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.kpi.stakeholders.BpmnKpiDefaultStakeholdersFinder
-import ru.citeck.ecos.process.domain.createDurationKpiSettings
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -28,6 +28,9 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @Autowired
     private lateinit var recordsService: RecordsService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     private val kpiSettings = mutableListOf<EntityRef>()
 
     companion object {
@@ -37,7 +40,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
     @BeforeAll
     fun setUp() {
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = "settings_duration_start_end_0",
                 process = testProcess,
                 source = "activitySource",
@@ -48,7 +51,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
             )
         )
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = "settings_duration_start_end_1",
                 process = testProcess,
                 source = "activitySource1",
@@ -59,7 +62,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
             )
         )
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = "settings_duration_start_start_0",
                 process = testProcess,
                 source = "activitySource",
@@ -70,7 +73,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
             )
         )
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = "settings_count_start",
                 process = testProcess,
                 target = "activityTarget",
@@ -79,7 +82,7 @@ class BpmnKpiDefaultStakeholdersFinderTest {
             )
         )
         kpiSettings.add(
-            createDurationKpiSettings(
+            helper.createDurationKpiSettings(
                 id = "settings_count_end",
                 process = testProcess,
                 target = "activityTarget",

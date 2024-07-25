@@ -6,74 +6,81 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.model.lib.delegation.service.DelegationService
-import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecord
+import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import javax.annotation.PostConstruct
 
 @Component
 class TaskActorsUtils(
-    val authorityService: EcosAuthoritiesApi,
-    val delegationService: DelegationService
+    private val authorityService: EcosAuthoritiesApi,
+    private val delegationService: DelegationService
 ) {
-    @PostConstruct
-    private fun init() {
-        utils = this
+
+    companion object {
+        private val log = KotlinLogging.logger {}
     }
-}
 
-private lateinit var utils: TaskActorsUtils
+    private fun isCurrentUserTaskActorOrDelegate(
+        taskId: String,
+        assignee: EntityRef,
+        candidateUsers: List<EntityRef>,
+        candidateGroups: List<EntityRef>,
+        documentType: String?
+    ): Boolean {
+        val currentUser = AuthContext.getCurrentUser()
+        val currentAuthorities = AuthContext.getCurrentAuthorities()
 
-private val log = KotlinLogging.logger {}
+        val currentUserRef = authorityService.getAuthorityRef(currentUser)
+        val currentAuthoritiesRefs = authorityService.getAuthorityRefs(currentAuthorities)
 
-fun ProcTaskDto.isCurrentUserTaskActorOrDelegate(): Boolean {
-    return isCurrentUserTaskActorOrDelegate(id, assignee, candidateUsers, candidateGroups, documentType)
-}
+        log.trace { "Is task actor: \ntaskId=$taskId \nuser=$currentUserRef \nuserAuthorities=$currentAuthoritiesRefs" }
 
-fun ProcTaskRecord.isCurrentUserTaskActorOrDelegate(): Boolean {
-    return isCurrentUserTaskActorOrDelegate(id, assignee, candidateUsers, candidateGroups, documentType)
-}
+        if (assignee == currentUserRef) return true
+        if (candidateUsers.contains(currentUserRef)) return true
+        if (candidateGroups.any { it in currentAuthoritiesRefs }) return true
 
-private fun isCurrentUserTaskActorOrDelegate(
-    taskId: String,
-    assignee: EntityRef,
-    candidateUsers: List<EntityRef>,
-    candidateGroups: List<EntityRef>,
-    documentType: String?
-): Boolean {
-    val currentUser = AuthContext.getCurrentUser()
-    val currentAuthorities = AuthContext.getCurrentAuthorities()
+        if (documentType.isNullOrBlank()) {
+            return false
+        }
+        val delegations = delegationService.getActiveAuthDelegations(
+            currentUser,
+            listOf(documentType)
+        )
+        for (delegation in delegations) {
+            val users = delegation.delegatedAuthorities.filter {
+                !it.startsWith(AuthGroup.PREFIX) && !it.startsWith(AuthRole.PREFIX)
+            }
+            val groups = delegation.delegatedAuthorities.filter {
+                it.startsWith(AuthGroup.PREFIX)
+            }
+            val usersRefs = authorityService.getAuthorityRefs(users)
+            val groupsRefs = authorityService.getAuthorityRefs(groups)
+            if (usersRefs.contains(assignee)) return true
+            if (usersRefs.any { candidateUsers.contains(it) }) return true
+            if (groupsRefs.any { candidateGroups.contains(it) }) return true
+        }
 
-    val currentUserRef = utils.authorityService.getAuthorityRef(currentUser)
-    val currentAuthoritiesRefs = utils.authorityService.getAuthorityRefs(currentAuthorities)
-
-    log.trace { "Is task actor: \ntaskId=$taskId \nuser=$currentUserRef \nuserAuthorities=$currentAuthoritiesRefs" }
-
-    if (assignee == currentUserRef) return true
-    if (candidateUsers.contains(currentUserRef)) return true
-    if (candidateGroups.any { it in currentAuthoritiesRefs }) return true
-
-    if (documentType.isNullOrBlank()) {
         return false
     }
-    val delegations = utils.delegationService.getActiveAuthDelegations(
-        currentUser,
-        listOf(documentType)
-    )
-    for (delegation in delegations) {
-        val users = delegation.delegatedAuthorities.filter {
-            !it.startsWith(AuthGroup.PREFIX) && !it.startsWith(AuthRole.PREFIX)
-        }
-        val groups = delegation.delegatedAuthorities.filter {
-            it.startsWith(AuthGroup.PREFIX)
-        }
-        val usersRefs = utils.authorityService.getAuthorityRefs(users)
-        val groupsRefs = utils.authorityService.getAuthorityRefs(groups)
-        if (usersRefs.contains(assignee)) return true
-        if (usersRefs.any { candidateUsers.contains(it) }) return true
-        if (groupsRefs.any { candidateGroups.contains(it) }) return true
+
+    fun isCurrentUserTaskActorOrDelegate(procTaskDto: ProcTaskDto): Boolean {
+        return isCurrentUserTaskActorOrDelegate(
+            procTaskDto.id,
+            procTaskDto.assignee,
+            procTaskDto.candidateUsers,
+            procTaskDto.candidateGroups,
+            procTaskDto.documentType
+        )
     }
 
-    return false
+    fun isCurrentUserTaskActorOrDelegate(procTaskRecord: ProcTaskRecords.ProcTaskRecord): Boolean {
+        return isCurrentUserTaskActorOrDelegate(
+            procTaskRecord.id,
+            procTaskRecord.assignee,
+            procTaskRecord.candidateUsers,
+            procTaskRecord.candidateGroups,
+            procTaskRecord.documentType
+        )
+    }
 }

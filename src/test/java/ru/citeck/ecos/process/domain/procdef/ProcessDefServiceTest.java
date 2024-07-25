@@ -208,9 +208,12 @@ public class ProcessDefServiceTest {
             procDefService.uploadProcDef(dto);
         }
 
-        List<ProcDefDto> testSectionDefs = procDefService.findAll(Predicates.eq("sectionRef", "eproc/bpmn-section@testSection"), Integer.MAX_VALUE, 0);
-        List<ProcDefDto> customSectionDefs = procDefService.findAll(Predicates.eq("sectionRef", "eproc/bpmn-section@someCustomSection"), Integer.MAX_VALUE, 0);
-        List<ProcDefDto> defaultSectionDefs = procDefService.findAll(Predicates.eq("sectionRef", "eproc/bpmn-section@DEFAULT"), Integer.MAX_VALUE, 0);
+        List<ProcDefDto> testSectionDefs = procDefService.findAll(
+            Predicates.eq("sectionRef", "eproc/bpmn-section@testSection"), Integer.MAX_VALUE, 0);
+        List<ProcDefDto> customSectionDefs = procDefService.findAll(
+            Predicates.eq("sectionRef", "eproc/bpmn-section@someCustomSection"), Integer.MAX_VALUE, 0);
+        List<ProcDefDto> defaultSectionDefs = procDefService.findAll(
+            Predicates.eq("sectionRef", "eproc/bpmn-section@DEFAULT"), Integer.MAX_VALUE, 0);
 
         assertEquals(9, testSectionDefs.size());
         assertEquals(3, customSectionDefs.size());

@@ -7,13 +7,12 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.saveBpmnWithAction
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -25,7 +24,6 @@ import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class BpmnAutoDeleteTest {
 
     @Autowired
@@ -39,6 +37,9 @@ class BpmnAutoDeleteTest {
 
     @Autowired
     private lateinit var bpmnEventHelper: BpmnEventHelper
+
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
 
     companion object {
         private val testType1Id = "test-type-1"
@@ -89,7 +90,7 @@ class BpmnAutoDeleteTest {
     fun `test process autoDelete on`() {
         val procId = "bpmn-auto-delete-true-test"
 
-        saveBpmnWithAction(
+        helper.saveBpmnWithAction(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             BpmnProcessDefActions.DEPLOY
@@ -120,7 +121,7 @@ class BpmnAutoDeleteTest {
     fun `test process autoDelete off`() {
         val procId = "bpmn-auto-delete-false-test"
 
-        saveBpmnWithAction(
+        helper.saveBpmnWithAction(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             BpmnProcessDefActions.DEPLOY

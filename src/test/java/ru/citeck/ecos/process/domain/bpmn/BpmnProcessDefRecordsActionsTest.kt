@@ -19,6 +19,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -35,16 +36,22 @@ class BpmnProcessDefRecordsActionsTest {
     @Autowired
     private lateinit var bpmnProcessService: BpmnProcessService
 
+    @Autowired
+    private lateinit var procDefRevDataProvider: ProcDefRevDataProvider
+
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     @AfterEach
     fun tearDown() {
-        cleanDeployments()
-        cleanDefinitions()
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
     }
 
     @Test
     fun `save definition without action should save converted definition`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -55,7 +62,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition without action should not deploy to engine`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
         val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
@@ -65,7 +72,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition with save action should save converted definition`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -76,8 +83,8 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition multiple times with same definition should not save new revision`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -87,8 +94,8 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition multiple times with different definition should save new revision`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
-        saveBpmnWithActionAndReplaceDefinition(
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
+        helper.saveBpmnWithActionAndReplaceDefinition(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             BpmnProcessDefActions.SAVE,
@@ -103,7 +110,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition with save action should not deploy to engine`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
 
         val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
@@ -113,7 +120,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition with deploy action should save converted definition`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DEPLOY)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DEPLOY)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -124,7 +131,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save definition with deploy action should deploy to engine`() {
         val procId = "regular-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DEPLOY)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DEPLOY)
 
         val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
@@ -135,7 +142,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save draft definition without action should save raw definition`() {
         val procId = "draft-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -146,7 +153,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save draft definition without action should not deploy to engine`() {
         val procId = "draft-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
         val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
@@ -156,7 +163,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save draft definition with draft action should save raw definition`() {
         val procId = "draft-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -167,7 +174,7 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save draft definition with draft action should not deploy to engine`() {
         val procId = "draft-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
 
         val processDefinitions = bpmnProcessService.getProcessDefinitionsByKey(procId)
 
@@ -177,8 +184,8 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save draft definition multiple times with same definition should not save new revision`() {
         val procId = "draft-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
 
@@ -188,8 +195,8 @@ class BpmnProcessDefRecordsActionsTest {
     @Test
     fun `save draft definition multiple times with different definition should not save new revision`() {
         val procId = "draft-bpmn-process"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
-        saveBpmnWithActionAndReplaceDefinition(
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
+        helper.saveBpmnWithActionAndReplaceDefinition(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             BpmnProcessDefActions.DRAFT,
@@ -207,11 +214,11 @@ class BpmnProcessDefRecordsActionsTest {
 
         // save as admin
         AuthContext.runAsFull("admin", listOf("ROLE_ADMIN")) {
-            saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
+            helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
         }
 
         // save as system
-        saveBpmnWithActionAndReplaceDefinition(
+        helper.saveBpmnWithActionAndReplaceDefinition(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             BpmnProcessDefActions.DRAFT,
@@ -235,7 +242,7 @@ class BpmnProcessDefRecordsActionsTest {
         }
 
         assertThrows<EcosBpmnElementDefinitionException> {
-            saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, defAction)
+            helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, defAction)
         }
     }
 
@@ -244,8 +251,8 @@ class BpmnProcessDefRecordsActionsTest {
     fun `copy bpmn process test`(procId: String) {
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        copyBpmnModule(procId, copiedId)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.copyBpmnModule(procId, copiedId)
 
         val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
@@ -262,8 +269,8 @@ class BpmnProcessDefRecordsActionsTest {
     fun `copy bpmn process should save working copy source ref`(procId: String) {
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        copyBpmnModule(procId, copiedId)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.copyBpmnModule(procId, copiedId)
 
         val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
@@ -284,15 +291,15 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "test-copy"
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        saveBpmnWithActionAndReplaceDefinition(
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.saveBpmnWithActionAndReplaceDefinition(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             null,
             "Event_1n4clhz" to "Event_some_event"
         )
 
-        copyBpmnModule(procId, copiedId)
+        helper.copyBpmnModule(procId, copiedId)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
         assertThat(revisions.size).isEqualTo(2)
@@ -316,8 +323,8 @@ class BpmnProcessDefRecordsActionsTest {
     fun `copied bpmn process should have disabled auto start`(procId: String) {
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        copyBpmnModule(procId, copiedId)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.copyBpmnModule(procId, copiedId)
 
         val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
@@ -336,8 +343,8 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "test-copy"
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        copyBpmnModule(procId, copiedId)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.copyBpmnModule(procId, copiedId)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
 
@@ -350,8 +357,8 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "test-copy-draft"
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        copyBpmnModule(procId, copiedId)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.copyBpmnModule(procId, copiedId)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
 
@@ -363,13 +370,13 @@ class BpmnProcessDefRecordsActionsTest {
     @ValueSource(strings = ["test-new-version", "test-new-version-draft"])
     fun `upload new version definition test`(procId: String) {
         val comment = "New version comment"
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
         val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
         assertThat(revisions).hasSize(1)
         assertThat(revisions[0].version).isEqualTo(0)
 
-        uploadNewVersionFromResource(
+        helper.uploadNewVersionFromResource(
             "test/bpmn/$procId.bpmn.xml",
             procId,
             comment,
@@ -388,13 +395,13 @@ class BpmnProcessDefRecordsActionsTest {
     fun `copied bpmn process, modify and upload as new version to root process`(procId: String) {
         val copiedId = "$procId-copy"
 
-        saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
-        copyBpmnModule(procId, copiedId)
+        helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
+        helper.copyBpmnModule(procId, copiedId)
 
         val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
             ?: error("Copied definition not found")
 
-        uploadNewVersion(
+        helper.uploadNewVersion(
             String(copiedDef.data),
             procId,
             "Upload to root process",
@@ -404,7 +411,7 @@ class BpmnProcessDefRecordsActionsTest {
         val rootProcessRevisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
         assertThat(rootProcessRevisions).hasSize(2)
 
-        val modifiedNewVersionContent = String(rootProcessRevisions[0].data)
+        val modifiedNewVersionContent = String(rootProcessRevisions[0].loadData(procDefRevDataProvider))
         assertThat(modifiedNewVersionContent).contains("new documentation")
 
         val procDef = BpmnXmlUtils.readFromString(modifiedNewVersionContent)
@@ -413,7 +420,7 @@ class BpmnProcessDefRecordsActionsTest {
         // [BPMN_PROP_PROCESS_DEF_ID] should be changed to [procId]
         assertThat(modifiedNewVersionContentProcDefIdFromXml).isEqualTo(procId)
 
-        val rootProcessContent = String(rootProcessRevisions[1].data)
+        val rootProcessContent = String(rootProcessRevisions[1].loadData(procDefRevDataProvider))
         assertThat(rootProcessContent).contains("some documentation")
     }
 }

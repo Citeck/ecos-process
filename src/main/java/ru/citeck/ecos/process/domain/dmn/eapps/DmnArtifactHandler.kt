@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefRecords
 import ru.citeck.ecos.process.domain.dmn.io.DmnIO
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -22,7 +23,8 @@ private const val ARTIFACT_TYPE = "process/dmn"
 @Component
 class DmnArtifactHandler(
     private val recordsService: RecordsService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val procDefRevDataProvider: ProcDefRevDataProvider
 ) : EcosArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String) {
@@ -39,7 +41,7 @@ class DmnArtifactHandler(
             val rev = procDefService.getProcessDefRev(DMN_PROC_TYPE, dto.revisionId)
                 ?: error("Revision not found for procDef: ${dto.id}")
 
-            val data = validateFormatAndGetDmnString(rev.data)
+            val data = validateFormatAndGetDmnString(rev.loadData(procDefRevDataProvider))
 
             listener.accept(
                 BinArtifact(

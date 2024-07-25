@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.clearTasks
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.aggregate.AlfWorkflowTaskProvider
@@ -35,6 +35,9 @@ class ProcTaskAggregatorTest {
     @Autowired
     private lateinit var taskService: TaskService
 
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
+
     @MockBean
     private lateinit var alfWorkflowTaskProvider: AlfWorkflowTaskProvider
 
@@ -46,36 +49,36 @@ class ProcTaskAggregatorTest {
      * Sorted test data
      *
      * alfTask1	12.12.2001 14:00
-     * task10	01.12.2001 13:00
+     * taskAgr10	01.12.2001 13:00
      * AlfTask2	01.11.2001 18:00
-     * task9	01.10.2001 13:00
-     * task8	06.06.2001 13:00
-     * task7	02.06.2001 15:00
-     * task6	08.04.2001 21:00
-     * task5	08.04.2001 19:30
-     * task4	05.03.2001 18:00
-     * task3	02.01.2001 13:00
-     * task2	01.01.2001 13:24
-     * task1	01.01.2001 13:00
+     * taskAgr9	01.10.2001 13:00
+     * taskAgr8	06.06.2001 13:00
+     * taskAgr7	02.06.2001 15:00
+     * taskAgr6	08.04.2001 21:00
+     * taskAgr5	08.04.2001 19:30
+     * taskAgr4	05.03.2001 18:00
+     * taskAgr3	02.01.2001 13:00
+     * taskAgr2	01.01.2001 13:24
+     * taskAgr1	01.01.2001 13:00
      * alfTask3	01.01.2000 18:00
      */
     @BeforeEach
     fun setUp() {
-        createTestTask("task1", "01/01/2001 13:00:00.000")
-        createTestTask("task2", "01/01/2001 13:24:00.000")
-        createTestTask("task3", "02/01/2001 13:00:00.000")
-        createTestTask("task4", "05/03/2001 18:00:00.000")
-        createTestTask("task5", "08/04/2001 19:30:00.000")
-        createTestTask("task6", "08/04/2001 21:00:00.000")
-        createTestTask("task7", "02/06/2001 15:00:00.000")
-        createTestTask("task8", "06/06/2001 13:00:00.000")
-        createTestTask("task9", "01/10/2001 13:00:00.000")
-        createTestTask("task10", "01/12/2001 13:00:00.000")
+        createTestTask("taskAgr1", "01/01/2001 13:00:00.000")
+        createTestTask("taskAgr2", "01/01/2001 13:24:00.000")
+        createTestTask("taskAgr3", "02/01/2001 13:00:00.000")
+        createTestTask("taskAgr4", "05/03/2001 18:00:00.000")
+        createTestTask("taskAgr5", "08/04/2001 19:30:00.000")
+        createTestTask("taskAgr6", "08/04/2001 21:00:00.000")
+        createTestTask("taskAgr7", "02/06/2001 15:00:00.000")
+        createTestTask("taskAgr8", "06/06/2001 13:00:00.000")
+        createTestTask("taskAgr9", "01/10/2001 13:00:00.000")
+        createTestTask("taskAgr10", "01/12/2001 13:00:00.000")
     }
 
     @AfterEach
     fun tearDown() {
-        clearTasks()
+        helper.clearTasks()
     }
 
     private fun createTestTask(id: String, createTime: String) {
@@ -109,17 +112,17 @@ class ProcTaskAggregatorTest {
         assertThat(aggregationResult.getRecords()).isEqualTo(
             listOf(
                 "alfTask1".toAggregationRef(),
-                "task10".toAggregationRef(),
+                "taskAgr10".toAggregationRef(),
                 "alfTask2".toAggregationRef(),
-                "task9".toAggregationRef(),
-                "task8".toAggregationRef(),
-                "task7".toAggregationRef(),
-                "task6".toAggregationRef(),
-                "task5".toAggregationRef(),
-                "task4".toAggregationRef(),
-                "task3".toAggregationRef(),
-                "task2".toAggregationRef(),
-                "task1".toAggregationRef(),
+                "taskAgr9".toAggregationRef(),
+                "taskAgr8".toAggregationRef(),
+                "taskAgr7".toAggregationRef(),
+                "taskAgr6".toAggregationRef(),
+                "taskAgr5".toAggregationRef(),
+                "taskAgr4".toAggregationRef(),
+                "taskAgr3".toAggregationRef(),
+                "taskAgr2".toAggregationRef(),
+                "taskAgr1".toAggregationRef(),
                 "alfTask3".toAggregationRef(),
             )
         )
@@ -148,8 +151,8 @@ class ProcTaskAggregatorTest {
 
         assertThat(aggregationResult.getRecords()).isEqualTo(
             listOf(
-                "task2".toAggregationRef(),
-                "task1".toAggregationRef(),
+                "taskAgr2".toAggregationRef(),
+                "taskAgr1".toAggregationRef(),
                 "alfTask3".toAggregationRef(),
             )
         )
@@ -177,10 +180,10 @@ class ProcTaskAggregatorTest {
         assertThat(aggregationResult.getRecords()).isEqualTo(
             listOf(
                 "alfTask1".toAggregationRef(),
-                "task10".toAggregationRef(),
+                "taskAgr10".toAggregationRef(),
                 "alfTask2".toAggregationRef(),
-                "task9".toAggregationRef(),
-                "task8".toAggregationRef(),
+                "taskAgr9".toAggregationRef(),
+                "taskAgr8".toAggregationRef(),
             )
         )
         assertThat(aggregationResult.getTotalCount()).isEqualTo(12)
@@ -207,11 +210,11 @@ class ProcTaskAggregatorTest {
 
         assertThat(aggregationResult.getRecords()).isEqualTo(
             listOf(
-                "task9".toAggregationRef(),
-                "task8".toAggregationRef(),
-                "task7".toAggregationRef(),
-                "task6".toAggregationRef(),
-                "task5".toAggregationRef(),
+                "taskAgr9".toAggregationRef(),
+                "taskAgr8".toAggregationRef(),
+                "taskAgr7".toAggregationRef(),
+                "taskAgr6".toAggregationRef(),
+                "taskAgr5".toAggregationRef(),
             )
         )
         assertThat(aggregationResult.getTotalCount()).isEqualTo(12)
@@ -238,9 +241,9 @@ class ProcTaskAggregatorTest {
 
         assertThat(aggregationResult.getRecords()).isEqualTo(
             listOf(
-                "task3".toAggregationRef(),
-                "task2".toAggregationRef(),
-                "task1".toAggregationRef(),
+                "taskAgr3".toAggregationRef(),
+                "taskAgr2".toAggregationRef(),
+                "taskAgr1".toAggregationRef(),
             )
         )
         assertThat(aggregationResult.getTotalCount()).isEqualTo(12)

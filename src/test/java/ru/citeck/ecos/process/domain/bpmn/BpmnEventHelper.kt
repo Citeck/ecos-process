@@ -7,6 +7,8 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.events2.type.RecordDeletedEvent
+import ru.citeck.ecos.model.lib.type.dto.TypeInfo
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 const val TEST_USER = "testUser"
@@ -76,21 +78,15 @@ class BpmnEventHelper(
     }
 
     fun sendUpdateCommentEvent(event: CommentUpdateEvent) {
-        AuthContext.runAs("testUser") {
-            commentUpdateEmitter.emit(event)
-        }
+        commentUpdateEmitter.emit(event)
     }
 
     fun sendRecordChangedEvent(event: RecordChangedEventDto) {
-        AuthContext.runAs("testUser") {
-            recordChangedEmitter.emit(event)
-        }
+        recordChangedEmitter.emit(event)
     }
 
     fun sendRecordDeletedEvent(event: RecordDeletedEventDto) {
-        AuthContext.runAs(TEST_USER) {
-            recordDeletedEmitter.emit(event)
-        }
+        recordDeletedEmitter.emit(event)
     }
 }
 
@@ -119,12 +115,28 @@ data class CommentUpdateEvent(
 
 data class RecordChangedEventDto(
     val record: EntityRef,
-    val diff: Diff
+    val diff: Diff,
+    val after: Map<String, Any?> = emptyMap(),
+    val typeDef: TypeInfo? = null
 )
 
-data class Diff(
+class Diff(
     val list: List<ChangedValue>
-)
+) : AttValue {
+    override fun has(name: String): Boolean {
+        return list.any { it.id == name }
+    }
+
+    override fun getAtt(name: String): Any? {
+        if (name == "list") {
+            return list.map {
+                RecordChangedEvent.DiffValue(it.id)
+            }
+        }
+
+        return super.getAtt(name)
+    }
+}
 
 data class ChangedValue(
     val id: String

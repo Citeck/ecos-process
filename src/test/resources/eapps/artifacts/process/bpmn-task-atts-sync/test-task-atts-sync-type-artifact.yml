@@ -1,0 +1,16 @@
+---
+id: test-task-atts-sync-type-artifact
+name: test task atts sync type artifact
+enabled: true
+source: TYPE
+attributesSync:
+  - id: procedure
+    type: TEXT
+    ecosTypes:
+      - typeRef: emodel/type@doc
+        recordExpressionAttribute: config.procedure
+  - id: urgency
+    type: NUMBER
+    ecosTypes:
+      - typeRef: emodel/type@doc
+        recordExpressionAttribute: config.urgency?num

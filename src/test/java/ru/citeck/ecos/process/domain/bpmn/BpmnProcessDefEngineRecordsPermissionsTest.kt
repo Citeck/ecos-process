@@ -17,12 +17,9 @@ import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
-import ru.citeck.ecos.process.domain.cleanDefinitions
-import ru.citeck.ecos.process.domain.cleanDeployments
-import ru.citeck.ecos.process.domain.queryLatestProcessDefEngineRecords
-import ru.citeck.ecos.process.domain.saveBpmnWithActionAndReplaceDefinition
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.model.perms.registry.TypePermissionsRegistry
@@ -43,6 +40,9 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
 
     @Autowired
     private lateinit var typesRegistry: EcosTypesRegistry
+
+    @Autowired
+    private lateinit var helper: BpmnProcHelper
 
     private var bpmnTypeBefore: TypeDef? = null
     private var permsDefBefore: TypePermsDef? = null
@@ -126,7 +126,7 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
         fun deployDifferentBpmn10Times(procId: String) {
             for (i in 1..10) {
                 val procIdIter = "$procId-$i"
-                saveBpmnWithActionAndReplaceDefinition(
+                helper.saveBpmnWithActionAndReplaceDefinition(
                     "test/bpmn/$procId.bpmn.xml",
                     procIdIter,
                     BpmnProcessDefActions.DEPLOY,
@@ -141,9 +141,9 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
 
     @Test
     fun `user should see only process defs with his permissions`() {
-        val userIvanProcDefs = queryLatestProcessDefEngineRecords(USER_IVAN)
-        val userKatyaProcDefs = queryLatestProcessDefEngineRecords(USER_KATYA)
-        val userWithoutPermsProcDefs = queryLatestProcessDefEngineRecords(USER_WITHOUT_PERMS)
+        val userIvanProcDefs = helper.queryLatestProcessDefEngineRecords(USER_IVAN)
+        val userKatyaProcDefs = helper.queryLatestProcessDefEngineRecords(USER_KATYA)
+        val userWithoutPermsProcDefs = helper.queryLatestProcessDefEngineRecords(USER_WITHOUT_PERMS)
 
         assertThat(userIvanProcDefs).hasSize(10)
         assertThat(userIvanProcDefs).allMatch {
@@ -162,7 +162,7 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
 
     @Test
     fun `user should see attributes of process defs only with his permissions`() {
-        val allProcDefs = queryLatestProcessDefEngineRecords("system")
+        val allProcDefs = helper.queryLatestProcessDefEngineRecords("system")
 
         assertThat(allProcDefs).hasSize(20)
 
@@ -202,14 +202,14 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
 
     @Test
     fun `as system should see all process defs records`() {
-        val allProcDefs = queryLatestProcessDefEngineRecords("system")
+        val allProcDefs = helper.queryLatestProcessDefEngineRecords("system")
 
         assertThat(allProcDefs).hasSize(20)
     }
 
     @Test
     fun `as system should see all process defs atts records`() {
-        val allProcDefs = queryLatestProcessDefEngineRecords("system")
+        val allProcDefs = helper.queryLatestProcessDefEngineRecords("system")
 
         assertThat(allProcDefs).hasSize(20)
 
@@ -232,8 +232,8 @@ class BpmnProcessDefEngineRecordsPermissionsTest {
     @AfterEach
     fun tearDown() {
 
-        cleanDeployments()
-        cleanDefinitions()
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
 
         val bpmnTypeBefore = bpmnTypeBefore
         if (bpmnTypeBefore == null) {

@@ -6,7 +6,7 @@ import org.camunda.bpm.engine.externaltask.ExternalTask
 import org.camunda.bpm.engine.externaltask.ExternalTaskQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.process.domain.bpmn.service.isAllowForProcessInstanceId
+import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -24,7 +24,8 @@ import java.time.Instant
 
 @Component
 class BpmnExternalTaskRecords(
-    private val externalTaskService: ExternalTaskService
+    private val externalTaskService: ExternalTaskService,
+    private val bpmnPermissionResolver: BpmnPermissionResolver
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
 
     companion object {
@@ -47,7 +48,7 @@ class BpmnExternalTaskRecords(
             "Process id must be specified"
         }
 
-        if (!BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processId)) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(BpmnPermission.PROC_INSTANCE_READ, processId)) {
             return RecsQueryRes()
         }
 
@@ -132,7 +133,7 @@ class BpmnExternalTaskRecords(
             .externalTaskId(record.id)
             .singleResult()
         val processInstance = externalTask.processInstanceId
-        if (!BpmnPermission.PROC_INSTANCE_EDIT.isAllowForProcessInstanceId(processInstance)) {
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(BpmnPermission.PROC_INSTANCE_EDIT, processInstance)) {
             error("User has no permissions to edit process instance: $processInstance")
         }
 
@@ -169,7 +170,11 @@ class BpmnExternalTaskRecords(
 
         return map {
             val processInstanceId = it.processInstanceId
-            if (BpmnPermission.PROC_INSTANCE_READ.isAllowForProcessInstanceId(processInstanceId)) {
+            if (bpmnPermissionResolver.isAllowForProcessInstanceId(
+                    BpmnPermission.PROC_INSTANCE_READ,
+                    processInstanceId
+                )
+            ) {
                 it
             } else {
                 EmptyIdentifiableRecord(it.id)
