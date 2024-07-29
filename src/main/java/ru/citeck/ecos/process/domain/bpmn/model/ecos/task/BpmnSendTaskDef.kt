@@ -34,6 +34,13 @@ data class BpmnSendTaskDef(
 
     val additionalMeta: Map<String, Any> = emptyMap(),
 
+    val sendCalendarEvent: Boolean = false,
+    val calendarEventOrganizer: String = "",
+    val calendarEventSummary: String = "",
+    val calendarEventDescription: String = "",
+    val calendarEventDate: String = "",
+    val calendarEventDuration: String = "",
+
     val asyncConfig: AsyncConfig,
     val jobConfig: JobConfig
 ) : Validated {

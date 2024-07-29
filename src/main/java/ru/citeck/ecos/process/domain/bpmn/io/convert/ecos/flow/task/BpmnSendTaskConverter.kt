@@ -60,6 +60,12 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             additionalMeta = element.otherAttributes[BPMN_PROP_NOTIFICATION_ADDITIONAL_META]?.let {
                 Json.mapper.readMap(it, String::class.java, String::class.java)
             } ?: emptyMap(),
+            sendCalendarEvent = element.otherAttributes[BPMN_PROP_NOTIFICATION_SEND_CALENDAR_EVENT].toBoolean(),
+            calendarEventOrganizer = element.otherAttributes[BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_ORGANIZER] ?: "",
+            calendarEventSummary = element.otherAttributes[BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_SUMMARY] ?: "",
+            calendarEventDescription = element.otherAttributes[BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DESCRIPTION] ?: "",
+            calendarEventDate = element.otherAttributes[BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DATE] ?: "",
+            calendarEventDuration = element.otherAttributes[BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DURATION] ?: "",
             asyncConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_ASYNC_CONFIG], AsyncConfig::class.java)
                 ?: AsyncConfig(),
             jobConfig = Json.mapper.read(element.otherAttributes[BPMN_PROP_JOB_CONFIG], JobConfig::class.java)
@@ -117,6 +123,13 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
                 BPMN_PROP_NOTIFICATION_ADDITIONAL_META,
                 Json.mapper.toString(element.additionalMeta)
             )
+
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_SEND_CALENDAR_EVENT, element.sendCalendarEvent.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_ORGANIZER, element.calendarEventOrganizer)
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_SUMMARY, element.calendarEventSummary)
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DESCRIPTION, element.calendarEventDescription)
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DATE, element.calendarEventDate)
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DURATION, element.calendarEventDuration)
 
             otherAttributes.putIfNotBlank(BPMN_PROP_ASYNC_CONFIG, Json.mapper.toString(element.asyncConfig))
             otherAttributes.putIfNotBlank(BPMN_PROP_JOB_CONFIG, Json.mapper.toString(element.jobConfig))

@@ -104,6 +104,43 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
                     Json.mapper.toString(additionalMeta) ?: ""
                 )
             )
+
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_SEND_CALENDAR_EVENT.localPart,
+                    sendCalendarEvent.toString()
+                )
+            )
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_ORGANIZER.localPart,
+                    calendarEventOrganizer
+                )
+            )
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_SUMMARY.localPart,
+                    calendarEventSummary
+                )
+            )
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DESCRIPTION.localPart,
+                    calendarEventDescription
+                )
+            )
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DATE.localPart,
+                    calendarEventDate
+                )
+            )
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DURATION.localPart,
+                    calendarEventDuration
+                )
+            )
         }
 
         return fields.map { it.jaxb(context) }

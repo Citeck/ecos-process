@@ -208,6 +208,133 @@
             "label": {
               "ru": "Panel"
             },
+            "key": "panel-calendar-event",
+            "title": {
+              "ru": "Событие в календаре",
+              "en": "Calendar event"
+            },
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "panel",
+            "input": false,
+            "components": [
+              {
+                "label": {
+                  "ru": "Отправить событие в календарь",
+                  "en": "Send calendar event"
+                },
+                "key": "notificationSendCalendarEvent",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "checkbox",
+                "input": true
+              },
+              {
+                "label": {
+                  "ru": "Организатор",
+                  "en": "Organizer"
+                },
+                "key": "notificationCalendarEventOrganizer",
+                "tooltip": {
+                  "ru": "Может быть указан напрямую или через expression.\n\nНапример:\n${someVariable}",
+                  "en": "Can be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.notificationSendCalendarEvent === true",
+                "type": "textfield",
+                "input": true,
+                "tab": 1,
+                "inputMasks": [
+                  {}
+                ]
+              },
+              {
+                "label": {
+                  "en": "Summary",
+                  "ru": "Название"
+                },
+                "key": "notificationCalendarEventSummary",
+                "tooltip": {
+                  "ru": "Может быть указан напрямую или через expression.\n\nНапример:\n${someVariable}",
+                  "en": "Can be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.notificationSendCalendarEvent === true",
+                "type": "textfield",
+                "input": true,
+                "tab": 1,
+                "inputMasks": [
+                  {}
+                ]
+              },
+              {
+                "label": {
+                  "ru": "Описание",
+                  "en": "Description"
+                },
+                "key": "notificationCalendarEventDescription",
+                "tooltip": {
+                  "ru": "Может быть указано напрямую или через expression.\n\nНапример:\n${someVariable}",
+                  "en": "Can be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.notificationSendCalendarEvent === true",
+                "type": "textfield",
+                "input": true,
+                "tab": 1,
+                "inputMasks": [
+                  {}
+                ]
+              },
+              {
+                "label": {
+                  "en": "Date",
+                  "ru": "Дата"
+                },
+                "key": "notificationCalendarEventDate",
+                "tooltip": {
+                  "ru": "Дата начала события.\nМожет быть указана напрямую или через expression.\n\nНапример:\n${someVariable}",
+                  "en": "Event start date.\nCan be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.notificationSendCalendarEvent === true",
+                "type": "textfield",
+                "input": true,
+                "tab": 1,
+                "inputMasks": [
+                  {}
+                ]
+              },
+              {
+                "label": {
+                  "en": "Duration",
+                  "ru": "Продолжительность"
+                },
+                "key": "notificationCalendarEventDuration",
+                "tooltip": {
+                  "ru": "Продолжительность события.\nПродолжительность указывается в формате h, m:\n\n3h 10m - 3 часа 10 минут\n30m - 30 минут\n\nМожет быть указана напрямую или через expression.\n\nНапример:\n${someVariable}",
+                  "en": "Duration of the event.\nThe duration time is specified in the format h, m:\n\n1h 15m - 1 hour 15 minutes\n30m - 30 minutes\n\nCan be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                },
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "customConditional": "show = data.notificationSendCalendarEvent === true",
+                "type": "textfield",
+                "input": true,
+                "tab": 1,
+                "inputMasks": [
+                  {}
+                ]
+              }
+            ]
+          },
+          {
+            "label": {
+              "ru": "Panel"
+            },
             "key": "panel-recipients",
             "title": {
               "ru": "Получатели",

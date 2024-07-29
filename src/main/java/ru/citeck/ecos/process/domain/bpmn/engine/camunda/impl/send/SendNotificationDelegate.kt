@@ -5,10 +5,13 @@ import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.DurationStrUtils
+import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
+import ru.citeck.ecos.notifications.lib.utils.CalendarEventUtils
 import ru.citeck.ecos.process.app.AppContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
@@ -19,9 +22,14 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.time.Instant
+import java.util.*
 
 private const val VAR_CURRENT_RUN_AS_USER = "currentRunAsUser"
 private const val VAR_PROCESS = "process"
+private const val VAR_NOTIFICATION_ATTACHMENTS = "_attachments"
+private const val VAR_EVENT_UID = "eventUid"
+private const val VAR_EVENT_SEQUENCE = "eventSequence"
 
 private const val FORCE_STR_PREFIX = "!str_"
 
@@ -44,6 +52,13 @@ class SendNotificationDelegate : JavaDelegate {
 
     var notificationLang: Expression? = null
     var notificationAdditionalMeta: Expression? = null
+
+    var notificationSendCalendarEvent: Expression? = null
+    var notificationCalendarEventOrganizer: Expression? = null
+    var notificationCalendarEventSummary: Expression? = null
+    var notificationCalendarEventDescription: Expression? = null
+    var notificationCalendarEventDate: Expression? = null
+    var notificationCalendarEventDuration: Expression? = null
 
     private lateinit var notificationService: NotificationService
     private lateinit var camundaRoleService: CamundaRoleService
@@ -78,6 +93,7 @@ class SendNotificationDelegate : JavaDelegate {
             }
         }
 
+        val recipients = getRecipientsEmailsFromExpression(notificationTo, execution)
         val notification = Notification.Builder()
             .record(record)
             .notificationType(
@@ -87,12 +103,12 @@ class SendNotificationDelegate : JavaDelegate {
             .title(notificationTitle?.expressionText ?: "")
             .body(notificationBody?.expressionText ?: "")
             .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
-            .recipients(getRecipientsEmailsFromExpression(notificationTo, execution))
+            .recipients(recipients)
             .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
             .bcc(getRecipientsEmailsFromExpression(notificationBcc, execution))
             .lang(notificationLang?.expressionText)
-            .additionalMeta(getAdditionalMeta(execution))
+            .additionalMeta(getAdditionalMeta(recipients, execution))
             .build()
 
         AuthContext.runAsSystem {
@@ -100,7 +116,7 @@ class SendNotificationDelegate : JavaDelegate {
         }
     }
 
-    private fun getAdditionalMeta(execution: DelegateExecution): Map<String, Any> {
+    private fun getAdditionalMeta(recipients: List<String>, execution: DelegateExecution): Map<String, Any> {
         val metaFromUserInput = notificationAdditionalMeta?.let {
             Json.mapper.readMap(it.expressionText, String::class.java, Any::class.java)
         } ?: emptyMap()
@@ -126,7 +142,52 @@ class SendNotificationDelegate : JavaDelegate {
 
         additionalMeta[VAR_PROCESS] = processVariables
 
+        val sendCalendarEvent = notificationSendCalendarEvent?.getValue(execution).toString().toBoolean()
+        if (sendCalendarEvent) {
+            val eventAttachment = createCalendarEventAttachment(recipients, execution)
+            additionalMeta[VAR_NOTIFICATION_ATTACHMENTS] = eventAttachment
+        }
+
         return additionalMeta
+    }
+
+    private fun createCalendarEventAttachment(
+        recipients: List<String>,
+        execution: DelegateExecution
+    ): CalendarEventUtils.CalendarEventAttachment {
+        val eventSummary = notificationCalendarEventSummary?.getValue(execution).toString()
+        val eventDescription = notificationCalendarEventDescription?.getValue(execution).toString()
+        val eventDate = Instant.parse(notificationCalendarEventDate?.getValue(execution).toString())
+        val eventDuration = notificationCalendarEventDuration?.getValue(execution).toString()
+        val eventDurationInMillis = DurationStrUtils.parseDurationToMillis(eventDuration)
+
+        val eventOrganizer =
+            mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
+
+        var uid = execution.getVariable(VAR_EVENT_UID)?.toString()
+        if (StringUtils.isBlank(uid)) {
+            uid = UUID.randomUUID().toString()
+            execution.setVariable(VAR_EVENT_UID, uid)
+        }
+
+        var sequence = execution.getVariable(VAR_EVENT_SEQUENCE)?.toString()?.toIntOrNull()
+        if (sequence == null) {
+            sequence = 0
+        } else {
+            sequence++
+        }
+        execution.setVariable(VAR_EVENT_SEQUENCE, sequence)
+
+        return CalendarEventUtils.createCalendarEventAttachment(
+            eventSummary,
+            eventDescription,
+            eventDate,
+            eventDurationInMillis,
+            eventOrganizer,
+            recipients,
+            uid = uid,
+            sequence = sequence
+        )
     }
 
     private fun AuthContext.getCurrentRunAsUserRef(): EntityRef {

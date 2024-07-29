@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>1.66.4</version>
+        <version>1.66.11</version>
     </parent>
 
     <properties>
@@ -189,6 +189,11 @@
             <groupId>ru.citeck.ecos.ent.lazyapproval</groupId>
             <artifactId>ecos-lazy-approval</artifactId>
             <version>${ecos.ecos-lazy-approval.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mnode.ical4j</groupId>
+            <artifactId>ical4j</artifactId>
         </dependency>
 
     </dependencies>
