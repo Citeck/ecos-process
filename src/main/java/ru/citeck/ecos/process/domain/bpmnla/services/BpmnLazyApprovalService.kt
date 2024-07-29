@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmnla.services
 
 import mu.KotlinLogging
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
@@ -199,8 +200,9 @@ class BpmnLazyApprovalService(
                 fillLazyApprovalReport(MailProcessingCode.OK, task)
             }
         } catch (e: Exception) {
-            log.warn { "Task with id = $taskId failed! The following error occurred: ${e.cause?.message}" }
-            fillLazyApprovalReport(MailProcessingCode.EXCEPTION, e.cause?.message, task)
+            val message = (ExceptionUtils.getRootCause(e) ?: e).message ?: "empty"
+            log.warn(e) { "Task with id = $taskId failed! The following error occurred: $message" }
+            fillLazyApprovalReport(MailProcessingCode.EXCEPTION, message, task)
         }
     }
 
