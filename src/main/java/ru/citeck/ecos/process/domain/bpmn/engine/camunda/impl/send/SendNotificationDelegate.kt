@@ -6,12 +6,11 @@ import org.camunda.bpm.engine.delegate.JavaDelegate
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.DurationStrUtils
-import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.notifications.lib.icalendar.CalendarEvent
 import ru.citeck.ecos.notifications.lib.service.NotificationService
-import ru.citeck.ecos.notifications.lib.utils.CalendarEventUtils
 import ru.citeck.ecos.process.app.AppContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
@@ -154,7 +153,7 @@ class SendNotificationDelegate : JavaDelegate {
     private fun createCalendarEventAttachment(
         recipients: List<String>,
         execution: DelegateExecution
-    ): CalendarEventUtils.CalendarEventAttachment {
+    ): CalendarEvent.CalendarEventAttachment {
         val eventSummary = notificationCalendarEventSummary?.getValue(execution).toString()
         val eventDescription = notificationCalendarEventDescription?.getValue(execution).toString()
         val eventDate = Instant.parse(notificationCalendarEventDate?.getValue(execution).toString())
@@ -164,13 +163,13 @@ class SendNotificationDelegate : JavaDelegate {
         val eventOrganizer =
             mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
 
-        var uid = execution.getVariable(VAR_EVENT_UID)?.toString()
-        if (StringUtils.isBlank(uid)) {
+        var uid = execution.getVariable(VAR_EVENT_UID)?.toString() ?: ""
+        if (uid.isBlank()) {
             uid = UUID.randomUUID().toString()
             execution.setVariable(VAR_EVENT_UID, uid)
         }
 
-        var sequence = execution.getVariable(VAR_EVENT_SEQUENCE)?.toString()?.toIntOrNull()
+        var sequence = execution.getVariable(VAR_EVENT_SEQUENCE) as? Int
         if (sequence == null) {
             sequence = 0
         } else {
@@ -178,16 +177,15 @@ class SendNotificationDelegate : JavaDelegate {
         }
         execution.setVariable(VAR_EVENT_SEQUENCE, sequence)
 
-        return CalendarEventUtils.createCalendarEventAttachment(
-            eventSummary,
-            eventDescription,
-            eventDate,
-            eventDurationInMillis,
-            eventOrganizer,
-            recipients,
-            uid = uid,
-            sequence = sequence
-        )
+        val calendarEvent = CalendarEvent.Builder(eventSummary, eventDate)
+            .uid(uid)
+            .sequence(sequence)
+            .description(eventDescription)
+            .durationInMillis(eventDurationInMillis)
+            .organizer(eventOrganizer)
+            .attendees(recipients)
+            .build()
+        return calendarEvent.createAttachment()
     }
 
     private fun AuthContext.getCurrentRunAsUserRef(): EntityRef {
