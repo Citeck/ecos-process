@@ -5,11 +5,7 @@ import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
-import org.camunda.bpm.engine.HistoryService
-import org.camunda.bpm.engine.ProcessEngine
-import org.camunda.bpm.engine.ProcessEngineException
-import org.camunda.bpm.engine.RuntimeService
-import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.*
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.init
 import org.camunda.bpm.scenario.ProcessScenario
@@ -39,6 +35,7 @@ import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.utils.DurationStrUtils
 import ru.citeck.ecos.config.lib.service.EcosConfigService
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
@@ -46,9 +43,10 @@ import ru.citeck.ecos.lazyapproval.model.MailProcessingCode
 import ru.citeck.ecos.license.EcosTestLicense
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.notifications.lib.icalendar.CalendarEvent
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
-import ru.citeck.ecos.process.domain.*
+import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
@@ -1658,6 +1656,43 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(notificationService).send(
             org.mockito.kotlin.check {
                 assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task with send calendar event`() {
+        val procId = "test-send-task-with-send-calendar-event"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                emptyMap()
+            ).engine(processEngine).execute()
+        }
+
+        val calendarEvent = CalendarEvent.Builder("Summary", Instant.parse("2024-07-31T12:00:00Z"))
+            .uid("2b60f57d-11da-48be-b4cd-7b9a206a6477")
+            .description("Description")
+            .durationInMillis(DurationStrUtils.parseDurationToMillis("2h"))
+            .organizer("organizer@mail.ru")
+            .attendees(listOf("1@mail.ru", "2@mail.ru"))
+            .createDate(Instant.parse("2024-07-29T00:00:00Z"))
+            .build()
+        val attachment = calendarEvent.createAttachment()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                val event = it.additionalMeta["_attachments"] as CalendarEvent.CalendarEventAttachment
+                val eventFileText = Base64.getMimeDecoder().decode(event.bytes)
+                val updatedEventText =
+                    eventFileText.decodeToString().replace("DTSTAMP:.+Z".toRegex(), "DTSTAMP:20240729T000000Z")
+
+                assertThat(updatedEventText).isEqualTo(Base64.getMimeDecoder().decode(attachment.bytes).decodeToString())
             }
         )
 
