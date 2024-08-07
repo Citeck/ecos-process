@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "dmn-section"
+sourceId: "dmn-section"
 
 name:
   ru: DMN section

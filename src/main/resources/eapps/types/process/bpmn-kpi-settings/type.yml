@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "bpmn-kpi-settings"
+sourceId: "bpmn-kpi-settings"
 
 name:
   ru: Настройка BPMN KPI

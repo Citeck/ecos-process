@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "cmmn-def"
+sourceId: "cmmn-def"
 
 name:
   ru: CMMN Сценарий

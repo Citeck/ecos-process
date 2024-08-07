@@ -1,6 +1,6 @@
 modelVersion: "1.0"
 
-source-id: "dmn-def"
+sourceId: "dmn-def"
 
 name:
   ru: DMN

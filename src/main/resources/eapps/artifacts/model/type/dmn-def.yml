@@ -5,6 +5,8 @@ name:
   en: DMN model
   ru: Модель DMN
 
+parentRef: emodel/type@ecos-vcs-object
+
 system: true
 sourceId: eproc/dmn-def
 

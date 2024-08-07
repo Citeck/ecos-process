@@ -5,6 +5,8 @@ name:
   en: BPMN model
   ru: Модель BPMN
 
+parentRef: emodel/type@ecos-vcs-object
+
 system: true
 sourceId: eproc/bpmn-def
 
