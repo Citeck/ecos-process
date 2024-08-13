@@ -105,6 +105,11 @@ class BpmnProcessDefRecords(
         private val log = KotlinLogging.logger {}
     }
 
+    @Volatile
+    private var allProcDefsFromAlfresco: List<AlfProcDefRecord> = emptyList()
+    @Volatile
+    private var allProcDefsFromAlfrescoNextUpdateTime = Instant.EPOCH
+
     private val permsCalculator = ecosPermissionsService.createCalculator()
         .withoutDefaultComponents()
         .addComponent(RootSectionPermsComponent())
@@ -200,6 +205,7 @@ class BpmnProcessDefRecords(
                 alfDefinitions = alfDefinitions.filter { it.getSectionRef() == queryDto.sectionRef }
             }
             totalCount += alfDefinitions.size
+            result.addAll(alfDefinitions)
         }
 
         val res = RecsQueryRes(result)
@@ -246,6 +252,11 @@ class BpmnProcessDefRecords(
     }
 
     private fun loadAllDefinitionsFromAlfresco(): List<AlfProcDefRecord> {
+
+        if (allProcDefsFromAlfrescoNextUpdateTime.isAfter(Instant.now())) {
+            return allProcDefsFromAlfresco
+        }
+
         val predicate = Predicates.and(
             Predicates.eq("type", "ecosbpm:processModel"),
         )
@@ -258,7 +269,7 @@ class BpmnProcessDefRecords(
             },
             ProcDefAlfAtts::class.java
         )
-        return processes.getRecords().map {
+        allProcDefsFromAlfresco = processes.getRecords().map {
             if (StringUtils.isBlank(it.sectionRef) ||
                 it.sectionRef == "workspace://SpacesStore/cat-doc-kind-ecos-bpm-default"
             ) {
@@ -270,6 +281,8 @@ class BpmnProcessDefRecords(
             }
             AlfProcDefRecord(it)
         }
+        allProcDefsFromAlfrescoNextUpdateTime = Instant.now().plusSeconds(60)
+        return allProcDefsFromAlfresco
     }
 
     override fun getRecordAtts(recordId: String): Any? {
