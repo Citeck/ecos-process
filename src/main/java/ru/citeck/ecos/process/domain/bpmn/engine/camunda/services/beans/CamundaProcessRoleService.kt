@@ -92,7 +92,7 @@ class MailUtils(
         private val log = KotlinLogging.logger {}
     }
 
-    private val emailPattern = Pattern.compile("^.+@.+\\..+$")
+    private val emailPattern = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
 
     /**
      * [data] list, where element can be:
