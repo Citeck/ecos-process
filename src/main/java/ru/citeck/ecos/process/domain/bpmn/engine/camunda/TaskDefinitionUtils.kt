@@ -1,9 +1,10 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda
 
-import ecos.guava30.com.google.common.cache.CacheBuilder
-import ecos.guava30.com.google.common.cache.CacheLoader
-import ecos.guava30.com.google.common.cache.LoadingCache
-import mu.KotlinLogging
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.xml.bind.JAXBElement
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.context.annotation.Lazy
@@ -21,10 +22,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSubProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
 import ru.citeck.ecos.process.domain.bpmnla.dto.UserTaskLaInfo
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.concurrent.TimeUnit
-import javax.xml.bind.JAXBElement
 
 @Component
 class TaskDefinitionUtils(
@@ -111,7 +110,7 @@ class TaskDefinitionUtils(
 
     fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
         val document = delegateTask.getDocumentRef()
-        if (document == RecordRef.EMPTY) {
+        if (document == EntityRef.EMPTY) {
             return emptyList()
         }
 
@@ -167,7 +166,7 @@ class TaskDefinitionUtils(
             laNotificationType = taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE]?.let {
                 NotificationType.valueOf(it)
             },
-            laNotificationTemplate = RecordRef.valueOf(
+            laNotificationTemplate = EntityRef.valueOf(
                 taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
             ),
             laManualNotificationTemplateEnabled =
@@ -176,11 +175,11 @@ class TaskDefinitionUtils(
             laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                RecordRef.valueOf(it)
+                EntityRef.valueOf(it)
             },
             laErrorReportNotificationTemplate =
             taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                RecordRef.valueOf(it)
+                EntityRef.valueOf(it)
             }
         )
     }

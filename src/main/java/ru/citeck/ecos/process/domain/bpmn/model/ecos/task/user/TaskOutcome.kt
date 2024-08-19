@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user
 
-import ecos.com.fasterxml.jackson210.core.JsonParser
-import ecos.com.fasterxml.jackson210.databind.DeserializationContext
-import ecos.com.fasterxml.jackson210.databind.JsonDeserializer
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.commons.data.MLText
 
 data class TaskOutcome(
@@ -18,7 +18,12 @@ data class TaskOutcomeConfig(
 
 @JsonDeserialize(using = TaskOutcomeThemeJsonDeserializer::class)
 enum class TaskOutcomeTheme {
-    DEFAULT, PRIMARY, INFO, SUCCESS, DANGER, WARNING
+    DEFAULT,
+    PRIMARY,
+    INFO,
+    SUCCESS,
+    DANGER,
+    WARNING
 }
 
 class TaskOutcomeThemeJsonDeserializer : JsonDeserializer<TaskOutcomeTheme>() {

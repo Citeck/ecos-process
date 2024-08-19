@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
+import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
@@ -11,7 +12,6 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import javax.annotation.PostConstruct
 
 @Component
 class MetaDataChangeTaskAttsSyncListener(

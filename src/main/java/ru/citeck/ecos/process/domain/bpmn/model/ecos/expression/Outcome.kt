@@ -1,13 +1,13 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.expression
 
-import ecos.com.fasterxml.jackson210.core.JsonGenerator
-import ecos.com.fasterxml.jackson210.core.JsonParser
-import ecos.com.fasterxml.jackson210.databind.DeserializationContext
-import ecos.com.fasterxml.jackson210.databind.JsonDeserializer
-import ecos.com.fasterxml.jackson210.databind.JsonSerializer
-import ecos.com.fasterxml.jackson210.databind.SerializerProvider
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonSerializer
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
 

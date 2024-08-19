@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.context.annotation.Lazy
@@ -17,7 +17,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTas
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
@@ -97,14 +96,14 @@ class BpmnElementConverter(
                 val userTaskLaInfo = taskDefinitionUtils.getUserTaskLaInfo(delegateTask)
 
                 userTaskEvent = UserTaskEvent(
-                    taskId = RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
+                    taskId = EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
                     engine = BPMN_CAMUNDA_ENGINE,
                     form = getFormRef(),
                     assignee = assignee,
                     roles = taskDefinitionUtils.getTaskRoles(delegateTask),
                     procDefId = rev?.procDefId,
                     procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
-                        RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
+                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
                     } else {
                         EntityRef.EMPTY
                     },
@@ -112,7 +111,7 @@ class BpmnElementConverter(
                     procInstanceId = getProcessInstanceRef(),
                     processId = processDefinition.key,
                     processRef = if (processDefinition.key.isNotBlank()) {
-                        RecordRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
+                        EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
                     } else {
                         EntityRef.EMPTY
                     },

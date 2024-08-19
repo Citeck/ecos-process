@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.procdef.service
 
 import com.querydsl.core.types.dsl.BooleanExpression
+import io.github.oshai.kotlinlogging.KotlinLogging
 import lombok.Data
 import lombok.RequiredArgsConstructor
-import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -26,7 +26,6 @@ import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.repo.*
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
@@ -186,10 +185,10 @@ class ProcDefServiceImpl(
     ): ProcDefEvent {
         return ProcDefEvent(
             procDefRef = when (procType) {
-                BPMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)
-                DMN_PROC_TYPE -> RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, id)
+                BPMN_PROC_TYPE -> EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)
+                DMN_PROC_TYPE -> EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, id)
                 CmmnProcDefRecords.CMMN_PROC_TYPE -> {
-                    RecordRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
+                    EntityRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
                 }
 
                 else -> throw IllegalArgumentException("Unknown proc type: $procType")
@@ -569,7 +568,7 @@ class ProcDefServiceImpl(
 
     @Data
     class TypeParents(
-        val parents: List<RecordRef>? = null
+        val parents: List<EntityRef>? = null
     )
 
     @Data

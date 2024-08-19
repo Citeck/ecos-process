@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -24,7 +25,7 @@ class BpmnKpiServiceImpl(
 ) : BpmnKpiService {
 
     companion object {
-        private val log = mu.KotlinLogging.logger {}
+        private val log = KotlinLogging.logger {}
     }
 
     override fun createKpiValue(value: BpmnKpiValue) {

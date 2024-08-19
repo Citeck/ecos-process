@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn
 
+import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_SOURCE_ID
@@ -7,7 +8,6 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import java.time.Instant
-import javax.annotation.PostConstruct
 
 /**
  * We need to initialize process of creating DB table for bpmn elements before running tests, because async

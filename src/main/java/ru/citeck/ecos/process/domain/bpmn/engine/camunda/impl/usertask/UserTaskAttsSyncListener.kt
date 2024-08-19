@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.addTaskListener
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer
-import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.txn.lib.TxnContext
 
 @Component
 class UserTaskAttsSyncParseListener(
@@ -29,7 +29,7 @@ class UserTaskAttsSyncListener(
 
     override fun notify(delegateTask: DelegateTask) {
         AuthContext.runAsSystem {
-            RequestContext.doWithTxn {
+            TxnContext.doInTxn {
                 procTaskAttsSynchronizer.syncOnTaskCreate(delegateTask)
             }
         }

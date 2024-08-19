@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
+import ru.citeck.ecos.context.lib.auth.AuthContext;
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessInstanceDto;
 import ru.citeck.ecos.process.domain.proc.service.ProcService;
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ public class CreateProcExecutor implements CommandExecutor<CreateProc> {
     public CreateProcResp execute(CreateProc createProc) {
 
         UUID procDefRevId = UUID.fromString(createProc.getProcDefRevId());
-        NewProcessInstanceDto instance = RemoteRecordsUtils.runAsSystem(() ->
+        NewProcessInstanceDto instance = AuthContext.runAsSystem(() ->
             procService.createProcessInstance(createProc.getRecordRef(), procDefRevId)
         );
 

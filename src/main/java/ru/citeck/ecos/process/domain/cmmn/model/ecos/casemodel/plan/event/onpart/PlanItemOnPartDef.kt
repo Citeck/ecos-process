@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.model.ecos.casemodel.plan.event.onpart
 
-import ecos.com.fasterxml.jackson210.annotation.JsonCreator
-import ecos.com.fasterxml.jackson210.annotation.JsonValue
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 import ru.citeck.ecos.commons.data.MLText
 
 class PlanItemOnPartDef(

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.procdef.api.rest
 
+import jakarta.annotation.PostConstruct
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import org.springframework.http.*
@@ -13,7 +14,6 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
 
 @Component
 @RestController

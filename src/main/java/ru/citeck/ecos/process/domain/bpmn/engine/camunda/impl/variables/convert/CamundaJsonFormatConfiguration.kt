@@ -1,8 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert
 
-import jdk.nashorn.api.scripting.ScriptObjectMirror
 import org.camunda.spin.impl.json.jackson.format.JacksonJsonDataFormat
 import org.camunda.spin.spi.DataFormatConfigurator
+import org.graalvm.polyglot.Value
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
@@ -50,25 +50,25 @@ class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDat
         module.addSerializer(TaskOutcomeTheme::class.java, TaskOutcomeThemeJsonSerializer())
         module.addDeserializer(TaskOutcomeTheme::class.java, TaskOutcomeThemeJsonDeserializer())
 
-        module.addSerializer(ScriptObjectMirror::class.java, ScriptObjectMirrorJsonSerializerProtection())
-        module.addDeserializer(ScriptObjectMirror::class.java, ScriptObjectMirrorJsonDeserializerNull())
+        module.addSerializer(Value::class.java, ScriptObjectMirrorJsonSerializerProtection())
+        module.addDeserializer(Value::class.java, ScriptObjectMirrorJsonDeserializerNull())
 
         mapper.registerModule(module)
     }
 }
 
-// Protect ScriptObjectMirror from saving to execution variable
-class ScriptObjectMirrorJsonSerializerProtection : JsonSerializer<ScriptObjectMirror>() {
+// Protect GraalVM value from saving to execution variable
+class ScriptObjectMirrorJsonSerializerProtection : JsonSerializer<Value>() {
 
-    override fun serialize(value: ScriptObjectMirror, gen: JsonGenerator, serializers: SerializerProvider) {
-        error("Save ScriptObject to execution variable is not supported. Use DataValue instead.")
+    override fun serialize(value: Value, gen: JsonGenerator, serializers: SerializerProvider) {
+        error("Save GraalVM value to execution variable is not supported. Use DataValue instead.")
     }
 }
 
-// If ScriptObjectMirror already saved to execution variable, then deserialize it as null to prevent errors
-class ScriptObjectMirrorJsonDeserializerNull : JsonDeserializer<ScriptObjectMirror>() {
+// If GraalVM value already saved to execution variable, then deserialize it as null to prevent errors
+class ScriptObjectMirrorJsonDeserializerNull : JsonDeserializer<Value>() {
 
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ScriptObjectMirror? {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Value? {
         return null
     }
 }

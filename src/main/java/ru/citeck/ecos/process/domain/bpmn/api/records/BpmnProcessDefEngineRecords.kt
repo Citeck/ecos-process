@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
@@ -178,8 +178,7 @@ class BpmnProcessDefEngineRecords(
         }
     }
 
-    private fun MutableList<ProcessDefinition>.checkPermissionsAndReplaceToEmptyRecord():
-        MutableList<Any> {
+    private fun MutableList<ProcessDefinition>.checkPermissionsAndReplaceToEmptyRecord(): MutableList<Any> {
         if (AuthContext.isRunAsSystemOrAdmin()) {
             return this.toMutableList()
         }

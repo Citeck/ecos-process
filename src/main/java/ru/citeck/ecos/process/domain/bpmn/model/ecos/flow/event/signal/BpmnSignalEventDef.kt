@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal
 
-import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
+import com.fasterxml.jackson.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.ComposedEventName
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
@@ -102,5 +102,7 @@ data class BpmnSignalEventDef(
 }
 
 enum class FilterEventByRecord {
-    ANY, DOCUMENT, DOCUMENT_BY_VARIABLE
+    ANY,
+    DOCUMENT,
+    DOCUMENT_BY_VARIABLE
 }

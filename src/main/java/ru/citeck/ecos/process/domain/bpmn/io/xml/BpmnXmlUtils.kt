@@ -1,15 +1,15 @@
 package ru.citeck.ecos.process.domain.bpmn.io.xml
 
+import jakarta.xml.bind.JAXBContext
+import jakarta.xml.bind.JAXBElement
+import jakarta.xml.bind.JAXBException
+import jakarta.xml.bind.Marshaller
 import ru.citeck.ecos.process.domain.bpmn.io.NS_BPMN
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.JAXBElement
-import javax.xml.bind.JAXBException
-import javax.xml.bind.Marshaller
 import javax.xml.namespace.QName
 
 object BpmnXmlUtils {

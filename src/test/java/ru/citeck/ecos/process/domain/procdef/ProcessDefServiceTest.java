@@ -26,7 +26,7 @@ import ru.citeck.ecos.process.domain.procdef.command.getprocdefrev.GetProcDefRev
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
@@ -47,11 +47,11 @@ import static ru.citeck.ecos.process.domain.bpmn.BpmnConstantsKt.BPMN_PROC_TYPE;
 public class ProcessDefServiceTest {
 
     public static final String type0Id = "type0";
-    public static final RecordRef type0Ref = TypeUtils.getTypeRef(type0Id);
+    public static final EntityRef type0Ref = TypeUtils.getTypeRef(type0Id);
     public static final String type1Id = "type1";
-    public static final RecordRef type1Ref = TypeUtils.getTypeRef(type1Id);
+    public static final EntityRef type1Ref = TypeUtils.getTypeRef(type1Id);
     public static final String type2Id = "type2";
-    public static final RecordRef type2Ref = TypeUtils.getTypeRef(type2Id);
+    public static final EntityRef type2Ref = TypeUtils.getTypeRef(type2Id);
 
     @Autowired
     private ProcDefService procDefService;
@@ -82,7 +82,7 @@ public class ProcessDefServiceTest {
     @Test
     public void uploadProcDefContentTest() {
 
-        RecordRef ecosTypeRef = type0Ref;
+        EntityRef ecosTypeRef = type0Ref;
 
         String alfType = "{http://www.citeck.ru/model/content/idocs/1.0}contractor";
 
@@ -139,7 +139,7 @@ public class ProcessDefServiceTest {
         assertEquals(newProcessDefDto.getFormat(), getProcDefRev.getFormat());
         assertEquals(newProcessDefDto.getId(), getProcDefRev.getProcDefId());
 
-        RecordRef docRef = RecordRef.valueOf("uiserv/test@local");
+        EntityRef docRef = EntityRef.valueOf("uiserv/test@local");
         CreateProcResp newProcResp = commandsService.executeSync(
                 new CreateProc(findProcDefResp.getProcDefRevId(), docRef))
             .getResultAs(CreateProcResp.class);

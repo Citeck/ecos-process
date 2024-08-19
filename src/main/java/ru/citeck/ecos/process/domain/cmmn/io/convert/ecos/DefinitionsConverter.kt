@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.cmmn.io.convert.ecos
 
+import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
@@ -19,8 +20,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.ConvertUtils
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records2.RecordRef
-import javax.xml.bind.JAXBElement
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
 class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
@@ -51,7 +51,7 @@ class DefinitionsConverter : EcosOmgConverter<CmmnProcessDef, Definitions> {
             withId(processDefId)
             withDefinitionsId(element.id)
             withName(Json.mapper.convert(name, MLText::class.java) ?: MLText())
-            withEcosType(RecordRef.valueOf(ecosType))
+            withEcosType(EntityRef.valueOf(ecosType))
             withCases(cases)
             withArtifacts(artifacts)
             withCmmnDi(cmmnDi)

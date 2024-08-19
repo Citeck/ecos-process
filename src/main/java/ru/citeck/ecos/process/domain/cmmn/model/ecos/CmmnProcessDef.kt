@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.model.ecos
 
-import ecos.com.fasterxml.jackson210.annotation.JsonInclude
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData

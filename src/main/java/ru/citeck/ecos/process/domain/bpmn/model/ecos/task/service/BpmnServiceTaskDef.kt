@@ -45,5 +45,6 @@ data class BpmnServiceTaskDef(
 }
 
 enum class ServiceTaskType {
-    EXTERNAL, EXPRESSION
+    EXTERNAL,
+    EXPRESSION
 }

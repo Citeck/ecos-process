@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.procdef.convert.io.xml
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.xml.bind.JAXBElement
 import org.apache.commons.io.IOUtils
 import org.springframework.util.DigestUtils
 import org.springframework.util.ResourceUtils
@@ -10,7 +11,6 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
 import javax.xml.XMLConstants
-import javax.xml.bind.JAXBElement
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.Schema
 import javax.xml.validation.SchemaFactory

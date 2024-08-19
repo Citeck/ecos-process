@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.cmmn
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -11,7 +11,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class CmmnExporterTest {
 
@@ -34,7 +34,7 @@ class CmmnExporterTest {
         testProc(procDefXml)
         testProc(
             CmmnIO.exportEcosCmmnToString(
-                CmmnIO.generateDefaultDef("test-id", MLText(""), RecordRef.EMPTY)
+                CmmnIO.generateDefaultDef("test-id", MLText(""), EntityRef.EMPTY)
             )
         )
     }

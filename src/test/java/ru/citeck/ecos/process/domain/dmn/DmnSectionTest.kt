@@ -9,7 +9,6 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.dmnsection.config.DmnSectionConfig
 import ru.citeck.ecos.process.domain.dmnsection.eapps.DmnSectionArtifactHandler
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -90,13 +89,13 @@ class DmnSectionTest {
         dmnSectionArtifactHandler.deployArtifact(artifactData2)
 
         val name = recordsService.getAtt(
-            RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2"),
+            EntityRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2"),
             "name"
         ).asText()
         assertEquals(name, "testSectionName2")
 
         val parentOfRec2 = recordsService.getAtt(
-            RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2-1"),
+            EntityRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2-1"),
             "parentRef?id"
         ).asText()
         assertEquals(parentOfRec2, "eproc/dmn-section@testSection2")

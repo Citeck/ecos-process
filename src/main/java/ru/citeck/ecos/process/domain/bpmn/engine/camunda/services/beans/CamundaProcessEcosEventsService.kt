@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue

@@ -84,7 +84,7 @@ public class TimerServiceImplTest {
 
     @Test
     public void createTimer_returnsProperResult() {
-        Instant triggerTime = Instant.now();
+        Instant triggerTime = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
         String commandId = "id";
         String targetApp = "targetApp";
@@ -144,7 +144,7 @@ public class TimerServiceImplTest {
         timerRepository.save(entity);
 
         int retryCount = 10;
-        Instant now = Instant.now();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         Instant triggerTime = now.minus(10, ChronoUnit.MINUTES);
         Boolean active = Boolean.FALSE;
 

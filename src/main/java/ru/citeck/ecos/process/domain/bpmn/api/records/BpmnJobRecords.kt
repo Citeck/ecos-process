@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.ManagementService
 import org.camunda.bpm.engine.runtime.Job
 import org.camunda.bpm.engine.runtime.JobQuery

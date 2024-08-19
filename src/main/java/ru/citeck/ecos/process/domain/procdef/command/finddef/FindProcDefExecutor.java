@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
+import ru.citeck.ecos.context.lib.auth.AuthContext;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -18,7 +18,7 @@ public class FindProcDefExecutor implements CommandExecutor<FindProcDef> {
     @Override
     public FindProcDefResp execute(FindProcDef findProcDef) {
 
-        ProcDefRevDto procDefRev = RemoteRecordsUtils.runAsSystem(() ->
+        ProcDefRevDto procDefRev = AuthContext.runAsSystem(() ->
             procDefService.findProcDef(
                 findProcDef.getProcType(),
                 findProcDef.getEcosTypeRef(),

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event
 
-import ecos.com.fasterxml.jackson210.annotation.JsonSubTypes
-import ecos.com.fasterxml.jackson210.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef

@@ -115,7 +115,7 @@ class BpmnProcessPermissionsTest {
                                             ObjectData.create(
                                                 """
                                            {
-                                              "fn": "if (value.id.indexOf('ivan') !== -1) {return 'userIvan';} if (value.id.indexOf('katya') !== -1) { return 'userKatya';} return 'userUnknown';"
+                                              "fn": "if (value.getId().indexOf('ivan') !== -1) {return 'userIvan';} if (value.getId().indexOf('katya') !== -1) { return 'userKatya';} return 'userUnknown';"
                                             }
                                                 """.trimIndent()
                                             )

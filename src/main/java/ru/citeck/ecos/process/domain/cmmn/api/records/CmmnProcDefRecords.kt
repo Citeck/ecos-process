@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.cmmn.api.records
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
-import mu.KotlinLogging
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
@@ -18,7 +18,6 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -108,7 +107,7 @@ class CmmnProcDefRecords(
 
     override fun getRecToMutate(recordId: String): CmmnMutateRecord {
         return if (recordId.isBlank()) {
-            CmmnMutateRecord("", "", MLText(), RecordRef.EMPTY, null, true)
+            CmmnMutateRecord("", "", MLText(), EntityRef.EMPTY, null, true)
         } else {
             val procDef = procDefService.getProcessDefById(ProcDefRef.create(CMMN_PROC_TYPE, recordId))
                 ?: error("Process definition is not found: $recordId")
@@ -323,8 +322,8 @@ class CmmnProcDefRecords(
         }
 
         @AttName(RecordConstants.ATT_TYPE)
-        fun getType(): RecordRef {
-            return RecordRef.create(AppName.EMODEL, "type", "cmmn-process-def")
+        fun getType(): EntityRef {
+            return EntityRef.create(AppName.EMODEL, "type", "cmmn-process-def")
         }
     }
 

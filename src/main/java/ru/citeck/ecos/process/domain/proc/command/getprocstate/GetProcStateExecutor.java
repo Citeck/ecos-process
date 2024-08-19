@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
+import ru.citeck.ecos.context.lib.auth.AuthContext;
 import ru.citeck.ecos.process.domain.proc.dto.ProcessStateDto;
 import ru.citeck.ecos.process.domain.proc.service.ProcService;
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ public class GetProcStateExecutor implements CommandExecutor<GetProcState> {
     public GetProcStateResp execute(GetProcState getProcState) {
 
         UUID procStateId = UUID.fromString(getProcState.getProcStateId());
-        ProcessStateDto procState = RemoteRecordsUtils.runAsSystem(() ->
+        ProcessStateDto procState = AuthContext.runAsSystem(() ->
             procService.getProcStateByStateId(procStateId)
         );
 

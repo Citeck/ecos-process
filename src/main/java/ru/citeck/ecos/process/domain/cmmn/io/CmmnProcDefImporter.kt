@@ -9,7 +9,7 @@ import ru.citeck.ecos.process.domain.cmmn.CMMN_TYPE
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class CmmnProcDefImporter {
@@ -62,14 +62,14 @@ class CmmnProcDefImporter {
         definition: Definitions,
         format: CmmnFormat,
         caseAdditionalAtts: Map<String, String>
-    ): RecordRef {
+    ): EntityRef {
 
         var ecosType = definition.otherAttributes[CmmnXmlUtils.PROP_ECOS_TYPE]
         if (ecosType.isNullOrBlank() && format == CmmnFormat.LEGACY_CMMN) {
             ecosType = getLegacyCmmnEcosType(caseAdditionalAtts)
         }
 
-        return RecordRef.valueOf(ecosType)
+        return EntityRef.valueOf(ecosType)
     }
 
     private fun getLegacyAlfType(caseAdditionalAtts: Map<String, String>): String? {

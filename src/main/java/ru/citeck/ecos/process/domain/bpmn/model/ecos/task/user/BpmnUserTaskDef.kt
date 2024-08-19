@@ -6,7 +6,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionEx
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 data class BpmnUserTaskDef(
     val id: String,
@@ -22,7 +22,7 @@ data class BpmnUserTaskDef(
     val manualRecipientsMode: Boolean = false,
     val manualRecipients: List<String> = emptyList(),
 
-    val formRef: RecordRef,
+    val formRef: EntityRef,
     val priority: TaskPriority,
     val priorityExpression: String? = null,
 
@@ -35,12 +35,12 @@ data class BpmnUserTaskDef(
 
     val laEnabled: Boolean = false,
     val laNotificationType: NotificationType? = null,
-    val laNotificationTemplate: RecordRef? = null,
+    val laNotificationTemplate: EntityRef? = null,
     val laManualNotificationTemplateEnabled: Boolean = false,
     val laManualNotificationTemplate: String? = null,
     val laReportEnabled: Boolean = false,
-    val laSuccessReportNotificationTemplate: RecordRef? = null,
-    val laErrorReportNotificationTemplate: RecordRef? = null
+    val laSuccessReportNotificationTemplate: EntityRef? = null,
+    val laErrorReportNotificationTemplate: EntityRef? = null
 
 ) : Validated {
 

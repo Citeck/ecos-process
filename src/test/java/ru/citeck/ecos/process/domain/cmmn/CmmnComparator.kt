@@ -1,11 +1,11 @@
 package ru.citeck.ecos.process.domain.cmmn
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.xml.bind.JAXBElement
 import org.apache.commons.beanutils.PropertyUtils
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
-import javax.xml.bind.JAXBElement
 
 object CmmnComparator {
 

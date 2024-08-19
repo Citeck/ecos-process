@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos
 
-import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
+import com.fasterxml.jackson.annotation.JsonTypeName
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnDefinitionException
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.Validated
 

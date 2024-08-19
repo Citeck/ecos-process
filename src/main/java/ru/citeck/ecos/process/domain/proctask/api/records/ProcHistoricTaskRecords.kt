@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.history.HistoricTaskInstanceQuery
 import org.springframework.stereotype.Component
@@ -9,7 +9,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_COMPLETED_BY
 import ru.citeck.ecos.process.domain.proctask.converter.TaskConverter
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
@@ -17,6 +16,7 @@ import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 import kotlin.system.measureTimeMillis
 
@@ -40,7 +40,7 @@ class ProcHistoricTaskRecords(
 
     override fun getId() = ID
 
-    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<RecordRef> {
+    override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         // TODO: check actor filter $CURRENT and filter task query
 
         val currentUser = AuthContext.getCurrentUser()
@@ -53,7 +53,7 @@ class ProcHistoricTaskRecords(
                 .count()
         }
 
-        val historicTasks: List<RecordRef>
+        val historicTasks: List<EntityRef>
         val historicTasksTime = measureTimeMillis {
             historicTasks = camundaHistoryService.createHistoricTaskInstanceQuery()
                 .taskVariableValueEquals(BPMN_TASK_COMPLETED_BY, currentUser)
@@ -62,14 +62,14 @@ class ProcHistoricTaskRecords(
                 .finished()
                 .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems)
                 .map {
-                    RecordRef.create(AppName.EPROC, ID, it.id)
+                    EntityRef.create(AppName.EPROC, ID, it.id)
                 }
         }
 
         log.debug { "Camunda historic task count: $historicTasksCountTime ms" }
         log.debug { "Camunda historic tasks: $historicTasksTime ms" }
 
-        val result = RecsQueryRes<RecordRef>()
+        val result = RecsQueryRes<EntityRef>()
 
         result.setRecords(historicTasks)
         result.setTotalCount(historicTasksCount)

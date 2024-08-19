@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.service
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.HistoryService
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension

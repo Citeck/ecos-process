@@ -1,12 +1,12 @@
 package ru.citeck.ecos.process.domain.procdef.convert.io.convert
 
+import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.ObjectFactory
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance

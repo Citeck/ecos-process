@@ -1,14 +1,14 @@
 package ru.citeck.ecos.process.domain.proctask.service.aggregate
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.TaskService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 // TODO: Remove aggregation from alfresco?
 @Component
@@ -21,7 +21,7 @@ class ProcTaskAggregator(
         private val log = KotlinLogging.logger {}
     }
 
-    fun queryTasks(recsQuery: RecordsQuery): RecsQueryRes<RecordRef> {
+    fun queryTasks(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
         // TODO: check actor filter $CURRENT and filter task query
 
         val originalSkip = recsQuery.page.skipCount
@@ -62,12 +62,12 @@ class ProcTaskAggregator(
             .map {
                 AggregateTaskDto(
                     id = it.id,
-                    aggregationRef = RecordRef.valueOf("${AppName.EPROC}/proc-task@${it.id}"),
+                    aggregationRef = EntityRef.valueOf("${AppName.EPROC}/proc-task@${it.id}"),
                     createTime = it.createTime
                 )
             }
 
-        val result = RecsQueryRes<RecordRef>()
+        val result = RecsQueryRes<EntityRef>()
         val aggregatedRecords = let {
             return@let (resultFromAlf.getRecords() + tasksFromCamunda)
                 .sortedByDescending { it.createTime }

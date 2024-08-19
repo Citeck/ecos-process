@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
-import mu.KotlinLogging
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
@@ -35,7 +35,6 @@ import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -288,7 +287,7 @@ class BpmnProcessDefRecords(
     override fun getRecordAtts(recordId: String): Any? {
 
         if (recordId.startsWith("flowable$") || recordId.startsWith("activiti$")) {
-            return RecordRef.create("alfresco", "workflow", "def_$recordId")
+            return EntityRef.create("alfresco", "workflow", "def_$recordId")
         }
 
         // TODO: remove atts hack after fix in perms request (should run as sys)
@@ -347,8 +346,8 @@ class BpmnProcessDefRecords(
                 "",
                 "",
                 MLText(),
-                RecordRef.EMPTY,
-                RecordRef.EMPTY,
+                EntityRef.EMPTY,
+                EntityRef.EMPTY,
                 EntityRef.EMPTY,
                 null,
                 false,
@@ -914,7 +913,7 @@ class BpmnProcessDefRecords(
         val engine: String?,
         @AttName("cm:title")
         val title: MLText?,
-        val startFormRef: RecordRef?,
+        val startFormRef: EntityRef?,
         @AttName("_has.ecosbpm:thumbnail?bool!false")
         val hasThumbnail: Boolean,
         @AttName(RecordConstants.ATT_MODIFIED)

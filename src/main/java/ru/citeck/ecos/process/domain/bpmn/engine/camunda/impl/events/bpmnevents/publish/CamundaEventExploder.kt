@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue

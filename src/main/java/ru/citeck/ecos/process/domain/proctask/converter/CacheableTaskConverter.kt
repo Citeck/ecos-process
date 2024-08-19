@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
@@ -17,9 +17,9 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 /**
  * @author Roman Makarskiy
@@ -65,19 +65,19 @@ class CacheableTaskConverter(
                     false
                 },
                 priority = priority,
-                formRef = RecordRef.valueOf(formKey),
+                formRef = EntityRef.valueOf(formKey),
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
-                    RecordRef.EMPTY
+                    EntityRef.EMPTY
                 } else {
-                    RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
+                    EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
                 documentRef = variables[BPMN_DOCUMENT_REF]?.let {
-                    RecordRef.valueOf(it.toString())
-                } ?: RecordRef.EMPTY,
+                    EntityRef.valueOf(it.toString())
+                } ?: EntityRef.EMPTY,
                 documentType = variables[BPMN_DOCUMENT_TYPE] as? String,
                 documentTypeRef = variables[BPMN_DOCUMENT_TYPE]?.let {
-                    RecordRef.create(AppName.EMODEL, "type", it.toString())
-                } ?: RecordRef.EMPTY,
+                    EntityRef.create(AppName.EMODEL, "type", it.toString())
+                } ?: EntityRef.EMPTY,
                 dueDate = dueDate?.toInstant(),
                 followUpDate = followUpDate?.toInstant(),
                 lastComment = localVariables[BPMN_LAST_COMMENT_LOCAL] as? String,
@@ -108,7 +108,7 @@ class CacheableTaskConverter(
     fun convertHistoricTask(task: HistoricTaskInstance): ProcTaskDto {
         with(task) {
             var nameMl = MLText(name)
-            var documentRef = RecordRef.EMPTY
+            var documentRef = EntityRef.EMPTY
             var comment: String? = null
             var lastComment: String? = null
 
@@ -138,7 +138,7 @@ class CacheableTaskConverter(
                 .list()
                 .forEach {
                     if (it.name == BPMN_DOCUMENT_REF) {
-                        documentRef = RecordRef.valueOf(it.value.toString())
+                        documentRef = EntityRef.valueOf(it.value.toString())
                     }
                 }
 
@@ -155,9 +155,9 @@ class CacheableTaskConverter(
                 lastComment = lastComment,
                 definitionKey = taskDefinitionKey,
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
-                    RecordRef.EMPTY
+                    EntityRef.EMPTY
                 } else {
-                    RecordRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
+                    EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
                 historic = true
             )

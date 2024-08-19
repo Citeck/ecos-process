@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.proctask.api.records
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.AndPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -16,6 +15,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.apps.EcosRemoteWebAppsApi
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 const val CURRENT_USER_FLAG = "\$CURRENT"
 
@@ -31,7 +31,7 @@ class WorkflowTaskRecordsProxy(
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<*> {
         val query = recsQuery.getQuery(TaskQuery::class.java)
-        val document = RecordRef.valueOf(query.document)
+        val document = EntityRef.valueOf(query.document)
         val sortBy = recsQuery.sortBy
         val page = recsQuery.page
 
@@ -80,9 +80,9 @@ class WorkflowTaskRecordsProxy(
 
         val toMutate = records.map {
             if (it.id.containsAlfDelimiter()) {
-                RecordAtts(RecordRef.create(AppName.ALFRESCO, "wftask", it.id), it.attributes)
+                RecordAtts(EntityRef.create(AppName.ALFRESCO, "wftask", it.id), it.attributes)
             } else {
-                RecordAtts(RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it.id), it.attributes)
+                RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, it.id), it.attributes)
             }
         }
 
@@ -90,7 +90,7 @@ class WorkflowTaskRecordsProxy(
     }
 
     private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery, sortBy: List<SortBy>, page: QueryPage): RecsQueryRes<*> {
-        val result = RecsQueryRes<RecordRef>()
+        val result = RecsQueryRes<EntityRef>()
         if (!query.active) {
             return result
         }
@@ -106,14 +106,14 @@ class WorkflowTaskRecordsProxy(
         val tasksQueryRes = procTaskService.findTasks(AndPredicate.of(conditions), sortBy, page)
         result.setRecords(
             tasksQueryRes.entities.map {
-                RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it)
+                EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, it)
             }
         )
         result.setTotalCount(tasksQueryRes.totalCount)
         return result
     }
 
-    private fun queryTasksForAnyProcessEngine(recsQuery: RecordsQuery, processRef: RecordRef): RecsQueryRes<*> {
+    private fun queryTasksForAnyProcessEngine(recsQuery: RecordsQuery, processRef: EntityRef): RecsQueryRes<*> {
         return when {
             isAlfProcess(processRef) -> queryFromAlf(recsQuery)
             isEcosProcProcess(processRef) -> queryTasksForEcosProcess(recsQuery, processRef)
@@ -129,16 +129,16 @@ class WorkflowTaskRecordsProxy(
         } ?: RecsQueryRes<Any>()
     }
 
-    private fun queryTasksForEcosProcess(recordsQuery: RecordsQuery, processRef: RecordRef): RecsQueryRes<*> {
-        val result = RecsQueryRes<RecordRef>()
+    private fun queryTasksForEcosProcess(recordsQuery: RecordsQuery, processRef: EntityRef): RecsQueryRes<*> {
+        val result = RecsQueryRes<EntityRef>()
         val taskQuery = recordsQuery.getQuery(TaskQuery::class.java)
 
         val taskRefs = if (taskQuery.actor == CURRENT_USER_FLAG) {
-            procTaskService.getTasksByProcessForCurrentUser(processRef.id)
+            procTaskService.getTasksByProcessForCurrentUser(processRef.getLocalId())
         } else {
-            procTaskService.getTasksByProcess(processRef.id)
+            procTaskService.getTasksByProcess(processRef.getLocalId())
         }.map {
-            RecordRef.create(AppName.EPROC, ProcTaskRecords.ID, it.id)
+            EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, it.id)
         }
 
         result.setRecords(taskRefs)
@@ -154,18 +154,18 @@ class WorkflowTaskRecordsProxy(
     )
 }
 
-private fun documentIsProcess(document: RecordRef): Boolean {
+private fun documentIsProcess(document: EntityRef): Boolean {
     return isAlfProcess(document) || isEcosProcProcess(document)
 }
 
-private fun isAlfProcess(ref: RecordRef): Boolean {
-    return ref.id.containsAlfDelimiter()
+private fun isAlfProcess(ref: EntityRef): Boolean {
+    return ref.getLocalId().containsAlfDelimiter()
 }
 
 private fun String.containsAlfDelimiter(): Boolean {
     return this.contains("$")
 }
 
-private fun isEcosProcProcess(ref: RecordRef): Boolean {
-    return ref.sourceId == BpmnProcessRecords.ID
+private fun isEcosProcProcess(ref: EntityRef): Boolean {
+    return ref.getSourceId() == BpmnProcessRecords.ID
 }

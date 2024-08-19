@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.domain.proctask.dto
 
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.io.Serializable
 import java.time.Instant
@@ -19,15 +18,15 @@ data class ProcTaskDto(
 
     val possibleOutcomes: List<TaskOutcome> = emptyList(),
 
-    val formRef: RecordRef = RecordRef.EMPTY,
+    val formRef: EntityRef = EntityRef.EMPTY,
 
-    val documentRef: RecordRef = RecordRef.EMPTY,
+    val documentRef: EntityRef = EntityRef.EMPTY,
 
     val documentType: String? = null,
 
-    val documentTypeRef: RecordRef = RecordRef.EMPTY,
+    val documentTypeRef: EntityRef = EntityRef.EMPTY,
 
-    val processInstanceId: RecordRef = RecordRef.EMPTY,
+    val processInstanceId: EntityRef = EntityRef.EMPTY,
 
     val created: Instant,
 
@@ -39,11 +38,11 @@ data class ProcTaskDto(
 
     val followUpDate: Instant? = null,
 
-    val assignee: EntityRef = RecordRef.EMPTY,
+    val assignee: EntityRef = EntityRef.EMPTY,
 
-    val sender: EntityRef = RecordRef.EMPTY,
+    val sender: EntityRef = EntityRef.EMPTY,
 
-    val owner: EntityRef = RecordRef.EMPTY,
+    val owner: EntityRef = EntityRef.EMPTY,
 
     val candidateUsers: List<EntityRef> = emptyList(),
     val candidateUsersOriginal: List<String> = emptyList(),

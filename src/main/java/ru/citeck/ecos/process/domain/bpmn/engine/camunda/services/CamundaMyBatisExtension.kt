@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.services
 
+import jakarta.annotation.PostConstruct
 import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.RuntimeService
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.events.CustomEventSubscriptionManager
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis.BpmnMyBatisExtendedSessionFactory
-import javax.annotation.PostConstruct
 
 private const val SELECT_TASKS_BY_IDS = "selectHistoricTaskInstanceByIds"
 private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES = "selectEventSubscriptionsByEventNames"

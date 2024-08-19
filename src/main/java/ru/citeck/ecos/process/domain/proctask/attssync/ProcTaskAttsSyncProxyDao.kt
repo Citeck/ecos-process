@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_REPO_SOURCE_ID
@@ -26,11 +26,13 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
         log.debug { "Mutate task atts sync: \n${Json.mapper.toPrettyString(records)}" }
 
         val currentRequestAttributesIds = mutableSetOf<String>()
-        val existsAttributes = findExistsAttributesWithoutIds(records.map {
-            it.id.ifEmpty {
-                it.getAtt("id").asText()
+        val existsAttributes = findExistsAttributesWithoutIds(
+            records.map {
+                it.id.ifEmpty {
+                    it.getAtt("id").asText()
+                }
             }
-        })
+        )
 
         for (record in records) {
             if (record.hasAtt("attributesSync")) {

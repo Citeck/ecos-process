@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.model.camunda;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "field", namespace = "http://camunda.org/schema/1.0/bpmn", propOrder = {"name", "stringValue", "expressionValue"})

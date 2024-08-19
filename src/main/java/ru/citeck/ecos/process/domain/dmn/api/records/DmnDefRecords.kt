@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.dmn.api.records
 
-import ecos.com.fasterxml.jackson210.annotation.JsonProperty
-import mu.KotlinLogging
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
@@ -28,7 +28,6 @@ import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -486,7 +485,7 @@ class DmnDefRecords(
     }
 
     private fun String.toProcDefRef(): EntityRef {
-        return RecordRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, this)
+        return EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, this)
     }
 
     private fun EntityRef.getPerms(): BpmnProcessDefRecords.ProcDefPermsValue {

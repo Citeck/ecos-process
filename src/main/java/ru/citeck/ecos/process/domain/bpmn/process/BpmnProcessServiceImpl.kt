@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.process
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Timer
-import mu.KotlinLogging
 import org.camunda.bpm.cockpit.impl.plugin.base.dto.query.CalledProcessInstanceQueryDto
 import org.camunda.bpm.cockpit.impl.plugin.resources.ProcessInstanceRestService
 import org.camunda.bpm.engine.HistoryService

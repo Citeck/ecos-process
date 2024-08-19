@@ -65,7 +65,6 @@ import ru.citeck.ecos.process.domain.bpmnla.services.BpmnLazyApprovalService
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
@@ -1171,7 +1170,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val procId = "test-set-status"
         helper.saveAndDeployBpmn("status", procId)
 
-        val docRef = RecordRef.valueOf(docRef.toString())
+        val docRef = EntityRef.valueOf(docRef.toString())
 
         run(process).startByKey(
             procId,
@@ -1310,7 +1309,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .recipients(mockAuthorEmails)
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
-            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
@@ -1393,7 +1392,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .bcc(mockApproverEmails)
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
-            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
@@ -1435,7 +1434,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .bcc(mockApproverEmails + "exp-bcc@mail.ru")
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
-            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
@@ -1473,7 +1472,7 @@ class BpmnMonsterTestWithRunProcessTest {
             .recipients(listOf("someMail@mail.ru"))
             .notificationType(NotificationType.EMAIL_NOTIFICATION)
             .lang("ru")
-            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
             .additionalMeta(
                 mapOf(
                     "process" to mapOf(
@@ -1650,7 +1649,7 @@ class BpmnMonsterTestWithRunProcessTest {
                     )
                 )
             )
-            .templateRef(RecordRef.valueOf("notifications/template@test-template"))
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
             .build()
 
         verify(notificationService).send(

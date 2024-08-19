@@ -1,5 +1,9 @@
 package ru.citeck.ecos.process.domain.cmmn.io.xml
 
+import jakarta.xml.bind.JAXBContext
+import jakarta.xml.bind.JAXBElement
+import jakarta.xml.bind.JAXBException
+import jakarta.xml.bind.Marshaller
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Definitions
 import ru.citeck.ecos.process.domain.cmmn.model.omg.Shape
@@ -7,10 +11,6 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
 import java.io.*
 import java.nio.charset.StandardCharsets
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.JAXBElement
-import javax.xml.bind.JAXBException
-import javax.xml.bind.Marshaller
 import javax.xml.namespace.QName
 
 object CmmnXmlUtils {

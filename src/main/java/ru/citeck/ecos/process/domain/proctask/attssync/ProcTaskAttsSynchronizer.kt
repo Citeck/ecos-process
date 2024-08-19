@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Lazy
@@ -350,5 +350,7 @@ private data class TaskAttsSyncQueueMessage(
 )
 
 private enum class SyncMode {
-    FULL, TYPE, RECORD
+    FULL,
+    TYPE,
+    RECORD
 }

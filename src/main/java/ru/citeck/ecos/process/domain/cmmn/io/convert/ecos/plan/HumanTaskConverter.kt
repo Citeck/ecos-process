@@ -7,7 +7,7 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.THumanTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
 class HumanTaskConverter : EcosOmgConverter<HumanTaskDef, THumanTask> {
@@ -23,7 +23,7 @@ class HumanTaskConverter : EcosOmgConverter<HumanTaskDef, THumanTask> {
 
         val roles = element.otherAttributes[PROP_ROLES] ?: "[]"
         val rolesList = Json.mapper.readList(roles, String::class.java)
-        val formRef = element.otherAttributes[PROP_FORM_REF]?.let { RecordRef.valueOf(it) }
+        val formRef = element.otherAttributes[PROP_FORM_REF]?.let { EntityRef.valueOf(it) }
 
         return HumanTaskDef(rolesList, formRef)
     }

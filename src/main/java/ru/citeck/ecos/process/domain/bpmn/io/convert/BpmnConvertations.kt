@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert
 
+import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
@@ -36,9 +37,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskD
 import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
 fun Bounds.toDef(): BoundsDef {
@@ -142,8 +141,8 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
             if (value.isNotBlank() && value != "null") add(value)
         }
 
-        is RecordRef -> {
-            if (RecordRef.isNotEmpty(value)) add(value)
+        is EntityRef -> {
+            if (EntityRef.isNotEmpty(value)) add(value)
         }
 
         is CamundaField -> {

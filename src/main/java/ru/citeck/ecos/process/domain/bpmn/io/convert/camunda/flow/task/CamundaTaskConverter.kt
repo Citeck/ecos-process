@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.task
 
+import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.task.SetStatusDelegate
@@ -15,7 +16,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
 class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {

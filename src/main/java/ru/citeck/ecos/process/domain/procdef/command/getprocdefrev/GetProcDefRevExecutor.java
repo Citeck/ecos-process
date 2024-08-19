@@ -6,12 +6,12 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
 import ru.citeck.ecos.commons.json.Json;
+import ru.citeck.ecos.context.lib.auth.AuthContext;
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO;
 import ru.citeck.ecos.process.domain.cmmn.model.ecos.CmmnProcessDef;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider;
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto;
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils;
 import ru.citeck.ecos.records3.RecordsServiceFactory;
 import ru.citeck.ecos.records3.record.request.RequestContext;
 
@@ -32,7 +32,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
     public GetProcDefRevResp execute(GetProcDefRev findProcDef) {
 
         UUID revId = UUID.fromString(findProcDef.getProcDefRevId());
-        ProcDefRevDto procDefRev = RemoteRecordsUtils.runAsSystem(() ->
+        ProcDefRevDto procDefRev = AuthContext.runAsSystem(() ->
             procDefService.getProcessDefRev(findProcDef.getProcType(), revId)
         );
 

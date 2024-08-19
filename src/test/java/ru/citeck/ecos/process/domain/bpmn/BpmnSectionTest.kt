@@ -8,7 +8,6 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmnsection.eapps.BpmnSectionArtifactHandler
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.delete.DelStatus
@@ -88,13 +87,13 @@ class BpmnSectionTest {
         bpmnSectionArtifactHandler.deployArtifact(artifactData2)
 
         val name = recordsService.getAtt(
-            RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2"),
+            EntityRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2"),
             "name"
         ).asText()
         assertEquals(name, "testSectionName2")
 
         val parentOfRec2 = recordsService.getAtt(
-            RecordRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2-1"),
+            EntityRef.valueOf("$REPO_DATA_SOURCE_ID@testSection2-1"),
             "parentRef?id"
         ).asText()
         assertEquals("eproc/bpmn-section@testSection2", parentOfRec2)

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity

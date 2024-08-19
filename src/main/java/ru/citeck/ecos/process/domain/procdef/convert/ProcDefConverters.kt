@@ -8,7 +8,6 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.time.Instant
@@ -37,9 +36,9 @@ fun ProcDefEntity.toDto(): ProcDefDto {
     procDefDto.revisionId = lastRev!!.id!!.id
     procDefDto.version = lastRev!!.version
     procDefDto.alfType = alfType
-    procDefDto.ecosTypeRef = RecordRef.valueOf(ecosTypeRef)
-    procDefDto.formRef = RecordRef.valueOf(formRef)
-    procDefDto.workingCopySourceRef = RecordRef.valueOf(workingCopySourceRef)
+    procDefDto.ecosTypeRef = EntityRef.valueOf(ecosTypeRef)
+    procDefDto.formRef = EntityRef.valueOf(formRef)
+    procDefDto.workingCopySourceRef = EntityRef.valueOf(workingCopySourceRef)
     procDefDto.enabled = enabled ?: false
     procDefDto.autoStartEnabled = autoStartEnabled ?: false
     procDefDto.autoDeleteEnabled = autoDeleteEnabled ?: true

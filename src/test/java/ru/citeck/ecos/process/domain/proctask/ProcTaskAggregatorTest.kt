@@ -19,9 +19,9 @@ import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.AggregateTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.aggregate.AlfWorkflowTaskProvider
 import ru.citeck.ecos.process.domain.proctask.service.aggregate.ProcTaskAggregator
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.text.SimpleDateFormat
 
@@ -254,7 +254,7 @@ class ProcTaskAggregatorTest {
         val aggregateTasks = tasks.map {
             AggregateTaskDto(
                 id = it.id,
-                aggregationRef = RecordRef.valueOf("eproc/${ProcTaskRecords.ID}@${it.id}"),
+                aggregationRef = EntityRef.valueOf("eproc/${ProcTaskRecords.ID}@${it.id}"),
                 createTime = sdf.parse(it.createTime)
             )
         }
@@ -273,6 +273,6 @@ class ProcTaskAggregatorTest {
     )
 }
 
-fun String.toAggregationRef(): RecordRef {
-    return RecordRef.create("eproc", ProcTaskRecords.ID, this)
+fun String.toAggregationRef(): EntityRef {
+    return EntityRef.create("eproc", ProcTaskRecords.ID, this)
 }

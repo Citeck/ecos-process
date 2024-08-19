@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.dmn.service
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.DecisionService
 import org.springframework.stereotype.Service
 

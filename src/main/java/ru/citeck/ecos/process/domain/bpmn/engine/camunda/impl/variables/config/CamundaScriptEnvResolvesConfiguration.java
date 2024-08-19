@@ -26,4 +26,6 @@ public class CamundaScriptEnvResolvesConfiguration extends AbstractCamundaConfig
 
         processEngineConfiguration.setEnvScriptResolvers(resolvers);
     }
+
+
 }

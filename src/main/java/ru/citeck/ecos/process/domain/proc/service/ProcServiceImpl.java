@@ -14,7 +14,7 @@ import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity;
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity;
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository;
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
-import ru.citeck.ecos.records2.RecordRef;
+import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -30,12 +30,12 @@ public class ProcServiceImpl implements ProcService {
     private final ProcTenantService tenantService;
 
     @Override
-    public NewProcessInstanceDto createProcessInstance(RecordRef recordRef, UUID procDefRevId) {
+    public NewProcessInstanceDto createProcessInstance(EntityRef recordRef, UUID procDefRevId) {
 
         EntityUuid procDefId = new EntityUuid(tenantService.getCurrent(), procDefRevId);
         ProcDefRevEntity processDefRev = processDefRevRepo.findById(procDefId).orElse(null);
 
-        if (RecordRef.isEmpty(recordRef)) {
+        if (EntityRef.isEmpty(recordRef)) {
             throw new IllegalArgumentException("recordRef can't be empty");
         }
         if (processDefRev == null) {

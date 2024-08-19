@@ -21,7 +21,14 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/eproc
-
+management:
+  health:
+    mongo:
+      # Health check is disabled for the following reasons:
+      # 1. The new Spring framework uses the 'hello' command for health checks, which is not supported by older versions of MongoDB.
+      # 2. MongoDB is used only for process definitions outside the BPMN engine and does not affect Camunda's core functionality.
+      # 3. MongoDB will be removed in future releases.
+      enabled: false
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -112,6 +119,10 @@ ecos:
         host: ${ecos.webapp.dataSources.main-rabbitmq.host}
         username: ${ecos.webapp.dataSources.main-rabbitmq.username}
         password: ${ecos.webapp.dataSources.main-rabbitmq.password}
+    x509:
+      keys:
+        application:
+          location: classpath:ecos/x509/keys/application.key
 
 camunda:
   bpm:
@@ -119,3 +130,6 @@ camunda:
       enabled: false
     webapp:
       application-path: /camunda
+    database:
+      # schema is managed by liquibase. See src/main/resources/ecos/liquibase/camunda/master.xml
+      schemaUpdate: 'false'

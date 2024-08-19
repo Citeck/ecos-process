@@ -1,18 +1,17 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.task.Task
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.api.records.isAlfTaskRef
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 internal val log = KotlinLogging.logger {}
 
@@ -58,7 +57,7 @@ class TaskConverter(
                 lastComment = lastComment,
                 definitionKey = definitionKey,
                 documentAtts = let {
-                    if (documentRef == RecordRef.EMPTY || RecordRef.valueOf(id).isAlfTaskRef()) {
+                    if (documentRef == EntityRef.EMPTY || EntityRef.valueOf(id).isAlfTaskRef()) {
                         return@let RecordAtts()
                     }
 

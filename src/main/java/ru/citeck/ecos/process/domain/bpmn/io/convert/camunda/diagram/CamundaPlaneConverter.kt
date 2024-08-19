@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.diagram
 
+import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnDiagramElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.diagram.BpmnPlaneDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.BPMNPlane
@@ -7,7 +8,6 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import javax.xml.bind.JAXBElement
 import javax.xml.namespace.QName
 
 class CamundaPlaneConverter : EcosOmgConverter<BpmnPlaneDef, BPMNPlane> {

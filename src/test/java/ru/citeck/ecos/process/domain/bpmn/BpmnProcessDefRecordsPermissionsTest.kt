@@ -28,7 +28,6 @@ import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
 import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
@@ -178,8 +177,8 @@ class BpmnProcessDefRecordsPermissionsTest {
                 "xml",
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 ModelUtils.getTypeRef("type1"),
-                RecordRef.EMPTY,
-                RecordRef.EMPTY,
+                EntityRef.EMPTY,
+                EntityRef.EMPTY,
                 BpmnProcHelperJava.buildProcDefXml(id),
                 null,
                 enabled = true,
@@ -445,7 +444,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     fun `deploy as user with deploy perms should allow`() {
         `when`(
             bpmnSectionPermissionsProvider.hasPermissions(
-                RecordRef.valueOf("eproc/bpmn-section@DEFAULT"),
+                EntityRef.valueOf("eproc/bpmn-section@DEFAULT"),
                 BpmnPermission.SECTION_CREATE_PROC_DEF
             )
         ).thenReturn(true)

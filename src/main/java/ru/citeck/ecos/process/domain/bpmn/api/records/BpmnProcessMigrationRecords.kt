@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.rest.MigrationRestService
 import org.camunda.bpm.engine.rest.dto.batch.BatchDto
 import org.camunda.bpm.engine.rest.dto.migration.MigrationExecutionDto
@@ -58,9 +58,9 @@ class BpmnProcessMigrationRecords(
                 BpmnPermission.PROC_INSTANCE_MIGRATE,
                 BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.sourceProcessDefinitionId)
             ) || !bpmnPermissionResolver.isAllowForBpmnDefEngine(
-                    BpmnPermission.PROC_INSTANCE_MIGRATE,
-                    BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.targetProcessDefinitionId)
-                )
+                BpmnPermission.PROC_INSTANCE_MIGRATE,
+                BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.targetProcessDefinitionId)
+            )
         ) {
             return emptyList<EntityRef>()
         }
@@ -124,7 +124,7 @@ class BpmnProcessMigrationRecords(
     }
 
     enum class MutateAction {
-        MIGRATE;
+        MIGRATE
     }
 
     data class ProcessMigrationRecord(

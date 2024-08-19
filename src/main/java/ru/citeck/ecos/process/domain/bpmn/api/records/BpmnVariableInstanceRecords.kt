@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
-import ecos.com.fasterxml.jackson210.databind.JavaType
-import mu.KotlinLogging
+import com.fasterxml.jackson.databind.JavaType
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.impl.persistence.entity.VariableInstanceEntity
 import org.camunda.bpm.engine.runtime.VariableInstance

@@ -18,7 +18,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
@@ -77,7 +76,7 @@ class SendNotificationDelegate : JavaDelegate {
         val record = let {
             val recordFromExpression = notificationRecord?.expressionText ?: ""
             if (recordFromExpression.isNotBlank()) {
-                RecordRef.valueOf(recordFromExpression)
+                EntityRef.valueOf(recordFromExpression)
             } else {
                 document
             }
@@ -101,7 +100,7 @@ class SendNotificationDelegate : JavaDelegate {
             )
             .title(notificationTitle?.expressionText ?: "")
             .body(notificationBody?.expressionText ?: "")
-            .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
+            .templateRef(EntityRef.valueOf(notificationTemplate?.expressionText))
             .recipients(recipients)
             .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))

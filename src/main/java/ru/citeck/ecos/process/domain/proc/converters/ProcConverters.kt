@@ -4,7 +4,7 @@ import ru.citeck.ecos.process.domain.proc.dto.ProcessInstanceDto
 import ru.citeck.ecos.process.domain.proc.dto.ProcessStateDto
 import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity
 import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 fun ProcessStateEntity.toDto(): ProcessStateDto {
     return ProcessStateDto(
@@ -21,7 +21,7 @@ fun ProcessInstanceEntity.toDto(): ProcessInstanceDto {
     return ProcessInstanceDto(
         id = id!!.id,
         procType = procType!!,
-        recordRef = RecordRef.valueOf(recordRef),
+        recordRef = EntityRef.valueOf(recordRef),
         stateId = state!!.id!!.id,
         created = created!!,
         modified = modified!!

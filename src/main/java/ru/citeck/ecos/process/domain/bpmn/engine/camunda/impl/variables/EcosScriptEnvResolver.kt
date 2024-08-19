@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.impl.scripting.env.ScriptEnvResolver
 import org.springframework.util.ResourceUtils
 import java.io.FileNotFoundException

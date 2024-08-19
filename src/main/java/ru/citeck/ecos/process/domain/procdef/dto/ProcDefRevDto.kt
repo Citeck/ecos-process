@@ -59,7 +59,8 @@ data class ProcDefRevDto(
 }
 
 enum class ProcDefRevDataState {
-    RAW, CONVERTED;
+    RAW,
+    CONVERTED;
 
     companion object {
 

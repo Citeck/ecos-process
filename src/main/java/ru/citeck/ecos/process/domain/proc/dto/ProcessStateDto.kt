@@ -1,8 +1,8 @@
 package ru.citeck.ecos.process.domain.proc.dto
 
+import jakarta.validation.constraints.NotNull
 import java.time.Instant
 import java.util.*
-import javax.validation.constraints.NotNull
 
 data class ProcessStateDto(
     val id: @NotNull UUID,

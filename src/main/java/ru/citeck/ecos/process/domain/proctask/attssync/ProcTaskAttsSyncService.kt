@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
@@ -40,7 +40,7 @@ class ProcTaskAttsSyncService(
         return try {
             recordsService.getAtts(ref, TaskAttsSyncSettingsMeta::class.java)
         } catch (e: Exception) {
-            log.debug("Failed to get sync settings: $ref", e)
+            log.debug(e) { "Failed to get sync settings: $ref" }
             return null
         }
     }
@@ -180,7 +180,8 @@ data class TaskAttsSyncSettingsMeta(
 )
 
 enum class TaskAttsSyncSource {
-    RECORD, TYPE
+    RECORD,
+    TYPE
 }
 
 data class TaskSyncAttribute(

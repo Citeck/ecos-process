@@ -4,7 +4,7 @@ import lombok.Data;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
 

@@ -1,5 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.webapp
 
+import jakarta.servlet.*
+import jakarta.servlet.http.HttpServletRequest
 import org.camunda.bpm.webapp.impl.security.auth.ContainerBasedAuthenticationFilter
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.web.servlet.ServletContextInitializer
@@ -7,8 +9,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.*
 import java.util.regex.Pattern
-import javax.servlet.*
-import javax.servlet.http.HttpServletRequest
 
 @Configuration
 class CamundaWebAppConfiguration {

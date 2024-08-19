@@ -14,7 +14,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
 class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
@@ -48,7 +48,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                     RecipientType.ROLE to element.otherAttributes[BPMN_PROP_ASSIGNEES]
                 )
             ),
-            formRef = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
+            formRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
             dueDate = element.otherAttributes[BPMN_PROP_DUE_DATE],
             followUpDate = element.otherAttributes[BPMN_PROP_FOLLOW_UP_DATE],
             priority = if (element.otherAttributes[BPMN_PROP_PRIORITY].isNullOrBlank()) {
@@ -63,7 +63,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 NotificationType.valueOf(it)
             },
             laNotificationTemplate = element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]?.let {
-                RecordRef.valueOf(it)
+                EntityRef.valueOf(it)
             },
             laManualNotificationTemplateEnabled =
             element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
@@ -71,11 +71,11 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             laReportEnabled = element.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             element.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                RecordRef.valueOf(it)
+                EntityRef.valueOf(it)
             },
             laErrorReportNotificationTemplate =
             element.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                RecordRef.valueOf(it)
+                EntityRef.valueOf(it)
             }
 
         )

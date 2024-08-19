@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event
 
-import ecos.com.fasterxml.jackson210.annotation.JsonTypeName
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 @JsonTypeName("terminateEvent")
 data class BpmnTerminateEventDef(

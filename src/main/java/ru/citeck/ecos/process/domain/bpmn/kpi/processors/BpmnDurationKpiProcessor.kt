@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi.processors
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.common.toPrettyString

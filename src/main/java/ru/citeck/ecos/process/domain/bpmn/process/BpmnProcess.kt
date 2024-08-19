@@ -91,7 +91,8 @@ data class CalledProcessInstanceMeta(
 )
 
 enum class SuspensionState {
-    ACTIVE, SUSPENDED
+    ACTIVE,
+    SUSPENDED
 }
 
 data class IncidentStatistics(

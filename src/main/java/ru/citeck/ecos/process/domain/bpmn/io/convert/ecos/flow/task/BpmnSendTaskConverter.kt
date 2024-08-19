@@ -17,7 +17,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
 class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
@@ -33,8 +33,8 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             type = NotificationType.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_TYPE]!!),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
-            template = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_TEMPLATE]),
-            record = RecordRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_RECORD]),
+            template = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_TEMPLATE]),
+            record = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_RECORD]),
             title = element.otherAttributes[BPMN_PROP_NOTIFICATION_TITLE] ?: "",
             body = element.otherAttributes[BPMN_PROP_NOTIFICATION_BODY] ?: "",
             from = element.otherAttributes[BPMN_PROP_NOTIFICATION_FROM] ?: "",

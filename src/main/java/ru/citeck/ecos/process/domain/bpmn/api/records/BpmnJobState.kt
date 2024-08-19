@@ -33,5 +33,5 @@ enum class BpmnJobState(
             I18nContext.ENGLISH to "Suspended",
             I18nContext.RUSSIAN to "Приостановлено"
         )
-    );
+    )
 }

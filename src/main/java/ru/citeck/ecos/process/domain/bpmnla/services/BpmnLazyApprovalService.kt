@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmnla.services
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.context.annotation.Lazy

@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.history.HistoricProcessInstance
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.rest.ProcessInstanceRestService

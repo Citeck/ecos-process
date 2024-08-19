@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.api.records
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.lang3.time.FastDateFormat
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
@@ -24,7 +24,6 @@ import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.*
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -115,9 +114,9 @@ class ProcTaskRecords(
             sortBy,
             recsQuery.page
         )
-        val tasksRefs = tasksResult.entities.map { RecordRef.create(AppName.EPROC, ID, it) }
+        val tasksRefs = tasksResult.entities.map { EntityRef.create(AppName.EPROC, ID, it) }
 
-        val result = RecsQueryRes<RecordRef>()
+        val result = RecsQueryRes<EntityRef>()
 
         result.setRecords(tasksRefs)
         result.setTotalCount(tasksResult.totalCount)
@@ -137,7 +136,7 @@ class ProcTaskRecords(
             val procRefs = mutableListOf<String>()
 
             recordIds.forEach {
-                val ref = RecordRef.valueOf(it)
+                val ref = EntityRef.valueOf(it)
                 if (ref.isAlfTaskRef()) {
                     records[it] = createTaskRecordFromAlf(ref)
                 } else {
@@ -261,13 +260,13 @@ class ProcTaskRecords(
     }
 
     private fun mutateDocumentVariables(task: ProcTaskDto, documentAtts: RecordAtts) {
-        if (task.documentRef != RecordRef.EMPTY && documentAtts.getAttributes().isNotEmpty()) {
+        if (task.documentRef != EntityRef.EMPTY && documentAtts.getAttributes().isNotEmpty()) {
             log.debug { "Submit task ${task.id}, mutate document <${task.documentRef}> with variables: $documentAtts" }
             recordsService.mutate(documentAtts)
         }
     }
 
-    private fun createTaskRecordFromAlf(ref: RecordRef): ProcTaskRecord {
+    private fun createTaskRecordFromAlf(ref: EntityRef): ProcTaskRecord {
         val mapping = EPROC_TO_ALF_TASK_ATTS
         val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss")
 
@@ -287,7 +286,7 @@ class ProcTaskRecords(
                 .toMap()
 
             val fullOriginalRef = let {
-                if (ref.appName.isBlank()) {
+                if (ref.getAppName().isBlank()) {
                     ref.withAppName("alfresco")
                 } else {
                     ref
@@ -306,8 +305,8 @@ class ProcTaskRecords(
         }
 
         return ProcTaskRecord(
-            id = ref.id,
-            documentRef = RecordRef.valueOf(alfAtts.getAtt(mapping["documentRef"]).asText()),
+            id = ref.getLocalId(),
+            documentRef = EntityRef.valueOf(alfAtts.getAtt(mapping["documentRef"]).asText()),
             dueDate = getDateFromAtts("dueDate"),
             priority = alfAtts.getAtt(mapping["priority"]).asInt(),
             created = getDateFromAtts("created"),
@@ -371,11 +370,11 @@ class ProcTaskRecords(
     inner class ProcTaskRecord(
         val id: String,
         val priority: Int = 0,
-        val formRef: RecordRef = RecordRef.EMPTY,
-        val processInstanceRef: RecordRef? = null,
-        val documentRef: RecordRef? = null,
+        val formRef: EntityRef = EntityRef.EMPTY,
+        val processInstanceRef: EntityRef? = null,
+        val documentRef: EntityRef? = null,
         val documentType: String? = null,
-        val documentTypeRef: RecordRef? = null,
+        val documentTypeRef: EntityRef? = null,
         val title: MLText? = null,
         val created: Instant? = null,
         val ended: Instant? = null,
@@ -384,10 +383,10 @@ class ProcTaskRecords(
         val followUpDate: Instant? = null,
         val definitionKey: String? = null,
 
-        val owner: EntityRef = RecordRef.EMPTY,
-        val assignee: EntityRef = RecordRef.EMPTY,
+        val owner: EntityRef = EntityRef.EMPTY,
+        val assignee: EntityRef = EntityRef.EMPTY,
 
-        val senderTemp: EntityRef = RecordRef.EMPTY,
+        val senderTemp: EntityRef = EntityRef.EMPTY,
 
         val candidateUsers: List<EntityRef> = emptyList(),
         val candidateGroups: List<EntityRef> = emptyList(),
@@ -432,11 +431,11 @@ class ProcTaskRecords(
         }
 
         @get:AttName("_formRef")
-        val formKey: RecordRef
+        val formKey: EntityRef
             get() = if (formRef.isNotEmpty()) {
                 formRef
             } else {
-                RecordRef.create(AppName.UISERV, "form", "proc_task_default_form")
+                EntityRef.create(AppName.UISERV, "form", "proc_task_default_form")
             }
 
         @get:AttName(RecordConstants.ATT_CREATED)
@@ -483,7 +482,7 @@ class ProcTaskRecords(
         }
 
         @AttName("workflow")
-        fun getWorkflow(): RecordRef? {
+        fun getWorkflow(): EntityRef? {
             return processInstanceRef
         }
 
@@ -588,8 +587,8 @@ private fun isAlfTask(id: String): Boolean {
     return id.startsWith(ALF_TASK_PREFIX)
 }
 
-fun RecordRef.isAlfTaskRef(): Boolean {
-    return id.startsWith(ALF_TASK_PREFIX)
+fun EntityRef.isAlfTaskRef(): Boolean {
+    return getLocalId().startsWith(ALF_TASK_PREFIX)
 }
 
 private data class FormInfo(

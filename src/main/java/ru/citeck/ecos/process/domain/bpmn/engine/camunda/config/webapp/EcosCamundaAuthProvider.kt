@@ -1,11 +1,11 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.webapp
 
+import jakarta.servlet.http.HttpServletRequest
 import org.camunda.bpm.engine.ProcessEngine
 import org.camunda.bpm.engine.rest.security.auth.AuthenticationResult
 import org.camunda.bpm.engine.rest.security.auth.impl.ContainerBasedAuthenticationProvider
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.AuthUser
-import javax.servlet.http.HttpServletRequest
 
 class EcosCamundaAuthProvider : ContainerBasedAuthenticationProvider() {
 
