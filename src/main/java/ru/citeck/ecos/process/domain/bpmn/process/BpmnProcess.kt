@@ -11,6 +11,14 @@ import java.time.Instant
 
 const val BPMN_ASYNC_START_PROCESS_QUEUE_NAME = "bpmn-process-async-start-process"
 
+/**
+ * WARNING!
+ * This parameter should not be changed without deleting
+ * of existing queue BPMN_ASYNC_START_PROCESS_QUEUE_NAME
+ * because changing of retryDelayMs required queue recreation.
+ *
+ * @see ru.citeck.ecos.rabbitmq.RabbitMqChannel.declareQueuesWithRetrying
+ */
 // retry ~5 min
 const val BPMN_ASYNC_START_PROCESS_QUEUE_RETRY_DELAY_MS = 500L
 

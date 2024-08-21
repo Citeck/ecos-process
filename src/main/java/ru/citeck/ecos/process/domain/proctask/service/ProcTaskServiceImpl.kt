@@ -150,6 +150,12 @@ class ProcTaskServiceImpl(
                 } else {
                     it
                 }
+            } else if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_DOCUMENT && it.getValue().isTextual()) {
+                val document = it.getValue().asText()
+                Predicates.or(
+                    ValuePredicate(ProcTaskSqlQueryBuilder.ATT_DOCUMENT, it.getType(), document),
+                    ValuePredicate(ProcTaskSqlQueryBuilder.ATT_MAIN_DOCUMENT_REF, it.getType(), document)
+                )
             } else {
                 it
             }

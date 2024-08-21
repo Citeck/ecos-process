@@ -53,6 +53,7 @@ class ProcTaskSqlQueryBuilder(
         const val ATT_DUE_DATE = "dueDate"
         const val ATT_PRIORITY = "priority"
         const val ATT_DOCUMENT = "document"
+        const val ATT_MAIN_DOCUMENT_REF = "mainDocumentRef"
         const val ATT_DOCUMENT_TYPE = "documentType"
         const val ATT_DOCUMENT_TYPE_REF = "documentTypeRef"
         const val ATT_TASK_KEY = "taskKey"
@@ -76,7 +77,8 @@ class ProcTaskSqlQueryBuilder(
         private val PROC_VARIABLES_MAPPING = mapOf(
             ATT_DOCUMENT to BPMN_DOCUMENT_REF,
             ATT_DOCUMENT_TYPE to BPMN_DOCUMENT_TYPE,
-            ATT_DOCUMENT_TYPE_REF to "documentTypeRef"
+            ATT_DOCUMENT_TYPE_REF to "documentTypeRef",
+            ATT_MAIN_DOCUMENT_REF to ATT_MAIN_DOCUMENT_REF
         )
 
         private val log = KotlinLogging.logger {}
