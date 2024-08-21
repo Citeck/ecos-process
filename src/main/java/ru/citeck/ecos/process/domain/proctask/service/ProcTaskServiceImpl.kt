@@ -32,6 +32,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import kotlin.system.measureTimeMillis
 
 private const val TASK_COMMENT_BROADCAST_ASPECT = "task-comments-broadcastable"
@@ -147,6 +148,16 @@ class ProcTaskServiceImpl(
                         actorsVariants.add(AndPredicate.of(delegationConditions))
                     }
                     OrPredicate.of(actorsVariants)
+                } else {
+                    it
+                }
+            } else if (it.getAttribute() == ProcTaskSqlQueryBuilder.ATT_DOCUMENT && it.getValue().isTextual()) {
+                val document = it.getValue().asText()
+                val records = getConnectedTaskRecords(document.toEntityRef())
+                if (records.isNotEmpty()) {
+                    val allDocuments = mutableListOf(document)
+                    allDocuments.addAll(records)
+                    Predicates.`in`(ProcTaskSqlQueryBuilder.ATT_DOCUMENT, allDocuments)
                 } else {
                     it
                 }
@@ -504,6 +515,10 @@ class ProcTaskServiceImpl(
                 withMaxItems(300)
             }
         ).getRecords().map { it.getLocalId() }
+    }
+
+    private fun getConnectedTaskRecords(document: EntityRef): List<String> {
+        return recordsService.getAtt(document, "has-connected-task:records[]?str").asStrList()
     }
 
     private fun Predicate.transformDocumentTypeRefToDocumentTypeAtt(): Predicate {
