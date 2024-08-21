@@ -33,7 +33,7 @@ class EappsTest {
     fun bpmnControllerTest() {
         testProcessController(
             "process/bpmn",
-            listOf("test-process.bpmn.xml", "test-draft-process-artifact-handler.bpmn.xml")
+            listOf("test-process", "test-draft-process-artifact-handler")
         )
     }
 
