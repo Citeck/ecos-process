@@ -8,5 +8,7 @@ name:
 
 controller:
   type: bin
+  config:
+    idRegex: "ecos:defId=\"([^\"]+)\""
 
 
