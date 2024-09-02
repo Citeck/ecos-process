@@ -162,6 +162,15 @@ class TaskDefinitionUtils(
     fun getUserTaskLaInfo(key: Pair<String, String>): UserTaskLaInfo {
         val taskDefinition = taskDeployedCamundaDefCache.get(key).task ?: return UserTaskLaInfo()
 
+        fun getlaNotificationAdditionalMeta(taskDefinition: TUserTask) : Map<String, String> {
+            val mateValue = taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_ADDITIONAL_META]
+            if (mateValue.isNullOrBlank()) {
+                return emptyMap()
+            }
+
+            return Json.mapper.readMap(mateValue, String::class.java, String::class.java)
+        }
+
         return UserTaskLaInfo(
             laEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_ENABLED].toBoolean(),
             laNotificationType = taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TYPE]?.let {
@@ -173,6 +182,7 @@ class TaskDefinitionUtils(
             laManualNotificationTemplateEnabled =
             taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
             laManualNotificationTemplate = taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
+            laNotificationAdditionalMeta = getlaNotificationAdditionalMeta(taskDefinition),
             laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {

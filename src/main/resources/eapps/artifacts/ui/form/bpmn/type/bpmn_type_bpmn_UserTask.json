@@ -492,6 +492,51 @@
           },
           {
             "label": {
+              "ru": "Дополнительная модель",
+              "en": "Additional meta"
+            },
+            "key": "laNotificationAdditionalMeta",
+            "tooltip": {
+              "ru": "Константное значение или имя переменной процесса.\n\nНапример:\nCustom value\n${someVariable}"
+            },
+            "keyLabel": "",
+            "addAnother": "Добавить еще",
+            "disableInlineEdit": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "datamap",
+            "input": true,
+            "valueComponent": {
+              "label": {
+                "ru": "Value"
+              },
+              "key": "value",
+              "validate": {
+                "required": false,
+                "custom": "",
+                "customPrivate": false,
+                "customMessage": "",
+                "json": "",
+                "minLength": "",
+                "maxLength": "",
+                "minWords": "",
+                "maxWords": ""
+              },
+              "inputMasks": [
+                {
+                  "label": "",
+                  "mask": ""
+                }
+              ],
+              "defaultValue": "Value",
+              "refreshOn": [],
+              "optionalWhenDisabled": false,
+              "type": "textfield",
+              "input": true
+            }
+          },
+          {
+            "label": {
               "ru": "Включить отчеты о выполнении согласований через почту",
               "en": "Enable reports on the lazy approval"
             },

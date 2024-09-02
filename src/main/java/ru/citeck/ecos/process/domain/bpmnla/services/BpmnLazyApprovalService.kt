@@ -114,7 +114,7 @@ class BpmnLazyApprovalService(
                 }
 
                 val tokenLA = addTokenLAToTask(delegateTask)
-                val additionalMeta = getAdditionalMeta(delegateTask.id, tokenLA)
+                val additionalMeta = getAdditionalMeta(delegateTask, tokenLA, taskEvent.laNotificationAdditionalMeta)
 
                 val notification = Notification.Builder()
                     .record(delegateTask.getDocumentRef())
@@ -140,12 +140,25 @@ class BpmnLazyApprovalService(
         return token
     }
 
-    private fun getAdditionalMeta(taskId: String, token: UUID): Map<String, Any> {
+    private fun getAdditionalMeta(
+        delegateTask: DelegateTask,
+        token: UUID,
+        additionalMeta: Map<String, String>
+    ): Map<String, Any> {
         val meta = mutableMapOf<String, Any>()
-        meta["task_id"] = taskId
+        meta["task_id"] = delegateTask.id
         meta["task_token"] = token.toString()
         meta["default_comment"] = ecosConfigService.getValue(DEFAULT_COMMENT_KEY).asText()
         meta["mail_for_answer"] = ecosConfigService.getValue(MAIL_FOR_ANSWER_KEY).asText()
+
+        additionalMeta.forEach { (key, value) ->
+            val executionVariable = findExecutionVariable(value)
+            meta[key] = if (executionVariable != null) {
+                delegateTask.execution.getVariable(executionVariable)
+            } else {
+                value
+            }
+        }
 
         return meta
     }
