@@ -211,7 +211,7 @@
                 {}
               ]
             },
-            "calculateValue": "value = data.value;\nconsole.log(\"AAAAAA\", value)",
+            "calculateValue": "value = data.value;",
             "allowCalculateOverride": true,
             "optionalWhenDisabled": false,
             "conditional": {

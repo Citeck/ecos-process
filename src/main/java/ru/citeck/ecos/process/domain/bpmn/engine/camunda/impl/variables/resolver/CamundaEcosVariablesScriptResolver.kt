@@ -30,6 +30,6 @@ class CamundaEcosVariablesScriptResolver(
     }
 
     override fun keySet(): MutableSet<String> {
-        return mutableSetOf()
+        return KEY_SET
     }
 }
