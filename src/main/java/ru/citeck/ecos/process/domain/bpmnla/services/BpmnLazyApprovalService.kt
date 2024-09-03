@@ -150,6 +150,7 @@ class BpmnLazyApprovalService(
         meta["task_token"] = token.toString()
         meta["default_comment"] = ecosConfigService.getValue(DEFAULT_COMMENT_KEY).asText()
         meta["mail_for_answer"] = ecosConfigService.getValue(MAIL_FOR_ANSWER_KEY).asText()
+        meta["process"] = delegateTask.execution.variables
 
         additionalMeta.forEach { (key, value) ->
             val executionVariable = findExecutionVariable(value)
