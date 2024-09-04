@@ -32,6 +32,7 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
+private const val FORCE_STR_PREFIX = "!str_"
 @Component
 class BpmnLazyApprovalService(
     @Lazy
@@ -143,7 +144,7 @@ class BpmnLazyApprovalService(
     private fun getAdditionalMeta(
         delegateTask: DelegateTask,
         token: UUID,
-        additionalMeta: Map<String, String>
+        additionalMeta: Map<String, Any>
     ): Map<String, Any> {
         val meta = mutableMapOf<String, Any>()
         meta["task_id"] = delegateTask.id
@@ -153,14 +154,18 @@ class BpmnLazyApprovalService(
         meta["process"] = delegateTask.execution.variables
 
         additionalMeta.forEach { (key, value) ->
-            val executionVariable = findExecutionVariable(value)
-            meta[key] = if (executionVariable != null) {
-                delegateTask.execution.getVariable(executionVariable)
-            } else {
-                value
+            val valueToPut = when (value) {
+                is String -> {
+                    if (value.startsWith(FORCE_STR_PREFIX)) {
+                        value.removePrefix(FORCE_STR_PREFIX)
+                    } else {
+                        EntityRef.valueOf(value)
+                    }
+                }
+                else -> value
             }
+            meta[key] = valueToPut
         }
-
         return meta
     }
 

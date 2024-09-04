@@ -464,7 +464,7 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
-            "customConditional": "show = data.laManualNotificationTemplateEnabled == true;",
+            "customConditional": "show = data.laEnabled == true\n  && data.laManualNotificationTemplateEnabled == true;",
             "type": "textfield",
             "input": true,
             "inputMasks": [
@@ -496,14 +496,12 @@
               "en": "Additional meta"
             },
             "key": "laNotificationAdditionalMeta",
-            "tooltip": {
-              "ru": "Константное значение или имя переменной процесса.\n\nНапример:\nCustom value\n${someVariable}"
-            },
             "keyLabel": "",
             "addAnother": "Добавить еще",
             "disableInlineEdit": true,
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "customConditional": "show = data.laEnabled == true;",
             "type": "datamap",
             "input": true,
             "valueComponent": {
