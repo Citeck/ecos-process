@@ -496,6 +496,7 @@
               "en": "Additional meta"
             },
             "key": "laNotificationAdditionalMeta",
+            "clearOnHide": false,
             "keyLabel": "",
             "addAnother": "Добавить еще",
             "disableInlineEdit": true,
@@ -509,6 +510,7 @@
                 "ru": "Value"
               },
               "key": "value",
+              "clearOnHide": false,
               "validate": {
                 "required": false,
                 "custom": "",
