@@ -38,7 +38,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             id = processDefId,
             enabled = element.otherAttributes[BPMN_PROP_ENABLED].toBoolean(),
             autoStartEnabled = element.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean(),
-            autoDeleteEnabled = element.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED].toBoolean(),
+            autoDeleteEnabled = element.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED]?.toBoolean() ?: true,
             definitionsId = element.id,
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),

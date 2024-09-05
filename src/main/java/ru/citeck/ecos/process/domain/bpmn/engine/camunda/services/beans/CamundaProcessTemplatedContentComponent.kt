@@ -17,8 +17,11 @@ class CamundaProcessTemplatedContentComponent(
 
     override fun getKey() = "templatedContent"
 
-    fun write(record: String, template: String) {
-        write(record, template, RecordConstants.ATT_CONTENT)
+    fun write(record: Any, template: Any) {
+        require(record is String || record is EntityRef) { "Record must be a string or EntityRef" }
+        require(template is String || template is EntityRef) { "Template must be a string or EntityRef" }
+
+        write(record.toString(), template.toString(), RecordConstants.ATT_CONTENT)
     }
 
     fun write(record: String, template: String, attribute: String) {
