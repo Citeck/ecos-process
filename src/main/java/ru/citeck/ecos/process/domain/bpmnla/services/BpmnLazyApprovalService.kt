@@ -18,6 +18,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send.getBaseNotificationAdditionalMeta
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
@@ -32,7 +33,6 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
-private const val FORCE_STR_PREFIX = "!str_"
 @Component
 class BpmnLazyApprovalService(
     @Lazy
@@ -144,29 +144,17 @@ class BpmnLazyApprovalService(
     private fun getAdditionalMeta(
         delegateTask: DelegateTask,
         token: UUID,
-        additionalMeta: Map<String, Any>
+        metaFromUserInput: Map<String, Any>
     ): Map<String, Any> {
         val meta = mutableMapOf<String, Any>()
         meta["task_id"] = delegateTask.id
         meta["task_token"] = token.toString()
         meta["default_comment"] = ecosConfigService.getValue(DEFAULT_COMMENT_KEY).asText()
         meta["mail_for_answer"] = ecosConfigService.getValue(MAIL_FOR_ANSWER_KEY).asText()
-        meta["process"] = delegateTask.execution.variables
 
-        additionalMeta.forEach { (key, value) ->
-            val valueToPut = when (value) {
-                is String -> {
-                    if (value.startsWith(FORCE_STR_PREFIX)) {
-                        value.removePrefix(FORCE_STR_PREFIX)
-                    } else {
-                        EntityRef.valueOf(value)
-                    }
-                }
-                else -> value
-            }
-            meta[key] = valueToPut
-        }
-        return meta
+        val baseMeta = getBaseNotificationAdditionalMeta(delegateTask, metaFromUserInput)
+
+        return baseMeta + meta
     }
 
     override fun approveTask(
