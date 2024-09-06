@@ -4603,7 +4603,8 @@ class BpmnMonsterTestWithRunProcessTest {
             additionalMeta["process"] = mapOf(
                 "documentRef" to "store/doc@1",
                 "currentRunAsUser" to EntityRef.EMPTY,
-                taskTokenName to procTaskService.getVariableLocal(it.id, taskTokenName)
+                taskTokenName to procTaskService.getVariableLocal(it.id, taskTokenName),
+                "laTemplateRefTest" to "notifications/template@test-la-notification",
             )
 
             it.complete()
