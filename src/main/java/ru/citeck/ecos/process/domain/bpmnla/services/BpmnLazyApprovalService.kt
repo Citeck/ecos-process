@@ -18,6 +18,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send.getBaseNotificationAdditionalMeta
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
@@ -114,7 +115,7 @@ class BpmnLazyApprovalService(
                 }
 
                 val tokenLA = addTokenLAToTask(delegateTask)
-                val additionalMeta = getAdditionalMeta(delegateTask.id, tokenLA)
+                val additionalMeta = getAdditionalMeta(delegateTask, tokenLA, taskEvent.laNotificationAdditionalMeta)
 
                 val notification = Notification.Builder()
                     .record(delegateTask.getDocumentRef())
@@ -140,14 +141,20 @@ class BpmnLazyApprovalService(
         return token
     }
 
-    private fun getAdditionalMeta(taskId: String, token: UUID): Map<String, Any> {
+    private fun getAdditionalMeta(
+        delegateTask: DelegateTask,
+        token: UUID,
+        metaFromUserInput: Map<String, Any>
+    ): Map<String, Any> {
         val meta = mutableMapOf<String, Any>()
-        meta["task_id"] = taskId
+        meta["task_id"] = delegateTask.id
         meta["task_token"] = token.toString()
         meta["default_comment"] = ecosConfigService.getValue(DEFAULT_COMMENT_KEY).asText()
         meta["mail_for_answer"] = ecosConfigService.getValue(MAIL_FOR_ANSWER_KEY).asText()
 
-        return meta
+        val baseMeta = getBaseNotificationAdditionalMeta(delegateTask, metaFromUserInput)
+
+        return baseMeta + meta
     }
 
     override fun approveTask(

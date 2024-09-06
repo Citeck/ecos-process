@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.proctask.converter
 import mu.KotlinLogging
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.task.Task
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.DOCUMENT_FIELD_PREFIX
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords

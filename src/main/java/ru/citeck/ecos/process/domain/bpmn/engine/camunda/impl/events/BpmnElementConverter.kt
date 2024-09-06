@@ -134,6 +134,7 @@ class BpmnElementConverter(
                     laNotificationTemplate = userTaskLaInfo.laNotificationTemplate,
                     laManualNotificationTemplateEnabled = userTaskLaInfo.laManualNotificationTemplateEnabled,
                     laManualNotificationTemplate = userTaskLaInfo.laManualNotificationTemplate,
+                    laNotificationAdditionalMeta = userTaskLaInfo.laNotificationAdditionalMeta,
                     laReportEnabled = userTaskLaInfo.laReportEnabled,
                     laSuccessReportNotificationTemplate = userTaskLaInfo.laSuccessReportNotificationTemplate,
                     laErrorReportNotificationTemplate = userTaskLaInfo.laErrorReportNotificationTemplate

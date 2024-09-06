@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
-import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.notifications.lib.Notification
@@ -16,16 +15,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
-import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-
-private const val VAR_CURRENT_RUN_AS_USER = "currentRunAsUser"
-private const val VAR_PROCESS = "process"
-
-private const val FORCE_STR_PREFIX = "!str_"
-
-private const val PERSON_SOURCE_ID = "person"
 
 class SendNotificationDelegate : JavaDelegate {
 
@@ -63,7 +53,7 @@ class SendNotificationDelegate : JavaDelegate {
         val record = let {
             val recordFromExpression = notificationRecord?.expressionText ?: ""
             if (recordFromExpression.isNotBlank()) {
-                RecordRef.valueOf(recordFromExpression)
+                EntityRef.valueOf(recordFromExpression)
             } else {
                 document
             }
@@ -86,7 +76,7 @@ class SendNotificationDelegate : JavaDelegate {
             )
             .title(notificationTitle?.expressionText ?: "")
             .body(notificationBody?.expressionText ?: "")
-            .templateRef(RecordRef.valueOf(notificationTemplate?.expressionText))
+            .templateRef(EntityRef.valueOf(notificationTemplate?.expressionText))
             .recipients(getRecipientsEmailsFromExpression(notificationTo, execution))
             .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
@@ -105,46 +95,7 @@ class SendNotificationDelegate : JavaDelegate {
             Json.mapper.readMap(it.expressionText, String::class.java, Any::class.java)
         } ?: emptyMap()
 
-        val processVariables = execution.getPreparedProcessVariables().toMutableMap()
-
-        processVariables[VAR_CURRENT_RUN_AS_USER] = AuthContext.getCurrentRunAsUserRef()
-
-        val additionalMeta = metaFromUserInput.map { (key, value) ->
-            val valueToPut = when (value) {
-                is String -> {
-                    if (value.startsWith(FORCE_STR_PREFIX)) {
-                        value.removePrefix(FORCE_STR_PREFIX)
-                    } else {
-                        EntityRef.valueOf(value)
-                    }
-                }
-
-                else -> value
-            }
-            key to valueToPut
-        }.toMap().toMutableMap()
-
-        additionalMeta[VAR_PROCESS] = processVariables
-
-        return additionalMeta
-    }
-
-    private fun AuthContext.getCurrentRunAsUserRef(): EntityRef {
-        val user = getCurrentRunAsUser()
-        if (user.isBlank()) {
-            return EntityRef.EMPTY
-        }
-        return EntityRef.create(AppName.EMODEL, PERSON_SOURCE_ID, user)
-    }
-
-    private fun DelegateExecution.getPreparedProcessVariables(): Map<String, Any> {
-        return variables.map { (key, value) ->
-            val valueToPut = when (value) {
-                is BpmnDataValue -> value.asDataValue()
-                else -> value
-            }
-            key to valueToPut
-        }.toMap()
+        return getBaseNotificationAdditionalMeta(execution, metaFromUserInput)
     }
 
     // Get emails, because at this moment we support only email notifications from BPMN
