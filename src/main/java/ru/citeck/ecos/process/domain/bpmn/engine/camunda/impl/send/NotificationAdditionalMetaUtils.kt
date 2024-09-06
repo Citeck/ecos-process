@@ -14,7 +14,8 @@ private const val PERSON_SOURCE_ID = "person"
 private const val VAR_PROCESS = "process"
 
 fun getBaseNotificationAdditionalMeta(
-    variablesScope: VariableScope, metaFromUserInput: Map<String, Any>
+    variablesScope: VariableScope,
+    metaFromUserInput: Map<String, Any>
 ): Map<String, Any> {
     val processVariables = variablesScope.getPreparedProcessVariables().toMutableMap()
     processVariables[VAR_CURRENT_RUN_AS_USER] = AuthContext.getCurrentRunAsUserRef()

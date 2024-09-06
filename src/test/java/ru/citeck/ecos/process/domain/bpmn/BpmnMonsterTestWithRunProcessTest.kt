@@ -4540,7 +4540,11 @@ class BpmnMonsterTestWithRunProcessTest {
             additionalMeta["task_token"] = procTaskService.getVariableLocal(it.id, taskTokenName).toString()
             additionalMeta["default_comment"] = ecosConfigService.getValue(defaultCommentKey).asText()
             additionalMeta["mail_for_answer"] = ecosConfigService.getValue(mailForAnswerKey).asText()
-            additionalMeta["process"] = mapOf("documentRef" to "store/doc@1")
+            additionalMeta["process"] = mapOf(
+                "documentRef" to "store/doc@1",
+                "currentRunAsUser" to EntityRef.EMPTY,
+                taskTokenName to procTaskService.getVariableLocal(it.id, taskTokenName)
+            )
 
             it.complete()
         }
@@ -4597,8 +4601,9 @@ class BpmnMonsterTestWithRunProcessTest {
             additionalMeta["default_comment"] = ecosConfigService.getValue(defaultCommentKey).asText()
             additionalMeta["mail_for_answer"] = ecosConfigService.getValue(mailForAnswerKey).asText()
             additionalMeta["process"] = mapOf(
-                "laTemplateRefTest" to "notifications/template@test-la-notification",
-                "documentRef" to "store/doc@1"
+                "documentRef" to "store/doc@1",
+                "currentRunAsUser" to EntityRef.EMPTY,
+                taskTokenName to procTaskService.getVariableLocal(it.id, taskTokenName)
             )
 
             it.complete()

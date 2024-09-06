@@ -162,7 +162,7 @@ class TaskDefinitionUtils(
     fun getUserTaskLaInfo(key: Pair<String, String>): UserTaskLaInfo {
         val taskDefinition = taskDeployedCamundaDefCache.get(key).task ?: return UserTaskLaInfo()
 
-        fun getLaNotificationAdditionalMeta(taskDefinition: TUserTask) : Map<String, String> {
+        fun getLaNotificationAdditionalMeta(taskDefinition: TUserTask): Map<String, String> {
             val mateValue = taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_ADDITIONAL_META]
             if (mateValue.isNullOrBlank()) {
                 return emptyMap()

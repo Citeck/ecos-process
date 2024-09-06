@@ -26,11 +26,13 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
         log.debug { "Mutate task atts sync: \n${Json.mapper.toPrettyString(records)}" }
 
         val currentRequestAttributesIds = mutableSetOf<String>()
-        val existsAttributes = findExistsAttributesWithoutIds(records.map {
-            it.id.ifEmpty {
-                it.getAtt("id").asText()
+        val existsAttributes = findExistsAttributesWithoutIds(
+            records.map {
+                it.id.ifEmpty {
+                    it.getAtt("id").asText()
+                }
             }
-        })
+        )
 
         for (record in records) {
             if (record.hasAtt("attributesSync")) {
