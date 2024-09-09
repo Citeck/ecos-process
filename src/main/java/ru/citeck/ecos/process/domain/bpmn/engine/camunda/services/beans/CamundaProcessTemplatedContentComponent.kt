@@ -24,10 +24,14 @@ class CamundaProcessTemplatedContentComponent(
         write(record.toString(), template.toString(), RecordConstants.ATT_CONTENT)
     }
 
-    fun write(record: String, template: String, attribute: String) {
+    fun write(record: Any, template: Any, attribute: String) {
+        require(record is String || record is EntityRef) { "Record must be a string or EntityRef" }
+        require(template is String || template is EntityRef) { "Template must be a string or EntityRef" }
+
+        val templateStr = template.toString()
         val templatedContentAtts = RecordAtts("$TEMPLATED_CONTENT_RECORDS_ID@")
         templatedContentAtts["record"] = record
-        templatedContentAtts["template"] = template.toNormalizeTemplateRef()
+        templatedContentAtts["template"] = templateStr.toNormalizeTemplateRef()
         templatedContentAtts["attribute"] = attribute
 
         recordsService.mutate(templatedContentAtts)
