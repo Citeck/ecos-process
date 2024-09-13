@@ -28,6 +28,7 @@ data class ProcTaskDto(
     val documentTypeRef: RecordRef = RecordRef.EMPTY,
 
     val processInstanceId: RecordRef = RecordRef.EMPTY,
+    val processDefinitionId: String? = null,
 
     val created: Instant,
 
