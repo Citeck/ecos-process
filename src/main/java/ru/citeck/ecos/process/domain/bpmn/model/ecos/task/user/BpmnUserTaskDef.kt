@@ -38,6 +38,7 @@ data class BpmnUserTaskDef(
     val laNotificationTemplate: EntityRef? = null,
     val laManualNotificationTemplateEnabled: Boolean = false,
     val laManualNotificationTemplate: String? = null,
+    val laNotificationAdditionalMeta: Map<String, String> = emptyMap(),
     val laReportEnabled: Boolean = false,
     val laSuccessReportNotificationTemplate: EntityRef? = null,
     val laErrorReportNotificationTemplate: EntityRef? = null

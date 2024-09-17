@@ -36,6 +36,7 @@ data class UserTaskEvent(
     var laNotificationTemplate: EntityRef? = null,
     var laManualNotificationTemplateEnabled: Boolean = false,
     var laManualNotificationTemplate: String? = null,
+    var laNotificationAdditionalMeta: Map<String, String> = emptyMap(),
     var laReportEnabled: Boolean = false,
     var laSuccessReportNotificationTemplate: EntityRef? = null,
     var laErrorReportNotificationTemplate: EntityRef? = null,

@@ -68,6 +68,12 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             laManualNotificationTemplateEnabled =
             element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
             laManualNotificationTemplate = element.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
+            laNotificationAdditionalMeta =
+            Json.mapper.readMap(
+                element.otherAttributes[BPMN_PROP_LA_NOTIFICATION_ADDITIONAL_META],
+                String::class.java,
+                String::class.java
+            ),
             laReportEnabled = element.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
             element.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
@@ -117,6 +123,10 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             element.laManualNotificationTemplate?.let {
                 otherAttributes.putIfNotBlank(BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE, it)
             }
+            otherAttributes.putIfNotBlank(
+                BPMN_PROP_LA_NOTIFICATION_ADDITIONAL_META,
+                Json.mapper.toString(element.laNotificationAdditionalMeta)
+            )
             otherAttributes.putIfNotBlank(BPMN_PROP_LA_REPORT_ENABLED, element.laReportEnabled.toString())
             element.laSuccessReportNotificationTemplate?.let {
                 otherAttributes.putIfNotBlank(BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE, it.toString())
