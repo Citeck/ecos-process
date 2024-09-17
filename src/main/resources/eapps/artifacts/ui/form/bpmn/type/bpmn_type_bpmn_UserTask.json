@@ -464,7 +464,7 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
-            "customConditional": "show = data.laManualNotificationTemplateEnabled == true;",
+            "customConditional": "show = data.laEnabled == true\n  && data.laManualNotificationTemplateEnabled == true;",
             "type": "textfield",
             "input": true,
             "inputMasks": [
@@ -489,6 +489,51 @@
             "customConditional": "show = data.laEnabled == true\n  && data.laManualNotificationTemplateEnabled != true;",
             "type": "selectJournal",
             "input": true
+          },
+          {
+            "label": {
+              "ru": "Дополнительная модель",
+              "en": "Additional meta"
+            },
+            "key": "laNotificationAdditionalMeta",
+            "clearOnHide": false,
+            "keyLabel": "",
+            "addAnother": "Добавить еще",
+            "disableInlineEdit": true,
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "customConditional": "show = data.laEnabled == true;",
+            "type": "datamap",
+            "input": true,
+            "valueComponent": {
+              "label": {
+                "ru": "Value"
+              },
+              "key": "value",
+              "clearOnHide": false,
+              "validate": {
+                "required": false,
+                "custom": "",
+                "customPrivate": false,
+                "customMessage": "",
+                "json": "",
+                "minLength": "",
+                "maxLength": "",
+                "minWords": "",
+                "maxWords": ""
+              },
+              "inputMasks": [
+                {
+                  "label": "",
+                  "mask": ""
+                }
+              ],
+              "defaultValue": "Value",
+              "refreshOn": [],
+              "optionalWhenDisabled": false,
+              "type": "textfield",
+              "input": true
+            }
           },
           {
             "label": {

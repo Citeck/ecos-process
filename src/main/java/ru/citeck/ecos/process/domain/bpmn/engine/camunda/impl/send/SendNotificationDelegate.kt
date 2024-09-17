@@ -23,13 +23,9 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.*
 
-private const val VAR_CURRENT_RUN_AS_USER = "currentRunAsUser"
-private const val VAR_PROCESS = "process"
 private const val VAR_NOTIFICATION_ATTACHMENTS = "_attachments"
 private const val VAR_EVENT_UID = "eventUid"
 private const val VAR_EVENT_SEQUENCE = "eventSequence"
-
-private const val FORCE_STR_PREFIX = "!str_"
 
 private const val PERSON_SOURCE_ID = "person"
 
@@ -119,26 +115,7 @@ class SendNotificationDelegate : JavaDelegate {
             Json.mapper.readMap(it.expressionText, String::class.java, Any::class.java)
         } ?: emptyMap()
 
-        val processVariables = execution.getPreparedProcessVariables().toMutableMap()
-
-        processVariables[VAR_CURRENT_RUN_AS_USER] = AuthContext.getCurrentRunAsUserRef()
-
-        val additionalMeta = metaFromUserInput.map { (key, value) ->
-            val valueToPut = when (value) {
-                is String -> {
-                    if (value.startsWith(FORCE_STR_PREFIX)) {
-                        value.removePrefix(FORCE_STR_PREFIX)
-                    } else {
-                        EntityRef.valueOf(value)
-                    }
-                }
-
-                else -> value
-            }
-            key to valueToPut
-        }.toMap().toMutableMap()
-
-        additionalMeta[VAR_PROCESS] = processVariables
+        val additionalMeta = getBaseNotificationAdditionalMeta(execution, metaFromUserInput).toMutableMap()
 
         val sendCalendarEvent = notificationSendCalendarEvent?.getValue(execution).toString().toBoolean()
         if (sendCalendarEvent) {
