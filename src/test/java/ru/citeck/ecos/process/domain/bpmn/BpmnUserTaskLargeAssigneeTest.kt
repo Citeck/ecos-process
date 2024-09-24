@@ -1,29 +1,29 @@
-//package ru.citeck.ecos.process.domain.bpmn
+// package ru.citeck.ecos.process.domain.bpmn
 //
-//import com.github.javafaker.Faker
-//import org.camunda.bpm.engine.ProcessEngine
-//import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
-//import org.camunda.bpm.scenario.ProcessScenario
-//import org.camunda.bpm.scenario.Scenario
-//import org.junit.jupiter.api.BeforeEach
-//import org.junit.jupiter.api.Test
-//import org.junit.jupiter.api.extension.ExtendWith
-//import org.mockito.ArgumentMatchers.anyString
-//import org.mockito.Mock
-//import org.mockito.Mockito.`when`
-//import org.mockito.kotlin.verify
-//import org.springframework.beans.factory.annotation.Autowired
-//import org.springframework.boot.test.context.SpringBootTest
-//import org.springframework.boot.test.mock.mockito.SpyBean
-//import ru.citeck.ecos.process.EprocApp
-//import ru.citeck.ecos.process.domain.BpmnProcHelper
-//import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
-//import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
-//import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+// import com.github.javafaker.Faker
+// import org.camunda.bpm.engine.ProcessEngine
+// import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
+// import org.camunda.bpm.scenario.ProcessScenario
+// import org.camunda.bpm.scenario.Scenario
+// import org.junit.jupiter.api.BeforeEach
+// import org.junit.jupiter.api.Test
+// import org.junit.jupiter.api.extension.ExtendWith
+// import org.mockito.ArgumentMatchers.anyString
+// import org.mockito.Mock
+// import org.mockito.Mockito.`when`
+// import org.mockito.kotlin.verify
+// import org.springframework.beans.factory.annotation.Autowired
+// import org.springframework.boot.test.context.SpringBootTest
+// import org.springframework.boot.test.mock.mockito.SpyBean
+// import ru.citeck.ecos.process.EprocApp
+// import ru.citeck.ecos.process.domain.BpmnProcHelper
+// import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+// import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
+// import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 //
-//@ExtendWith(EcosSpringExtension::class)
-//@SpringBootTest(classes = [EprocApp::class])
-//class BpmnUserTaskLargeAssigneeTest {
+// @ExtendWith(EcosSpringExtension::class)
+// @SpringBootTest(classes = [EprocApp::class])
+// class BpmnUserTaskLargeAssigneeTest {
 //
 //    companion object {
 //        private val faker = Faker.instance()
@@ -80,4 +80,4 @@
 //    }
 //
 //
-//}
+// }

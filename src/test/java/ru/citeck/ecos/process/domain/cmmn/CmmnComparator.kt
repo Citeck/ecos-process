@@ -71,7 +71,7 @@ object CmmnComparator {
         }
 
         if (expected is Collection<*> && expected !is List<*>) {
-            log.error("Collection type is not supported: ${expected::class.java}")
+            log.error { "Collection type is not supported: ${expected::class.java}" }
             return false
         }
 
@@ -82,11 +82,11 @@ object CmmnComparator {
 
         if (expected is List<*>) {
             if (actual !is List<*>) {
-                log.error("$path expected list but found ${actual::class.java}")
+                log.error { "$path expected list but found ${actual::class.java}" }
                 return false
             }
             if (expected.size != actual.size) {
-                log.error("$path expected list size ${expected.size} but actual size: ${actual.size}")
+                log.error { "$path expected list size ${expected.size} but actual size: ${actual.size}" }
                 return false
             }
             if (expected.size > 0) {
@@ -108,11 +108,11 @@ object CmmnComparator {
         } else if (expected is Map<*, *>) {
 
             if (actual !is Map<*, *>) {
-                log.error("$path expected map but found ${actual::class.java}")
+                log.error { "$path expected map but found ${actual::class.java}" }
                 return false
             }
             if (expected.size != actual.size) {
-                log.error("$path expected map size ${expected.size} but actual size: ${actual.size}")
+                log.error { "$path expected map size ${expected.size} but actual size: ${actual.size}" }
             }
             val allKeys = setOf(*expected.keys.toTypedArray(), *actual.keys.toTypedArray())
             for (key in allKeys) {

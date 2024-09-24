@@ -9,7 +9,7 @@ import javax.script.ScriptEngineManager
 
 class EcosCamundaEnginePlugin(
     private val ecosWebAppEnvironment: EcosWebAppEnvironment
-) : AbstractProcessEnginePlugin()  {
+) : AbstractProcessEnginePlugin() {
 
     companion object {
         const val SCRIPT_PROPS_KEY = "ecos.webapp.scripts.graaljs.camunda"
