@@ -1,5 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send
 
+import net.fortuna.ical4j.model.TimeZone
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory
+import net.fortuna.ical4j.util.TimeZones
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
@@ -28,6 +31,8 @@ private const val VAR_EVENT_UID = "eventUid"
 private const val VAR_EVENT_SEQUENCE = "eventSequence"
 
 private const val PERSON_SOURCE_ID = "person"
+
+private val DEFAULT_ECOS_TIMEZONE_REGEX = Regex("^[+-](0[1-9]|1[1-2])(:\\d+|$)");
 
 class SendNotificationDelegate : JavaDelegate {
 
@@ -139,6 +144,10 @@ class SendNotificationDelegate : JavaDelegate {
         val eventOrganizer =
             mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
 
+        var organizerTimeZone =
+            mailUtils.getUserTimeZone(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString()))
+                .first()
+
         var uid = execution.getVariable(VAR_EVENT_UID)?.toString() ?: ""
         if (uid.isBlank()) {
             uid = UUID.randomUUID().toString()
@@ -155,6 +164,7 @@ class SendNotificationDelegate : JavaDelegate {
 
         val calendarEvent = CalendarEvent.Builder(eventSummary, eventDate)
             .uid(uid)
+            .timeZone(getTimeZone(organizerTimeZone))
             .sequence(sequence)
             .description(eventDescription)
             .durationInMillis(eventDurationInMillis)
@@ -211,5 +221,32 @@ class SendNotificationDelegate : JavaDelegate {
         val emailsFromExpression = mailUtils.getEmails(fromExpression)
 
         return emailsFromRoles + emailsFromExpression
+    }
+
+    private fun getTimeZone(ecosTimeZone: String):TimeZone {
+
+        val timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry()
+        if (ecosTimeZone.isBlank()) {
+            return timeZoneRegistry.getTimeZone(TimeZones.UTC_ID)
+        }
+        var timeZone = timeZoneRegistry.getTimeZone(ecosTimeZone)
+        if (timeZone == null) {
+            timeZone = timeZoneRegistry.getTimeZone(convertEcosTimeZoneToTZ(ecosTimeZone));
+        }
+        if (timeZone == null) {
+            timeZone = timeZoneRegistry.getTimeZone(TimeZones.UTC_ID);
+        }
+        return timeZone
+    }
+
+    private fun convertEcosTimeZoneToTZ(ecosTimeZone: String):String {
+        if (DEFAULT_ECOS_TIMEZONE_REGEX.matches(ecosTimeZone)) {
+            return buildString {
+                append("Etc/GMT")
+                append(ecosTimeZone[0])
+                append(Integer.parseInt(ecosTimeZone.substring(1,3)))
+            }
+        }
+        return  ecosTimeZone
     }
 }

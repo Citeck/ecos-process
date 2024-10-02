@@ -142,6 +142,43 @@ class MailUtils(
         }
     }
 
+    fun getUserTimeZone(data: List<String>): Set<String> {
+        return AuthContext.runAsSystem {
+            val recipients = mutableListOf<String>()
+
+            data.forEach {
+                if (!emailPattern.matcher(it).matches()) {
+                    recipients.add(it)
+                }
+            }
+
+            val fullFilledRefs = convertRecipientsToFullFilledRefs(recipients.toSet())
+
+            val allUsers = mutableSetOf<EntityRef>()
+            val groups = mutableListOf<EntityRef>()
+
+            fullFilledRefs.forEach {
+                if (it.isAuthorityGroupRef()) {
+                    groups.add(it)
+                } else {
+                    allUsers.add(it)
+                }
+            }
+
+            val usersFromGroup = recordsService.getAtts(groups, GroupInfo::class.java)
+                .map { it.containedUsers }
+                .flatten()
+            allUsers.addAll(usersFromGroup)
+
+            val timeZones = recordsService.getAtts(allUsers, UserInfo::class.java)
+                .filter { it.timeZone?.isNotBlank() ?: false }
+                .map { it.timeZone!! }
+
+            (timeZones).toSet()
+        }
+
+    }
+
     private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): Set<EntityRef> {
         val authorityRefs = mutableSetOf<EntityRef>()
 
@@ -178,4 +215,6 @@ private data class GroupInfo(
 private data class UserInfo(
     @AttName("email")
     var email: String? = "",
+    @AttName("timezone")
+    var timeZone: String? = "",
 )
