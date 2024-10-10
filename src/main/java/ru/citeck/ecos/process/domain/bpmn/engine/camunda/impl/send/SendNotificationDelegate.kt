@@ -23,7 +23,9 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.time.DateTimeException
 import java.time.Instant
+import java.time.ZoneId
 import java.util.*
 
 private const val VAR_NOTIFICATION_ATTACHMENTS = "_attachments"
@@ -32,7 +34,7 @@ private const val VAR_EVENT_SEQUENCE = "eventSequence"
 
 private const val PERSON_SOURCE_ID = "person"
 
-private val DEFAULT_ECOS_TIMEZONE_REGEX = Regex("^[+-](0[1-9]|1[1-2])(:\\d+|$)");
+private val DEFAULT_TIMEZONE_REGEX = Regex("^[+-](0[1-9]|1[1-2])(:\\d+|$)");
 
 class SendNotificationDelegate : JavaDelegate {
 
@@ -145,8 +147,7 @@ class SendNotificationDelegate : JavaDelegate {
             mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
 
         var organizerTimeZone =
-            mailUtils.getUserTimeZone(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString()))
-                .first()
+            mailUtils.getUserTimeZoneByEmail(eventOrganizer)
 
         var uid = execution.getVariable(VAR_EVENT_UID)?.toString() ?: ""
         if (uid.isBlank()) {
@@ -223,13 +224,13 @@ class SendNotificationDelegate : JavaDelegate {
         return emailsFromRoles + emailsFromExpression
     }
 
-    private fun getTimeZone(ecosTimeZone: String):TimeZone {
-
-        val timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry()
-        if (ecosTimeZone.isBlank()) {
-            return timeZoneRegistry.getTimeZone(TimeZones.UTC_ID)
+    private fun getTimeZone(ecosTimeZone: String?): TimeZone? {
+        if (ecosTimeZone.isNullOrBlank()) {
+            return null
         }
+        val timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry()
         var timeZone = timeZoneRegistry.getTimeZone(ecosTimeZone)
+
         if (timeZone == null) {
             timeZone = timeZoneRegistry.getTimeZone(convertEcosTimeZoneToTZ(ecosTimeZone));
         }
@@ -239,14 +240,22 @@ class SendNotificationDelegate : JavaDelegate {
         return timeZone
     }
 
-    private fun convertEcosTimeZoneToTZ(ecosTimeZone: String):String {
-        if (DEFAULT_ECOS_TIMEZONE_REGEX.matches(ecosTimeZone)) {
-            return buildString {
-                append("Etc/GMT")
-                append(ecosTimeZone[0])
-                append(Integer.parseInt(ecosTimeZone.substring(1,3)))
+    private fun convertEcosTimeZoneToTZ(ecosTimeZone: String): String {
+        try {
+            val standardTimeZone = ZoneId.of(ecosTimeZone).rules.getOffset(Instant.now()).toString()
+            if ("Z" == standardTimeZone) {
+                return TimeZones.UTC_ID
             }
+            if (DEFAULT_TIMEZONE_REGEX.matches(standardTimeZone)) {
+                return buildString {
+                    append("Etc/GMT")
+                    append(standardTimeZone[0])
+                    append(Integer.parseInt(standardTimeZone.substring(1, 3)))
+                }
+            }
+        } catch (e: DateTimeException) {
+            return TimeZones.UTC_ID
         }
-        return  ecosTimeZone
+        return TimeZones.UTC_ID
     }
 }

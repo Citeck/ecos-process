@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.regex.Pattern
@@ -142,41 +143,21 @@ class MailUtils(
         }
     }
 
-    fun getUserTimeZone(data: List<String>): Set<String> {
+    fun getUserTimeZoneByEmail(email: String): String? {
         return AuthContext.runAsSystem {
-            val recipients = mutableListOf<String>()
+            val user: EntityRef = recordsService.queryOne(
+                RecordsQuery.create()
+                    .withSourceId("emodel/person")
+                    .withQuery(mapOf("email" to email))
+                    .build()
+            ) ?: EntityRef.EMPTY
 
-            data.forEach {
-                if (!emailPattern.matcher(it).matches()) {
-                    recipients.add(it)
-                }
+            var timeZone: String? = null
+            if (EntityRef.isNotEmpty(user)) {
+                timeZone = recordsService.getAtt(user, "timezone").asText()
             }
-
-            val fullFilledRefs = convertRecipientsToFullFilledRefs(recipients.toSet())
-
-            val allUsers = mutableSetOf<EntityRef>()
-            val groups = mutableListOf<EntityRef>()
-
-            fullFilledRefs.forEach {
-                if (it.isAuthorityGroupRef()) {
-                    groups.add(it)
-                } else {
-                    allUsers.add(it)
-                }
-            }
-
-            val usersFromGroup = recordsService.getAtts(groups, GroupInfo::class.java)
-                .map { it.containedUsers }
-                .flatten()
-            allUsers.addAll(usersFromGroup)
-
-            val timeZones = recordsService.getAtts(allUsers, UserInfo::class.java)
-                .filter { it.timeZone?.isNotBlank() ?: false }
-                .map { it.timeZone!! }
-
-            (timeZones).toSet()
+            timeZone
         }
-
     }
 
     private fun convertRecipientsToFullFilledRefs(recipients: Collection<String>): Set<EntityRef> {
@@ -214,7 +195,5 @@ private data class GroupInfo(
 
 private data class UserInfo(
     @AttName("email")
-    var email: String? = "",
-    @AttName("timezone")
-    var timeZone: String? = "",
+    var email: String? = ""
 )
