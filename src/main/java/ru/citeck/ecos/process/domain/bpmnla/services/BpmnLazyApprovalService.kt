@@ -231,7 +231,7 @@ class BpmnLazyApprovalService(
         )
 
         val taskDefinitionKey = task?.definitionKey
-        val processDefinitionId = task?.processInstanceId?.getLocalId()?.let {
+        val processDefinitionId = task?.processDefinitionId ?: task?.processInstanceId?.getLocalId()?.let {
             bpmnProcessService.getProcessDefinitionByProcessInstanceId(it)?.id
         }
         if (taskDefinitionKey?.isNotBlank() == true && processDefinitionId?.isNotBlank() == true) {

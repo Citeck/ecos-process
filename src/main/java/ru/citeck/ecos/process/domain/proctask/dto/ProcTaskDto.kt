@@ -27,6 +27,7 @@ data class ProcTaskDto(
     val documentTypeRef: EntityRef = EntityRef.EMPTY,
 
     val processInstanceId: EntityRef = EntityRef.EMPTY,
+    val processDefinitionId: String? = null,
 
     val created: Instant,
 
