@@ -34,16 +34,26 @@ data class BpmnSignalEventDef(
     val signalName: String
         get() = let {
 
-            val finalEventName = if (it.eventManualMode) {
-                if (manualSignalName.isNullOrBlank()) {
-                    throw EcosBpmnElementDefinitionException(
-                        id,
-                        "Signal name in mandatory for manual mode of Bpmn Signal."
-                    )
+            val finalEventName = when {
+                eventManualMode -> {
+                    if (manualSignalName.isNullOrBlank()) {
+                        throw EcosBpmnElementDefinitionException(
+                            id,
+                            "Signal name in mandatory for manual mode of Bpmn Signal."
+                        )
+                    }
+                    manualSignalName
                 }
-                manualSignalName
-            } else {
-                eventType?.name ?: throw EcosBpmnElementDefinitionException(
+                eventType == EcosEventType.USER_EVENT -> {
+                    if (manualSignalName.isNullOrBlank()) {
+                        throw EcosBpmnElementDefinitionException(
+                            id,
+                            "User event is mandatory for ${EcosEventType.USER_EVENT.name} event type."
+                        )
+                    }
+                    manualSignalName
+                }
+                else ->  eventType?.name ?: throw EcosBpmnElementDefinitionException(
                     id,
                     "Event type is mandatory for Bpmn Signal."
                 )

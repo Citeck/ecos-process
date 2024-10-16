@@ -95,7 +95,8 @@ enum class EcosEventType(
                 defaultModel = emptyMap()
             )
         )
-    );
+    ),
+    USER_EVENT(emptyList());
 
     companion object {
 
@@ -103,10 +104,10 @@ enum class EcosEventType(
         const val RECORD_TYPE_ATT = "recordType"
 
         fun from(value: String): EcosEventType =
-            EcosEventType.values().find { event ->
+            EcosEventType.entries.find { event ->
                 event.eventRepresentations.any { it.eventName == value }
             } ?: let {
-                EcosEventType.values().find { it.name == value } ?: UNDEFINED
+                EcosEventType.entries.find { it.name == value } ?: UNDEFINED
             }
 
         fun findRepresentation(eventName: String): EventRepresentation? {
@@ -114,7 +115,7 @@ enum class EcosEventType(
         }
     }
 
-    val representation = fun(eventName: String): EventRepresentation? {
+   private  val representation = fun(eventName: String): EventRepresentation? {
         return eventRepresentations.firstOrNull { it.eventName == eventName }
     }
 

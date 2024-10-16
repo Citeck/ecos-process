@@ -20,7 +20,8 @@
       "event_record_status_changed": "Статус изменен",
       "event_record_changed": "Record изменен",
       "event_record_created": "Record создан",
-      "event_record_deleted": "Record удален"
+      "event_record_deleted": "Record удален",
+      "event_user_event": "Пользовательское событие"
     },
     "en": {
       "event_comment_create": "Comment create",
@@ -32,7 +33,8 @@
       "event_record_status_changed": "Status changed",
       "event_record_changed": "Record changed",
       "event_record_created": "Record created",
-      "event_record_deleted": "Record deleted"
+      "event_record_deleted": "Record deleted",
+      "event_user_event": "User event"
     }
   },
   "definition": {
@@ -151,6 +153,12 @@
                 {
                   "label": "event_record_status_changed",
                   "value": "RECORD_STATUS_CHANGED"
+                },
+                {
+                  "label": {
+                    "ru": "event_user_event"
+                  },
+                  "value": "USER_EVENT"
                 }
               ],
               "headers": [
@@ -160,6 +168,35 @@
             "defaultValue": "",
             "optionalWhenDisabled": false,
             "customConditional": "show = !!!data.eventManualMode;",
+            "type": "ecosSelect",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Событие",
+              "en": "Event"
+            },
+            "key": "userEvent",
+            "validate": {
+              "required": true
+            },
+            "dataSrc": "custom",
+            "data": {
+              "custom": "values = _.get(data, 'userEvents.records') || [];",
+              "headers": [
+                {}
+              ]
+            },
+            "refreshOn": [
+              "userEvents",
+              "eventManualMode"
+            ],
+            "optionalWhenDisabled": false,
+            "conditional": {
+              "show": "true",
+              "when": "eventType",
+              "eq": "USER_EVENT"
+            },
             "type": "ecosSelect",
             "input": true
           },
@@ -341,6 +378,27 @@
         "key": "includeForm3",
         "label": "Форма: BPMN base form Async",
         "type": "includeForm"
+      },
+      {
+        "label": "load user events",
+        "source": {
+          "type": "recordsQuery",
+          "recordsQuery": {
+            "query": "value = {\n  sourceId: 'uiserv/action',\n  language: 'predicate',\n  query: {\n    t: 'eq',\n    a: 'type',\n    v: 'user-event'\n  }\n}",
+            "attributes": {
+              "value": "?localId",
+              "label": "?disp"
+            },
+            "isSingle": false
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "userEvents",
+        "type": "asyncData",
+        "input": true
       }
     ],
     "formId": "bpmn-type-bpmn:SignalEvent"

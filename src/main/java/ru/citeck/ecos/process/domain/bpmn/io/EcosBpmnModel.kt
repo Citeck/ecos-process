@@ -58,6 +58,7 @@ val BPMN_PROP_PRIORITY_EXPRESSION = QName(NS_ECOS_BPMN, "priorityExpression")
 val BPMN_PROP_DUE_DATE = QName(NS_ECOS_BPMN, "dueDate")
 val BPMN_PROP_FOLLOW_UP_DATE = QName(NS_ECOS_BPMN, "followUpDate")
 
+val BPMN_PROP_USER_EVENT = QName(NS_ECOS_BPMN, "userEvent")
 val BPMN_PROP_MANUAL_SIGNAL_NAME = QName(NS_ECOS_BPMN, "manualSignalName")
 val BPMN_PROP_EVENT_MANUAL_MODE = QName(NS_ECOS_BPMN, "eventManualMode")
 val BPMN_PROP_EVENT_TYPE = QName(NS_ECOS_BPMN, "eventType")

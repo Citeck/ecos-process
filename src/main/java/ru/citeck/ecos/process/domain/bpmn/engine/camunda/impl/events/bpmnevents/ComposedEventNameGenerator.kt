@@ -13,7 +13,7 @@ object ComposedEventNameGenerator {
 
         val composedName = let {
             val foundEventType = EcosEventType.from(event.eventName)
-            if (foundEventType == EcosEventType.UNDEFINED) {
+            if (foundEventType == EcosEventType.UNDEFINED || foundEventType == EcosEventType.USER_EVENT) {
                 event.eventName
             } else {
                 foundEventType.name
