@@ -603,7 +603,7 @@ class ProcTaskSqlQueryBuilder(
         val totalCount: Long
         val camundaCountTime = measureTimeMillis {
             totalCount = if (maxItems > tasks.size) {
-                tasks.size.toLong()
+                skipCount + tasks.size.toLong()
             } else {
                 createTaskQuery(
                     "COUNT(DISTINCT $TASK_ALIAS.${TaskQueryProperty.TASK_ID.name})",
