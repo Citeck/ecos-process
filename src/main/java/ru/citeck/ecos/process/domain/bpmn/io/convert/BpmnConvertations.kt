@@ -6,6 +6,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_SCRIPT_ENGINE_LANGUAGE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.DEFAULT_IN_VARIABLES_PROPAGATION_TO_CALL_ACTIVITY
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.*
@@ -516,8 +517,13 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
         }
 
         is BpmnSignalEventDef -> {
+            if (bpmnEventDef.eventType == EcosEventType.USER_EVENT) {
+                event.otherAttributes.putIfNotBlank(BPMN_PROP_USER_EVENT, bpmnEventDef.manualSignalName)
+            } else {
+                event.otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_SIGNAL_NAME, bpmnEventDef.manualSignalName)
+            }
+
             event.otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE] = bpmnEventDef.eventManualMode.toString()
-            event.otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_SIGNAL_NAME, bpmnEventDef.manualSignalName)
             event.otherAttributes.putIfNotBlank(BPMN_PROP_EVENT_TYPE, bpmnEventDef.eventType?.name)
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE,

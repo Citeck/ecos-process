@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.model.lib.status.service.StatusService
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.BpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
@@ -82,8 +83,11 @@ class ReportElementsService(
                     if (event.eventManualMode) {
                         eventElement.eventType = MANUAL_MODE_NAME
                         eventElement.value = event.manualSignalName
+                    } else if (event.eventType == EcosEventType.USER_EVENT) {
+                        eventElement.eventType = EventType.USER_EVENT.nameEvent
+                        eventElement.value = event.manualSignalName
                     } else {
-                        eventElement.eventType = EventType.values().find { it.name == event.eventType?.name }?.nameEvent
+                        eventElement.eventType = EventType.entries.find { it.name == event.eventType?.name }?.nameEvent
                     }
                 }
             }
@@ -295,6 +299,12 @@ enum class EventType(val nameEvent: MLText) {
         MLText(
             LocaleUtils.toLocale("ru") to "Record удален",
             LocaleUtils.toLocale("en") to "Record deleted"
+        )
+    ),
+    USER_EVENT(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Пользовательское событие",
+            LocaleUtils.toLocale("en") to "User event"
         )
     )
 }

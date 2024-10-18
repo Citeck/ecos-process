@@ -3140,6 +3140,25 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process, never()).hasFinished("endEventFromStart")
     }
 
+    @Test
+    fun `bpmn event user event current document`() {
+        val procId = "bpmn-events-user-event-current-document-test"
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "user-event-action1",
+                eventData = mapOf(
+                    "record" to docRef.toString()
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
     // --- BPMN SERVICES TESTS ---
 
     @Test

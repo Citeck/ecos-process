@@ -16,8 +16,7 @@ import javax.xml.namespace.QName
 class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, TSignalEventDefinition> {
 
     override fun import(element: TSignalEventDefinition, context: ImportContext): BpmnSignalEventDef {
-        val isManualMode = element.otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE]?.toBoolean()
-            ?: false
+        val isManualMode = element.otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE]?.toBoolean() == true
 
         val eventType = if (isManualMode) {
             null
@@ -33,7 +32,11 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
         val signal = BpmnSignalEventDef(
             id = element.id,
             eventManualMode = isManualMode,
-            manualSignalName = element.otherAttributes[BPMN_PROP_MANUAL_SIGNAL_NAME],
+            manualSignalName = if (eventType == EcosEventType.USER_EVENT) {
+                element.otherAttributes[BPMN_PROP_USER_EVENT]
+            } else {
+                element.otherAttributes[BPMN_PROP_MANUAL_SIGNAL_NAME]
+            },
             eventType = eventType,
             eventFilterByRecordType = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE]?.let {
                 FilterEventByRecord.valueOf(it)
