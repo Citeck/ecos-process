@@ -1,8 +1,5 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send
 
-import net.fortuna.ical4j.model.TimeZone
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory
-import net.fortuna.ical4j.util.TimeZones
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
@@ -23,9 +20,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import java.time.DateTimeException
 import java.time.Instant
-import java.time.ZoneId
 import java.util.*
 
 private const val VAR_NOTIFICATION_ATTACHMENTS = "_attachments"
@@ -61,6 +56,7 @@ class SendNotificationDelegate : JavaDelegate {
     var notificationCalendarEventDate: Expression? = null
     var notificationCalendarEventDuration: Expression? = null
 
+    private lateinit var calendarUtils: CalendarUtils
     private lateinit var notificationService: NotificationService
     private lateinit var camundaRoleService: CamundaRoleService
     private lateinit var mailUtils: MailUtils
@@ -146,7 +142,7 @@ class SendNotificationDelegate : JavaDelegate {
         val eventOrganizer =
             mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
 
-        var organizerTimeZone =
+        val organizerTimeZone =
             mailUtils.getUserTimeZoneByEmail(eventOrganizer)
 
         var uid = execution.getVariable(VAR_EVENT_UID)?.toString() ?: ""
@@ -165,7 +161,7 @@ class SendNotificationDelegate : JavaDelegate {
 
         val calendarEvent = CalendarEvent.Builder(eventSummary, eventDate)
             .uid(uid)
-            .timeZone(getTimeZone(organizerTimeZone))
+            .timeZone(calendarUtils.convertToICalTz(organizerTimeZone))
             .sequence(sequence)
             .description(eventDescription)
             .durationInMillis(eventDurationInMillis)
@@ -222,40 +218,5 @@ class SendNotificationDelegate : JavaDelegate {
         val emailsFromExpression = mailUtils.getEmails(fromExpression)
 
         return emailsFromRoles + emailsFromExpression
-    }
-
-    private fun getTimeZone(ecosTimeZone: String?): TimeZone? {
-        if (ecosTimeZone.isNullOrBlank()) {
-            return null
-        }
-        val timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry()
-        var timeZone = timeZoneRegistry.getTimeZone(ecosTimeZone)
-
-        if (timeZone == null) {
-            timeZone = timeZoneRegistry.getTimeZone(convertEcosTimeZoneToTZ(ecosTimeZone));
-        }
-        if (timeZone == null) {
-            timeZone = timeZoneRegistry.getTimeZone(TimeZones.UTC_ID);
-        }
-        return timeZone
-    }
-
-    private fun convertEcosTimeZoneToTZ(ecosTimeZone: String): String {
-        try {
-            val standardTimeZone = ZoneId.of(ecosTimeZone).rules.getOffset(Instant.now()).toString()
-            if ("Z" == standardTimeZone) {
-                return TimeZones.UTC_ID
-            }
-            if (DEFAULT_TIMEZONE_REGEX.matches(standardTimeZone)) {
-                return buildString {
-                    append("Etc/GMT")
-                    append(standardTimeZone[0])
-                    append(Integer.parseInt(standardTimeZone.substring(1, 3)))
-                }
-            }
-        } catch (e: DateTimeException) {
-            return TimeZones.UTC_ID
-        }
-        return TimeZones.UTC_ID
     }
 }
