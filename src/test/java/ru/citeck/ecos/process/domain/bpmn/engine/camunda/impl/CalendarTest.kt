@@ -10,11 +10,11 @@ import java.time.ZoneId
 class CalendarTest {
 
     @ParameterizedTest
-    @ValueSource(strings = ["+03:00", "Z", "UTC", "-6", "UTC+11","GMT-8"])
+    @ValueSource(strings = ["+03:00", "Z", "UTC", "-6", "UTC+11", "GMT-8"])
     fun `convert to ical Tz test`(userTimeZone: String) {
         val calendarUtils = CalendarUtils()
 
-        val now = Instant.now();
+        val now = Instant.now()
         assertThat(
             calendarUtils.convertToICalTz(userTimeZone).toZoneId().rules.getOffset(now)
         )

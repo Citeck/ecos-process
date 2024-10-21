@@ -5,7 +5,6 @@ import net.fortuna.ical4j.model.TimeZone
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory
 import net.fortuna.ical4j.util.TimeZones
 import org.springframework.stereotype.Component
-
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -21,10 +20,10 @@ class CalendarUtils {
     fun convertToICalTz(userTimeZone: String?): TimeZone {
         if (userTimeZone.isNullOrBlank()) {
             log.error { "Invalid timeZone: '$userTimeZone'" }
-            return timeZoneRegistry.getTimeZone(TimeZones.UTC_ID);
+            return timeZoneRegistry.getTimeZone(TimeZones.UTC_ID)
         }
 
-        return timeZoneRegistry.getTimeZone(convertToTz(userTimeZone));
+        return timeZoneRegistry.getTimeZone(convertToTz(userTimeZone))
     }
 
     fun convertToTz(userTimeZone: String): String {
@@ -42,4 +41,3 @@ class CalendarUtils {
         }
     }
 }
-

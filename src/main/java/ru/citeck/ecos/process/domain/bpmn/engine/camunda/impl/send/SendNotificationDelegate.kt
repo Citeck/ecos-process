@@ -29,8 +29,6 @@ private const val VAR_EVENT_SEQUENCE = "eventSequence"
 
 private const val PERSON_SOURCE_ID = "person"
 
-private val DEFAULT_TIMEZONE_REGEX = Regex("^[+-](0[1-9]|1[1-2])(:\\d+|$)");
-
 class SendNotificationDelegate : JavaDelegate {
 
     var notificationTemplate: Expression? = null

@@ -7,13 +7,13 @@ import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.isAuthorityGroupRef
+import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
-import java.util.function.Predicate
 import java.util.regex.Pattern
 
 private const val WORKSPACE_PREFIX = "workspace://"
@@ -151,6 +151,7 @@ class MailUtils(
                 RecordsQuery.create()
                     .withSourceId("emodel/person")
                     .withQuery(Predicates.eq("email", email))
+                    .withLanguage(PredicateService.LANGUAGE_PREDICATE)
                     .build(),
                 "timezone"
             ).asText("")
