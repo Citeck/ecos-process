@@ -1,6 +1,6 @@
 ---
 type: 'maven-webapp'
 properties:
-  skipTests: true
+  skipTests: false
   image:
     multiplatform: true
