@@ -28,6 +28,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnConditionalE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.BpmnTerminateEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.StatusChangeType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
@@ -38,6 +39,8 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskD
 import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
 
@@ -259,6 +262,14 @@ fun getCamundaJobRetryTimeCycleFieldConfig(
 
 internal fun String.isExpression(): Boolean {
     return startsWith("#{") || startsWith("\${")
+}
+
+fun convertManualStatusSelectionToPredicate(statusChangeType: StatusChangeType?, status: String?): Predicate? {
+    if (status.isNullOrBlank() || statusChangeType == null) {
+        return null
+    }
+
+    return Predicates.eq(statusChangeType.name.lowercase(), status)
 }
 
 fun VariablesMappingPropagation.toCamundaInElements(context: ExportContext): List<JAXBElement<CamundaIn>> {
@@ -523,6 +534,23 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
                 event.otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_SIGNAL_NAME, bpmnEventDef.manualSignalName)
             }
 
+            val filterByPredicate =
+                if (bpmnEventDef.eventType == EcosEventType.RECORD_STATUS_CHANGED
+                    && bpmnEventDef.statusChangeType != null
+                    && bpmnEventDef.manualStatus != null
+                ) {
+                    null
+                } else {
+                    bpmnEventDef.eventFilterByPredicate
+                }
+
+
+            event.otherAttributes.putIfNotBlank(
+                BPMN_PROP_EVENT_FILTER_BY_PREDICATE,
+                Json.mapper.toString(filterByPredicate)
+            )
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_STATUS_CHANGE_TYPE, bpmnEventDef.statusChangeType?.name)
+            event.otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_STATUS, bpmnEventDef.manualStatus)
             event.otherAttributes[BPMN_PROP_EVENT_MANUAL_MODE] = bpmnEventDef.eventManualMode.toString()
             event.otherAttributes.putIfNotBlank(BPMN_PROP_EVENT_TYPE, bpmnEventDef.eventType?.name)
             event.otherAttributes.putIfNotBlank(
@@ -536,10 +564,6 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE,
                 bpmnEventDef.eventFilterByRecordVariable
-            )
-            event.otherAttributes.putIfNotBlank(
-                BPMN_PROP_EVENT_FILTER_BY_PREDICATE,
-                Json.mapper.toString(bpmnEventDef.eventFilterByPredicate)
             )
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_MODEL,

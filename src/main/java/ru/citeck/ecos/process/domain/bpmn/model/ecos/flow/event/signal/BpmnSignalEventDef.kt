@@ -28,7 +28,10 @@ data class BpmnSignalEventDef(
 
     val eventModel: Map<String, String> = emptyMap(),
 
-    val manualSignalName: String? = null
+    val manualSignalName: String? = null,
+
+    val statusChangeType: StatusChangeType? = null,
+    val manualStatus: String? = null
 ) : BpmnAbstractEventDef(), Validated {
 
     val signalName: String
@@ -44,6 +47,7 @@ data class BpmnSignalEventDef(
                     }
                     manualSignalName
                 }
+
                 eventType == EcosEventType.USER_EVENT -> {
                     if (manualSignalName.isNullOrBlank()) {
                         throw EcosBpmnElementDefinitionException(
@@ -53,7 +57,8 @@ data class BpmnSignalEventDef(
                     }
                     manualSignalName
                 }
-                else ->  eventType?.name ?: throw EcosBpmnElementDefinitionException(
+
+                else -> eventType?.name ?: throw EcosBpmnElementDefinitionException(
                     id,
                     "Event type is mandatory for Bpmn Signal."
                 )
@@ -104,6 +109,31 @@ data class BpmnSignalEventDef(
                 }
             }
 
+            EcosEventType.RECORD_STATUS_CHANGED -> {
+                if (statusChangeType != null && manualStatus.isNullOrBlank()) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Set status is mandatory for RECORD_STATUS_CHANGED event"
+                    )
+                }
+
+                if (manualStatus != null && manualStatus.isNotBlank() && statusChangeType == null) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Status change type is mandatory for manual selecting status"
+                    )
+                }
+
+                if (statusChangeType != null && manualStatus != null && manualStatus.isNotBlank()
+                    && eventFilterByPredicate == null
+                ) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Failed to convert manual status to predicate"
+                    )
+                }
+            }
+
             else -> {
                 // do nothing
             }
@@ -115,4 +145,9 @@ enum class FilterEventByRecord {
     ANY,
     DOCUMENT,
     DOCUMENT_BY_VARIABLE
+}
+
+enum class StatusChangeType {
+    BEFORE,
+    AFTER
 }

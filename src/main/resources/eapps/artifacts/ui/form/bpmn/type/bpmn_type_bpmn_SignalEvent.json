@@ -21,7 +21,9 @@
       "event_record_changed": "Record изменен",
       "event_record_created": "Record создан",
       "event_record_deleted": "Record удален",
-      "event_user_event": "Пользовательское событие"
+      "event_user_event": "Пользовательское событие",
+      "status_change_type_before": "Предыдущий",
+      "status_change_type_after": "Новый"
     },
     "en": {
       "event_comment_create": "Comment create",
@@ -34,7 +36,9 @@
       "event_record_changed": "Record changed",
       "event_record_created": "Record created",
       "event_record_deleted": "Record deleted",
-      "event_user_event": "User event"
+      "event_user_event": "User event",
+      "status_change_type_before": "Before",
+      "status_change_type_after": "New"
     }
   },
   "definition": {
@@ -170,6 +174,136 @@
             "customConditional": "show = !!!data.eventManualMode;",
             "type": "ecosSelect",
             "input": true
+          },
+          {
+            "label": {
+              "ru": "eventStatusColumn"
+            },
+            "key": "eventStatusColumn",
+            "columns": [
+              {
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Тип изменения",
+                      "en": "Change type"
+                    },
+                    "key": "statusChangeType",
+                    "dataSrc": "values",
+                    "data": {
+                      "values": [
+                        {
+                          "label": {
+                            "ru": "status_change_type_before"
+                          },
+                          "value": "BEFORE"
+                        },
+                        {
+                          "label": {
+                            "ru": "status_change_type_after"
+                          },
+                          "value": "AFTER"
+                        }
+                      ],
+                      "headers": [
+                        {}
+                      ]
+                    },
+                    "optionalWhenDisabled": false,
+                    "conditional": {
+                      "show": "true",
+                      "when": "eventType",
+                      "eq": "RECORD_STATUS_CHANGED"
+                    },
+                    "logic": [
+                      {
+                        "name": "Make required if manual status selected",
+                        "trigger": {
+                          "type": "javascript",
+                          "javascript": "result = !!data.manualStatus;"
+                        },
+                        "actions": [
+                          {
+                            "name": "Make required",
+                            "type": "property",
+                            "property": {
+                              "label": "Required",
+                              "value": "validate.required",
+                              "type": "boolean"
+                            },
+                            "state": "true"
+                          }
+                        ]
+                      }
+                    ],
+                    "type": "ecosSelect",
+                    "input": true
+                  }
+                ],
+                "type": "column",
+                "input": false,
+                "key": "column",
+                "index": 0
+              },
+              {
+                "index": 1,
+                "type": "column",
+                "input": false,
+                "key": "column",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Статус",
+                      "en": "Status"
+                    },
+                    "key": "manualStatus",
+                    "dataSrc": "custom",
+                    "data": {
+                      "custom": "const statuses = _.get(data, 'statuses.statusesData') || [];\nconst filtered = statuses.filter(status => !['ANY', 'EMPTY'].includes(status.value));\n\nvalues = filtered;",
+                      "headers": [
+                        {}
+                      ]
+                    },
+                    "defaultValue": "",
+                    "refreshOn": [
+                      "statuses"
+                    ],
+                    "optionalWhenDisabled": false,
+                    "conditional": {
+                      "show": "true",
+                      "when": "eventType",
+                      "eq": "RECORD_STATUS_CHANGED"
+                    },
+                    "logic": [
+                      {
+                        "name": "Set required on change type selected",
+                        "trigger": {
+                          "type": "javascript",
+                          "javascript": "result = !!data.statusChangeType;"
+                        },
+                        "actions": [
+                          {
+                            "name": "Make required",
+                            "type": "property",
+                            "property": {
+                              "label": "Required",
+                              "value": "validate.required",
+                              "type": "boolean"
+                            },
+                            "state": "true"
+                          }
+                        ]
+                      }
+                    ],
+                    "type": "ecosSelect",
+                    "input": true
+                  }
+                ]
+              }
+            ],
+            "oneColumnInViewMode": false,
+            "type": "columns",
+            "input": false
           },
           {
             "label": {
@@ -341,7 +475,7 @@
                 "defaultValue": "",
                 "refreshOn": [],
                 "optionalWhenDisabled": false,
-                "customConditional": "let type = instance.options.editor.getElementType();\n\nvar showRequired = true;\n\nswitch (type) {\n  case \"bpmn:IntermediateThrowEvent\": {\n    showRequired = false;\n    break;\n  }\n  case \"bpmn:EndEvent\": {\n    showRequired = false;\n    break;\n  }\n  default: {\n    showRequired = true;\n  }\n}\n\nshow = showRequired;",
+                "customConditional": "let type = instance.options.editor.getElementType();\n\nvar showRequired = true;\n\nswitch (type) {\n  case \"bpmn:IntermediateThrowEvent\": {\n    showRequired = false;\n    break;\n  }\n  case \"bpmn:EndEvent\": {\n    showRequired = false;\n    break;\n  }\n  default: {\n    showRequired = true;\n  }\n}\n\nconst isManualStatusNotSelected = !data.manualStatus\nconst isStatusChangeTypeNotSelected = !data.statusChangeType\n\nshow = showRequired && isManualStatusNotSelected && isStatusChangeTypeNotSelected;",
                 "logic": [
                   {
                     "name": "mandatory",
@@ -397,6 +531,25 @@
           "type": "once"
         },
         "key": "userEvents",
+        "type": "asyncData",
+        "input": true
+      },
+      {
+        "label": "load statuses",
+        "source": {
+          "type": "recordsScript",
+          "recordsScript": {
+            "script": "let ref = instance.options.editor.getEcosType();\n\nif (!!ref) {\n  value = ref;\n}",
+            "attributes": {
+              "statusesData": "model.statuses[]{value:id,label:name}"
+            }
+          },
+          "forceLoad": false
+        },
+        "update": {
+          "type": "once"
+        },
+        "key": "statuses",
         "type": "asyncData",
         "input": true
       }

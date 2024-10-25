@@ -67,6 +67,8 @@ val BPMN_PROP_EVENT_FILTER_BY_ECOS_TYPE = QName(NS_ECOS_BPMN, "eventFilterByEcos
 val BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE = QName(NS_ECOS_BPMN, "eventFilterByRecordVariable")
 val BPMN_PROP_EVENT_FILTER_BY_PREDICATE = QName(NS_ECOS_BPMN, "eventFilterByPredicate")
 val BPMN_PROP_EVENT_MODEL = QName(NS_ECOS_BPMN, "eventModel")
+val BPMN_PROP_STATUS_CHANGE_TYPE = QName(NS_ECOS_BPMN, "statusChangeType")
+val BPMN_PROP_MANUAL_STATUS = QName(NS_ECOS_BPMN, "manualStatus")
 
 val BPMN_PROP_ERROR_NAME = QName(NS_ECOS_BPMN, "errorName")
 val BPMN_PROP_ERROR_CODE = QName(NS_ECOS_BPMN, "errorCode")

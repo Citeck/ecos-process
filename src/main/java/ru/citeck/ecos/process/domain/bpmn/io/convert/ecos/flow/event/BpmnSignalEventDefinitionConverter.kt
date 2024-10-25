@@ -3,8 +3,10 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.event
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.convertManualStatusSelectionToPredicate
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.FilterEventByRecord
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.StatusChangeType
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSignalEventDefinition
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
@@ -28,6 +30,10 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
 
             EcosEventType.valueOf(eventTypeAttr)
         }
+        val statusChangeType = element.otherAttributes[BPMN_PROP_STATUS_CHANGE_TYPE]?.takeIf { it.isNotBlank() }?.let {
+            StatusChangeType.valueOf(it)
+        }
+        val manualStatus = element.otherAttributes[BPMN_PROP_MANUAL_STATUS]
 
         val signal = BpmnSignalEventDef(
             id = element.id,
@@ -37,6 +43,8 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
             } else {
                 element.otherAttributes[BPMN_PROP_MANUAL_SIGNAL_NAME]
             },
+            statusChangeType = statusChangeType,
+            manualStatus = manualStatus,
             eventType = eventType,
             eventFilterByRecordType = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_RECORD_TYPE]?.let {
                 FilterEventByRecord.valueOf(it)
@@ -50,8 +58,14 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
                 typeRef.withSourceId("type")
             } ?: EntityRef.EMPTY,
             eventFilterByRecordVariable = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE],
-            eventFilterByPredicate = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_PREDICATE]?.let {
-                Json.mapper.convert(it, Predicate::class.java)
+            eventFilterByPredicate = if (eventType == EcosEventType.RECORD_STATUS_CHANGED && statusChangeType != null
+                && manualStatus != null && manualStatus.isNotBlank()
+            ) {
+                convertManualStatusSelectionToPredicate(statusChangeType, manualStatus)
+            } else {
+                element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_PREDICATE]?.let {
+                    Json.mapper.convert(it, Predicate::class.java)
+                }
             },
             eventModel = element.otherAttributes[BPMN_PROP_EVENT_MODEL]?.let {
                 Json.mapper.readMap(it, String::class.java, String::class.java)

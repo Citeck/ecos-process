@@ -3159,6 +3159,27 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `bpmn event status manual current document`() {
+        val procId = "bpmn-events-status-manual-test"
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendManualEvent(
+                eventName = "record-status-changed",
+                eventData = mapOf(
+                    "record" to docRef.toString(),
+                    "before" to "on_task",
+                    "after" to "new"
+                )
+            )
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
     // --- BPMN SERVICES TESTS ---
 
     @Test
