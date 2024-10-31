@@ -1,0 +1,81 @@
+---
+id: add-eproc-admin-menu-section
+name:
+  ru: Добавить раздел администратора eproc
+  en: Add eproc admin section
+
+target: 'ui/menu$admin-workspace-menu'
+system: true
+order: 0
+
+type: json
+config:
+  operations:
+    - op: add
+      path: '$.subMenu.left.items'
+      value:
+        id: eproc-section
+        label:
+          en: Process management
+          ru: Управление процессами
+        hidden: false
+        type: SECTION
+        config: { }
+        items:
+          - id: eproc-bpmn-models
+            label:
+              en: BPMN models
+              ru: Модели BPMN
+            icon: ui/icon@i-leftmenu-tools
+            hidden: false
+            type: ARBITRARY
+            config:
+              url: "/v2/admin?type=BPM"
+          - id: eproc-bp-administration
+            label:
+              en: BP Administration
+              ru: Администрирование БП
+            icon: ui/icon@i-leftmenu-tools
+            hidden: false
+            type: ARBITRARY
+            config:
+              url: "/v2/admin?type=BPMN_ADMIN"
+          - id: eproc-dmn-models
+            label:
+              en: DMN models
+              ru: Модели DMN
+            icon: ui/icon@i-leftmenu-tools
+            hidden: false
+            type: ARBITRARY
+            config:
+              url: "/v2/admin?type=DMN"
+          - id: eproc-kpi-settings
+            label:
+              ru: Настройка KPI
+              en: KPI Settings
+            icon: ui/icon@i-leftmenu-tools
+            hidden: false
+            type: JOURNAL
+            config:
+              recordRef: uiserv/journal@bpmn-kpi-settings
+              displayCount: false
+          - id: eproc-kpi-values
+            label:
+              ru: Значения KPI
+              en: KPI values
+            icon: ui/icon@i-leftmenu-tools
+            hidden: false
+            type: JOURNAL
+            config:
+              recordRef: uiserv/journal@bpmn-kpi-values
+              displayCount: false
+          - id: eproc-bpmn-task-attributes-sync
+            label:
+              ru: Синхронизация атрибутов задач BPMN
+              en: BPMN Task Attributes Sync
+            icon: ui/icon@i-leftmenu-tools
+            hidden: false
+            type: JOURNAL
+            config:
+              recordRef: uiserv/journal@bpmn-task-atts-sync
+              displayCount: false
