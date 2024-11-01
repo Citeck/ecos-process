@@ -57,14 +57,12 @@ class SendNotificationDelegate : JavaDelegate {
     private lateinit var notificationService: NotificationService
     private lateinit var camundaRoleService: CamundaRoleService
     private lateinit var mailUtils: MailUtils
-    private lateinit var calendarUtils: CalendarUtils
     private lateinit var document: EntityRef
 
     private fun init(execution: DelegateExecution) {
         notificationService = AppContext.getBean(NotificationService::class.java)
         camundaRoleService = AppContext.getBean(CamundaRoleService::class.java)
         mailUtils = AppContext.getBean(MailUtils::class.java)
-        calendarUtils = AppContext.getBean(CalendarUtils::class.java)
         document = execution.getDocumentRef()
     }
 
@@ -160,7 +158,7 @@ class SendNotificationDelegate : JavaDelegate {
 
         val calendarEvent = CalendarEvent.Builder(eventSummary, eventDate)
             .uid(uid)
-            .timeZone(calendarUtils.convertToICalTz(organizerTimeZone))
+            .timeZone(CalendarUtils.convertToICalTz(organizerTimeZone))
             .sequence(sequence)
             .description(eventDescription)
             .durationInMillis(eventDurationInMillis)

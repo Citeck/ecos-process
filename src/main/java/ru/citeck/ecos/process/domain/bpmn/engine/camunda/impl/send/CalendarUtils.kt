@@ -4,29 +4,24 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.fortuna.ical4j.model.TimeZone
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory
 import net.fortuna.ical4j.util.TimeZones
-import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-@Component
-class CalendarUtils {
+object CalendarUtils {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-        private val timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry()
-    }
+    private val log = KotlinLogging.logger {}
+    private val timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry()
 
     fun convertToICalTz(userTimeZone: String?): TimeZone {
         if (userTimeZone.isNullOrBlank()) {
-            log.error { "Invalid timeZone: '$userTimeZone'" }
             return timeZoneRegistry.getTimeZone(TimeZones.UTC_ID)
         }
 
-        return timeZoneRegistry.getTimeZone(convertToTz(userTimeZone))
+        return timeZoneRegistry.getTimeZone(convertTzToEtcGmtOrUtc(userTimeZone))
     }
 
-    fun convertToTz(userTimeZone: String): String {
+    fun convertTzToEtcGmtOrUtc(userTimeZone: String): String {
         val tzOffset = try {
             ZoneId.of(userTimeZone).rules.getOffset(Instant.now())
         } catch (e: RuntimeException) {
