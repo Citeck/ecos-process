@@ -28,22 +28,37 @@ data class BpmnSignalEventDef(
 
     val eventModel: Map<String, String> = emptyMap(),
 
-    val manualSignalName: String? = null
+    val manualSignalName: String? = null,
+
+    val statusChangeType: StatusChangeType? = null,
+    val manualStatus: String? = null
 ) : BpmnAbstractEventDef(), Validated {
 
     val signalName: String
         get() = let {
 
-            val finalEventName = if (it.eventManualMode) {
-                if (manualSignalName.isNullOrBlank()) {
-                    throw EcosBpmnElementDefinitionException(
-                        id,
-                        "Signal name in mandatory for manual mode of Bpmn Signal."
-                    )
+            val finalEventName = when {
+                eventManualMode -> {
+                    if (manualSignalName.isNullOrBlank()) {
+                        throw EcosBpmnElementDefinitionException(
+                            id,
+                            "Signal name in mandatory for manual mode of Bpmn Signal."
+                        )
+                    }
+                    manualSignalName
                 }
-                manualSignalName
-            } else {
-                eventType?.name ?: throw EcosBpmnElementDefinitionException(
+
+                eventType == EcosEventType.USER_EVENT -> {
+                    if (manualSignalName.isNullOrBlank()) {
+                        throw EcosBpmnElementDefinitionException(
+                            id,
+                            "User event is mandatory for ${EcosEventType.USER_EVENT.name} event type."
+                        )
+                    }
+                    manualSignalName
+                }
+
+                else -> eventType?.name ?: throw EcosBpmnElementDefinitionException(
                     id,
                     "Event type is mandatory for Bpmn Signal."
                 )
@@ -94,6 +109,31 @@ data class BpmnSignalEventDef(
                 }
             }
 
+            EcosEventType.RECORD_STATUS_CHANGED -> {
+                if (statusChangeType != null && manualStatus.isNullOrBlank()) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Set status is mandatory for RECORD_STATUS_CHANGED event"
+                    )
+                }
+
+                if (manualStatus != null && manualStatus.isNotBlank() && statusChangeType == null) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Status change type is mandatory for manual selecting status"
+                    )
+                }
+
+                if (statusChangeType != null && manualStatus != null && manualStatus.isNotBlank()
+                    && eventFilterByPredicate == null
+                ) {
+                    throw EcosBpmnElementDefinitionException(
+                        id,
+                        "Failed to convert manual status to predicate"
+                    )
+                }
+            }
+
             else -> {
                 // do nothing
             }
@@ -105,4 +145,9 @@ enum class FilterEventByRecord {
     ANY,
     DOCUMENT,
     DOCUMENT_BY_VARIABLE
+}
+
+enum class StatusChangeType {
+    BEFORE,
+    AFTER
 }

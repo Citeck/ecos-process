@@ -115,7 +115,7 @@ class BpmnEventSubscriptionService(
 
         val listenerEventNames = let {
             val eventType = EcosEventType.from(eventName)
-            if (eventType == EcosEventType.UNDEFINED) {
+            if (eventType == EcosEventType.UNDEFINED || eventType == EcosEventType.USER_EVENT) {
                 listOf(eventName)
             } else {
                 eventType.availableEventNames()

@@ -71,6 +71,7 @@ class CacheableTaskConverter(
                 } else {
                     EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
+                processDefinitionId = processDefinitionId,
                 documentRef = variables[BPMN_DOCUMENT_REF]?.let {
                     EntityRef.valueOf(it.toString())
                 } ?: EntityRef.EMPTY,
@@ -159,6 +160,7 @@ class CacheableTaskConverter(
                 } else {
                     EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
                 },
+                processDefinitionId = processDefinitionId,
                 historic = true
             )
         }
