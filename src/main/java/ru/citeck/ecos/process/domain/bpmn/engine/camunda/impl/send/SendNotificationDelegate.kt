@@ -139,6 +139,9 @@ class SendNotificationDelegate : JavaDelegate {
         val eventOrganizer =
             mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
 
+        val organizerTimeZone =
+            mailUtils.getUserTimeZoneByEmail(eventOrganizer)
+
         var uid = execution.getVariable(VAR_EVENT_UID)?.toString() ?: ""
         if (uid.isBlank()) {
             uid = UUID.randomUUID().toString()
@@ -155,6 +158,7 @@ class SendNotificationDelegate : JavaDelegate {
 
         val calendarEvent = CalendarEvent.Builder(eventSummary, eventDate)
             .uid(uid)
+            .timeZone(CalendarUtils.convertToICalTz(organizerTimeZone))
             .sequence(sequence)
             .description(eventDescription)
             .durationInMillis(eventDurationInMillis)
