@@ -16,6 +16,8 @@
 
 server:
   port: 8098
+  tomcat:
+    use-relative-redirects: true
 
 spring:
   data:
@@ -126,6 +128,9 @@ ecos:
 
 camunda:
   bpm:
+    admin-user:
+      id: admin
+      password: admincamundapassword
     authorization:
       enabled: false
     webapp:

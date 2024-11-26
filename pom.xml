@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>3.11.1</version>
+        <version>3.11.2</version>
     </parent>
 
     <properties>
@@ -19,7 +19,7 @@
         <camunda.spring-boot.version>7.21.0</camunda.spring-boot.version>
         <camunda.spin.version>1.23.0</camunda.spin.version>
 
-        <ecos.bpmn-commons-values.version>1.1.0</ecos.bpmn-commons-values.version>
+        <ecos.bpmn-commons-values.version>1.1.1</ecos.bpmn-commons-values.version>
         <ecos.ecos-lazy-approval.version>1.2.0</ecos.ecos-lazy-approval.version>
 
         <querydsl.version>5.1.0</querydsl.version>
