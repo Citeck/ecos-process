@@ -26,7 +26,6 @@ config:
             label:
               en: BPMN models
               ru: Модели BPMN
-            icon: ui/icon@i-leftmenu-tools
             hidden: false
             type: ARBITRARY
             config:
@@ -35,7 +34,6 @@ config:
             label:
               en: BP Administration
               ru: Администрирование БП
-            icon: ui/icon@i-leftmenu-tools
             hidden: false
             type: ARBITRARY
             config:
@@ -44,7 +42,6 @@ config:
             label:
               en: DMN models
               ru: Модели DMN
-            icon: ui/icon@i-leftmenu-tools
             hidden: false
             type: ARBITRARY
             config:
@@ -53,7 +50,6 @@ config:
             label:
               ru: Настройка KPI
               en: KPI Settings
-            icon: ui/icon@i-leftmenu-tools
             hidden: false
             type: JOURNAL
             config:
@@ -63,7 +59,6 @@ config:
             label:
               ru: Значения KPI
               en: KPI values
-            icon: ui/icon@i-leftmenu-tools
             hidden: false
             type: JOURNAL
             config:
@@ -73,7 +68,6 @@ config:
             label:
               ru: Синхронизация атрибутов задач BPMN
               en: BPMN Task Attributes Sync
-            icon: ui/icon@i-leftmenu-tools
             hidden: false
             type: JOURNAL
             config:
