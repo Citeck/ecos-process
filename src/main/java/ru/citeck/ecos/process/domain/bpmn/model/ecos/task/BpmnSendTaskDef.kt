@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.model.ecos.task
 
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
@@ -35,11 +36,13 @@ data class BpmnSendTaskDef(
     val additionalMeta: Map<String, Any> = emptyMap(),
 
     val sendCalendarEvent: Boolean = false,
-    val calendarEventOrganizer: String = "",
     val calendarEventSummary: String = "",
     val calendarEventDescription: String = "",
+    val calendarEventOrganizer: CalendarEventOrganizer,
     val calendarEventDate: String = "",
+    val calendarEventDateExpression: String = "",
     val calendarEventDuration: String = "",
+    val calendarEventDurationExpression: String = "",
 
     val asyncConfig: AsyncConfig,
     val jobConfig: JobConfig
@@ -56,6 +59,28 @@ data class BpmnSendTaskDef(
 
         if (type != NotificationType.EMAIL_NOTIFICATION) {
             throw EcosBpmnElementDefinitionException(id, "In the current version, only the email type is supported")
+        }
+
+        if (sendCalendarEvent) {
+            if (StringUtils.isBlank(calendarEventSummary)) {
+                throw EcosBpmnElementDefinitionException(id, "Calendar event Summary is empty")
+            }
+
+            if (StringUtils.isBlank(calendarEventDescription)) {
+                throw EcosBpmnElementDefinitionException(id, "Calendar event Description is empty")
+            }
+
+            if (calendarEventOrganizer.isEmpty()) {
+                throw EcosBpmnElementDefinitionException(id, "Calendar event Organizer is empty")
+            }
+
+            if (StringUtils.isBlank(calendarEventDate) && StringUtils.isBlank(calendarEventDateExpression)) {
+                throw EcosBpmnElementDefinitionException(id, "Calendar event Date is empty")
+            }
+
+            if (StringUtils.isBlank(calendarEventDuration) && StringUtils.isBlank(calendarEventDurationExpression)) {
+                throw EcosBpmnElementDefinitionException(id, "Calendar event Duration is empty")
+            }
         }
     }
 }

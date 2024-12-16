@@ -35,7 +35,6 @@ import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.commons.utils.DurationStrUtils
 import ru.citeck.ecos.config.lib.service.EcosConfigService
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
@@ -73,6 +72,7 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -1677,7 +1677,7 @@ class BpmnMonsterTestWithRunProcessTest {
         val calendarEvent = CalendarEvent.Builder("Summary", Instant.parse("2024-07-31T12:00:00Z"))
             .uid("2b60f57d-11da-48be-b4cd-7b9a206a6477")
             .description("Description")
-            .durationInMillis(DurationStrUtils.parseDurationToMillis("2h"))
+            .durationInMillis(Duration.parse("PT2H").toMillis())
             .organizer("organizer@mail.ru")
             .attendees(listOf("1@mail.ru", "2@mail.ru"))
             .createDate(Instant.parse("2024-07-29T00:00:00Z"))
@@ -1691,7 +1691,50 @@ class BpmnMonsterTestWithRunProcessTest {
                 val updatedEventText =
                     eventFileText.decodeToString().replace("DTSTAMP:.+Z".toRegex(), "DTSTAMP:20240729T000000Z")
 
-                assertThat(updatedEventText).isEqualTo(Base64.getMimeDecoder().decode(attachment.bytes).decodeToString())
+                assertThat(updatedEventText).isEqualTo(
+                    Base64.getMimeDecoder().decode(attachment.bytes).decodeToString()
+                )
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task with send calendar event values`() {
+        val procId = "test-send-task-with-send-calendar-event-values"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val calendarEvent = CalendarEvent.Builder("Test Name", Instant.parse("2024-12-17T09:00:00Z"))
+            .uid("2b60f57d-11da-48be-b4cd-7b9a206a6477")
+            .description("Test Description")
+            .durationInMillis(Duration.parse("PT1H").toMillis())
+            .organizer(mockAuthorEmails.first())
+            .attendees(listOf("1@mail.ru", "2@mail.ru"))
+            .createDate(Instant.parse("2024-12-16T00:00:00Z"))
+            .build()
+        val attachment = calendarEvent.createAttachment()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                val event = it.additionalMeta["_attachments"] as CalendarEvent.CalendarEventAttachment
+                val eventFileText = Base64.getMimeDecoder().decode(event.bytes)
+                val updatedEventText =
+                    eventFileText.decodeToString().replace("DTSTAMP:.+Z".toRegex(), "DTSTAMP:20241216T000000Z")
+
+                assertThat(updatedEventText).isEqualTo(
+                    Base64.getMimeDecoder().decode(attachment.bytes).decodeToString()
+                )
             }
         )
 
