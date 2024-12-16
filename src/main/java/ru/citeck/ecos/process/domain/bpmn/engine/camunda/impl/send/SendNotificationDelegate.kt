@@ -5,7 +5,6 @@ import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.commons.utils.DurationStrUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
@@ -17,9 +16,11 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.CalendarEventOrganizer
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 
@@ -132,12 +133,17 @@ class SendNotificationDelegate : JavaDelegate {
     ): CalendarEvent.CalendarEventAttachment {
         val eventSummary = notificationCalendarEventSummary?.getValue(execution).toString()
         val eventDescription = notificationCalendarEventDescription?.getValue(execution).toString()
-        val eventDate = Instant.parse(notificationCalendarEventDate?.getValue(execution).toString())
-        val eventDuration = notificationCalendarEventDuration?.getValue(execution).toString()
-        val eventDurationInMillis = DurationStrUtils.parseDurationToMillis(eventDuration)
+        val eventDate = notificationCalendarEventDate?.getValue(execution).let {
+            if (it is Date) {
+                it.toInstant()
+            } else {
+                Instant.parse(it.toString())
+            }
+        }
+        val eventDuration = Duration.parse(notificationCalendarEventDuration?.getValue(execution).toString())
+        val eventDurationInMillis = eventDuration.toMillis()
 
-        val eventOrganizer =
-            mailUtils.getEmails(listOf(notificationCalendarEventOrganizer?.getValue(execution).toString())).first()
+        val eventOrganizer = getCalendarEventOrganizer(notificationCalendarEventOrganizer, execution)
 
         val organizerTimeZone =
             mailUtils.getUserTimeZoneByEmail(eventOrganizer)
@@ -215,5 +221,27 @@ class SendNotificationDelegate : JavaDelegate {
         val emailsFromExpression = mailUtils.getEmails(fromExpression)
 
         return emailsFromRoles + emailsFromExpression
+    }
+
+    private fun getCalendarEventOrganizer(expressionData: Expression?, execution: DelegateExecution): String {
+        if (expressionData == null) {
+            return ""
+        }
+
+        val calendarEventOrganizer = Json.mapper.read(
+            expressionData.getValue(execution).toString(),
+            CalendarEventOrganizer::class.java
+        ) ?: return ""
+
+        val emailFromRole = camundaRoleService.getEmails(document, listOf(calendarEventOrganizer.role))
+        val emailFromExpression = mailUtils.getEmails(listOf(calendarEventOrganizer.expression))
+
+        return if (emailFromRole.isNotEmpty()) {
+            emailFromRole.first()
+        } else if (emailFromExpression.isNotEmpty()) {
+            emailFromExpression.first()
+        } else {
+            ""
+        }
     }
 }

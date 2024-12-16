@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.flow.task
 import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send.SendNotificationDelegate
 import ru.citeck.ecos.process.domain.bpmn.io.*
@@ -113,12 +114,6 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             )
             fields.addIfNotBlank(
                 CamundaFieldCreator.expression(
-                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_ORGANIZER.localPart,
-                    calendarEventOrganizer
-                )
-            )
-            fields.addIfNotBlank(
-                CamundaFieldCreator.expression(
                     BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_SUMMARY.localPart,
                     calendarEventSummary
                 )
@@ -131,14 +126,32 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             )
             fields.addIfNotBlank(
                 CamundaFieldCreator.expression(
-                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DATE.localPart,
-                    calendarEventDate
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_ORGANIZER.localPart,
+                    Json.mapper.toString(calendarEventOrganizer) ?: ""
                 )
             )
+
+            val calendarEventDateField = if (StringUtils.isNotBlank(calendarEventDate)) {
+                calendarEventDate
+            } else {
+                calendarEventDateExpression
+            }
+            fields.addIfNotBlank(
+                CamundaFieldCreator.expression(
+                    BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DATE.localPart,
+                    calendarEventDateField
+                )
+            )
+
+            val calendarEventDurationField = if (StringUtils.isNotBlank(calendarEventDuration)) {
+                calendarEventDuration
+            } else {
+                calendarEventDurationExpression
+            }
             fields.addIfNotBlank(
                 CamundaFieldCreator.expression(
                     BPMN_PROP_NOTIFICATION_CALENDAR_EVENT_DURATION.localPart,
-                    calendarEventDuration
+                    calendarEventDurationField
                 )
             )
         }

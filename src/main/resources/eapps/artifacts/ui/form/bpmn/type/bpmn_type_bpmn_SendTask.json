@@ -231,33 +231,16 @@
               },
               {
                 "label": {
-                  "ru": "Организатор",
-                  "en": "Organizer"
-                },
-                "key": "notificationCalendarEventOrganizer",
-                "tooltip": {
-                  "ru": "Может быть указан напрямую или через expression.\n\nНапример:\n${someVariable}",
-                  "en": "Can be specified directly or via an expression.\n\nExample:\n${someVariable}"
-                },
-                "refreshOn": [],
-                "optionalWhenDisabled": false,
-                "customConditional": "show = data.notificationSendCalendarEvent === true",
-                "type": "textfield",
-                "input": true,
-                "tab": 1,
-                "inputMasks": [
-                  {}
-                ]
-              },
-              {
-                "label": {
                   "en": "Summary",
                   "ru": "Название"
                 },
                 "key": "notificationCalendarEventSummary",
                 "tooltip": {
-                  "ru": "Может быть указан напрямую или через expression.\n\nНапример:\n${someVariable}",
+                  "ru": "Может быть указано напрямую или через expression.\n\nНапример:\n${someVariable}",
                   "en": "Can be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                },
+                "validate": {
+                  "required": true
                 },
                 "refreshOn": [],
                 "optionalWhenDisabled": false,
@@ -279,55 +262,179 @@
                   "ru": "Может быть указано напрямую или через expression.\n\nНапример:\n${someVariable}",
                   "en": "Can be specified directly or via an expression.\n\nExample:\n${someVariable}"
                 },
+                "validate": {
+                  "required": true
+                },
+                "defaultValue": "",
                 "refreshOn": [],
                 "optionalWhenDisabled": false,
                 "customConditional": "show = data.notificationSendCalendarEvent === true",
-                "type": "textfield",
-                "input": true,
-                "tab": 1,
-                "inputMasks": [
-                  {}
-                ]
+                "type": "textarea",
+                "input": true
               },
               {
                 "label": {
-                  "en": "Date",
-                  "ru": "Дата"
+                  "ru": "calendar-event-tabs"
                 },
-                "key": "notificationCalendarEventDate",
-                "tooltip": {
-                  "ru": "Дата начала события.\nМожет быть указана напрямую или через expression.\n\nНапример:\n${someVariable}",
-                  "en": "Event start date.\nCan be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                "key": "calendar-event-tabs",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Значение",
+                      "en": "Value"
+                    },
+                    "key": "calendar-event-value",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Организатор",
+                          "en": "Organizer"
+                        },
+                        "key": "notificationCalendarEventOrganizer",
+                        "tooltip": {
+                          "ru": "Организатор выбирается из ролей типа ecos\n\nКонечным результатом обработки поля будет являться email. Если в роли содержится несколько пользователей, то будет выбран первый вычисленный email!",
+                          "en": "Organizer is selected from roles of ecos type\n\nThe final result of the field processing will be an email. If the role contains several users, the first calculated email will be selected!"
+                        },
+                        "dataSrc": "custom",
+                        "data": {
+                          "custom": "values = _.get(data, 'roles.rolesData');",
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": [],
+                        "refreshOn": [
+                          "roles"
+                        ],
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      },
+                      {
+                        "label": {
+                          "ru": "Дата",
+                          "en": "Date"
+                        },
+                        "key": "notificationCalendarEventDate",
+                        "tooltip": {
+                          "ru": "Дата начала события.\n\nПри создании события будет указан часовой пояс организатора из профиля пользователя.",
+                          "en": "Event start date.\n\nWhen creating an event, the organizer's time zone from the user profile will be specified."
+                        },
+                        "format": "yyyy-MM-dd HH:mm",
+                        "datePicker": {
+                          "minDate": "",
+                          "maxDate": ""
+                        },
+                        "timePicker": {
+                          "showMeridian": false
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "datetime",
+                        "input": true,
+                        "suffix": true
+                      },
+                      {
+                        "label": {
+                          "ru": "Продолжительность",
+                          "en": "Duration"
+                        },
+                        "key": "notificationCalendarEventDuration",
+                        "tooltip": {
+                          "ru": "Продолжительность события.",
+                          "en": "Duration of the event."
+                        },
+                        "dataSrc": "custom",
+                        "data": {
+                          "custom": "values = [...Array(8 * 60 / 15)].map((_, index) => {\n      const timeOfMin = (index + 1) * 15;\n      let hours = 0, minutes = 0;\n\n      switch (true) {\n        case timeOfMin < 60:\n          minutes = timeOfMin;\n          break;\n\n        case timeOfMin >= 60:\n          hours = Math.floor(timeOfMin / 60);\n          minutes = timeOfMin % 60;\n          break;\n\n        default:\n          break;\n      }\n\n      return {\n        value: `PT${hours > 0 ? `${hours}H` : ''}${minutes > 0 ? `${minutes}M` : ''}`,\n        label: `${hours > 0 ? `${hours}H` : ''}${minutes > 0 ? ` ${minutes}M` : ''}`\n      };\n});",
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": "",
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": {
+                      "ru": "Выражение",
+                      "en": "Expression"
+                    },
+                    "key": "calendar-event-expression",
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "Организатор",
+                          "en": "Organizer"
+                        },
+                        "key": "notificationCalendarEventOrganizerExpression",
+                        "tooltip": {
+                          "ru": "Имя, recordRef  или емейл организатора. \nКонечным результатом обработки поля будет являться email.\n\nПоддерживаются expression для получения данных из переменных или сервисов.\nНапример:\nivan.petrov\nGROUP_company_accountant\nemodel/authority-group@company_accountant\nemodel/person@ivan\nivan.petrov@citeck.ru\n \nЕсли передан объект, который содержит несколько емейлов (группа пользователей), то будет выбран первый вычисленный email",
+                          "en": "Name, recordRef or email of the organizer.\n\nThe final result of field processing will be an email.\n\nExpressions for obtaining data from variables or services are supported.\nExample:\nivan.petrov\nGROUP_company_accountant\nemodel/authority-group@company_accountant\nemodel/person@ivan\nivan.petrov@citeck.ru\n\nIf an object is passed that contains several emails (user group), the first calculated email will be selected"
+                        },
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "tab": 1,
+                        "inputMasks": [
+                          {}
+                        ]
+                      },
+                      {
+                        "label": {
+                          "en": "Date",
+                          "ru": "Дата"
+                        },
+                        "key": "notificationCalendarEventDateExpression",
+                        "tooltip": {
+                          "ru": "Дата начала события.\nМожет быть указана в формате ISO или выражение:\n\n- 2020-06-20T10:30:00Z\n- ${someDate}\n\nВыражение всегда должно  возвращать java.util.Date, java.util.String (ISO 8601) или null.\n\nПри создании события будет указан часовой пояс организатора из профиля пользователя.",
+                          "en": "Event start date.\nCan be specified in ISO format or expression:\n\n- 2020-06-20T10:30:00Z\n-${someDate}\n\nThe expression should always resolve to a java.util.Date, java.util.String (ISO 8601) or null.\n\nWhen creating an event, the organizer's time zone from the user profile will be specified."
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "tab": 1,
+                        "inputMasks": [
+                          {}
+                        ]
+                      },
+                      {
+                        "label": {
+                          "en": "Duration",
+                          "ru": "Продолжительность"
+                        },
+                        "key": "notificationCalendarEventDurationExpression",
+                        "tooltip": {
+                          "ru": "Продолжительность события.\nПродолжительность указывается в <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> формате.\n\n<li><i>PT15S</i> - 15 секунд</li><li><i>PT1H30M</i> - 1 час и 30 минут</li><li><i>P14D</i> - 14 дней</li>\n\nМожет быть указана напрямую или через expression.\n\nНапример:\n${someVariable}",
+                          "en": "Duration of the event.\nThe duration time is specified as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format.\n\n<li><i>PT15S</i> - 15 seconds</li><li><i>PT1H30M</i> - 1 hour and 30 minutes</li><li><i>P14D</i> - 14 days</li>\n\nCan be specified directly or via an expression.\n\nExample:\n${someVariable}"
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "textfield",
+                        "input": true,
+                        "tab": 1,
+                        "inputMasks": [
+                          {}
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "conditional": {
+                  "show": "false",
+                  "when": "notificationSendCalendarEvent",
+                  "eq": "false"
                 },
-                "refreshOn": [],
-                "optionalWhenDisabled": false,
-                "customConditional": "show = data.notificationSendCalendarEvent === true",
-                "type": "textfield",
-                "input": true,
-                "tab": 1,
-                "inputMasks": [
-                  {}
-                ]
-              },
-              {
-                "label": {
-                  "en": "Duration",
-                  "ru": "Продолжительность"
-                },
-                "key": "notificationCalendarEventDuration",
-                "tooltip": {
-                  "ru": "Продолжительность события.\nПродолжительность указывается в формате h, m:\n\n3h 10m - 3 часа 10 минут\n30m - 30 минут\n\nМожет быть указана напрямую или через expression.\n\nНапример:\n${someVariable}",
-                  "en": "Duration of the event.\nThe duration time is specified in the format h, m:\n\n1h 15m - 1 hour 15 minutes\n30m - 30 minutes\n\nCan be specified directly or via an expression.\n\nExample:\n${someVariable}"
-                },
-                "refreshOn": [],
-                "optionalWhenDisabled": false,
-                "customConditional": "show = data.notificationSendCalendarEvent === true",
-                "type": "textfield",
-                "input": true,
-                "tab": 1,
-                "inputMasks": [
-                  {}
-                ]
+                "type": "tabs",
+                "input": false
               }
             ]
           },
