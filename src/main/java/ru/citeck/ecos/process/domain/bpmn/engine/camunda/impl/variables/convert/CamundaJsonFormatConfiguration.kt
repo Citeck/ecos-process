@@ -20,6 +20,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.
 
 class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDataFormat> {
 
+    companion object {
+        private const val POLYGLOT_MAP_CLASS_NAME = "com.oracle.truffle.polyglot.PolyglotMap"
+    }
+
     override fun getDataFormatClass(): Class<JacksonJsonDataFormat> {
         return JacksonJsonDataFormat::class.java
     }
@@ -53,6 +57,9 @@ class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDat
         module.addSerializer(Value::class.java, ScriptObjectMirrorJsonSerializerProtection())
         module.addDeserializer(Value::class.java, ScriptObjectMirrorJsonDeserializerNull())
 
+        module.addSerializer(Class.forName(POLYGLOT_MAP_CLASS_NAME), PolyglotMapSerializer())
+        module.addDeserializer(Class.forName(POLYGLOT_MAP_CLASS_NAME), PolyglotMapDeserializer())
+
         mapper.registerModule(module)
     }
 }
@@ -69,6 +76,24 @@ class ScriptObjectMirrorJsonSerializerProtection : JsonSerializer<Value>() {
 class ScriptObjectMirrorJsonDeserializerNull : JsonDeserializer<Value>() {
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Value? {
+        return null
+    }
+}
+
+// Fast fail to prevent saving unrecognized PolyglotMap to execution variable
+class PolyglotMapSerializer : JsonSerializer<Any>() {
+    override fun serialize(value: Any, gen: JsonGenerator, serializers: SerializerProvider) {
+        error(
+            "Save PolyglotMap to execution variable is not supported. " +
+                "If you trying to save some structure - use DataValue instead. " +
+                "If you trying to save js Date - save as ISO string."
+        )
+    }
+}
+
+// If PolyglotMap already saved to execution variable, then deserialize it as null to prevent errors
+class PolyglotMapDeserializer<T> : JsonDeserializer<T>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): T? {
         return null
     }
 }

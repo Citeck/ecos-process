@@ -923,6 +923,36 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `script task should prevent save js date`() {
+        val procId = "test-save-js-date-script"
+        helper.saveAndDeployBpmn("scripttask", procId)
+
+        assertThrows<Exception> {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+    }
+
+    @Test
+    fun `script task should prevent save js object`() {
+        val procId = "test-save-js-object-script"
+        helper.saveAndDeployBpmn("scripttask", procId)
+
+        assertThrows<Exception> {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+    }
+
     // ---BPMN GATEWAY TESTS ---
 
     @Test

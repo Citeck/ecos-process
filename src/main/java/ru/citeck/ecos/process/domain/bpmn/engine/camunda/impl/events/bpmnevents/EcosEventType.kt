@@ -115,7 +115,7 @@ enum class EcosEventType(
         }
     }
 
-   private  val representation = fun(eventName: String): EventRepresentation? {
+    private val representation = fun(eventName: String): EventRepresentation? {
         return eventRepresentations.firstOrNull { it.eventName == eventName }
     }
 

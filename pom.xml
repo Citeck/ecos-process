@@ -24,7 +24,7 @@
 
         <querydsl.version>5.1.0</querydsl.version>
         <mongock.version>5.4.4</mongock.version>
-        <graalvm.js-scriptengine.version>23.0.5</graalvm.js-scriptengine.version>
+        <graalvm.js-scriptengine.version>24.1.1</graalvm.js-scriptengine.version>
         <jaxb-impl.version>4.0.5</jaxb-impl.version>
 
         <mongodb.driver.version>5.1.3</mongodb.driver.version>
@@ -82,6 +82,13 @@
             <groupId>org.graalvm.js</groupId>
             <artifactId>js-scriptengine</artifactId>
             <version>${graalvm.js-scriptengine.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js</artifactId>
+            <version>${graalvm.js-scriptengine.version}</version>
+            <type>pom</type>
         </dependency>
 
         <dependency>

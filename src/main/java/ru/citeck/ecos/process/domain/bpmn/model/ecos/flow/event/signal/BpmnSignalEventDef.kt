@@ -124,8 +124,8 @@ data class BpmnSignalEventDef(
                     )
                 }
 
-                if (statusChangeType != null && manualStatus != null && manualStatus.isNotBlank()
-                    && eventFilterByPredicate == null
+                if (statusChangeType != null && manualStatus != null && manualStatus.isNotBlank() &&
+                    eventFilterByPredicate == null
                 ) {
                     throw EcosBpmnElementDefinitionException(
                         id,

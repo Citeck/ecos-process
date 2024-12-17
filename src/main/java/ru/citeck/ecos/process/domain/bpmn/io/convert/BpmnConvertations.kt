@@ -535,15 +535,14 @@ private fun fillBpmnEventDefPayloadFromBpmnEventDef(
             }
 
             val filterByPredicate =
-                if (bpmnEventDef.eventType == EcosEventType.RECORD_STATUS_CHANGED
-                    && bpmnEventDef.statusChangeType != null
-                    && bpmnEventDef.manualStatus != null
+                if (bpmnEventDef.eventType == EcosEventType.RECORD_STATUS_CHANGED &&
+                    bpmnEventDef.statusChangeType != null &&
+                    bpmnEventDef.manualStatus != null
                 ) {
                     null
                 } else {
                     bpmnEventDef.eventFilterByPredicate
                 }
-
 
             event.otherAttributes.putIfNotBlank(
                 BPMN_PROP_EVENT_FILTER_BY_PREDICATE,

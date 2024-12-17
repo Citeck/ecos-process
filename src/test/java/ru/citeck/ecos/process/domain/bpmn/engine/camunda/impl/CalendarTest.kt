@@ -22,7 +22,7 @@ class CalendarTest {
 
     @ParameterizedTest
     @NullSource
-    @ValueSource(strings = ["123" , "", "GMT+3,GMT+4", "UTC - 4", "Etc/GMT+30"])
+    @ValueSource(strings = ["123", "", "GMT+3,GMT+4", "UTC - 4", "Etc/GMT+30"])
     fun `convert to ical Tz test error timezone`(userTimeZone: String?) {
         val now = Instant.EPOCH
         assertThat(
