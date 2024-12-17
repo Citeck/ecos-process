@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>3.11.6</version>
+        <version>3.12.1</version>
     </parent>
 
     <properties>
@@ -24,7 +24,6 @@
 
         <querydsl.version>5.1.0</querydsl.version>
         <mongock.version>5.4.4</mongock.version>
-        <graalvm.js-scriptengine.version>24.1.1</graalvm.js-scriptengine.version>
         <jaxb-impl.version>4.0.5</jaxb-impl.version>
 
         <mongodb.driver.version>5.1.3</mongodb.driver.version>
@@ -81,14 +80,7 @@
         <dependency>
             <groupId>org.graalvm.js</groupId>
             <artifactId>js-scriptengine</artifactId>
-            <version>${graalvm.js-scriptengine.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.graalvm.js</groupId>
-            <artifactId>js</artifactId>
-            <version>${graalvm.js-scriptengine.version}</version>
-            <type>pom</type>
+            <version>${graalvm.version}</version>
         </dependency>
 
         <dependency>
