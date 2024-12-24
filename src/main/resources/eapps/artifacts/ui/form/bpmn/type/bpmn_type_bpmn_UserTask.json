@@ -291,24 +291,9 @@
                           "en": "Time type"
                         },
                         "key": "durationType",
-                        "dataSrc": "values",
+                        "dataSrc": "custom",
                         "data": {
-                          "values": [
-                            {
-                              "label": {
-                                "ru": "Календарное",
-                                "en": "Calendar"
-                              },
-                              "value": "CALENDAR"
-                            },
-                            {
-                              "label": {
-                                "ru": "Рабочее",
-                                "en": "Business"
-                              },
-                              "value": "BUSINESS"
-                            }
-                          ],
+                          "custom": "let workingCalendarAvailable = data.isLicense.isDeveloper || data.isLicense.isEnterprise;\n\nlet timeTypes = [\n    {\n        label: utils.getTextByLocale({\n            en: 'Calendar',\n            ru: 'Календарное'\n        }),\n        value: 'CALENDAR'\n    }\n]\n\nif (workingCalendarAvailable) {\n    timeTypes.push({\n        label: utils.getTextByLocale({\n            en: 'Business',\n            ru: 'Рабочее'\n        }),\n        value: 'BUSINESS'\n    });\n}\n\nvalues = timeTypes;",
                           "headers": [
                             {}
                           ]
@@ -686,8 +671,9 @@
           "record": {
             "id": "emodel/meta@",
             "attributes": {
-              "isDeveloper": "$license.developer?bool",
-              "hasFeatureLazyApproval": "$license.features.lazy-approval"
+              "isDeveloper": "$license.developer?bool!",
+              "hasFeatureLazyApproval": "$license.features.lazy-approval",
+              "isEnterprise": "$license.enterprise?bool!"
             }
           },
           "forceLoad": false
@@ -710,7 +696,7 @@
         },
         "refreshOn": [],
         "optionalWhenDisabled": false,
-        "customConditional": "show = data.isLicense.isDeveloper == true || data.isLicense.hasFeatureLazyApproval != null;",
+        "customConditional": "show = data.isLicense.isDeveloper === true || data.isLicense.hasFeatureLazyApproval != null;",
         "type": "panel",
         "input": false,
         "components": [
