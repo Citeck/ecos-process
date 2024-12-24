@@ -133,21 +133,531 @@
       },
       {
         "label": {
-          "ru": "Форма задачи",
-          "en": "Task form"
+          "ru": "Panel"
         },
-        "key": "formRef",
-        "tooltip": {
-          "ru": "Если не выбрать значение, форма будет сгенерирована автоматически с указанными результатами задачи",
-          "en": "If no value is selected, the form will be generated automatically with the specified task outcomes"
+        "key": "panel3",
+        "title": {
+          "ru": "Приоритет",
+          "en": "Priority"
         },
-        "modalTitle": "",
-        "journalId": "ecos-forms",
-        "queryData": "",
         "refreshOn": [],
         "optionalWhenDisabled": false,
-        "type": "selectJournal",
-        "input": true
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Tabs"
+            },
+            "key": "task-settings-tab",
+            "components": [
+              {
+                "label": {
+                  "ru": "Значение",
+                  "en": "Value"
+                },
+                "key": "value-tab",
+                "components": [
+                  {
+                    "label": {
+                      "en": "Priority",
+                      "ru": "Приоритет"
+                    },
+                    "key": "priority",
+                    "hideLabel": true,
+                    "validate": {
+                      "required": true
+                    },
+                    "dataSrc": "values",
+                    "data": {
+                      "values": [
+                        {
+                          "label": "task_priority_low",
+                          "value": "LOW"
+                        },
+                        {
+                          "label": "task_priority_medium",
+                          "value": "MEDIUM"
+                        },
+                        {
+                          "label": "task_priority_high",
+                          "value": "HIGH"
+                        }
+                      ],
+                      "headers": [
+                        {}
+                      ]
+                    },
+                    "defaultValue": "",
+                    "customDefaultValue": "value = \"MEDIUM\";",
+                    "optionalWhenDisabled": false,
+                    "customConditional": "show = _.isEmpty(data.priorityExpression) || data.priorityExpression.trim().length === 0;",
+                    "type": "ecosSelect",
+                    "input": true
+                  }
+                ]
+              },
+              {
+                "label": {
+                  "ru": "Выражение",
+                  "en": "Expression"
+                },
+                "key": "expression-tab",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Вычисляемый приоритет",
+                      "en": "Priority expression"
+                    },
+                    "key": "priorityExpression",
+                    "tooltip": {
+                      "ru": "Expression для получения приоритета задачи из переменных или сервисов.\n\nВыражение должно вернуть число, представляющее собой приоритет:\nВысокий - 1\nСредний - 2\nНизкий - 3",
+                      "en": "Expression to get the task priority from variables or services.\n\nExpression should return a number that represents the priority:\nHigh - 1\nMedium - 2\nLow - 3"
+                    },
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textfield",
+                    "input": true,
+                    "inputMasks": [
+                      {}
+                    ]
+                  }
+                ]
+              }
+            ],
+            "type": "tabs",
+            "input": false
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel4",
+        "title": {
+          "ru": "Срок",
+          "en": "Due date"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Tabs"
+            },
+            "key": "due-date-tab",
+            "components": [
+              {
+                "label": {
+                  "ru": "Значение",
+                  "en": "Value"
+                },
+                "key": "due-date-value-tab",
+                "components": [
+                  {
+                    "label": {
+                      "ru": "Due date manual"
+                    },
+                    "key": "dueDateManual",
+                    "hideLabel": true,
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "container",
+                    "input": true,
+                    "components": [
+                      {
+                        "label": {
+                          "ru": "HTML"
+                        },
+                        "key": "due-date-manul-hint",
+                        "className": "",
+                        "content": {
+                          "ru": "При вычислении срока задачи, точкой отсчета является дата создания задачи.",
+                          "en": "When calculating the task deadline, the starting point is the date the task was created."
+                        },
+                        "refreshOnChange": false,
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "type": "htmlelement",
+                        "input": false
+                      },
+                      {
+                        "label": {
+                          "ru": "Тип времени",
+                          "en": "Time type"
+                        },
+                        "key": "durationType",
+                        "dataSrc": "values",
+                        "data": {
+                          "values": [
+                            {
+                              "label": {
+                                "ru": "Календарное",
+                                "en": "Calendar"
+                              },
+                              "value": "CALENDAR"
+                            },
+                            {
+                              "label": {
+                                "ru": "Рабочее",
+                                "en": "Business"
+                              },
+                              "value": "BUSINESS"
+                            }
+                          ],
+                          "headers": [
+                            {}
+                          ]
+                        },
+                        "defaultValue": "",
+                        "optionalWhenDisabled": false,
+                        "type": "ecosSelect",
+                        "input": true
+                      },
+                      {
+                        "label": {
+                          "ru": "Продолжительность",
+                          "en": "Duration"
+                        },
+                        "key": "duration",
+                        "validate": {
+                          "pattern": "^P(?:(?:\\d+Y|\\d+M|\\d+W)+(?:T(?:\\d+H|\\d+M|\\d+S)+)?|T(?:\\d+H|\\d+M|\\d+S)+)$",
+                          "customMessage": "Не соответствует формату продолжительности ISO 8601"
+                        },
+                        "defaultValue": "",
+                        "refreshOn": [
+                          "data"
+                        ],
+                        "optionalWhenDisabled": false,
+                        "logic": [
+                          {
+                            "name": "hide if days selected",
+                            "trigger": {
+                              "type": "javascript",
+                              "javascript": "result = !!data.dueDateManual.workingDays;"
+                            },
+                            "actions": [
+                              {
+                                "name": "hide",
+                                "type": "property",
+                                "property": {
+                                  "label": "Hidden",
+                                  "value": "hidden",
+                                  "type": "boolean"
+                                },
+                                "state": "true"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "mandatory logic",
+                            "trigger": {
+                              "type": "javascript",
+                              "javascript": "var mandatory = false\nlet type = _.get(data, \"dueDateManual.durationType\");\n\nif (type === \"CALENDAR\") {\n    mandatory = true;\n} else if (type === \"BUSINESS\") {\n    let daysNotSelected = !_.get(data, \"dueDateManual.workingDays\")\n    mandatory = daysNotSelected;\n}\n\nresult = mandatory;"
+                            },
+                            "actions": [
+                              {
+                                "name": "set mandatory",
+                                "type": "property",
+                                "property": {
+                                  "label": "Required",
+                                  "value": "validate.required",
+                                  "type": "boolean"
+                                },
+                                "state": "true"
+                              }
+                            ]
+                          }
+                        ],
+                        "type": "textfield",
+                        "input": true,
+                        "inputMasks": [
+                          {}
+                        ]
+                      },
+                      {
+                        "label": {
+                          "ru": "HTML"
+                        },
+                        "key": "due-date-duration-hint",
+                        "className": "",
+                        "content": {
+                          "ru": "Продолжительность времени, определенная в <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> формате, кроме указания дней. Например:\n\n<li><i>PT15M</i> - 15 минут</li>\n<li><i>PT3H</i> - 3 часа</li>\n<li><i>PT1H30M</i> - 1 час и 30 минут</li>",
+                          "en": "A time duration defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format, except for specifying days. For example:\n\n<li><i>PT15M</i> - 15 minutes</li>\n<li><i>PT3H</i> - 3 hour</li>\n<li><i>PT1H30M</i> - 1 hour and 30 minutes</li>\n"
+                        },
+                        "refreshOnChange": false,
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "customConditional": "show = !data.dueDateManual.workingDays;",
+                        "type": "htmlelement",
+                        "input": false
+                      },
+                      {
+                        "label": {
+                          "ru": "Рабочие дни",
+                          "en": "Working Days"
+                        },
+                        "key": "workingDays",
+                        "validate": {
+                          "integer": true,
+                          "min": 1,
+                          "max": 10000
+                        },
+                        "isBigNumber": false,
+                        "delimiterValue": " ",
+                        "refreshOn": [],
+                        "optionalWhenDisabled": false,
+                        "conditional": {
+                          "show": "true",
+                          "when": "durationType",
+                          "eq": "BUSINESS"
+                        },
+                        "logic": [
+                          {
+                            "name": "hide if duration selected",
+                            "trigger": {
+                              "type": "javascript",
+                              "javascript": "result = !!data.dueDateManual.duration;"
+                            },
+                            "actions": [
+                              {
+                                "name": "hide",
+                                "type": "property",
+                                "property": {
+                                  "label": "Hidden",
+                                  "value": "hidden",
+                                  "type": "boolean"
+                                },
+                                "state": "true"
+                              }
+                            ]
+                          },
+                          {
+                            "name": "mandatory logic",
+                            "trigger": {
+                              "type": "javascript",
+                              "javascript": "var mandatory = false\n\nlet type = _.get(data, \"dueDateManual.durationType\");\nlet durationNotSelected = !_.get(data, \"dueDateManual.duration\")\n\nmandatory = type === \"BUSINESS\" && durationNotSelected\n\nresult = mandatory;"
+                            },
+                            "actions": [
+                              {
+                                "name": "set mandatory",
+                                "type": "property",
+                                "property": {
+                                  "label": "Required",
+                                  "value": "validate.required",
+                                  "type": "boolean"
+                                },
+                                "state": "true"
+                              }
+                            ]
+                          }
+                        ],
+                        "type": "number",
+                        "input": true
+                      },
+                      {
+                        "label": {
+                          "ru": "Рабочее расписание",
+                          "en": "Working schedule"
+                        },
+                        "key": "workingSchedule",
+                        "validate": {
+                          "required": true
+                        },
+                        "modalTitle": "",
+                        "journalId": "type$working-schedule",
+                        "queryData": "",
+                        "refreshOn": [],
+                        "customDefaultValue": "value = \"emodel/working-schedule@DEFAULT\"",
+                        "optionalWhenDisabled": false,
+                        "conditional": {
+                          "show": "true",
+                          "when": "durationType",
+                          "eq": "BUSINESS"
+                        },
+                        "type": "selectJournal",
+                        "input": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": {
+                  "ru": "Выражение",
+                  "en": "Expression"
+                },
+                "key": "due-date-expression-tab",
+                "components": [
+                  {
+                    "label": {
+                      "en": "Due date expression",
+                      "ru": "Вычисляемый срок"
+                    },
+                    "key": "dueDate",
+                    "tooltip": {
+                      "ru": "Дата в формате ISO или выражение:\n\n- 2020-06-20T10:30:00\n- ${someDate}\n\nВыражение всегда должно  возвращать java.util.Date, java.util.String (ISO 8601) или null.",
+                      "en": "Date in ISO format or expression:\n\n- 2020-06-20T10:30:00\n-${someDate}\n\nThe expression should always resolve to a java.util.Date, java.util.String (ISO 8601), or null."
+                    },
+                    "defaultValue": "",
+                    "refreshOn": [],
+                    "optionalWhenDisabled": false,
+                    "type": "textfield",
+                    "input": true,
+                    "inputMasks": [
+                      {}
+                    ]
+                  }
+                ]
+              }
+            ],
+            "type": "tabs",
+            "input": false
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
+        "key": "panel2",
+        "title": {
+          "ru": "Параметры задачи",
+          "en": "Task settings"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "components": [
+          {
+            "label": {
+              "ru": "Форма",
+              "en": "Form"
+            },
+            "key": "formRef",
+            "tooltip": {
+              "ru": "Если не выбрать значение, форма будет сгенерирована автоматически с указанными результатами задачи",
+              "en": "If no value is selected, the form will be generated automatically with the specified task outcomes"
+            },
+            "modalTitle": "",
+            "journalId": "ecos-forms",
+            "queryData": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "selectJournal",
+            "input": true
+          },
+          {
+            "label": {
+              "ru": "Результаты задачи",
+              "en": "Task outcomes"
+            },
+            "key": "outcomes",
+            "multiple": true,
+            "validate": {
+              "required": true,
+              "minLength": "",
+              "maxLength": ""
+            },
+            "disableAddingRemovingRows": false,
+            "addAnotherPosition": "bottom",
+            "removePlacement": "col",
+            "defaultOpen": false,
+            "layoutFixed": false,
+            "enableRowGroups": false,
+            "reorder": true,
+            "defaultValue": [
+              {
+                "textField": "",
+                "id": "",
+                "name": {
+                  "ru": "",
+                  "en": ""
+                },
+                "objectObject": {
+                  "ru": "",
+                  "en": ""
+                },
+                "_name": {
+                  "ru": "",
+                  "en": ""
+                },
+                "submit-outcome-config": false
+              }
+            ],
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "datagrid",
+            "input": true,
+            "components": [
+              {
+                "label": {
+                  "ru": "Идентификатор",
+                  "en": "Id"
+                },
+                "key": "id",
+                "validate": {
+                  "pattern": "([a-zA-Z0-9-_]+$)"
+                },
+                "inputMasks": [
+                  {
+                    "label": "",
+                    "mask": ""
+                  }
+                ],
+                "defaultValue": "",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "textfield",
+                "pattern": "^[a-zA-Z0-9-_*]+$",
+                "minLength": 3,
+                "input": true,
+                "row": "0-0"
+              },
+              {
+                "label": {
+                  "en": "Name",
+                  "ru": "Название"
+                },
+                "key": "name",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "mlText",
+                "input": true,
+                "row": "0-1"
+              },
+              {
+                "label": "",
+                "key": "submit-outcome-config",
+                "action": "custom",
+                "state": "",
+                "showValidations": false,
+                "custom": "let currentRow = row;\n\nlet formInstance = instance.root;\nformInstance.showErrors([]);\n\nlet incomeOutcomes = formInstance.submission.data.outcomes\n\nconst applyOutcomeData = (newOutcomes) => {\n\n    let updatedData = [];\n\n    incomeOutcomes.forEach(outcome => {\n        if (outcome.id === newOutcomes.id) {\n            let updated = {\n                ...outcome,\n                config: {\n                    theme: newOutcomes.theme\n                }\n            }\n            updatedData.push(updated)\n        } else {\n            updatedData.push(outcome)\n        }\n    })\n\n    submission = {\n        ...submission,\n        data: {\n            ...submission.data,\n            outcomes: updatedData\n        }\n    }\n    formInstance.submission = submission;\n}\n\nCiteck.EcosFormUtils.getFormById('uiserv/form@bpmn-user-task-outcome-config-form', {\n    definition: 'definition?json',\n    i18n: 'i18n?json'\n}).then(function(formConfig) {\n\n    const formData = {\n        id: currentRow['id']\n    };\n\n    let config = currentRow['config'] || {};\n    let theme = config['theme'];\n    if (theme === undefined || theme.length === 0) {\n        theme = 'PRIMARY';\n    }\n\n    formData['theme'] = theme;\n\n    Citeck.Dialogs.showFormDialog({\n        title: Citeck.helpers.getMLValue({\n            'en': 'Outcome Configuration',\n            'ru': 'Настройка результата задачи'\n        }),\n        showDefaultButtons: true,\n        formDefinition: formConfig.definition,\n        formData: formData,\n        formI18n: formConfig.i18n,\n        onSubmit: submission => {\n            let data = submission.data || {};\n            applyOutcomeData(data)\n        }\n    })\n});",
+                "headers": [
+                  {
+                    "header": "",
+                    "value": ""
+                  }
+                ],
+                "hideLabel": true,
+                "leftIcon": "icon-settings",
+                "refreshOn": [],
+                "optionalWhenDisabled": false,
+                "type": "button",
+                "input": true,
+                "row": "0-2"
+              }
+            ],
+            "rowGroups": [
+              {}
+            ]
+          }
+        ]
       },
       {
         "label": {
@@ -167,187 +677,6 @@
         "input": true,
         "inputMasks": [
           {}
-        ]
-      },
-      {
-        "label": {
-          "ru": "Срок выполнения",
-          "en": "Due date"
-        },
-        "key": "dueDate",
-        "tooltip": {
-          "ru": "Дата в формате ISO или выражение:\n\n- 2020-06-20T10:30:00\n- ${someDate}\n\nВыражение всегда должно  возвращать java.util.Date, java.util.String (ISO 8601) или null.",
-          "en": "Date in ISO format or expression:\n\n- 2020-06-20T10:30:00\n-${someDate}\n\nThe expression should always resolve to a java.util.Date, java.util.String (ISO 8601), or null."
-        },
-        "defaultValue": "",
-        "refreshOn": [],
-        "optionalWhenDisabled": false,
-        "type": "textfield",
-        "input": true,
-        "inputMasks": [
-          {}
-        ]
-      },
-      {
-        "label": {
-          "en": "Priority",
-          "ru": "Приоритет"
-        },
-        "key": "priority",
-        "validate": {
-          "required": true
-        },
-        "dataSrc": "values",
-        "data": {
-          "values": [
-            {
-              "label": "task_priority_low",
-              "value": "LOW"
-            },
-            {
-              "label": "task_priority_medium",
-              "value": "MEDIUM"
-            },
-            {
-              "label": "task_priority_high",
-              "value": "HIGH"
-            }
-          ],
-          "headers": [
-            {
-              "key": "",
-              "value": ""
-            }
-          ]
-        },
-        "defaultValue": "",
-        "customDefaultValue": "value = \"MEDIUM\";",
-        "optionalWhenDisabled": false,
-        "customConditional": "show = _.isEmpty(data.priorityExpression) || data.priorityExpression.trim().length === 0;",
-        "type": "ecosSelect",
-        "input": true
-      },
-      {
-        "label": {
-          "ru": "Приоритет (выражение)",
-          "en": "Priority (expression)"
-        },
-        "key": "priorityExpression",
-        "tooltip": {
-          "ru": "Expression для получения приоритета задачи из переменных или сервисов.\n\nВыражение должно вернуть число, представляющее собой приоритет:\nВысокий - 1\nСредний - 2\nНизкий - 3",
-          "en": "Expression to get the task priority from variables or services.\n\nExpression should return a number that represents the priority:\nHigh - 1\nMedium - 2\nLow - 3"
-        },
-        "inputMasks": [
-          {
-            "label": "",
-            "mask": ""
-          }
-        ],
-        "defaultValue": "",
-        "refreshOn": [],
-        "optionalWhenDisabled": false,
-        "type": "textfield",
-        "input": true
-      },
-      {
-        "label": {
-          "en": "Task outcomes",
-          "ru": "Результаты задачи"
-        },
-        "key": "outcomes",
-        "multiple": true,
-        "validate": {
-          "required": true,
-          "minLength": "",
-          "maxLength": ""
-        },
-        "disableAddingRemovingRows": false,
-        "addAnotherPosition": "bottom",
-        "removePlacement": "col",
-        "defaultOpen": false,
-        "layoutFixed": false,
-        "enableRowGroups": false,
-        "reorder": true,
-        "defaultValue": [
-          {
-            "textField": "",
-            "id": "",
-            "name": {
-              "ru": "",
-              "en": ""
-            },
-            "objectObject": {
-              "ru": "",
-              "en": ""
-            },
-            "_name": {
-              "ru": "",
-              "en": ""
-            }
-          }
-        ],
-        "refreshOn": [],
-        "optionalWhenDisabled": false,
-        "type": "datagrid",
-        "input": true,
-        "components": [
-          {
-            "label": {
-              "ru": "Идентификатор",
-              "en": "Id"
-            },
-            "key": "id",
-            "validate": {
-              "pattern": "([a-zA-Z0-9-_]+$)"
-            },
-            "inputMasks": [
-              {
-                "label": "",
-                "mask": ""
-              }
-            ],
-            "defaultValue": "",
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
-            "type": "textfield",
-            "pattern": "^[a-zA-Z0-9-_*]+$",
-            "minLength": 3,
-            "input": true,
-            "row": "0-0"
-          },
-          {
-            "label": {
-              "en": "Name",
-              "ru": "Название"
-            },
-            "key": "name",
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
-            "type": "mlText",
-            "input": true,
-            "row": "0-1"
-          },
-          {
-            "label": "",
-            "key": "submit-outcome-config",
-            "action": "custom",
-            "state": "",
-            "showValidations": false,
-            "custom": "let currentRow = row;\n\nlet formInstance = instance.root;\nformInstance.showErrors([]);\n\nlet incomeOutcomes = formInstance.submission.data.outcomes\n\nconst applyOutcomeData = (newOutcomes) => {\n\n    let updatedData = [];\n\n    incomeOutcomes.forEach(outcome => {\n        if (outcome.id === newOutcomes.id) {\n            let updated = {\n                ...outcome,\n                config: {\n                    theme: newOutcomes.theme\n                }\n            }\n            updatedData.push(updated)\n        } else {\n            updatedData.push(outcome)\n        }\n    })\n\n    submission = {\n        ...submission,\n        data: {\n            ...submission.data,\n            outcomes: updatedData\n        }\n    }\n    formInstance.submission = submission;\n}\n\nCiteck.EcosFormUtils.getFormById('uiserv/form@bpmn-user-task-outcome-config-form', {\n    definition: 'definition?json',\n    i18n: 'i18n?json'\n}).then(function(formConfig) {\n\n    const formData = {\n        id: currentRow['id']\n    };\n\n    let config = currentRow['config'] || {};\n    let theme = config['theme'];\n    if (theme === undefined || theme.length === 0) {\n        theme = 'PRIMARY';\n    }\n\n    formData['theme'] = theme;\n\n    Citeck.Dialogs.showFormDialog({\n        title: Citeck.helpers.getMLValue({\n            'en': 'Outcome Configuration',\n            'ru': 'Настройка результата задачи'\n        }),\n        showDefaultButtons: true,\n        formDefinition: formConfig.definition,\n        formData: formData,\n        formI18n: formConfig.i18n,\n        onSubmit: submission => {\n            let data = submission.data || {};\n            applyOutcomeData(data)\n        }\n    })\n});",
-            "headers": [
-              {
-                "header": "",
-                "value": ""
-              }
-            ],
-            "hideLabel": true,
-            "leftIcon": "icon-settings",
-            "refreshOn": [],
-            "optionalWhenDisabled": false,
-            "type": "button",
-            "input": true,
-            "row": "0-2"
-          }
         ]
       },
       {
@@ -511,17 +840,6 @@
               },
               "key": "value",
               "clearOnHide": false,
-              "validate": {
-                "required": false,
-                "custom": "",
-                "customPrivate": false,
-                "customMessage": "",
-                "json": "",
-                "minLength": "",
-                "maxLength": "",
-                "minWords": "",
-                "maxWords": ""
-              },
               "inputMasks": [
                 {
                   "label": "",

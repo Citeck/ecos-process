@@ -14,6 +14,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.MultiInstanceConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.toExpression
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TMultiInstanceLoopCharacteristics
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
@@ -92,7 +93,13 @@ class CamundaUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
             otherAttributes[CAMUNDA_FORM_KEY] = element.formRef.toString()
 
-            otherAttributes.putIfNotBlank(CAMUNDA_DUE_DATE, element.dueDate)
+            val dueDate = if (element.dueDateManual != null) {
+                element.dueDateManual.toExpression()
+            } else {
+                element.dueDate
+            }
+            otherAttributes.putIfNotBlank(CAMUNDA_DUE_DATE, dueDate)
+            otherAttributes.putIfNotBlank(BPMN_PROP_DUE_DATE_MANUAL, Json.mapper.toString(element.dueDateManual))
             otherAttributes.putIfNotBlank(CAMUNDA_FOLLOW_UP_DATE, element.followUpDate)
 
             otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE] = element.manualRecipientsMode.toString()

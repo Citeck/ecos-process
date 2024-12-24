@@ -4,6 +4,8 @@ import org.camunda.spin.impl.json.jackson.format.JacksonJsonDataFormat
 import org.camunda.spin.spi.DataFormatConfigurator
 import org.graalvm.polyglot.Value
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
+import ru.citeck.ecos.bpmn.commons.values.Duration
+import ru.citeck.ecos.bpmn.commons.values.Time
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
@@ -59,6 +61,12 @@ class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDat
 
         module.addSerializer(Class.forName(POLYGLOT_MAP_CLASS_NAME), PolyglotMapSerializer())
         module.addDeserializer(Class.forName(POLYGLOT_MAP_CLASS_NAME), PolyglotMapDeserializer())
+
+        module.addSerializer(Time::class.java, TimeJsonSerializer())
+        module.addDeserializer(Time::class.java, TimeJsonDeserializer())
+
+        module.addSerializer(Duration::class.java, DurationJsonSerializer())
+        module.addDeserializer(Duration::class.java, DurationJsonDeserializer())
 
         mapper.registerModule(module)
     }
@@ -187,5 +195,33 @@ class TaskOutcomeThemeJsonDeserializer : JsonDeserializer<TaskOutcomeTheme>() {
         }
 
         return Json.mapper.readNotNull(stringValue, TaskOutcomeTheme::class.java)
+    }
+}
+
+class TimeJsonSerializer : JsonSerializer<Time>() {
+
+    override fun serialize(value: Time, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeString(value.toIsoString())
+    }
+}
+
+class TimeJsonDeserializer : JsonDeserializer<Time>() {
+
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Time {
+        return Time.of(p.valueAsString)
+    }
+}
+
+class DurationJsonSerializer : JsonSerializer<Duration>() {
+
+    override fun serialize(value: Duration, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeString(value.toIsoString())
+    }
+}
+
+class DurationJsonDeserializer : JsonDeserializer<Duration>() {
+
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Duration {
+        return Duration.of(p.valueAsString)
     }
 }

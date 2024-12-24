@@ -27,12 +27,14 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
+import ru.citeck.ecos.bpmn.commons.values.Time
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.config.lib.service.EcosConfigService
@@ -52,6 +54,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.TimeNowProvider
 import ru.citeck.ecos.process.domain.bpmn.event.BpmnEcosEventTestAction
 import ru.citeck.ecos.process.domain.bpmn.event.SUBSCRIPTION
 import ru.citeck.ecos.process.domain.bpmn.kpi.BPMN_KPI_SETTINGS_SOURCE_ID
@@ -71,6 +74,8 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import ru.citeck.ecos.wkgsch.lib.schedule.WorkingScheduleService
+import ru.citeck.ecos.wkgsch.lib.schedule.type.weekly.WeeklyWorkingSchedule
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
@@ -173,6 +178,16 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @SpyBean
     private lateinit var bpmnEcosEventTestAction: BpmnEcosEventTestAction
+
+    @SpyBean
+    private lateinit var timeNowProvider: TimeNowProvider
+
+    @MockBean
+    private lateinit var workingScheduleService: WorkingScheduleService
+
+    @Autowired
+    @Qualifier("testWeaklyWorkingSchedule")
+    private lateinit var testWeaklyWorkingSchedule: WeeklyWorkingSchedule
 
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
 
@@ -288,6 +303,8 @@ class BpmnMonsterTestWithRunProcessTest {
         )
 
         `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
+
+        `when`(workingScheduleService.getScheduleById(anyString())).thenReturn(testWeaklyWorkingSchedule)
     }
 
     @AfterEach
@@ -832,6 +849,87 @@ class BpmnMonsterTestWithRunProcessTest {
             ).isEqualTo(
                 expectedFollowUpDate
             )
+
+            assertThat(
+                ZonedDateTime.ofInstant(it.dueDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedDueDate
+            )
+
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `task due date manual calendar duration`() {
+        val procId = "test-user-task-due-date-manual-calendar"
+        helper.saveAndDeployBpmn(USER_TASK, procId)
+
+        // PT1H30M
+        val fixedInstant = Instant.parse("2024-12-17T15:00:00Z")
+        val expectedDueDate = Instant.parse("2024-12-17T16:30:00Z")
+
+        `when`(timeNowProvider.now()).thenReturn(Time.of(fixedInstant))
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+
+            assertThat(
+                ZonedDateTime.ofInstant(it.dueDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedDueDate
+            )
+
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test due date manual business duration`() {
+        val procId = "test-user-task-due-date-manual-business"
+        helper.saveAndDeployBpmn(USER_TASK, procId)
+
+        // PT5H
+        val fixedInstant = Instant.parse("2024-12-17T10:30:00Z")
+        val expectedDueDate = Instant.parse("2024-12-18T07:30:00Z")
+
+        `when`(timeNowProvider.now()).thenReturn(Time.of(fixedInstant))
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+
+            assertThat(
+                ZonedDateTime.ofInstant(it.dueDate.toInstant(), ZoneOffset.UTC).toInstant()
+            ).isEqualTo(
+                expectedDueDate
+            )
+
+            it.complete()
+        }
+
+        run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `test due date manual business days`() {
+        val procId = "test-user-task-due-date-manual-business-days"
+        helper.saveAndDeployBpmn(USER_TASK, procId)
+
+        // 5 business days
+        val fixedInstant = Instant.parse("2024-12-17T10:30:00Z")
+        val expectedDueDate = Instant.parse("2024-12-24T10:30:00Z")
+
+        `when`(timeNowProvider.now()).thenReturn(Time.of(fixedInstant))
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
 
             assertThat(
                 ZonedDateTime.ofInstant(it.dueDate.toInstant(), ZoneOffset.UTC).toInstant()

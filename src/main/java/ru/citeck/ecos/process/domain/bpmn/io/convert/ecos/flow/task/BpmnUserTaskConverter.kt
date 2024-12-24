@@ -8,6 +8,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.*
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskDueDateManual
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
@@ -30,6 +31,16 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             }
         }
 
+        val dueDate = element.otherAttributes[BPMN_PROP_DUE_DATE]
+        val dueDateManual = if (dueDate.isNullOrBlank()) {
+            Json.mapper.convert(
+                element.otherAttributes[BPMN_PROP_DUE_DATE_MANUAL],
+                TaskDueDateManual::class.java
+            ).takeIf { converted -> converted?.durationType != null }
+        } else {
+            null
+        }
+
         return BpmnUserTaskDef(
             id = element.id,
             name = nameMl,
@@ -49,7 +60,10 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 )
             ),
             formRef = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_FORM_REF]),
-            dueDate = element.otherAttributes[BPMN_PROP_DUE_DATE],
+
+            dueDate = dueDate,
+            dueDateManual = dueDateManual,
+
             followUpDate = element.otherAttributes[BPMN_PROP_FOLLOW_UP_DATE],
             priority = if (element.otherAttributes[BPMN_PROP_PRIORITY].isNullOrBlank()) {
                 TaskPriority.MEDIUM
@@ -103,7 +117,16 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_FORM_REF, element.formRef.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_PRIORITY, element.priority.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_PRIORITY_EXPRESSION, element.priorityExpression)
-            otherAttributes.putIfNotBlank(BPMN_PROP_DUE_DATE, element.dueDate)
+
+            val dueDateManual = Json.mapper.toString(element.dueDateManual)
+            val dueDate = if (dueDateManual.isNullOrBlank()) {
+                element.dueDate
+            } else {
+                null
+            }
+            otherAttributes.putIfNotBlank(BPMN_PROP_DUE_DATE, dueDate)
+            otherAttributes.putIfNotBlank(BPMN_PROP_DUE_DATE_MANUAL, dueDateManual)
+
             otherAttributes.putIfNotBlank(BPMN_PROP_FOLLOW_UP_DATE, element.followUpDate)
 
             otherAttributes.putIfNotBlank(BPMN_PROP_MANUAL_RECIPIENTS_MODE, element.manualRecipientsMode.toString())

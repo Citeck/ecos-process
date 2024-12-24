@@ -27,6 +27,8 @@ data class BpmnUserTaskDef(
     val priorityExpression: String? = null,
 
     val dueDate: String? = null,
+    val dueDateManual: TaskDueDateManual? = null,
+
     val followUpDate: String? = null,
 
     val multiInstanceConfig: MultiInstanceConfig? = null,
@@ -95,5 +97,7 @@ data class BpmnUserTaskDef(
                 )
             }
         }
+
+        dueDateManual?.validate(id)
     }
 }
