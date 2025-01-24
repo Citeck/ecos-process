@@ -73,7 +73,7 @@ class SendNotificationDelegate : JavaDelegate {
         document = let {
             val recordFromExpression = notificationRecord?.getValue(execution)?.toString()
             if (!recordFromExpression.isNullOrBlank()) {
-                EntityRef.valueOf(recordFromExpression)
+                EntityRef.valueOf(recordFromExpression.replace("\"", ""))
             } else {
                 execution.getDocumentRef()
             }
