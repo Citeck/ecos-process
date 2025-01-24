@@ -129,4 +129,11 @@
         <tagDatabase tag="7.21.0"/>
     </changeSet>
 
+    <changeSet author="Citeck" id="20250124_ecos_add_variables_index">
+        <!--
+        Index to speed up queries of tasks for document
+        -->
+        <sql>CREATE INDEX IF NOT EXISTS ecos_idx_variable_task_name_text ON act_ru_variable(task_id_, name_, text_);</sql>
+    </changeSet>
+
 </databaseChangeLog>
