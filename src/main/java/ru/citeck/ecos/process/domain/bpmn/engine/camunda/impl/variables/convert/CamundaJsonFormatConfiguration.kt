@@ -124,7 +124,7 @@ class BpmnDataValueJsonSerializer : JsonSerializer<BpmnDataValue>() {
 class BpmnDataValueJsonDeserializer : JsonDeserializer<BpmnDataValue>() {
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): BpmnDataValue {
-        return BpmnDataValue.create(p.binaryValue)
+        return Json.mapper.readNotNull(p.binaryValue, BpmnDataValue::class.java)
     }
 }
 
