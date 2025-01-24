@@ -1459,6 +1459,44 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    fun `send task with record from expression`() {
+        val procId = "test-send-task-record-from-expression"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                emptyMap()
+            ).engine(processEngine).execute()
+        }
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(mockAuthorEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        "doc" to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
     fun `send task with explicit text`() {
         val procId = "test-send-task-with-explicit-text"
         helper.saveAndDeployBpmn(SEND_TASK, procId)

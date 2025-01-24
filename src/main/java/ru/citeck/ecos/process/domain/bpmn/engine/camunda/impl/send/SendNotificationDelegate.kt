@@ -70,12 +70,12 @@ class SendNotificationDelegate : JavaDelegate {
     override fun execute(execution: DelegateExecution) {
         init(execution)
 
-        val record = let {
-            val recordFromExpression = notificationRecord?.expressionText ?: ""
-            if (recordFromExpression.isNotBlank()) {
+        document = let {
+            val recordFromExpression = notificationRecord?.getValue(execution)?.toString()
+            if (!recordFromExpression.isNullOrBlank()) {
                 EntityRef.valueOf(recordFromExpression)
             } else {
-                document
+                execution.getDocumentRef()
             }
         }
 
@@ -90,7 +90,7 @@ class SendNotificationDelegate : JavaDelegate {
 
         val recipients = getRecipientsEmailsFromExpression(notificationTo, execution)
         val notification = Notification.Builder()
-            .record(record)
+            .record(document)
             .notificationType(
                 notificationType?.let { NotificationType.valueOf(it.expressionText) }
                     ?: NotificationType.EMAIL_NOTIFICATION

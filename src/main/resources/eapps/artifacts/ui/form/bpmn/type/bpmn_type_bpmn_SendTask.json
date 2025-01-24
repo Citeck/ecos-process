@@ -655,8 +655,8 @@
             },
             "key": "notificationRecord",
             "tooltip": {
-              "ru": "Базовый RecordRef по которому отправляется уведомление. Если пусто, то документ, по которому идет бизнес процесс.",
-              "en": "The base RecordRef on which the notification is sent. If empty, then the document according to which the business process is running."
+              "ru": "Базовый RecordRef по которому отправляется уведомление. Может быть указан напрямую или через expression.\n\nЕсли пусто, то документ, по которому идет бизнес процесс.",
+              "en": "The base RecordRef on which the notification is sent. Can be specified directly or via expression.\n\nIf empty, then the document according to which the business process is running."
             },
             "hidden": true,
             "defaultValue": "",
@@ -684,7 +684,10 @@
               }
             ],
             "type": "textfield",
-            "input": true
+            "input": true,
+            "inputMasks": [
+              {}
+            ]
           },
           {
             "label": {

@@ -18,7 +18,7 @@ data class BpmnSendTaskDef(
     val incoming: List<String> = emptyList(),
     val outgoing: List<String> = emptyList(),
 
-    val record: EntityRef = EntityRef.EMPTY,
+    val record: String = "",
     val template: EntityRef = EntityRef.EMPTY,
     val type: NotificationType,
 

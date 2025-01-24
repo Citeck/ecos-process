@@ -35,7 +35,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
             template = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_TEMPLATE]),
-            record = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_RECORD]),
+            record = element.otherAttributes[BPMN_PROP_NOTIFICATION_RECORD] ?: "",
             title = element.otherAttributes[BPMN_PROP_NOTIFICATION_TITLE] ?: "",
             body = element.otherAttributes[BPMN_PROP_NOTIFICATION_BODY] ?: "",
             from = element.otherAttributes[BPMN_PROP_NOTIFICATION_FROM] ?: "",
@@ -92,7 +92,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TEMPLATE, element.template.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TYPE, element.type.toString())
-            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_RECORD, element.record.toString())
+            otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_RECORD, element.record)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TITLE, element.title)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_BODY, element.body)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_FROM, element.from)
