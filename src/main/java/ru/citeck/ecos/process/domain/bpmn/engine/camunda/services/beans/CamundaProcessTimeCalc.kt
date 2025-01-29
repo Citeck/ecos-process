@@ -79,19 +79,26 @@ class CamundaProcessTimeCalc(
         return Time.of(schedule.addWorkingTime(now.instant, durationEntity.toJavaDuration()))
     }
 
+
+    // Current implementation of schedule.addWorkingDays works incorrectly. Using is not recommended.
+    // See https://jira.citeck.ru/browse/ECOSENT-3164
+    @Deprecated(message = "Not stable", replaceWith = ReplaceWith("nowPlusWorkingTime"))
     fun plusWorkingDays(time: Time, days: Int): Time {
         return plusWorkingDays(time, days, DEFAULT_SCHEDULE_ID)
     }
 
+    @Deprecated(message = "Not stable", replaceWith = ReplaceWith("nowPlusWorkingTime"))
     fun plusWorkingDays(time: Time, days: Int, scheduleId: String): Time {
         val schedule = workingScheduleService.getScheduleById(scheduleId)
         return Time.of(schedule.addWorkingDays(time.instant, days))
     }
 
+    @Deprecated(message = "Not stable", replaceWith = ReplaceWith("nowPlusWorkingTime"))
     fun nowPlusWorkingDays(days: Int): Time {
         return nowPlusWorkingDays(days, DEFAULT_SCHEDULE_ID)
     }
 
+    @Deprecated(message = "Not stable", replaceWith = ReplaceWith("nowPlusWorkingTime"))
     fun nowPlusWorkingDays(days: Int, scheduleId: String): Time {
         val schedule = workingScheduleService.getScheduleById(scheduleId)
 

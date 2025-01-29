@@ -387,6 +387,8 @@
                           "en": "Working Days"
                         },
                         "key": "workingDays",
+                        "disabled": true,
+                        "hidden": true,
                         "validate": {
                           "integer": true,
                           "min": 1,
