@@ -1,11 +1,13 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.flow.task
 
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.*
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.BpmnUserTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskDueDateManual
@@ -17,6 +19,8 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportCo
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
+
+private val allowedDurationRegex = "^PT(?:(\\d+H)(\\d+M)?|(\\d+M))\$".toRegex()
 
 class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
@@ -33,8 +37,17 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
         val dueDate = element.otherAttributes[BPMN_PROP_DUE_DATE]
         val dueDateManual = if (dueDate.isNullOrBlank()) {
+            val dueDateManualData = DataValue.of(element.otherAttributes[BPMN_PROP_DUE_DATE_MANUAL])
+            val durationRaw = dueDateManualData["duration"].asText()
+            if (durationRaw.isNotBlank() && !allowedDurationRegex.containsMatchIn(durationRaw)) {
+                throw EcosBpmnElementDefinitionException(
+                    element.id,
+                    "Invalid duration format"
+                )
+            }
+
             Json.mapper.convert(
-                element.otherAttributes[BPMN_PROP_DUE_DATE_MANUAL],
+                dueDateManualData,
                 TaskDueDateManual::class.java
             ).takeIf { converted -> converted?.durationType != null }
         } else {

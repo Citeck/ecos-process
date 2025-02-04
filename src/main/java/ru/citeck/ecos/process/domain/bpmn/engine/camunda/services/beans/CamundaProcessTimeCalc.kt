@@ -79,7 +79,6 @@ class CamundaProcessTimeCalc(
         return Time.of(schedule.addWorkingTime(now.instant, durationEntity.toJavaDuration()))
     }
 
-
     // Current implementation of schedule.addWorkingDays works incorrectly. Using is not recommended.
     // See https://jira.citeck.ru/browse/ECOSENT-3164
     @Deprecated(message = "Not stable", replaceWith = ReplaceWith("nowPlusWorkingTime"))
@@ -109,7 +108,7 @@ class CamundaProcessTimeCalc(
 
 // Hack for testing
 @Component
-class TimeNowProvider() {
+class TimeNowProvider {
 
     fun now(): Time {
         return Time.now()

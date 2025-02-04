@@ -313,8 +313,8 @@
                         },
                         "key": "duration",
                         "validate": {
-                          "pattern": "^P(?:(?:\\d+Y|\\d+M|\\d+W)+(?:T(?:\\d+H|\\d+M|\\d+S)+)?|T(?:\\d+H|\\d+M|\\d+S)+)$",
-                          "customMessage": "Не соответствует формату продолжительности ISO 8601"
+                          "pattern": "^PT(?:(\\d+H)(\\d+M)?|(\\d+M))$",
+                          "customMessage": "Неверное значение"
                         },
                         "defaultValue": "",
                         "refreshOn": [
@@ -374,8 +374,8 @@
                         "key": "due-date-duration-hint",
                         "className": "",
                         "content": {
-                          "ru": "Продолжительность времени, определенная в <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> формате, кроме указания дней. Например:\n\n<li><i>PT15M</i> - 15 минут</li>\n<li><i>PT3H</i> - 3 часа</li>\n<li><i>PT1H30M</i> - 1 час и 30 минут</li>",
-                          "en": "A time duration defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format, except for specifying days. For example:\n\n<li><i>PT15M</i> - 15 minutes</li>\n<li><i>PT3H</i> - 3 hour</li>\n<li><i>PT1H30M</i> - 1 hour and 30 minutes</li>\n"
+                          "ru": "Продолжительность времени, определенная в <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> формате с указанием часов и минут. Например:\n\n<li><i>PT15M</i> - 15 минут</li>\n<li><i>PT3H</i> - 3 часа</li>\n<li><i>PT1H30M</i> - 1 час и 30 минут</li>",
+                          "en": "A time duration defined as <a href=\"https://en.wikipedia.org/wiki/ISO_8601\" target=\"_blank\" rel=\"noopener noreferrer\">ISO 8601</a> durations format, for select hours and minutes. For example:\n\n<li><i>PT15M</i> - 15 minutes</li>\n<li><i>PT3H</i> - 3 hour</li>\n<li><i>PT1H30M</i> - 1 hour and 30 minutes</li>\n"
                         },
                         "refreshOnChange": false,
                         "refreshOn": [],

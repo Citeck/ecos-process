@@ -29,15 +29,24 @@ data class TaskDueDateManual(
         }
 
         if (durationType == DurationType.BUSINESS && duration == null && workingDays == null) {
-            throw EcosBpmnElementDefinitionException(elementId, "Duration or working days must be set for business duration type")
+            throw EcosBpmnElementDefinitionException(
+                elementId,
+                "Duration or working days must be set for business duration type"
+            )
         }
 
         if (durationType == DurationType.BUSINESS && workingSchedule.isEmpty()) {
-            throw EcosBpmnElementDefinitionException(elementId, "Working schedule must be set for business duration type")
+            throw EcosBpmnElementDefinitionException(
+                elementId,
+                "Working schedule must be set for business duration type"
+            )
         }
 
         if (duration != null && workingDays != null) {
-            throw EcosBpmnElementDefinitionException(elementId, "Only one of the fields should be set of duration and working days")
+            throw EcosBpmnElementDefinitionException(
+                elementId,
+                "Only one of the fields should be set of duration and working days"
+            )
         }
     }
 }
