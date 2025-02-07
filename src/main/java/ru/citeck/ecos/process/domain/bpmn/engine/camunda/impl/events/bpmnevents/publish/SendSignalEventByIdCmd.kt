@@ -7,14 +7,33 @@ import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EVENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class SendSignalEventByIdCmd(
     private val signalId: String,
     eventData: BpmnDataValue
 ) : Command<Unit> {
 
-    private val eventVariable = mapOf(BPMN_EVENT to eventData)
+    private val startProcessVariables = let {
+        val data = mutableMapOf<String, Any>(BPMN_EVENT to eventData)
+
+        val recordAtt = eventData[EcosEventType.RECORD_ATT].asText()
+        if (recordAtt.isNotBlank()) {
+            data[BPMN_DOCUMENT_REF] = recordAtt
+        }
+
+        val recordTypeRef = EntityRef.valueOf(eventData[EcosEventType.RECORD_TYPE_ATT].asText())
+        val localId = recordTypeRef.getLocalId()
+        if (localId.isNotBlank()) {
+            data[BPMN_DOCUMENT_TYPE] = localId
+        }
+
+        data.toMap()
+    }
 
     override fun execute(commandContext: CommandContext) {
         sendSignal(commandContext)
@@ -92,7 +111,7 @@ class SendSignalEventByIdCmd(
     private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {
         for (signalEventSubscriptionEntity in catchSignalEventSubscription) {
             if (isActiveEventSubscription(signalEventSubscriptionEntity)) {
-                signalEventSubscriptionEntity.eventReceived(eventVariable, false)
+                signalEventSubscriptionEntity.eventReceived(startProcessVariables, false)
             }
         }
     }
@@ -111,7 +130,7 @@ class SendSignalEventByIdCmd(
             if (processDefinition != null) {
                 val signalStartEvent = processDefinition.findActivity(signalStartEventSubscription.activityId)
                 val processInstance = processDefinition.createProcessInstanceForInitial(signalStartEvent)
-                processInstance.start(eventVariable)
+                processInstance.start(startProcessVariables)
             }
         }
     }
