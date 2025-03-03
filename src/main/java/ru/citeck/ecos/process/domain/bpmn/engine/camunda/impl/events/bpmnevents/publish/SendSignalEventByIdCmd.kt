@@ -4,6 +4,7 @@ import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.interceptor.Command
 import org.camunda.bpm.engine.impl.interceptor.CommandContext
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
@@ -33,6 +34,13 @@ class SendSignalEventByIdCmd(
         }
 
         data.toMap()
+    }
+
+    private val businessKey = let {
+        val recordAtt = eventData[EcosEventType.RECORD_ATT].asText()
+        recordAtt.ifBlank {
+            null
+        }
     }
 
     override fun execute(commandContext: CommandContext) {
@@ -111,7 +119,13 @@ class SendSignalEventByIdCmd(
     private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {
         for (signalEventSubscriptionEntity in catchSignalEventSubscription) {
             if (isActiveEventSubscription(signalEventSubscriptionEntity)) {
-                signalEventSubscriptionEntity.eventReceived(startProcessVariables, false)
+                signalEventSubscriptionEntity.eventReceived(
+                    startProcessVariables,
+                    null,
+                    null,
+                    businessKey,
+                    false
+                )
             }
         }
     }
@@ -130,6 +144,10 @@ class SendSignalEventByIdCmd(
             if (processDefinition != null) {
                 val signalStartEvent = processDefinition.findActivity(signalStartEventSubscription.activityId)
                 val processInstance = processDefinition.createProcessInstanceForInitial(signalStartEvent)
+                if (processInstance is ExecutionEntity) {
+                    processInstance.businessKey = businessKey
+                }
+
                 processInstance.start(startProcessVariables)
             }
         }
