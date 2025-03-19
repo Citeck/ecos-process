@@ -3253,6 +3253,24 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(process).hasFinished("endEvent")
     }
 
+    @Test
+    fun `bpmn event sub process with user task signal`() {
+        val procId = "bpmn-events-sub-process-user-task-signal-event"
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it).hasCandidateUser(USER_IVAN)
+            assertThat(it).hasCandidateUser(USER_PETR)
+
+            it.complete()
+        }
+
+        run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endSubProcess")
+        verify(process).hasFinished("endEvent")
+    }
+
     // --- BPMN SERVICES TESTS ---
 
     @Test
