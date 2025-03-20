@@ -7,6 +7,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 
 data class UserTaskEvent(
+    var record: EntityRef? = null,
     var taskId: EntityRef? = null,
     var engine: String? = null,
     var form: EntityRef? = null,

@@ -91,11 +91,12 @@ class BpmnElementConverter(
 //            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId " +
 //            " procDefId, procDefRef, procDeploymentVersion will be null"
 //    }
-
+                val documentRef = getDocumentRef()
                 val outcome = getOutcome()
                 val userTaskLaInfo = taskDefinitionUtils.getUserTaskLaInfo(delegateTask)
 
                 userTaskEvent = UserTaskEvent(
+                    record = documentRef,
                     taskId = EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
                     engine = BPMN_CAMUNDA_ENGINE,
                     form = getFormRef(),
@@ -127,7 +128,7 @@ class BpmnElementConverter(
                     outcome = outcome.value,
                     outcomeName = outcome.name,
                     completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,
-                    document = getDocumentRef(),
+                    document = documentRef,
                     laEnabled = userTaskLaInfo.laEnabled,
                     laNotificationType = userTaskLaInfo.laNotificationType,
                     laNotificationTemplate = userTaskLaInfo.laNotificationTemplate,
