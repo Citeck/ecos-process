@@ -50,7 +50,6 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.EcosEventEmitter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
@@ -3289,8 +3288,10 @@ class BpmnMonsterTestWithRunProcessTest {
             it.complete()
         }
 
-        val scenario =
-            run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
+        val scenario = run(process)
+            .startByKey(procId, docRef.toString(), variables_docRef)
+            .engine(processEngine)
+            .execute()
 
         val eventJsonAssert = assertThat(scenario.instance(process)).variables().extracting("event").extracting {
             it as BpmnDataValue
@@ -3311,16 +3312,21 @@ class BpmnMonsterTestWithRunProcessTest {
             .containsEntry("assigneeRef", null)
             .containsEntry("candidateGroups", emptyList<String>())
             .containsEntry("candidateGroupsRef", emptyList<String>())
-            .containsEntry("candidateUsers", mockRoleUserNames)
-            .containsEntry("candidateUsersRef", listOf("emodel/person@$USER_IVAN", "emodel/person@$USER_PETR"))
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["json"]["candidateUsers"].asList(String::class.java)
+        }.asInstanceOf(InstanceOfAssertFactories.list(String::class.java))
+            .containsExactlyInAnyOrderElementsOf(mockRoleUserNames)
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["json"]["candidateUsersRef"].asList(String::class.java)
+        }.asInstanceOf(InstanceOfAssertFactories.list(String::class.java))
+            .containsExactlyInAnyOrderElementsOf(listOf("emodel/person@$USER_IVAN", "emodel/person@$USER_PETR"))
 
         verify(process).hasFinished("endSubProcess")
         verify(process).hasFinished("endEvent")
-
-        val event = eventsService.getListeners()[EcosEventEmitter.ECOS_EVENT_USER_TASK_CREATE]
-        event?.listeners?.forEach {
-            eventsService.removeListener(it.config)
-        }
     }
 
     // --- BPMN SERVICES TESTS ---

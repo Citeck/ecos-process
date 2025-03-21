@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.listener
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.camunda.bpm.engine.delegate.TaskListener
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
@@ -11,26 +10,10 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEm
 import ru.citeck.ecos.txn.lib.TxnContext
 
 @Component
-class BpmnTaskCreateEventListener(
-    private val emitter: BpmnEventEmitter,
-
-    @Lazy
-    private val bpmnElementConverter: BpmnElementConverter
-) : TaskListener {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
+class BpmnTaskCreateEventListener : TaskListener {
 
     override fun notify(delegateTask: DelegateTask) {
-        AuthContext.runAsSystem {
-            TxnContext.doInTxn {
-                val converterFlowElement = bpmnElementConverter.toUserTaskEvent(delegateTask)
-                log.debug { "Emit task create element:\n $converterFlowElement" }
-
-                emitter.emitUserTaskCreateEvent(converterFlowElement)
-            }
-        }
+        // do nothing, stay for backward compatibility
     }
 }
 

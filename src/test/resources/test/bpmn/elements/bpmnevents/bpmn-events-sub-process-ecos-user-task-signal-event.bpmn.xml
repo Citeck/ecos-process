@@ -24,7 +24,7 @@
         </bpmn:endEvent>
         <bpmn:sequenceFlow sourceRef="userTask" targetRef="endEvent" name="" id="Flow_0zcn35o" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
         <bpmn:subProcess triggeredByEvent="true" name="" id="Activity_0tyvnpi" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:false}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
-            <bpmn:startEvent isInterrupting="false" name="" id="Event_00is9nq" ecos:documentation="{}" ecos:manualSignalName="ecos-user-task-create" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{&quot;json&quot;:&quot;?json&quot;}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:false}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true" ecos:eventFilterByPredicate="{}">
+            <bpmn:startEvent isInterrupting="false" name="" id="Event_00is9nq" ecos:documentation="{}" ecos:manualSignalName="bpmn-user-task-create" ecos:eventFilterByRecordType="DOCUMENT" ecos:eventModel="{&quot;json&quot;:&quot;?json&quot;}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:false}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:eventManualMode="true" ecos:eventFilterByPredicate="{}">
                 <bpmn:outgoing >Flow_0y27q9o</bpmn:outgoing>
                 <bpmn:signalEventDefinition  signalRef="Signal_k5fxS3G" id="SignalEventDefinition_1ntako8"/>
             </bpmn:startEvent>
@@ -37,7 +37,7 @@
     <bpmn:collaboration id="Collaboration_1jh4oo2">
         <bpmn:participant  name="" processRef="bpmn-events-sub-process-ecos-user-task-signal-event" id="Participant_1hrro8q" ecos:documentation="{}" ecos:name_ml="{}" ecos:ecosType="emodel/type@type-ecos-fin-request"/>
     </bpmn:collaboration>
-    <bpmn:signal name="ecos-user-task-create;${execution.businessKey};ANY;pr_99914b932bd37a50b983c5e7c90ae93b" id="Signal_k5fxS3G"/>
+    <bpmn:signal name="bpmn-user-task-create;${execution.businessKey};ANY;pr_99914b932bd37a50b983c5e7c90ae93b" id="Signal_k5fxS3G"/>
     <bpmndi:BPMNDiagram id="BPMNDiagram_1">
         <bpmndi:BPMNPlane  bpmnElement="Collaboration_1jh4oo2" id="BPMNPlane_1">
             <bpmndi:BPMNShape bpmnElement="Participant_1hrro8q" isExpanded="false" id="Participant_1hrro8q_di">
