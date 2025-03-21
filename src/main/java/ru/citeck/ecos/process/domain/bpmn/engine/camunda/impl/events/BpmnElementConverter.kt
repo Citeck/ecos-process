@@ -7,11 +7,12 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.auth.AuthGroup
+import ru.citeck.ecos.model.lib.authorities.AuthorityType
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.EcosUserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FullFulFlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.RawFlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
@@ -96,12 +97,23 @@ class BpmnElementConverter(
                 val outcome = getOutcome()
                 val userTaskLaInfo = taskDefinitionUtils.getUserTaskLaInfo(delegateTask)
 
+                val (candidateUsers, candidateGroups) = candidates.splitToUserGroupCandidates()
+
                 userTaskEvent = UserTaskEvent(
                     record = documentRef,
                     taskId = EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
                     engine = BPMN_CAMUNDA_ENGINE,
                     form = getFormRef(),
                     assignee = assignee,
+                    assigneeRef = assignee?.takeIf { it.isNotBlank() }?.let { AuthorityType.PERSON.getRef(it) },
+                    candidateUsers = candidateUsers.toList(),
+                    candidateUsersRef = candidateUsers.map { AuthorityType.PERSON.getRef(it) },
+                    candidateGroups = candidateGroups.toList(),
+                    candidateGroupsRef = candidateGroups.map {
+                        AuthorityType.GROUP.getRef(
+                            it.removePrefix(AuthGroup.PREFIX)
+                        )
+                    },
                     roles = taskDefinitionUtils.getTaskRoles(delegateTask),
                     procDefId = rev?.procDefId,
                     procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
@@ -147,48 +159,6 @@ class BpmnElementConverter(
             }
 
             return userTaskEvent
-        }
-    }
-
-    fun toEcosUserTaskEvent(delegateTask: DelegateTask): EcosUserTaskEvent {
-        with(delegateTask) {
-            val ecosUserTaskEvent: EcosUserTaskEvent
-            val time = measureTimeMillis {
-                val processDefinition = bpmnProcessService.getProcessDefinition(processDefinitionId) ?: error(
-                    "Process definition is null. TaskId: $id, name: $name, executionId: $executionId, " +
-                        "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
-                )
-                val rev = procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
-
-                ecosUserTaskEvent = EcosUserTaskEvent(
-                    getDocumentRef(),
-                    EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, id),
-                    BPMN_CAMUNDA_ENGINE,
-                    getFormRef(),
-                    procDefId = rev?.procDefId ?: "",
-                    procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
-                    } else {
-                        EntityRef.EMPTY
-                    },
-                    procDeploymentVersion = rev?.version?.inc(),
-                    procInstanceId = getProcessInstanceRef(),
-                    processId = processDefinition.key,
-                    processRef = if (processDefinition.key.isNotBlank()) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
-                    } else {
-                        EntityRef.EMPTY
-                    },
-                    elementDefId = taskDefinitionKey,
-                    created = createTime?.toInstant()
-                )
-            }
-
-            log.trace {
-                "Convert task to ecos user task event in $time ms"
-            }
-
-            return ecosUserTaskEvent
         }
     }
 

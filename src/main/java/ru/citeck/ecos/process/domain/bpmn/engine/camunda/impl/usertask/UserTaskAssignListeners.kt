@@ -3,16 +3,16 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateTask
 import org.camunda.bpm.engine.delegate.TaskListener
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.AuthGroup
-import ru.citeck.ecos.model.lib.authorities.AuthorityType
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_ASSIGNEE_ELEMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.EcosEventEmitter
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.EcosUserTaskEvent
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
+import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private const val COLLECTION_START_PREFIX = "["
 private const val COLLECTION_END_PREFIX = "]"
@@ -21,61 +21,43 @@ private val log = KotlinLogging.logger {}
 
 @Component
 class ManualRecipientsModeUserTaskAssignListener(
-    private val userTaskListenerUtils: UserTaskListenerUtils
+    private val utils: UserTaskListenerUtils
 ) : TaskListener {
 
     override fun notify(delegateTask: DelegateTask) {
-        userTaskListenerUtils.convertAssigneeStorageToTaskRecipients(delegateTask)
+        val converted = utils.convertAssigneeStorageToTaskRecipients(delegateTask)
+        utils.sendUserTaskCreateBpmnEvent(converted)
     }
 }
 
 @Component
 class RecipientsFromRolesUserTaskAssignListener(
-    private val userTaskListenerUtils: UserTaskListenerUtils
+    private val utils: UserTaskListenerUtils
 ) : TaskListener {
 
     override fun notify(delegateTask: DelegateTask) {
-        userTaskListenerUtils.convertAssigneeStorageToTaskRecipients(delegateTask)
+        val converted = utils.convertAssigneeStorageToTaskRecipients(delegateTask)
+        utils.sendUserTaskCreateBpmnEvent(converted)
     }
 }
 
-private fun fillTaskRecipients(
-    candidateNames: List<String>,
-    delegateTask: DelegateTask,
-    ecosUserTaskEvent: EcosUserTaskEvent
-) {
+private fun fillTaskRecipients(candidateNames: List<String>, delegateTask: DelegateTask) {
     val isSingleUser = candidateNames.size == 1 && !candidateNames[0].startsWith(AuthGroup.PREFIX)
     if (isSingleUser) {
         val assignee = candidateNames[0]
 
         log.debug { "Set assignee: $assignee" }
         delegateTask.assignee = assignee
-        ecosUserTaskEvent.assignee = assignee
-        ecosUserTaskEvent.assigneeRef = AuthorityType.PERSON.getRef(assignee)
     } else {
-        val candidateGroups = mutableListOf<String>()
-        val candidateGroupsRef = mutableListOf<EntityRef>()
-        val candidateUsers = mutableListOf<String>()
-        val candidateUsersRef = mutableListOf<EntityRef>()
-
         candidateNames.forEach {
             if (it.startsWith(AuthGroup.PREFIX)) {
                 log.debug { "Add candidate group: $it" }
                 delegateTask.addCandidateGroup(it)
-                candidateGroups.add(it)
-                candidateGroupsRef.add(AuthorityType.GROUP.getRef(it.removePrefix(AuthGroup.PREFIX)))
             } else {
                 log.debug { "Add candidate user: $it" }
                 delegateTask.addCandidateUser(it)
-                candidateUsers.add(it)
-                candidateUsersRef.add(AuthorityType.PERSON.getRef(it))
             }
         }
-
-        ecosUserTaskEvent.candidateGroups = candidateGroups
-        ecosUserTaskEvent.candidateGroupsRef = candidateGroupsRef
-        ecosUserTaskEvent.candidateUsers = candidateUsers
-        ecosUserTaskEvent.candidateUsersRef = candidateUsersRef
     }
 }
 
@@ -96,14 +78,34 @@ class MultiInstanceAutoModeUserTaskAssignListener : TaskListener {
 @Component
 class UserTaskListenerUtils(
     val authorityService: EcosAuthoritiesApi,
-    private val bpmnElementConverter: BpmnElementConverter,
-    private val ecosEventEmitter: EcosEventEmitter
+    private val emitter: BpmnEventEmitter,
+
+    @Lazy
+    private val bpmnElementConverter: BpmnElementConverter
 ) {
 
-    fun convertAssigneeStorageToTaskRecipients(delegateTask: DelegateTask) {
+    /**
+     * We send [ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BPMN_EVENT_USER_TASK_CREATE]
+     * in [ManualRecipientsModeUserTaskAssignListener] and [RecipientsFromRolesUserTaskAssignListener] listeners
+     * because we need to send event with filled task assignee and candidates.
+     */
+    fun sendUserTaskCreateBpmnEvent(
+        delegateTask: DelegateTask,
+    ) {
+        AuthContext.runAsSystem {
+            TxnContext.doInTxn {
+                val converterFlowElement = bpmnElementConverter.toUserTaskEvent(delegateTask)
+                log.debug { "Emit task create element:\n $converterFlowElement" }
+
+                emitter.emitUserTaskCreateEvent(converterFlowElement)
+            }
+        }
+    }
+
+    fun convertAssigneeStorageToTaskRecipients(delegateTask: DelegateTask): DelegateTask {
         val assignee = delegateTask.assignee
         if (assignee.isNullOrBlank()) {
-            return
+            return delegateTask
         }
 
         val candidatesRaw = assignee.split(BPMN_CAMUNDA_COLLECTION_SEPARATOR)
@@ -112,10 +114,10 @@ class UserTaskListenerUtils(
 
         val candidatesNames = getCandidateAuthorityNames(candidatesRaw)
 
-        val ecosUserTaskEvent = bpmnElementConverter.toEcosUserTaskEvent(delegateTask)
         delegateTask.assignee = null
-        fillTaskRecipients(candidatesNames, delegateTask, ecosUserTaskEvent)
-        ecosEventEmitter.emitEcosUserTaskCreateEvent(ecosUserTaskEvent)
+        fillTaskRecipients(candidatesNames, delegateTask)
+
+        return delegateTask
     }
 
     private fun getCandidateAuthorityNames(candidates: List<String>): List<String> {
