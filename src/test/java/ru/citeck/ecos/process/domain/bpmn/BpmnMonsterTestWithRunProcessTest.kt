@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.collections4.ListUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.InstanceOfAssertFactories
 import org.awaitility.Awaitility
 import org.camunda.bpm.engine.*
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
@@ -40,6 +41,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.config.lib.service.EcosConfigService
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.lazyapproval.model.MailProcessingCode
 import ru.citeck.ecos.license.EcosTestLicense
 import ru.citeck.ecos.notifications.lib.Notification
@@ -50,6 +52,7 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.EcosEventEmitter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
@@ -118,6 +121,9 @@ private const val FOLDER_LA = "bpmnla"
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class], properties = ["ecos-process.bpmn.elements.listener.enabled=true"])
 class BpmnMonsterTestWithRunProcessTest {
+
+    @Autowired
+    private lateinit var eventsService: EventsService
 
     @Autowired
     private lateinit var taskService: TaskService
@@ -3405,6 +3411,52 @@ class BpmnMonsterTestWithRunProcessTest {
 
         verify(process).hasFinished("endSubProcess")
         verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `bpmn event sub process with ecos user task signal event`() {
+        val procId = "bpmn-events-sub-process-ecos-user-task-signal-event"
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        `when`(process.waitsAtUserTask("userTask")).thenReturn {
+            assertThat(it).hasCandidateUser(USER_IVAN)
+            assertThat(it).hasCandidateUser(USER_PETR)
+
+            it.complete()
+        }
+
+        val scenario =
+            run(process).startByKey(procId, docRef.toString(), variables_docRef).engine(processEngine).execute()
+
+        val eventJsonAssert = assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["json"].asMap(String::class.java, Any::class.java)
+        }.asInstanceOf(InstanceOfAssertFactories.map(String::class.java, Any::class.java))
+
+        eventJsonAssert
+            .containsEntry("record", docRef.toString())
+            .containsEntry("engine", BPMN_CAMUNDA_ENGINE)
+            .containsEntry("form", "")
+            .containsEntry("procDefId", "bpmn-events-sub-process-ecos-user-task-signal-event")
+            .containsEntry("procDefRef", "eproc/bpmn-def@bpmn-events-sub-process-ecos-user-task-signal-event")
+            .containsEntry("procDeploymentVersion", 1)
+            .containsEntry("processId", "bpmn-events-sub-process-ecos-user-task-signal-event")
+            .containsEntry("processRef", "eproc/bpmn-proc-latest@bpmn-events-sub-process-ecos-user-task-signal-event")
+            .containsEntry("elementDefId", "userTask")
+            .containsEntry("assignee", null)
+            .containsEntry("assigneeRef", null)
+            .containsEntry("candidateGroups", emptyList<String>())
+            .containsEntry("candidateGroupsRef", emptyList<String>())
+            .containsEntry("candidateUsers", mockRoleUserNames)
+            .containsEntry("candidateUsersRef", listOf("emodel/person@$USER_IVAN", "emodel/person@$USER_PETR"))
+
+        verify(process).hasFinished("endSubProcess")
+        verify(process).hasFinished("endEvent")
+
+        val event = eventsService.getListeners()[EcosEventEmitter.ECOS_EVENT_USER_TASK_CREATE]
+        event?.listeners?.forEach {
+            eventsService.removeListener(it.config)
+        }
     }
 
     // --- BPMN SERVICES TESTS ---
