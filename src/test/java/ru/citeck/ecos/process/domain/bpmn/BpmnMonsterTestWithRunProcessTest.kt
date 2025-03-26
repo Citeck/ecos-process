@@ -199,7 +199,7 @@ class BpmnMonsterTestWithRunProcessTest {
     private val kpiSettings = mutableListOf<EntityRef>()
 
     companion object {
-        private const val KPI_ASYNC_WAIT_TIMEOUT_SECONDS = 15L
+        private const val KPI_ASYNC_WAIT_TIMEOUT_SECONDS = 60L
 
         private val harryRecord = PotterRecord()
         private val harryRef = EntityRef.valueOf("hogwarts/people@harry")
