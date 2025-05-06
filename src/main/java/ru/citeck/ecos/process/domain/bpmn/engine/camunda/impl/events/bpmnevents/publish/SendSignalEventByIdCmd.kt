@@ -19,6 +19,8 @@ class SendSignalEventByIdCmd(
     eventData: BpmnDataValue
 ) : Command<Unit> {
 
+    private val notifyEventVariables = mapOf(BPMN_EVENT to eventData)
+
     private val startProcessVariables = let {
         val data = mutableMapOf<String, Any>(BPMN_EVENT to eventData)
 
@@ -119,13 +121,7 @@ class SendSignalEventByIdCmd(
     private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {
         for (signalEventSubscriptionEntity in catchSignalEventSubscription) {
             if (isActiveEventSubscription(signalEventSubscriptionEntity)) {
-                signalEventSubscriptionEntity.eventReceived(
-                    startProcessVariables,
-                    null,
-                    null,
-                    businessKey,
-                    false
-                )
+                signalEventSubscriptionEntity.eventReceived(notifyEventVariables, false)
             }
         }
     }
