@@ -192,23 +192,25 @@ class ProcTaskSqlQueryBuilder(
 
     private fun addValueCondition(predicate: ValuePredicate): Boolean {
 
-        var attribute = predicate.getAttribute()
+        val attribute = predicate.getAttribute()
         val type = predicate.getType()
         var value = predicate.getValue()
 
-        if (attribute == ATT_ACTOR) {
-            attribute = ATT_ACTORS
-            if (value.isTextual() && value.asText() == "\$CURRENT") {
-                value = DataValue.create(AuthContext.getCurrentUserWithAuthorities())
-            }
-        }
+        if (attribute == ATT_ACTOR || attribute == ATT_ACTORS) {
 
-        if (attribute == ATT_ACTORS) {
-            if (!joins.contains("JOIN act_ru_identitylink")) {
+            if (attribute == ATT_ACTOR) {
+                if (value.isTextual() && value.asText() == "\$CURRENT") {
+                    value = DataValue.create(AuthContext.getCurrentUserWithAuthorities())
+                }
+            }
+
+            val candidateAlias = CANDIDATE_ALIAS + "_" + attribute
+
+            if (!joins.contains("JOIN act_ru_identitylink $candidateAlias")) {
                 joins.append(
-                    " LEFT JOIN act_ru_identitylink $CANDIDATE_ALIAS ON " +
-                        "$CANDIDATE_ALIAS.task_id_ = $TASK_ALIAS.id_ " +
-                        "AND $CANDIDATE_ALIAS.type_ = 'candidate'"
+                    " LEFT JOIN act_ru_identitylink $candidateAlias ON " +
+                        "$candidateAlias.task_id_ = $TASK_ALIAS.id_ " +
+                        "AND $candidateAlias.type_ = 'candidate'"
                 )
             }
 
@@ -224,8 +226,8 @@ class ProcTaskSqlQueryBuilder(
                 condition.append(
                     "(" +
                         "$TASK_ALIAS.assignee_ IS NULL AND " +
-                        "$CANDIDATE_ALIAS.user_id_ IS NULL AND " +
-                        "$CANDIDATE_ALIAS.group_id_ IS NULL" +
+                        "$candidateAlias.user_id_ IS NULL AND " +
+                        "$candidateAlias.group_id_ IS NULL" +
                         ")"
                 )
                 return true
@@ -239,7 +241,7 @@ class ProcTaskSqlQueryBuilder(
             }
             condition.append("$TASK_ALIAS.assignee_ IS NULL AND (")
             if (users.isNotEmpty()) {
-                condition.append("$CANDIDATE_ALIAS.user_id_ IN (")
+                condition.append("$candidateAlias.user_id_ IN (")
                 addSqlQueryParams(condition, users)
                 condition.append(")")
             }
@@ -247,7 +249,7 @@ class ProcTaskSqlQueryBuilder(
                 if (users.isNotEmpty()) {
                     condition.append(" OR ")
                 }
-                condition.append("$CANDIDATE_ALIAS.group_id_ IN (")
+                condition.append("$candidateAlias.group_id_ IN (")
                 addSqlQueryParams(condition, groups)
                 condition.append(")")
             }
