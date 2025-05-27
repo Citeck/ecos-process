@@ -45,6 +45,7 @@ class ProcTaskSqlQueryBuilder(
 
         private const val TASK_ALIAS = "task"
         private const val CANDIDATE_ALIAS = "candidate"
+        private const val VARIABLE_ALIAS_PREFIX = "var"
 
         const val ATT_ACTORS = "actors"
         const val ATT_ACTOR = "actor"
@@ -82,9 +83,19 @@ class ProcTaskSqlQueryBuilder(
         private val log = KotlinLogging.logger {}
     }
 
+    private data class VariableCondition(
+        val name: String,
+        val isProcessVar: Boolean,
+        val attType: AttributeType,
+        val isEmptyCondition: Boolean = false,
+        val eqValues: MutableList<Any?> = mutableListOf(),
+        val otherConditions: MutableList<String> = mutableListOf()
+    )
+
     private val joins = StringBuilder()
     private val condition = StringBuilder()
     private val params = LinkedHashMap<String, Any?>()
+    private val variableConditions = mutableMapOf<String, VariableCondition>()
 
     private var skipCount = 0
     private var maxItems = -1
@@ -288,9 +299,7 @@ class ProcTaskSqlQueryBuilder(
 
             val attType = TASK_ATTS_TYPES[attribute] ?: AttributeType.TEXT
 
-            if (attType == AttributeType.TEXT &&
-                (type == ValuePredicate.Type.CONTAINS || type == ValuePredicate.Type.LIKE)
-            ) {
+            if (attType.shouldUseLowerCase(type)) {
                 value = DataValue.create("%${value.asText().lowercase()}%")
                 condition.append(" ")
                     .append("LOWER(")
@@ -323,23 +332,13 @@ class ProcTaskSqlQueryBuilder(
         }
 
         val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
-
-        condition.append(" NOT EXISTS(SELECT id_ FROM act_ru_variable WHERE name_ = '$name' AND ")
-        if (isProcessVar) {
-            condition.append("task_id_ IS NULL")
-        } else {
-            condition.append("$TASK_ALIAS.id_ = task_id_")
-        }
-        condition.append(
-            " AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='${attType.getTaskAttType()}' " +
-                "AND ${attType.getTaskAttColumn()} IS NOT NULL "
-        )
-
-        if (attType == AttributeType.TEXT) {
-            condition.append("AND text_ != ''")
+        variableConditions.getOrPut(name) {
+            VariableCondition(name, isProcessVar, attType, isEmptyCondition = true)
         }
 
-        condition.append(")")
+        val alias = getVariableAlias(name)
+
+        condition.append("$alias.id_ IS NULL")
         return true
     }
 
@@ -355,75 +354,91 @@ class ProcTaskSqlQueryBuilder(
             return false
         }
 
-        condition.append(" EXISTS(SELECT id_ FROM act_ru_variable WHERE name_ = '$name' AND ")
-        if (isProcessVar) {
-            condition.append("task_id_ IS NULL")
-        } else {
-            condition.append("$TASK_ALIAS.id_ = task_id_")
+        val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
+        val variableCondition = variableConditions.getOrPut(name) {
+            VariableCondition(name, isProcessVar, attType)
         }
 
-        val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
-        val taskAttType = attType.getTaskAttType()
-
-        condition.append(" AND $TASK_ALIAS.PROC_INST_ID_ = PROC_INST_ID_ AND type_='$taskAttType' AND ")
-
-        val taskColumn = attType.getTaskAttColumn(predicateType)
-        condition.append(taskColumn)
+        val alias = getVariableAlias(name)
+        val taskColumn = attType.getTaskAttColumn()
 
         val values = castSqlParamValueToListOf(value, attType, isRuVariable = isRuVariable)
+
         when (predicateType) {
             ValuePredicate.Type.EQ -> {
-                if (values.size == 1) {
-                    condition.append(" = ")
-                    addSqlQueryParams(condition, values)
-                } else {
-                    condition.append(" IN (")
-                    addSqlQueryParams(condition, values)
-                    condition.append(")")
-                }
+                // Collect EQ values to group them into IN later
+                variableCondition.eqValues.addAll(values)
             }
 
             ValuePredicate.Type.GT -> {
-                condition.append(" > ")
-                addSqlQueryParams(condition, values)
+                val paramName = "p${params.size}"
+                params[paramName] = values[0]
+                variableCondition.otherConditions.add("$alias.$taskColumn > #{$paramName}")
             }
 
             ValuePredicate.Type.LT -> {
-                condition.append(" < ")
-                addSqlQueryParams(condition, values)
+                val paramName = "p${params.size}"
+                params[paramName] = values[0]
+                variableCondition.otherConditions.add("$alias.$taskColumn < #{$paramName}")
             }
 
             ValuePredicate.Type.GE -> {
-                condition.append(" >= ")
-                addSqlQueryParams(condition, values)
+                val paramName = "p${params.size}"
+                params[paramName] = values[0]
+                variableCondition.otherConditions.add("$alias.$taskColumn >= #{$paramName}")
             }
 
             ValuePredicate.Type.LE -> {
-                condition.append(" <= ")
-                addSqlQueryParams(condition, values)
+                val paramName = "p${params.size}"
+                params[paramName] = values[0]
+                variableCondition.otherConditions.add("$alias.$taskColumn <= #{$paramName}")
             }
 
             ValuePredicate.Type.IN -> {
-                condition.append(" IN (")
-                addSqlQueryParams(condition, values)
-                condition.append(")")
+                val paramNames = mutableListOf<String>()
+                values.forEach {
+                    val paramName = "p${params.size}"
+                    params[paramName] = it
+                    paramNames.add("#{$paramName}")
+                }
+                variableCondition.otherConditions.add("$alias.$taskColumn IN (${paramNames.joinToString(",")})")
             }
 
             ValuePredicate.Type.CONTAINS,
             ValuePredicate.Type.LIKE -> {
                 if (attType == AttributeType.TEXT) {
-                    condition.append(" LIKE ")
-                    addSqlQueryParams(condition, values.map { "%$it%".lowercase() })
+                    val likeValues = values.map { "%$it%".lowercase() }
+                    val paramNames = mutableListOf<String>()
+                    likeValues.forEach {
+                        val paramName = "p${params.size}"
+                        params[paramName] = it
+                        paramNames.add("#{$paramName}")
+                    }
+                    val columnExpression = "LOWER($alias.$taskColumn)"
+                    if (paramNames.size == 1) {
+                        variableCondition.otherConditions.add("$columnExpression LIKE ${paramNames[0]}")
+                    } else {
+                        variableCondition.otherConditions.add("(${paramNames.map { "$columnExpression LIKE $it" }.joinToString(" OR ")})")
+                    }
                 } else {
-                    condition.append(" LIKE ")
-                    addSqlQueryParams(condition, values.map { "%$it%" })
+                    val likeValues = values.map { "%$it%" }
+                    val paramNames = mutableListOf<String>()
+                    likeValues.forEach {
+                        val paramName = "p${params.size}"
+                        params[paramName] = it
+                        paramNames.add("#{$paramName}")
+                    }
+                    if (paramNames.size == 1) {
+                        variableCondition.otherConditions.add("$alias.$taskColumn LIKE ${paramNames[0]}")
+                    } else {
+                        variableCondition.otherConditions.add("(${paramNames.map { "$alias.$taskColumn LIKE $it" }.joinToString(" OR ")})")
+                    }
                 }
             }
 
             else -> return false
         }
-
-        condition.append(")")
+        condition.append("$alias.id_ IS NOT NULL")
         return true
     }
 
@@ -533,6 +548,10 @@ class ProcTaskSqlQueryBuilder(
         query.setLength(query.length - 1)
     }
 
+    private fun getVariableAlias(variableName: String): String {
+        return "${VARIABLE_ALIAS_PREFIX}_${variableName.replace("[^a-zA-Z0-9_]".toRegex(), "_")}"
+    }
+
     private fun createTaskQuery(
         selectFields: String,
         withLimitAndSort: Boolean
@@ -544,9 +563,98 @@ class ProcTaskSqlQueryBuilder(
             }
         }
         sqlSelectQuery.append(" FROM act_ru_task $TASK_ALIAS ")
+
+        // Add existing joins
         if (joins.isNotEmpty()) {
             sqlSelectQuery.append(joins.toString()).append(" ")
         }
+
+        // Add optimized variable joins with conditions
+        for ((variableName, variableCondition) in variableConditions) {
+            val alias = getVariableAlias(variableName)
+            val taskAttType = variableCondition.attType.getTaskAttType()
+
+            sqlSelectQuery.append(" LEFT JOIN act_ru_variable $alias ON ")
+            sqlSelectQuery.append("$alias.name_ = '$variableName' AND ")
+            sqlSelectQuery.append("$alias.type_ = '$taskAttType' AND ")
+            sqlSelectQuery.append("$alias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
+
+            if (variableCondition.isProcessVar) {
+                sqlSelectQuery.append("$alias.task_id_ IS NULL")
+            } else {
+                sqlSelectQuery.append("$alias.task_id_ = $TASK_ALIAS.id_")
+            }
+
+            // Add filter conditions directly to JOIN for better performance
+            if (!variableCondition.isEmptyCondition) {
+                // EQ values should be combined with OR, other conditions with AND
+                val eqConditions = mutableListOf<String>()
+                val otherConditions = mutableListOf<String>()
+
+                // Add EQ values as IN condition
+                if (variableCondition.eqValues.isNotEmpty()) {
+                    val taskColumn = variableCondition.attType.getTaskAttColumn()
+                    if (variableCondition.eqValues.size == 1) {
+                        val paramName = "p${params.size}"
+                        params[paramName] = variableCondition.eqValues[0]
+                        eqConditions.add("$alias.$taskColumn = #{$paramName}")
+                    } else {
+                        val paramNames = mutableListOf<String>()
+                        variableCondition.eqValues.forEach {
+                            val paramName = "p${params.size}"
+                            params[paramName] = it
+                            paramNames.add("#{$paramName}")
+                        }
+                        eqConditions.add("$alias.$taskColumn IN (${paramNames.joinToString(",")})")
+                    }
+                }
+
+                // Add other conditions (GT, LT, GE, LE, etc.)
+                otherConditions.addAll(variableCondition.otherConditions)
+
+                val finalConditions = mutableListOf<String>()
+                if (eqConditions.isNotEmpty()) {
+                    finalConditions.add(eqConditions.joinToString(" OR "))
+                }
+                if (otherConditions.isNotEmpty()) {
+                    // Each condition in otherConditions is already complete and should be added as-is
+                    // For range conditions (like GE and LT together), they should be combined with AND
+                    // For CONTAINS with multiple values, the condition is already properly formed with OR inside
+                    if (otherConditions.size == 1) {
+                        finalConditions.add(otherConditions[0])
+                    } else {
+                        // Check if these are range conditions (GE/LE and LT/GT combinations)
+                        val hasRangeConditions = otherConditions.any { condition ->
+                            condition.contains(" >= ") || condition.contains(" <= ") ||
+                                condition.contains(" > ") || condition.contains(" < ")
+                        }
+                        val hasLikeConditions = otherConditions.any { condition ->
+                            condition.contains(" LIKE ")
+                        }
+
+                        if (hasRangeConditions && !hasLikeConditions) {
+                            // Range conditions should be combined with AND
+                            finalConditions.add(otherConditions.joinToString(" AND "))
+                        } else {
+                            // LIKE/CONTAINS conditions should be combined with OR
+                            finalConditions.add(otherConditions.joinToString(" OR "))
+                        }
+                    }
+                }
+
+                if (finalConditions.isNotEmpty()) {
+                    sqlSelectQuery.append(" AND (")
+                    if (finalConditions.size == 1) {
+                        sqlSelectQuery.append(finalConditions[0])
+                    } else {
+                        // If we have both EQ and other conditions, combine them with OR
+                        sqlSelectQuery.append(finalConditions.joinToString(" OR "))
+                    }
+                    sqlSelectQuery.append(")")
+                }
+            }
+        }
+
         if (condition.isNotEmpty()) {
             sqlSelectQuery.append(" WHERE ")
                 .append(condition.toString())
@@ -629,21 +737,18 @@ class ProcTaskSqlQueryBuilder(
 
     private fun AttributeType.getTaskAttColumn(predicateType: ValuePredicate.Type? = null): String {
         return when (this) {
-            AttributeType.TEXT -> {
-                if (predicateType == ValuePredicate.Type.CONTAINS || predicateType == ValuePredicate.Type.LIKE) {
-                    "LOWER(text_)"
-                } else {
-                    "text_"
-                }
-            }
-
+            AttributeType.TEXT -> "text_"
             AttributeType.NUMBER -> "double_"
             AttributeType.DATE,
             AttributeType.DATETIME,
             AttributeType.BOOLEAN -> "long_"
-
             else -> "text_"
         }
+    }
+
+    private fun AttributeType.shouldUseLowerCase(predicateType: ValuePredicate.Type? = null): Boolean {
+        return this == AttributeType.TEXT &&
+            (predicateType == ValuePredicate.Type.CONTAINS || predicateType == ValuePredicate.Type.LIKE)
     }
 
     private fun String.isAttFromSync(): Boolean = this.startsWith(TASK_DOCUMENT_ATT_PREFIX) ||
