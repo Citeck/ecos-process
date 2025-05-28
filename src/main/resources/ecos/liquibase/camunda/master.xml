@@ -68,7 +68,7 @@
 
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="ACT_RU_JOB" columnName="LAST_FAILURE_LOG_ID_" />
+                <columnExists tableName="ACT_RU_JOB" columnName="LAST_FAILURE_LOG_ID_"/>
             </not>
         </preConditions>
 
@@ -134,6 +134,12 @@
         Index to speed up queries of tasks for document
         -->
         <sql>CREATE INDEX IF NOT EXISTS ecos_idx_variable_task_name_text ON act_ru_variable(task_id_, name_, text_);</sql>
+    </changeSet>
+
+    <changeSet id="20250528_ecos_proc_inst_task_id" author="Citeck">
+        <sql>CREATE INDEX IF NOT EXISTS idx_var_proc_inst_id_task_id
+            ON act_ru_variable
+            (name_, type_, text_, proc_inst_id_, task_id_);</sql>
     </changeSet>
 
 </databaseChangeLog>
