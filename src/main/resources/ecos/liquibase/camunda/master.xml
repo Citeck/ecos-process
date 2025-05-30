@@ -142,4 +142,10 @@
             (name_, type_, text_, proc_inst_id_, task_id_);</sql>
     </changeSet>
 
+    <changeSet id="20250530_ecos_proc_inst_task_include" author="Citeck">
+        <sql>CREATE INDEX IF NOT EXISTS idx_var_proc_inst_id_task_id_include
+            ON act_ru_variable (name_, type_, text_)
+            INCLUDE (proc_inst_id_, task_id_, id_);</sql>
+    </changeSet>
+
 </databaseChangeLog>
