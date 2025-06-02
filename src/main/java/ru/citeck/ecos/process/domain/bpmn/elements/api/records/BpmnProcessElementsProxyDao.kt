@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.elements.api.records
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -49,8 +50,8 @@ class BpmnProcessElementsProxyDao : RecordsDaoProxy(
             )
         } else {
             Predicates.and(
-                Predicates.eq("procDefId", value.id),
-                Predicates.not(Predicates.eq("engine", "flowable"))
+                Predicates.eq("procDefId", value.getLocalId()),
+                Predicates.eq("engine", BPMN_CAMUNDA_ENGINE)
             )
         }
     }
