@@ -19,6 +19,18 @@
         "input": false
       },
       {
+        "label" : {
+          "ru" : "Комментарий",
+          "en" : "Comment"
+        },
+        "key" : "comment",
+        "defaultValue" : "",
+        "refreshOn" : [],
+        "optionalWhenDisabled" : false,
+        "type" : "textarea",
+        "input" : true
+      },
+      {
         "label": {
           "ru": "Task Outcome"
         },
