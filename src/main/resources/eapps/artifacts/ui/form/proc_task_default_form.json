@@ -13,12 +13,6 @@
   "definition": {
     "components": [
       {
-        "scrollableContent": true,
-        "key": "panel2",
-        "type": "panel",
-        "input": false
-      },
-      {
         "label" : {
           "ru" : "Комментарий",
           "en" : "Comment"
