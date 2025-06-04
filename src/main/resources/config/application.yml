@@ -70,6 +70,9 @@ ecos-process:
           retry:
             max-attempts: 1200
     elements:
+      dao:
+        total-count:
+          enable: false
       listener:
         enabled: true
       mutation-processor:
