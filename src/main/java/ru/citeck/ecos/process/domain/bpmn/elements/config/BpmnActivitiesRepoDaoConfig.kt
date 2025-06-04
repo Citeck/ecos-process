@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.elements.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.citeck.ecos.context.lib.auth.AuthGroup
@@ -21,7 +22,10 @@ const val BPMN_PROCESS_ELEMENT_TYPE = "bpmn-process-element"
 @Configuration
 class BpmnActivitiesRepoDaoConfig(
     private val dbDomainFactory: DbDomainFactory,
-    private val bpmnProcessElementsMixin: BpmnProcessElementsMixin
+    private val bpmnProcessElementsMixin: BpmnProcessElementsMixin,
+    @Value("\${ecos-process.bpmn.elements.dao.total-count.enable}")
+    private val bpmnElementsEnableTotalCount: Boolean
+
 ) {
 
     @Bean
@@ -62,6 +66,7 @@ class BpmnActivitiesRepoDaoConfig(
                 .withRecordsDao(
                     DbRecordsDaoConfig.create {
                         withId(BPMN_ELEMENTS_REPO_SOURCE_ID)
+                        withEnableTotalCount(bpmnElementsEnableTotalCount)
                         withTypeRef(typeRef)
                     }
                 )
