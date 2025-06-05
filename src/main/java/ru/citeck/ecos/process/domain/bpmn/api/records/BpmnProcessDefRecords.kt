@@ -380,6 +380,17 @@ class BpmnProcessDefRecords(
     }
 
     override fun saveMutatedRec(record: BpmnMutateRecord): String {
+        if (record.action == BpmnProcessDefActions.VALIDATE_GENERAL_BPMN.name) {
+            val definition = record.definition
+            require(definition.isNullOrBlank().not()) {
+                "BPMN definition cannot be empty for validation"
+            }
+
+            BpmnXmlUtils.readFromString(definition)
+
+            return "ok"
+        }
+
         val procDefRef = record.id.toProcDefRef()
         val perms = if (record.isNewRecord) {
             ProcDefPermsValue(record, SectionType.BPMN)
