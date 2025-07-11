@@ -187,6 +187,10 @@
       "Set Status Task",
       "Set Status Task"
     ],
+    "bpmn_Task_EcosTaskAiTask": [
+      "AI Task",
+      "AI Task"
+    ],
     "bpmn_Association": [
       "Association",
       "Association"

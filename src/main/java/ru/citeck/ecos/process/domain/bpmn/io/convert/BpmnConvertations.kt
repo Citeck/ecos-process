@@ -33,7 +33,9 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAbstractEcosTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnSetStatusTaskDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_SET_STATUS
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.*
@@ -105,7 +107,25 @@ object CamundaFieldCreator {
     }
 }
 
+object CamundaPropertyCreator {
+
+    fun string(name: String, value: String): CamundaProperty {
+        return CamundaProperty().apply {
+            this.name = name
+            this.value = value
+        }
+    }
+}
+
 fun CamundaField.jaxb(context: ExportContext): JAXBElement<CamundaField> {
+    return context.converters.convertToJaxb(this)
+}
+
+fun CamundaProperties.jaxb(context: ExportContext): JAXBElement<CamundaProperties> {
+    return context.converters.convertToJaxb(this)
+}
+
+fun CamundaProperty.jaxb(context: ExportContext): JAXBElement<CamundaProperty> {
     return context.converters.convertToJaxb(this)
 }
 
@@ -152,6 +172,10 @@ inline fun <reified T> MutableList<in T>.addIfNotBlank(value: T?) {
         is CamundaField -> {
             if (value.stringValue?.value?.isNotBlank() == true) add(value)
             if (value.expressionValue?.value?.isNotBlank() == true) add(value)
+        }
+
+        is CamundaProperty -> {
+            if (value.value?.isNotBlank() == true && value.name?.isNotBlank() == true) add(value)
         }
 
         is CamundaFailedJobRetryTimeCycle -> {
@@ -449,6 +473,16 @@ fun TTask.convertToBpmnEcosTaskDef(): BpmnAbstractEcosTaskDef? {
             BpmnSetStatusTaskDef(status)
         }
 
+        ECOS_TASK_AI -> {
+            BpmnAiTaskDef(
+                userInput = otherAttributes[BPMN_PROP_AI_USER_INPUT] ?: "",
+                preProcessedScript = otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] ?: "",
+                postProcessedScript = otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] ?: "",
+                addDocumentToContext = otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT]?.toBoolean() ?: true,
+                saveResultToDocumentAtt = otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] ?: ""
+            )
+        }
+
         else -> error("Unsupported task type: $taskType")
     }
 }
@@ -458,6 +492,15 @@ fun TTask.fillEcosTaskDefToOtherAttributes(ecosTaskDef: BpmnAbstractEcosTaskDef)
         is BpmnSetStatusTaskDef -> {
             otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_SET_STATUS
             otherAttributes[BPMN_PROP_ECOS_STATUS] = ecosTaskDef.status
+        }
+
+        is BpmnAiTaskDef -> {
+            otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_AI
+            otherAttributes[BPMN_PROP_AI_USER_INPUT] = ecosTaskDef.userInput
+            otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] = ecosTaskDef.preProcessedScript
+            otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = ecosTaskDef.postProcessedScript
+            otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT] = ecosTaskDef.addDocumentToContext.toString()
+            otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] = ecosTaskDef.saveResultToDocumentAtt
         }
 
         else -> error("Unsupported task type: $ecosTaskDef")
