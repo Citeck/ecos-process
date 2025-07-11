@@ -33,6 +33,14 @@ public class ObjectFactory {
         "http://camunda.org/schema/1.0/bpmn", "timeDuration"
     );
 
+    private final static QName _CamundaProperty_QNAME = new QName(
+        "http://camunda.org/schema/1.0/bpmn", "property"
+    );
+
+    private final static QName _CamundaProperties_QNAME = new QName(
+        "http://camunda.org/schema/1.0/bpmn", "properties"
+    );
+
     public CamundaField createCamundaField() {
         return new CamundaField();
     }
@@ -76,6 +84,14 @@ public class ObjectFactory {
         return new CamundaTimeDuration();
     }
 
+    public CamundaProperty createCamundaProperty() {
+        return new CamundaProperty();
+    }
+
+    public CamundaProperties createCamundaProperties() {
+        return new CamundaProperties();
+    }
+
     @XmlElementDecl(namespace = "http://camunda.org/schema/1.0/bpmn", name = "failedJobRetryTimeCycle")
     public JAXBElement<CamundaFailedJobRetryTimeCycle> createCamundaFailedJobRetryTimeCycle(
         CamundaFailedJobRetryTimeCycle value) {
@@ -110,6 +126,16 @@ public class ObjectFactory {
             _CamundaTimeDuration_QNAME,
             CamundaTimeDuration.class, null, value
         );
+    }
+
+    @XmlElementDecl(namespace = "http://camunda.org/schema/1.0/bpmn", name = "property")
+    public JAXBElement<CamundaProperty> createCamundaProperty(CamundaProperty value) {
+        return new JAXBElement<CamundaProperty>(_CamundaProperty_QNAME, CamundaProperty.class, null, value);
+    }
+
+    @XmlElementDecl(namespace = "http://camunda.org/schema/1.0/bpmn", name = "properties")
+    public JAXBElement<CamundaProperties> createCamundaProperties(CamundaProperties value) {
+        return new JAXBElement<CamundaProperties>(_CamundaProperties_QNAME, CamundaProperties.class, null, value);
     }
 
 }
