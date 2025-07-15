@@ -18,13 +18,28 @@ class CamundaProcessTemplatedContentComponent(
     override fun getKey() = "templatedContent"
 
     fun write(record: Any, template: Any) {
-        require(record is String || record is EntityRef) { "Record must be a string or EntityRef" }
-        require(template is String || template is EntityRef) { "Template must be a string or EntityRef" }
-
-        write(record.toString(), template.toString(), RecordConstants.ATT_CONTENT)
+        writeImpl(record, template)
     }
 
     fun write(record: Any, template: Any, attribute: String) {
+        writeImpl(record, template, attribute)
+    }
+
+    fun write(record: Any, template: Any, parentAtt: String, childType: String) {
+        writeImpl(record, template, parentAtt, childType)
+    }
+
+    fun write(record: Any, template: Any, parentAtt: String, childType: String, attribute: String) {
+        writeImpl(record, template, parentAtt, childType, attribute)
+    }
+
+    private fun writeImpl(
+        record: Any,
+        template: Any,
+        parentAtt: String = "",
+        childType: String = "",
+        attribute: String = RecordConstants.ATT_CONTENT
+    ) {
         require(record is String || record is EntityRef) { "Record must be a string or EntityRef" }
         require(template is String || template is EntityRef) { "Template must be a string or EntityRef" }
 
@@ -32,6 +47,8 @@ class CamundaProcessTemplatedContentComponent(
         val templatedContentAtts = RecordAtts("$TEMPLATED_CONTENT_RECORDS_ID@")
         templatedContentAtts["record"] = record
         templatedContentAtts["template"] = templateStr.toNormalizeTemplateRef()
+        templatedContentAtts["parentAtt"] = parentAtt
+        templatedContentAtts["childType"] = childType
         templatedContentAtts["attribute"] = attribute
 
         recordsService.mutate(templatedContentAtts)
