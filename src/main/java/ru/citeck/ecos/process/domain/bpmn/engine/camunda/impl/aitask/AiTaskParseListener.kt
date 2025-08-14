@@ -24,7 +24,9 @@ class AiTaskParseListener() : AbstractBpmnParseListener() {
     }
 
     override fun parseServiceTask(
-        taskElement: Element, scope: ScopeImpl, activity: ActivityImpl
+        taskElement: Element,
+        scope: ScopeImpl,
+        activity: ActivityImpl
     ) {
         if (taskElement.isAiTask().not()) {
             return
@@ -44,11 +46,13 @@ class AiTaskParseListener() : AbstractBpmnParseListener() {
         ) ?: ""
         if (saveAiResultToDocumentAtt.isNotBlank()) {
             val scriptListener = ScriptExecutionListener(
-                SourceExecutableScript(AI_TASK_SCRIPT_LANGUAGE,
+                SourceExecutableScript(
+                    AI_TASK_SCRIPT_LANGUAGE,
                     """
                         document.att("$saveAiResultToDocumentAtt", $AI_RESPONSE_ATT);
                         document.save();
-                    """.trimIndent())
+                    """.trimIndent()
+                )
             )
             activity.addBuiltInListener(ExecutionListener.EVENTNAME_END, scriptListener, 0)
         }
@@ -61,8 +65,6 @@ class AiTaskParseListener() : AbstractBpmnParseListener() {
 
             activity.addBuiltInListener(ExecutionListener.EVENTNAME_END, scriptListener, 1)
         }
-
-
     }
 
     private fun Element.isAiTask(): Boolean {

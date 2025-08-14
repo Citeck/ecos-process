@@ -3,7 +3,6 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.send
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.Expression
 import org.camunda.bpm.engine.delegate.JavaDelegate
-import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.notifications.lib.Notification
@@ -18,7 +17,6 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtil
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.CalendarEventOrganizer
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
-import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Duration
 import java.time.Instant
@@ -27,8 +25,6 @@ import java.util.*
 private const val VAR_NOTIFICATION_ATTACHMENTS = "_attachments"
 private const val VAR_EVENT_UID = "eventUid"
 private const val VAR_EVENT_SEQUENCE = "eventSequence"
-
-private const val PERSON_SOURCE_ID = "person"
 
 class SendNotificationDelegate : JavaDelegate {
 
@@ -172,24 +168,6 @@ class SendNotificationDelegate : JavaDelegate {
             .attendees(recipients)
             .build()
         return calendarEvent.createAttachment()
-    }
-
-    private fun AuthContext.getCurrentRunAsUserRef(): EntityRef {
-        val user = getCurrentRunAsUser()
-        if (user.isBlank()) {
-            return EntityRef.EMPTY
-        }
-        return EntityRef.create(AppName.EMODEL, PERSON_SOURCE_ID, user)
-    }
-
-    private fun DelegateExecution.getPreparedProcessVariables(): Map<String, Any> {
-        return variables.map { (key, value) ->
-            val valueToPut = when (value) {
-                is BpmnDataValue -> value.asDataValue()
-                else -> value
-            }
-            key to valueToPut
-        }.toMap()
     }
 
     // Get emails, because at this moment we support only email notifications from BPMN
