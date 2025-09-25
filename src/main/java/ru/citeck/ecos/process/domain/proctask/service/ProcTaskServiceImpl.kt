@@ -158,6 +158,9 @@ class ProcTaskServiceImpl(
         if (predicate is VoidPredicate && !AuthContext.isRunAsSystemOrAdmin()) {
             return DbFindRes.empty()
         }
+        if (PredicateUtils.isAlwaysFalse(preparedPredicate)) {
+            return DbFindRes.empty()
+        }
 
         return ProcTaskSqlQueryBuilder(authoritiesApi, camundaTaskService, procTaskAttsSyncService)
             .addConditions(preparedPredicate)
