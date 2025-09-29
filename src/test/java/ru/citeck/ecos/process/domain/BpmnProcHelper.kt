@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain
 
 import com.hazelcast.core.HazelcastInstance
+import jakarta.annotation.PostConstruct
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.rest.dto.migration.MigrationPlanGenerationDto
@@ -39,6 +40,7 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.nio.charset.StandardCharsets
@@ -55,8 +57,24 @@ class BpmnProcHelper(
     val procTaskAttsSyncService: ProcTaskAttsSyncService,
     val hazelCast: HazelcastInstance,
     val eventsService: EventsService,
+    val webAppApi: EcosWebAppApi,
     val bpmnEventSubscriptionService: BpmnEventSubscriptionService
 ) {
+
+    private lateinit var stdListenerIds: Set<String>
+
+    @PostConstruct
+    fun init() {
+        val listeners = HashSet<String>()
+        webAppApi.doBeforeAppReady {
+            eventsService.getListeners().forEach {
+                it.value.listeners.forEach { listener ->
+                    listeners.add(listener.config.id)
+                }
+            }
+        }
+        stdListenerIds = listeners
+    }
 
     fun getBpmnProcessDefDto(resource: String, id: String): NewProcessDefDto {
         return NewProcessDefDto(
@@ -264,7 +282,9 @@ class BpmnProcHelper(
 
         eventsService.getListeners().forEach {
             it.value.listeners.forEach { listener ->
-                eventsService.removeListener(listener.config.id)
+                if (!stdListenerIds.contains(listener.config.id)) {
+                    eventsService.removeListener(listener.config.id)
+                }
             }
         }
 
