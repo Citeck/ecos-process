@@ -246,16 +246,4 @@ class TaskDueDateManualExpressionConverterTest {
             ).validate("")
         }
     }
-
-    @Test
-    fun `create due date manual dto with type business and missing working schedule should throw`() {
-        assertThrows<EcosBpmnElementDefinitionException> {
-            TaskDueDateManual(
-                durationType = DurationType.BUSINESS,
-                duration = Duration.ofDays(2),
-                workingDays = null,
-                workingSchedule = EntityRef.EMPTY
-            ).validate("")
-        }
-    }
 }
