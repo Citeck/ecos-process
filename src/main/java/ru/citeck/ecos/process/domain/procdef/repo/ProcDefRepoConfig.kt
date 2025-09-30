@@ -23,6 +23,10 @@ class ProcDefRepoConfig {
     @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
     class EcosDataConfig {
 
+        init {
+            log.info { "=== Initialize ecos-data repo for process definitions ===" }
+        }
+
         @Bean
         fun procDefRepository(
             recordsService: RecordsService,
@@ -41,6 +45,10 @@ class ProcDefRepoConfig {
     @Configuration
     @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "true")
     class MongoConfig {
+
+        init {
+            log.info { "=== Initialize mongo (legacy) repo for process definitions ===" }
+        }
 
         @Bean
         fun procDefRepository(mongoProcDefRepo: MongoProcDefRepo): ProcDefRepository {

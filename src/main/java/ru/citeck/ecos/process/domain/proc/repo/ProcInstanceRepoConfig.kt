@@ -1,6 +1,6 @@
 package ru.citeck.ecos.process.domain.proc.repo
 
-import jakarta.annotation.PostConstruct
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,16 +13,21 @@ import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcStateRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.webapp.api.EcosWebAppApi
 
 @Configuration
-class ProcInstanceRepoConfig(
-    val webAppApi: EcosWebAppApi
-) {
+class ProcInstanceRepoConfig {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     @Configuration
     @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
     class EcosDataConfig {
+
+        init {
+            log.info { "=== Initialize ecos-data repo for process instances ===" }
+        }
 
         @Bean
         fun procInstanceRepository(recordsService: RecordsService, procStateRepo: ProcStateRepository): ProcInstanceRepository {
@@ -41,6 +46,10 @@ class ProcInstanceRepoConfig(
     @Configuration
     @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "true")
     class MongoConfig {
+
+        init {
+            log.info { "=== Initialize mongo (legacy) repo for process instances ===" }
+        }
 
         @Bean
         fun procInstanceRepository(procInstanceRepo: MongoProcInstanceRepository): ProcInstanceRepository {
