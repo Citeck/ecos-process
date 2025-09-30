@@ -42,12 +42,10 @@ management:
 
 # application:
 
-ecos-app:
-  id: ecos-process
-  version: 1.0.0
-  name: ECOS Process
-
 ecos-process:
+  repo:
+    mongo:
+      enabled: false
   bpmn:
     first-enabled-proc-def:
       cache:
