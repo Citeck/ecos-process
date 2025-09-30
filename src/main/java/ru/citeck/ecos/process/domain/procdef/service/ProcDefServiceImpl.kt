@@ -1,10 +1,8 @@
 package ru.citeck.ecos.process.domain.procdef.service
 
-import com.querydsl.core.types.dsl.BooleanExpression
 import io.github.oshai.kotlinlogging.KotlinLogging
 import lombok.Data
 import lombok.RequiredArgsConstructor
-import org.apache.commons.lang3.StringUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -12,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
-import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
@@ -26,7 +23,6 @@ import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.repo.*
 import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
-import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
@@ -93,7 +89,6 @@ class ProcDefServiceImpl(
 
         var newRevision = ProcDefRevEntity()
 
-        newRevision.id = EntityUuid(tenantService.getCurrent(), UUID.randomUUID())
         newRevision.created = now
         newRevision.data = processDef.data
         newRevision.image = processDef.image
@@ -107,7 +102,6 @@ class ProcDefServiceImpl(
         if (currentProcDef == null) {
 
             currentProcDef = ProcDefEntity()
-            currentProcDef.id = EntityUuid(tenantService.getCurrent(), UUID.randomUUID())
             currentProcDef.alfType = processDef.alfType
             currentProcDef.ecosTypeRef = processDef.ecosTypeRef.toString()
             currentProcDef.formRef = processDef.formRef.toString()
@@ -122,7 +116,7 @@ class ProcDefServiceImpl(
             currentProcDef.autoDeleteEnabled = processDef.autoDeleteEnabled
             currentProcDef.sectionRef = processDef.sectionRef.toString()
 
-            currentProcDef = procDefRepo.save<ProcDefEntity>(currentProcDef)
+            currentProcDef = procDefRepo.save(currentProcDef)
             newRevision.version = 0
 
             sendProcDefEvent = {
@@ -225,34 +219,7 @@ class ProcDefServiceImpl(
 
     private fun findAllProcDefEntities(predicate: Predicate, max: Int, skip: Int): List<ProcDefEntity> {
         val page = PageRequest.of(skip / max, max, Sort.by(Sort.Order.desc("created")))
-        val query = predicateToQuery(predicate)
-        return procDefRepo.findAll(query, page).content
-    }
-
-    private fun predicateToQuery(predicate: Predicate): BooleanExpression {
-
-        val predQuery = PredicateUtils.convertToDto(predicate, PredicateQuery::class.java)
-        val entity = QProcDefEntity.procDefEntity
-        var query = entity.id.tnt.eq(tenantService.getCurrent())
-
-        if (StringUtils.isNotBlank(predQuery.procType)) {
-            query = query.and(QProcDefEntity.procDefEntity.procType.eq(predQuery.procType))
-        }
-        if (StringUtils.isNotBlank(predQuery.moduleId)) {
-            query = query.and(QProcDefEntity.procDefEntity.extId.containsIgnoreCase(predQuery.moduleId))
-        }
-        if (StringUtils.isNotBlank(predQuery.name)) {
-            query = query.and(QProcDefEntity.procDefEntity.name.containsIgnoreCase(predQuery.name))
-        }
-        if (StringUtils.isNotBlank(predQuery.sectionRef)) {
-            val sectionEntity = QProcDefEntity.procDefEntity.sectionRef
-            query = if (predQuery.sectionRef.equals(DEFAULT_BPMN_SECTION)) {
-                query.and(sectionEntity.eq(DEFAULT_BPMN_SECTION).or(sectionEntity.isEmpty).or(sectionEntity.isNull))
-            } else {
-                query.and(QProcDefEntity.procDefEntity.sectionRef.eq(predQuery.sectionRef))
-            }
-        }
-        return query
+        return procDefRepo.findAll(predicate, page).content
     }
 
     override fun getCount(): Long {
@@ -260,7 +227,7 @@ class ProcDefServiceImpl(
     }
 
     override fun getCount(predicate: Predicate): Long {
-        return procDefRepo.count(predicateToQuery(predicate))
+        return procDefRepo.getCount(predicate)
     }
 
     override fun uploadNewRev(dto: ProcDefWithDataDto, comment: String): ProcDefDto {
@@ -379,7 +346,6 @@ class ProcDefServiceImpl(
                     // save as new revision
 
                     var newRevision = ProcDefRevEntity()
-                    newRevision.id = EntityUuid(tenantService.getCurrent(), UUID.randomUUID())
                     newRevision.created = now
                     newRevision.data = data
                     newRevision.image = image
@@ -425,7 +391,7 @@ class ProcDefServiceImpl(
 
     override fun getProcessDefRev(procType: String, procDefRevId: UUID): ProcDefRevDto? {
         val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
-        val revEntity = procDefRevRepo.findById(revId).orElse(null) ?: return null
+        val revEntity = procDefRevRepo.findById(revId) ?: return null
         return revEntity.toDto()
     }
 
@@ -433,9 +399,8 @@ class ProcDefServiceImpl(
         log.debug { "Save deployment id $deploymentId for process definition revision $procDefRevId" }
 
         val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
-        val revEntity = procDefRevRepo.findById(revId).orElseThrow {
-            error("Proc def rev with id $revId not found")
-        }
+        val revEntity = procDefRevRepo.findById(revId)
+            ?: error("Proc def rev with id $revId not found")
 
         revEntity.deploymentId = deploymentId
 
@@ -483,13 +448,8 @@ class ProcDefServiceImpl(
 
     override fun getCacheKey(): String {
         val currentTenant = tenantService.getCurrent()
-        val page = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("modified")))
-        val modified = procDefRepo.getModifiedDate(currentTenant, page)
-        return if (modified.isEmpty()) {
-            ""
-        } else {
-            modified[0].modified?.toEpochMilli().toString()
-        } + "-" + getCount() + "-" + STARTUP_TIME_STR
+        val modified = procDefRepo.getLastModifiedDate(currentTenant)
+        return modified.toEpochMilli().toString() + "-" + getCount() + "-" + STARTUP_TIME_STR
     }
 
     @Transactional(readOnly = true)
@@ -570,12 +530,4 @@ class ProcDefServiceImpl(
     class TypeParents(
         val parents: List<EntityRef>? = null
     )
-
-    @Data
-    class PredicateQuery {
-        val moduleId: String? = null
-        val procType: String? = null
-        val sectionRef: String? = null
-        val name: String? = null
-    }
 }

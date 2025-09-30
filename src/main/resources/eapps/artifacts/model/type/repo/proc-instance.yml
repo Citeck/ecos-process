@@ -1,0 +1,18 @@
+---
+id: proc-instance
+sourceId: 'eproc/proc-instance-repo'
+
+system: true
+
+model:
+  attributes:
+    - id: procType
+      index:
+        enabled: true
+    - id: recordRef
+      type: ASSOC
+      index:
+        enabled: true
+    - id: state
+      type: ASSOC
+

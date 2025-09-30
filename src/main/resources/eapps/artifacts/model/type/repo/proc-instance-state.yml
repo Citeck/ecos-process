@@ -1,0 +1,17 @@
+---
+id: proc-instance-state
+sourceId: 'eproc/proc-instance-state-repo'
+
+system: true
+
+model:
+  attributes:
+    - id: procType
+    - id: data
+      type: BINARY
+    - id: process
+      type: ASSOC
+    - id: procDefRev
+      type: ASSOC
+    - id: version
+      type: NUMBER

@@ -13,10 +13,10 @@ import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity;
 import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity;
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity;
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository;
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -24,16 +24,15 @@ import java.util.UUID;
 public class ProcServiceImpl implements ProcService {
 
     private final ProcInstanceRepository processRepo;
-    private final ProcDefRevRepository processDefRevRepo;
     private final ProcStateRepository processStateRepo;
 
-    private final ProcTenantService tenantService;
+    private final ProcDefRevRepository processDefRevRepo;
 
     @Override
     public NewProcessInstanceDto createProcessInstance(EntityRef recordRef, UUID procDefRevId) {
 
-        EntityUuid procDefId = new EntityUuid(tenantService.getCurrent(), procDefRevId);
-        ProcDefRevEntity processDefRev = processDefRevRepo.findById(procDefId).orElse(null);
+        EntityUuid procDefId = new EntityUuid(0, procDefRevId);
+        ProcDefRevEntity processDefRev = processDefRevRepo.findById(procDefId);
 
         if (EntityRef.isEmpty(recordRef)) {
             throw new IllegalArgumentException("recordRef can't be empty");
@@ -43,7 +42,6 @@ public class ProcServiceImpl implements ProcService {
         }
 
         ProcessInstanceEntity processInstance = new ProcessInstanceEntity();
-        processInstance.setId(new EntityUuid(tenantService.getCurrent(), UUID.randomUUID()));
         processInstance.setRecordRef(recordRef.toString());
 
         Instant now = Instant.now();
@@ -54,7 +52,6 @@ public class ProcServiceImpl implements ProcService {
         processInstance = processRepo.save(processInstance);
 
         ProcessStateEntity state = new ProcessStateEntity();
-        state.setId(new EntityUuid(tenantService.getCurrent(), UUID.randomUUID()));
         state.setData(new byte[0]);
         state.setProcDefRev(processDefRev);
         state.setProcess(processInstance);
@@ -75,7 +72,8 @@ public class ProcServiceImpl implements ProcService {
 
     @Override
     public ProcessInstanceDto getInstanceById(UUID id) {
-        return processRepo.findById(new EntityUuid(tenantService.getCurrent(), id))
+
+        return Optional.ofNullable(processRepo.findById(new EntityUuid(0, id)))
             .map(ProcConvertersKt::toDto)
             .orElse(null);
 
@@ -84,15 +82,13 @@ public class ProcServiceImpl implements ProcService {
     @Override
     public ProcessStateDto updateStateData(UUID prevStateId, byte[] data) {
 
-        int currentTenant = tenantService.getCurrent();
-        EntityUuid entityId = new EntityUuid(currentTenant, prevStateId);
+        EntityUuid entityId = new EntityUuid(0, prevStateId);
 
-        ProcessStateEntity stateEntity = processStateRepo.findById(entityId)
+        ProcessStateEntity stateEntity = Optional.ofNullable(processStateRepo.findById(entityId))
             .orElseThrow(() ->
                 new IllegalArgumentException("Process state with id " + prevStateId + " doesn't exists"));
 
         ProcessStateEntity newState = new ProcessStateEntity();
-        newState.setId(new EntityUuid(currentTenant, UUID.randomUUID()));
         newState.setData(data);
         newState.setProcDefRev(stateEntity.getProcDefRev());
         newState.setProcess(stateEntity.getProcess());
@@ -111,7 +107,7 @@ public class ProcServiceImpl implements ProcService {
     @Override
     public ProcessStateDto getProcStateByProcId(UUID procId) {
 
-        return processRepo.findById(new EntityUuid(tenantService.getCurrent(), procId))
+        return Optional.ofNullable(processRepo.findById(new EntityUuid(0, procId)))
             .map(ProcessInstanceEntity::getState)
             .map(ProcConvertersKt::toDto)
             .orElse(null);
@@ -120,7 +116,7 @@ public class ProcServiceImpl implements ProcService {
     @Override
     public ProcessStateDto getProcStateByStateId(UUID procStateId) {
 
-        return processStateRepo.findById(new EntityUuid(tenantService.getCurrent(), procStateId))
+        return Optional.ofNullable(processStateRepo.findById(new EntityUuid(0, procStateId)))
             .map(ProcConvertersKt::toDto)
             .orElse(null);
     }

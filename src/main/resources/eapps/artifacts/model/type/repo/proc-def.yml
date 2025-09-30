@@ -1,0 +1,37 @@
+---
+id: proc-def
+sourceId: 'eproc/proc-def-repo'
+
+system: true
+
+model:
+  attributes:
+    - id: extId
+      index:
+        enabled: true
+    - id: procType
+      index:
+        enabled: true
+    - id: name
+    - id: ecosTypeRef
+      type: ASSOC
+      config:
+        typeRef: emodel/type@type
+    - id: formRef
+      type: ASSOC
+      config:
+        typeRef: emodel/type@form
+    - id: workingCopySourceRef
+      type: ASSOC
+    - id: alfType
+    - id: enabled
+      type: BOOLEAN
+    - id: autoStartEnabled
+      type: BOOLEAN
+    - id: autoDeleteEnabled
+      type: BOOLEAN
+    - id: sectionRef
+      type: ASSOC
+    - id: lastRev
+      type: ASSOC
+

@@ -15,9 +15,8 @@ class ProcDefRevDataProvider(
 
     fun getData(dto: ProcDefRevDto): ByteArray {
         val revId = EntityUuid(tenantService.getCurrent(), dto.id)
-        val revEntity = procDefRevRepo.findById(revId).orElseThrow {
-            IllegalStateException("ProcDefRevEntity not found by id: $revId")
-        }
+        val revEntity = procDefRevRepo.findById(revId)
+            ?: throw IllegalStateException("ProcDefRevEntity not found by id: $revId")
         return revEntity.data!!
     }
 }

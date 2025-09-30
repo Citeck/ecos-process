@@ -23,7 +23,6 @@
         <ecos.ecos-lazy-approval.version>1.2.0</ecos.ecos-lazy-approval.version>
 
         <querydsl.version>5.1.0</querydsl.version>
-        <mongock.version>5.4.4</mongock.version>
         <jaxb-impl.version>4.0.5</jaxb-impl.version>
 
         <mongodb.driver.version>5.1.3</mongodb.driver.version>
@@ -114,30 +113,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.mongock</groupId>
-            <artifactId>mongock-api</artifactId>
-            <version>${mongock.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.mongock</groupId>
-            <artifactId>mongodb-sync-v4-driver</artifactId>
-            <version>${mongock.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mongodb</groupId>
-                    <artifactId>mongodb-driver-sync</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>io.mongock</groupId>
-            <artifactId>mongock-springboot</artifactId>
-            <version>${mongock.version}</version>
         </dependency>
 
         <dependency>

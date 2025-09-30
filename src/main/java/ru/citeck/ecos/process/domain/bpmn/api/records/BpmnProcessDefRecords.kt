@@ -834,7 +834,9 @@ class BpmnProcessDefRecords(
         var moduleId: String? = null,
         var forceMajorVersion: Boolean = false,
         var comment: String = "",
-        var isUploadNewVersion: Boolean = false
+        var isUploadNewVersion: Boolean = false,
+        @AttName("_workspace")
+        var workspace: EntityRef? = null
     ) {
         val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
         val isNewRecord = id.isBlank()

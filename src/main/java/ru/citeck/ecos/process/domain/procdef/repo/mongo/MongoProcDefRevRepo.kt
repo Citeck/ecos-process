@@ -1,21 +1,22 @@
-package ru.citeck.ecos.process.domain.procdef.repo
+package ru.citeck.ecos.process.domain.procdef.repo.mongo
 
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
+import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.mongodb.repository.Query
+import org.springframework.stereotype.Repository
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
 
-interface ProcDefRevRepository {
-
-    fun save(entity: ProcDefRevEntity): ProcDefRevEntity
-
-    fun findById(id: EntityUuid): ProcDefRevEntity?
-
-    fun findAllById(ids: Iterable<EntityUuid>): List<ProcDefRevEntity>
+@Repository
+interface MongoProcDefRevRepo : MongoRepository<ProcDefRevEntity, EntityUuid> {
 
     /**
      *  Return def rev entity without data, because it is too big memory usage.
      *  If you need get revisions with data, implement method with [Pageable]
      */
+    @Query(fields = "{ 'data' : null }")
     fun findAllByProcessDef(processDef: ProcDefEntity): List<ProcDefRevEntity>
 
     fun findByDeploymentId(deploymentId: String): ProcDefRevEntity?
@@ -23,11 +24,8 @@ interface ProcDefRevRepository {
     /**
      *  Return def rev entity without data, because it is too big memory usage.
      */
+    @Query(fields = "{ 'data' : null }")
     fun findByDeploymentIdIsIn(deploymentIds: List<String>): List<ProcDefRevEntity>
 
     fun queryAllByDeploymentIdIsNotNull(pageable: Pageable): Slice<ProcDefRevEntity>
-
-    fun deleteAll(entities: List<ProcDefRevEntity>)
-
-    fun deleteAll()
 }

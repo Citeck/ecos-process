@@ -1,0 +1,26 @@
+---
+id: proc-def-rev
+sourceId: 'eproc/proc-def-rev-repo'
+
+system: true
+
+model:
+  attributes:
+    - id: format
+    - id: data
+      type: BINARY
+    - id: processDef
+      type: ASSOC
+    - id: deploymentId
+      index:
+        enabled: true
+    - id: dataState
+    - id: comment
+    - id: version
+      type: NUMBER
+    - id: prevRev
+      type: ASSOC
+      config:
+        typeRef: emodel/type@proc-def-rev
+    - id: image
+      type: BINARY

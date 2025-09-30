@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.timer.service;
 import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandsService;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TimerServiceImpl implements TimerService {
 
-    private final TimerRepository timerRepository;
+    private TimerRepository timerRepository;
     private final ProcTenantService tenantService;
     private final CommandsService commandsService;
 
@@ -37,6 +38,8 @@ public class TimerServiceImpl implements TimerService {
 
     @Override
     public CreateTimerCommandRes createTimer(CreateTimerCommand createTimerCommand) {
+
+        checkRepo();
 
         TimerEntity entity = timerCreationCommandToEntity(createTimerCommand);
         entity = timerRepository.save(entity);
@@ -64,6 +67,8 @@ public class TimerServiceImpl implements TimerService {
     @Override
     public boolean cancelTimer(UUID timerId) {
 
+        checkRepo();
+
         EntityUuid id = new EntityUuid(tenantService.getCurrent(), timerId);
         TimerEntity entity = timerRepository.findFirstByActiveAndId(true, id).orElse(null);
 
@@ -77,6 +82,10 @@ public class TimerServiceImpl implements TimerService {
 
     @Override
     public void updateTimers() {
+
+        if (timerRepository == null) {
+            return;
+        }
 
         Optional<TimerEntity> timerOpt;
         while ((timerOpt = getFirstCompletedTimer()).isPresent()) {
@@ -149,6 +158,7 @@ public class TimerServiceImpl implements TimerService {
 
     @Override
     public void save(TimerDto dto) {
+        checkRepo();
         timerRepository.save(dtoToEntity(dto));
     }
 
@@ -166,5 +176,16 @@ public class TimerServiceImpl implements TimerService {
         entity.setResult(Json.getMapper().toString(dto.getResult()));
 
         return entity;
+    }
+
+    private void checkRepo() {
+        if (timerRepository == null) {
+            throw new IllegalStateException("Timer repository is null. Probably you run without mongo db?");
+        }
+    }
+
+    @Autowired(required = false)
+    public void setTimerRepository(TimerRepository timerRepository) {
+        this.timerRepository = timerRepository;
     }
 }
