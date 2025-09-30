@@ -96,6 +96,8 @@ abstract class EcosDataAbstractAdapter<T : Any>(
                 val valueMapping = valuePredMappings[result.getAttribute()]
                 if (valueMapping != null) {
                     result = valueMapping.invoke(result)
+                } else if (result.getAttribute() == RecordConstants.ATT_TYPE) {
+                    result = Predicates.alwaysTrue()
                 }
             }
             val mappedAtt = attsMapping[pred.getAttribute()]
