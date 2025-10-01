@@ -4,6 +4,7 @@ import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.JAXBElement
 import jakarta.xml.bind.JAXBException
 import jakarta.xml.bind.Marshaller
+import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.io.NS_BPMN
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
@@ -71,6 +72,12 @@ object BpmnXmlUtils {
         } catch (e: JAXBException) {
             throw IllegalArgumentException("Can not write to stream", e)
         }
+    }
+
+    fun validateEcosBpmnFormat(definition: String) {
+        val ecosBpmnDef = BpmnIO.importEcosBpmn(definition)
+        BpmnIO.exportEcosBpmn(ecosBpmnDef)
+        BpmnIO.exportCamundaBpmn(ecosBpmnDef)
     }
 
     //  Bpmn modeler failed to parse definition with empty xmlns.

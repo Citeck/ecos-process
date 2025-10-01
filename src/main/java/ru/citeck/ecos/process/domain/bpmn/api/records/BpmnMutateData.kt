@@ -90,7 +90,7 @@ class BpmnMutateDataProcessor(
             } else {
                 // Parse definition data from Ecos BPMN format
 
-                validateEcosBpmnFormat(statedInitialDefinition)
+                BpmnXmlUtils.validateEcosBpmnFormat(statedInitialDefinition)
 
                 val ecosBpmnDefinition = BpmnIO.importEcosBpmn(statedInitialDefinition)
 
@@ -201,12 +201,6 @@ class BpmnMutateDataProcessor(
 
             BpmnXmlUtils.writeToString(bpmnDef) to isRaw
         }
-    }
-
-    private fun validateEcosBpmnFormat(definition: String) {
-        val ecosBpmnDef = BpmnIO.importEcosBpmn(definition)
-        BpmnIO.exportEcosBpmn(ecosBpmnDef)
-        BpmnIO.exportCamundaBpmn(ecosBpmnDef)
     }
 
     private fun debugLogEcosAndCamundaDefStr(ecosBpmnDef: BpmnDefinitionDef) {
