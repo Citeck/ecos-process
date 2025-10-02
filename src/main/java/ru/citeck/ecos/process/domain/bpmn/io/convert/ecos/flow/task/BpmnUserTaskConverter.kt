@@ -46,6 +46,10 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
                 )
             }
 
+            val workingSchedule = dueDateManualData["workingSchedule"].asText()
+                .ifBlank { "emodel/working-schedule@DEFAULT" }
+            dueDateManualData["workingSchedule"] = workingSchedule
+
             Json.mapper.convert(
                 dueDateManualData,
                 TaskDueDateManual::class.java
