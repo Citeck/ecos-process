@@ -3,6 +3,8 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.workspace.IdInWs
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.service.BpmnPermissionResolver
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
@@ -33,7 +35,8 @@ class BpmnProcessDefVersionRecords(
     private val procDefService: ProcDefService,
     private val bpmnProcessDefRecords: BpmnProcessDefRecords,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
-    private val bpmnPermissionResolver: BpmnPermissionResolver
+    private val bpmnPermissionResolver: BpmnPermissionResolver,
+    private val workspaceService: WorkspaceService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
@@ -89,7 +92,7 @@ class BpmnProcessDefVersionRecords(
             return RecsQueryRes<VersionRecord>()
         }
 
-        val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, bpmnDefId)
+        val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, workspaceService.convertToIdInWs(bpmnDefId))
         var versions = procDefService.getProcessDefRevs(procDefRef).map {
             it.toVersionRecord()
         }
@@ -141,6 +144,7 @@ class BpmnProcessDefVersionRecords(
             deploymentId = deploymentId ?: "",
             dataState = dataState,
             procDefId = procDefId,
+            workspace = workspace,
             modified = created,
             downloadUrl = "/gateway/${AppName.EPROC}/api/proc-def/version/data?ref=${getProcessDefVersionsRef()}",
             fileName = "${procDefId}_v$externalVersion.bpmn.xml",
@@ -182,6 +186,7 @@ class BpmnProcessDefVersionRecords(
         val modifier: EntityRef,
         val format: String = "",
         val procDefId: String,
+        val workspace: String,
         val tags: List<String> = emptyList(),
         val editLink: String = EDIT_BPMN_PROC_LINK.format(EntityRef.create(AppName.EPROC, ID, id)),
 
@@ -192,7 +197,7 @@ class BpmnProcessDefVersionRecords(
         val disp: MLText
             get() = let {
                 var defName = procDefService.getProcessDefById(
-                    ProcDefRef.create(BPMN_PROC_TYPE, procDefId)
+                    ProcDefRef.create(BPMN_PROC_TYPE, IdInWs.create(workspace, procDefId))
                 )?.name?.getClosest(I18nContext.getLocale()) ?: ""
 
                 if (defName.isBlank()) {

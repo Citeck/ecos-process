@@ -4,6 +4,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.model.lib.workspace.IdInWs
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
@@ -17,7 +19,9 @@ import java.util.*
 
 @Component
 class BpmnMutateDataProcessor(
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val workspaceService: WorkspaceService,
+    private val bpmnIO: BpmnIO
 ) {
 
     companion object {
@@ -35,10 +39,14 @@ class BpmnMutateDataProcessor(
         var autoStartEnabled = mutateRecord.autoStartEnabled
         var autoDeleteEnabled = mutateRecord.autoDeleteEnabled
         var enabled = mutateRecord.enabled
+        val workspace = mutateRecord.workspace
 
         if (mutateRecord.isModuleCopy()) {
-            recordId = mutateRecord.moduleId ?: error("moduleId is missing")
-            processDefId = recordId
+            recordId = workspaceService.addWsPrefixToId(
+                mutateRecord.moduleId ?: error("moduleId is missing"),
+                workspace,
+            )
+            processDefId = recordId.substringAfter(IdInWs.WS_DELIM)
 
             val procDef = BpmnXmlUtils.readFromString(statedInitialDefinition)
 
@@ -47,7 +55,7 @@ class BpmnMutateDataProcessor(
             procDef.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED] = true.toString()
             procDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
 
-            val lastRevisionId: UUID = getLastRevisionId(mutateRecord.id)
+            val lastRevisionId: UUID = getLastRevisionId(workspace, mutateRecord.id)
             workingCopySourceRef = EntityRef.create(
                 AppName.EPROC,
                 BpmnProcessDefVersionRecords.ID,
@@ -86,13 +94,15 @@ class BpmnMutateDataProcessor(
                 autoStartEnabled = draftDefinition.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean()
                 autoDeleteEnabled = draftDefinition.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED].toBoolean()
 
+                draftDefinition.otherAttributes[BPMN_PROP_WORKSPACE] = workspace
+
                 newEcosDefinition = statedInitialDefinition
             } else {
                 // Parse definition data from Ecos BPMN format
 
                 validateEcosBpmnFormat(statedInitialDefinition)
 
-                val ecosBpmnDefinition = BpmnIO.importEcosBpmn(statedInitialDefinition)
+                var ecosBpmnDefinition = bpmnIO.importEcosBpmn(statedInitialDefinition)
 
                 debugLogEcosAndCamundaDefStr(ecosBpmnDefinition)
 
@@ -105,12 +115,14 @@ class BpmnMutateDataProcessor(
                 autoStartEnabled = ecosBpmnDefinition.autoStartEnabled
                 autoDeleteEnabled = ecosBpmnDefinition.autoDeleteEnabled
 
-                newEcosDefinition = BpmnIO.exportEcosBpmnToString(ecosBpmnDefinition)
-                newCamundaDefinitionStr = BpmnIO.exportCamundaBpmnToString(ecosBpmnDefinition)
+                ecosBpmnDefinition = ecosBpmnDefinition.copy(workspace = workspace)
+
+                newEcosDefinition = bpmnIO.exportEcosBpmnToString(ecosBpmnDefinition)
+                newCamundaDefinitionStr = bpmnIO.exportCamundaBpmnToString(ecosBpmnDefinition)
             }
 
             if (recordId.isBlank()) {
-                recordId = processDefId
+                recordId = workspaceService.addWsPrefixToId(processDefId, workspace)
             }
         }
 
@@ -121,6 +133,7 @@ class BpmnMutateDataProcessor(
         return BpmnMutateData(
             recordId = recordId,
             processDefId = processDefId,
+            workspace = workspace,
             name = name,
             ecosType = ecosType,
             formRef = formRef,
@@ -145,8 +158,8 @@ class BpmnMutateDataProcessor(
         return !moduleId.isNullOrBlank() && id != moduleId
     }
 
-    private fun getLastRevisionId(id: String): UUID {
-        val ref = ProcDefRef.create(BPMN_PROC_TYPE, id)
+    private fun getLastRevisionId(workspace: String, id: String): UUID {
+        val ref = ProcDefRef.create(BPMN_PROC_TYPE, IdInWs.create(workspace, id))
         val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
         return currentProc.revisionId
     }
@@ -154,7 +167,7 @@ class BpmnMutateDataProcessor(
     private fun BpmnProcessDefRecords.BpmnMutateRecord.getStatedDefinition(): Pair<String, Boolean> {
         val initialDefinition: String? = when (true) {
             isModuleCopy() -> {
-                val ref = ProcDefRef.create(BPMN_PROC_TYPE, processDefId)
+                val ref = ProcDefRef.create(BPMN_PROC_TYPE, IdInWs.create(workspace, processDefId))
                 val currentProc = procDefService.getProcessDefById(ref) ?: error("Process definition not found: $ref")
 
                 String(currentProc.data)
@@ -204,17 +217,17 @@ class BpmnMutateDataProcessor(
     }
 
     private fun validateEcosBpmnFormat(definition: String) {
-        val ecosBpmnDef = BpmnIO.importEcosBpmn(definition)
-        BpmnIO.exportEcosBpmn(ecosBpmnDef)
-        BpmnIO.exportCamundaBpmn(ecosBpmnDef)
+        val ecosBpmnDef = bpmnIO.importEcosBpmn(definition)
+        bpmnIO.exportEcosBpmn(ecosBpmnDef)
+        bpmnIO.exportCamundaBpmn(ecosBpmnDef)
     }
 
     private fun debugLogEcosAndCamundaDefStr(ecosBpmnDef: BpmnDefinitionDef) {
-        if (log.isDebugEnabled) {
-            val ecosBpmnStr = BpmnIO.exportEcosBpmnToString(ecosBpmnDef)
+        if (log.isDebugEnabled()) {
+            val ecosBpmnStr = bpmnIO.exportEcosBpmnToString(ecosBpmnDef)
             log.debug { "exportEcosBpmnToString:\n$ecosBpmnStr" }
 
-            val camundaStr = BpmnIO.exportCamundaBpmnToString(ecosBpmnDef)
+            val camundaStr = bpmnIO.exportCamundaBpmnToString(ecosBpmnDef)
             log.debug { "exportCamundaBpmnToString:\n$camundaStr" }
         }
     }
@@ -223,6 +236,7 @@ class BpmnMutateDataProcessor(
 data class BpmnMutateData(
     val recordId: String,
     val processDefId: String,
+    val workspace: String,
     val name: MLText,
     val ecosType: EntityRef,
     val formRef: EntityRef,

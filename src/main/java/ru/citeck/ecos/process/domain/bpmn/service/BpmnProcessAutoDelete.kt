@@ -38,7 +38,7 @@ class BpmnProcessAutoDelete(
 
     private fun handleDeleteProcessEvent(eventData: EventData) {
         log.debug { "Received event: $eventData" }
-        val processDef = cachedFirstEnabledProcessDefFinder.find(eventData.typeRef.toString())
+        val processDef = cachedFirstEnabledProcessDefFinder.find(eventData.workspace, eventData.typeRef.toString())
         if (processDef == null) {
             log.debug { "Process definition not found for ${eventData.typeRef}" }
             return
@@ -64,6 +64,9 @@ class BpmnProcessAutoDelete(
         var recordRef: EntityRef = EntityRef.EMPTY,
 
         @AttName("record._type?id")
-        var typeRef: EntityRef = EntityRef.EMPTY
+        var typeRef: EntityRef = EntityRef.EMPTY,
+
+        @AttName("record._workspace?localId!")
+        var workspace: String = ""
     )
 }

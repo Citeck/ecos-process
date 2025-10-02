@@ -29,6 +29,7 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
     private final ProcDefService processService;
     private final CmmnProcDefImporter cmmnProcDefImporter;
     private final ProcDefRevDataProvider procDefRevDataProvider;
+    private final CmmnIO cmmnIO;
 
     @Override
     public void deployArtifact(@NotNull CaseTemplateDto dto) {
@@ -38,7 +39,7 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
         if (slashIdx > -1) {
             fileName = fileName.substring(slashIdx + 1);
         }
-        processService.uploadProcDef(cmmnProcDefImporter.getDataToImport(dto.getData(), fileName));
+        processService.uploadProcDef(cmmnProcDefImporter.getDataToImport("", dto.getData(), fileName));
     }
 
     @NotNull
@@ -74,7 +75,7 @@ public class CaseTemplateArtifactHandler implements EcosArtifactHandler<CaseTemp
                 if (procDef == null) {
                     throw new RuntimeException("CMMN process reading failed: " + procDefDto.getId());
                 }
-                data = CmmnIO.exportEcosCmmnToString(procDef).getBytes(StandardCharsets.UTF_8);
+                data = cmmnIO.exportEcosCmmnToString(procDef).getBytes(StandardCharsets.UTF_8);
             } else {
 
                 throw new RuntimeException("Unknown format: " + procDefDto.getFormat());

@@ -65,7 +65,8 @@ interface BpmnProcessService {
 }
 
 data class StartProcessRequest(
-    val processKey: String,
+    val workspace: String,
+    val processId: String,
     val businessKey: String? = null,
     val variables: Map<String, Any?> = emptyMap()
 )

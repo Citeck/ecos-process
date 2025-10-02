@@ -10,10 +10,19 @@ import java.util.List;
 
 @Data
 @CommandType("find-proc-def")
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class FindProcDef {
+
     private String procType;
     private EntityRef ecosTypeRef;
     private List<String> alfTypes;
+    private String workspace;
+
+    public FindProcDef(String procType, EntityRef ecosTypeRef, List<String> alfTypes) {
+        this.procType = procType;
+        this.ecosTypeRef = ecosTypeRef;
+        this.alfTypes = alfTypes;
+        this.workspace = "";
+    }
 }

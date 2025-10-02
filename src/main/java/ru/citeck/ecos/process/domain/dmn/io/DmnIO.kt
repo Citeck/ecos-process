@@ -1,8 +1,10 @@
 package ru.citeck.ecos.process.domain.dmn.io
 
+import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.generateElementId
 import ru.citeck.ecos.process.domain.dmn.io.convert.camunda.CamundaDmnDefinitionsConverter
 import ru.citeck.ecos.process.domain.dmn.io.convert.ecos.DmnDefinitionsConverter
@@ -12,7 +14,10 @@ import ru.citeck.ecos.process.domain.dmn.model.omg.TDMNElement
 import ru.citeck.ecos.process.domain.dmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 
-object DmnIO {
+@Component
+class DmnIO(
+    workspaceService: WorkspaceService
+) {
 
     private val extensionTypeResolver = { item: Any ->
         val result: String? = when (item) {
@@ -26,14 +31,16 @@ object DmnIO {
         listOf(
             DmnDefinitionsConverter::class,
         ),
-        extensionTypeResolver
+        extensionTypeResolver,
+        workspaceService = workspaceService
     )
 
     private val ecosCamundaDmnConverters = EcosOmgConverters(
         listOf(
             CamundaDmnDefinitionsConverter::class,
         ),
-        extensionTypeResolver
+        extensionTypeResolver,
+        workspaceService = workspaceService
     )
 
     fun importEcosDmn(definitions: String): DmnDefinitionDef {

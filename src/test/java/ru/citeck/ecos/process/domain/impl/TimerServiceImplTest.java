@@ -5,13 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.citeck.ecos.commands.dto.CommandResult;
 import ru.citeck.ecos.commons.data.ObjectData;
 import ru.citeck.ecos.commons.json.Json;
 import ru.citeck.ecos.process.EprocApp;
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid;
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommandRes;
 import ru.citeck.ecos.process.domain.timer.dto.TimerCommandDto;
@@ -27,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(EcosSpringExtension.class)
 @SpringBootTest(classes = EprocApp.class)
@@ -74,9 +71,6 @@ public class TimerServiceImplTest {
     @Autowired
     private TimerService timerService;
 
-    @MockBean
-    private ProcTenantService tenantService;
-
     @BeforeEach
     public void before() {
         timerRepository.deleteAll();
@@ -102,16 +96,14 @@ public class TimerServiceImplTest {
         createTimerCommand.setTriggerTime(triggerTime);
         createTimerCommand.setCommand(commandDto);
 
-        int tenant = 10;
-
-        when(tenantService.getCurrent()).thenReturn(tenant);
+        int tenant = 0;
 
         CreateTimerCommandRes saved = timerService.createTimer(createTimerCommand);
 
         List<TimerEntity> entities = timerRepository.findAll();
         assertEquals(1, entities.size());
 
-        TimerEntity entity = entities.get(0);
+        TimerEntity entity = entities.getFirst();
 
         assertNotNull(entity.getId());
         assertEquals((Integer) tenant, (Integer) entity.getId().getTnt());
@@ -134,12 +126,9 @@ public class TimerServiceImplTest {
     public void save_properUpdate() {
 
         UUID id = UUID.randomUUID();
-        int tenant = 5;
-
-        when(tenantService.getCurrent()).thenReturn(tenant);
 
         TimerEntity entity = new TimerEntity();
-        entity.setId(new EntityUuid(tenant, id));
+        entity.setId(new EntityUuid(0, id));
 
         timerRepository.save(entity);
 
@@ -174,7 +163,7 @@ public class TimerServiceImplTest {
         assertEquals(1, entities.size());
 
         TimerEntity saved = entities.get(0);
-        assertEquals(new EntityUuid(tenant, id), saved.getId());
+        assertEquals(new EntityUuid(0, id), saved.getId());
         assertEquals((Integer) retryCount, saved.getRetryCounter());
         assertEquals(triggerTime, saved.getTriggerTime());
         assertEquals(active, saved.isActive());

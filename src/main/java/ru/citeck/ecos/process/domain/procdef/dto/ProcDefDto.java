@@ -19,6 +19,8 @@ public class ProcDefDto {
     @NotNull
     private String procType;
 
+    private String workspace;
+
     @NotNull
     private String format;
 
@@ -62,6 +64,7 @@ public class ProcDefDto {
     public ProcDefDto(@NotNull String id,
                       MLText name,
                       @NotNull String procType,
+                      @NotNull String workspace,
                       @NotNull String format,
                       @NotNull UUID revisionId,
                       @NotNull Integer version,
@@ -79,6 +82,7 @@ public class ProcDefDto {
         this.id = id;
         this.name = name;
         this.procType = procType;
+        this.workspace = workspace;
         this.format = format;
         this.revisionId = revisionId;
         this.version = version;
@@ -118,6 +122,14 @@ public class ProcDefDto {
 
     public void setProcType(String procType) {
         this.procType = procType;
+    }
+
+    public String getWorkspace() {
+        return workspace;
+    }
+
+    public void setWorkspace(String workspace) {
+        this.workspace = workspace != null ? workspace : "";
     }
 
     public String getFormat() {

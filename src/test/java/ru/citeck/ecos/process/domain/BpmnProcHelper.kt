@@ -11,6 +11,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME
@@ -77,10 +78,15 @@ class BpmnProcHelper(
     }
 
     fun getBpmnProcessDefDto(resource: String, id: String): NewProcessDefDto {
+        return getBpmnProcessDefDto(resource, IdInWs.create(id))
+    }
+
+    fun getBpmnProcessDefDto(resource: String, idInWs: IdInWs): NewProcessDefDto {
         return NewProcessDefDto(
-            id,
+            idInWs.id,
             MLText.EMPTY,
             BPMN_PROC_TYPE,
+            idInWs.workspace,
             "xml",
             "{http://www.citeck.ru/model/content/idocs/1.0}type",
             typeRef,

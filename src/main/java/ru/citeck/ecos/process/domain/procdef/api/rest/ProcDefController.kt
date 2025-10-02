@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -19,7 +20,8 @@ import java.util.concurrent.TimeUnit
 @RestController
 @RequestMapping("/api/procdef")
 class ProcDefController(
-    val procDefService: ProcDefService
+    val procDefService: ProcDefService,
+    val workspaceService: WorkspaceService
 ) : ApplicationContextAware {
 
     private lateinit var applicationContext: ApplicationContext
@@ -63,7 +65,7 @@ class ProcDefController(
             "dmn-def" -> "dmn"
             else -> error("Unknown ref: $ref")
         }
-        val procDefRef = ProcDefRef.create(procType, ref.getLocalId())
+        val procDefRef = ProcDefRef.create(procType, workspaceService.convertToIdInWs(ref.getLocalId()))
         val procDef = procDefService.getProcessDefById(procDefRef) ?: return noPreviewData
 
         val lastrev = procDefService.getProcessDefRev(procType, procDef.revisionId)

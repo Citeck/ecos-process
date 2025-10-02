@@ -18,11 +18,13 @@ import org.camunda.bpm.engine.runtime.ProcessInstance
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
+import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -43,6 +45,7 @@ class BpmnProcessServiceImpl(
     private val historyService: HistoryService,
     private val recordsService: RecordsService,
     private val meterRegistry: MeterRegistry,
+    private val workspaceService: WorkspaceService,
     @Qualifier("bpmnRabbitmqConnection")
     bpmnRabbitmqConnection: RabbitMqConnection
 ) : BpmnProcessService {
@@ -74,6 +77,13 @@ class BpmnProcessServiceImpl(
     }
 
     override fun startProcess(request: StartProcessRequest): ProcessInstance {
+
+        var processKey = request.processId
+        if (!workspaceService.isWorkspaceWithGlobalArtifacts(request.workspace)) {
+            val wsSysId = workspaceService.getWorkspaceSystemId(request.workspace)
+            processKey = wsSysId + BpmnUtils.PROC_KEY_WS_DELIM + processKey
+        }
+
         with(request) {
 
             val timer = Timer.start()
@@ -89,11 +99,13 @@ class BpmnProcessServiceImpl(
                     ).asText()
                 }
 
+                val defIdInWs = workspaceService.convertToIdInWs(definitionId)
+
                 val definition: ProcDefWithDataDto
                 val getDefTime = measureTimeMillis {
-                    definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, definitionId))
+                    definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, defIdInWs))
                         ?: throw IllegalArgumentException(
-                            "Process definition with id $definitionId not found for " +
+                            "Process definition with id '$definitionId' not found for " +
                                 "process key $processKey"
                         )
                 }

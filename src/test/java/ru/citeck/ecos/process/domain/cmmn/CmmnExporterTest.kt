@@ -8,6 +8,7 @@ import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.*
@@ -19,6 +20,8 @@ class CmmnExporterTest {
         val log = KotlinLogging.logger {}
     }
 
+    val cmmnIO = CmmnIO(ModelServiceFactory().workspaceService)
+
     @Test
     fun fromXmlTest() {
 
@@ -27,14 +30,14 @@ class CmmnExporterTest {
 
         // test
         val originalDefs = CmmnXmlUtils.readFromString(procDefXml)
-        val ecosProc = CmmnIO.importEcosCmmn(originalDefs)
-        println(CmmnIO.exportAlfCmmnToString(ecosProc))
+        val ecosProc = cmmnIO.importEcosCmmn(originalDefs)
+        println(cmmnIO.exportAlfCmmnToString(ecosProc))
         // /test
 
         testProc(procDefXml)
         testProc(
-            CmmnIO.exportEcosCmmnToString(
-                CmmnIO.generateDefaultDef("test-id", MLText(""), EntityRef.EMPTY)
+            cmmnIO.exportEcosCmmnToString(
+                cmmnIO.generateDefaultDef("test-id", MLText(""), EntityRef.EMPTY)
             )
         )
     }
@@ -44,8 +47,8 @@ class CmmnExporterTest {
         val originalXmlProcess = CmmnXmlUtils.readFromString(procDefXml)
         CmmnComparator.sortAllById(originalXmlProcess)
 
-        val ecosProcess = CmmnIO.importEcosCmmn(originalXmlProcess)
-        val xmlProcessAfterExport = CmmnIO.exportEcosCmmn(ecosProcess)
+        val ecosProcess = cmmnIO.importEcosCmmn(originalXmlProcess)
+        val xmlProcessAfterExport = cmmnIO.exportEcosCmmn(ecosProcess)
 
         CmmnComparator.sortAllById(xmlProcessAfterExport)
 
@@ -74,7 +77,7 @@ class CmmnExporterTest {
 
         assertTrue(compareResult)
 
-        val ecosProcess2 = CmmnIO.importEcosCmmn(xmlProcessAfterExport)
+        val ecosProcess2 = cmmnIO.importEcosCmmn(xmlProcessAfterExport)
 
         assertEquals(
             Json.mapper.convert(ecosProcess, ObjectData::class.java),

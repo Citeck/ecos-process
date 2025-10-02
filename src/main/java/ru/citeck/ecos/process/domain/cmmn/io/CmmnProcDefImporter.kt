@@ -12,17 +12,19 @@ import ru.citeck.ecos.process.domain.proc.dto.NewProcessDefDto
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
-class CmmnProcDefImporter {
+class CmmnProcDefImporter(
+    val cmmnIO: CmmnIO
+) {
 
-    fun getDataToImport(definition: String, fileName: String): NewProcessDefDto {
-        return getDataToImport(CmmnXmlUtils.readFromString(definition), fileName)
+    fun getDataToImport(workspace: String, definition: String, fileName: String): NewProcessDefDto {
+        return getDataToImport(workspace, CmmnXmlUtils.readFromString(definition), fileName)
     }
 
-    fun getDataToImport(bytes: ByteArray, fileName: String): NewProcessDefDto {
-        return getDataToImport(CmmnXmlUtils.readFromString(String(bytes, Charsets.UTF_8)), fileName)
+    fun getDataToImport(workspace: String, bytes: ByteArray, fileName: String): NewProcessDefDto {
+        return getDataToImport(workspace, CmmnXmlUtils.readFromString(String(bytes, Charsets.UTF_8)), fileName)
     }
 
-    fun getDataToImport(definition: Definitions, fileName: String): NewProcessDefDto {
+    fun getDataToImport(workspace: String, definition: Definitions, fileName: String): NewProcessDefDto {
 
         val format = CmmnXmlUtils.getFormat(definition)
         val id = getProcDefId(definition, fileName)
@@ -34,10 +36,11 @@ class CmmnProcDefImporter {
             id = id,
             name = getName(definition),
             procType = CMMN_TYPE,
+            workspace = workspace,
             format = format.code,
             data = let {
                 if (format == CmmnFormat.ECOS_CMMN) {
-                    Json.mapper.toBytes(CmmnIO.importEcosCmmn(definition)) ?: error("Incorrect format. File: $fileName")
+                    Json.mapper.toBytes(cmmnIO.importEcosCmmn(definition)) ?: error("Incorrect format. File: $fileName")
                 } else {
                     definition.otherAttributes[CmmnXmlUtils.PROP_PROCESS_DEF_ID] = id
                     CmmnXmlUtils.writeToString(definition).toByteArray(Charsets.UTF_8)

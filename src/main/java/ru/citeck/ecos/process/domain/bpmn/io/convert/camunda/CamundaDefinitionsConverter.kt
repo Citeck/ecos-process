@@ -6,6 +6,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NAME_ML
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_DEF_ID
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_WORKSPACE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TCollaboration
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
@@ -30,6 +31,8 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
         element.errors.forEach {
             context.bpmnErrorsByNames.computeIfAbsent(it.name) { _ -> it }
         }
+
+        context.setWorkspace(element.workspace)
 
         return TDefinitions().apply {
             id = element.definitionsId
@@ -65,6 +68,7 @@ class CamundaDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinit
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
             otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = element.id
+            otherAttributes[BPMN_PROP_WORKSPACE] = element.workspace
         }
     }
 }

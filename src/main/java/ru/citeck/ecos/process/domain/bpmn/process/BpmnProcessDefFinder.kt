@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.process
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
@@ -14,7 +15,8 @@ import ru.citeck.ecos.webapp.lib.spring.context.auth.RunAsSystem
 class BpmnProcessDefFinder(
     private val recordsService: RecordsService,
     private val bpmnProcessService: BpmnProcessService,
-    private val procDefService: ProcDefService
+    private val procDefService: ProcDefService,
+    private val workspaceService: WorkspaceService
 ) {
 
     @RunAsSystem
@@ -51,8 +53,9 @@ class BpmnProcessDefFinder(
 
     @RunAsSystem
     fun getByProcessKey(processKey: String): EntityRef {
+        val idInWs = workspaceService.convertToIdInWs(processKey)
         val procDef =
-            procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, processKey)) ?: return EntityRef.EMPTY
+            procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, idInWs)) ?: return EntityRef.EMPTY
         return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, procDef.id)
     }
 }

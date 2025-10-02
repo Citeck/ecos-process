@@ -253,6 +253,7 @@ class ProcTaskQueryWithDocumentAttsTest {
 
         val processInstance = bpmnProcessService.startProcess(
             StartProcessRequest(
+                "",
                 PROC_ID,
                 docRef.toString(),
                 mapOf(

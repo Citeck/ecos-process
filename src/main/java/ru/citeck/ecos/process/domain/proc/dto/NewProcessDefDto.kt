@@ -7,6 +7,7 @@ data class NewProcessDefDto(
     val id: String,
     val name: MLText = MLText.EMPTY,
     val procType: String,
+    val workspace: String,
     val format: String,
     val alfType: String? = null,
     val ecosTypeRef: EntityRef = EntityRef.EMPTY,
@@ -28,6 +29,7 @@ data class NewProcessDefDto(
         if (id != other.id) return false
         if (name != other.name) return false
         if (procType != other.procType) return false
+        if (workspace != other.workspace) return false
         if (format != other.format) return false
         if (alfType != other.alfType) return false
         if (ecosTypeRef != other.ecosTypeRef) return false
@@ -44,6 +46,7 @@ data class NewProcessDefDto(
         var result = id.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + procType.hashCode()
+        result = 31 * result + workspace.hashCode()
         result = 31 * result + format.hashCode()
         result = 31 * result + (alfType?.hashCode() ?: 0)
         result = 31 * result + ecosTypeRef.hashCode()
@@ -56,8 +59,8 @@ data class NewProcessDefDto(
     }
 
     override fun toString(): String {
-        return "NewProcessDefDto(id='$id', name=$name, procType='$procType', format='$format', " +
-            "alfType=$alfType, ecosTypeRef=$ecosTypeRef, formRef=$formRef, enabled=$enabled, " +
+        return "NewProcessDefDto(id='$id', name=$name, procType='$procType', workspace='$workspace' " +
+            "format='$format', alfType=$alfType, ecosTypeRef=$ecosTypeRef, formRef=$formRef, enabled=$enabled, " +
             "autoStartEnabled=$autoStartEnabled, autoDeleteEnabled=$autoDeleteEnabled, " +
             "sectionRef=$sectionRef, createdFromVersion=$createdFromVersion)"
     }

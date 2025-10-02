@@ -18,6 +18,7 @@ fun ProcDefRevEntity.toDto(): ProcDefRevDto {
         format = format!!,
         image = image,
         procDefId = processDef!!.extId!!,
+        workspace = processDef!!.workspace ?: "",
         created = created,
         createdBy = createdBy,
         deploymentId = deploymentId,
@@ -32,6 +33,7 @@ fun ProcDefEntity.toDto(): ProcDefDto {
     val procDefDto = ProcDefDto()
     procDefDto.id = extId
     procDefDto.procType = procType
+    procDefDto.workspace = workspace
     procDefDto.name = Json.mapper.read(name, MLText::class.java)
     procDefDto.revisionId = lastRev!!.id!!.id
     procDefDto.version = lastRev!!.version

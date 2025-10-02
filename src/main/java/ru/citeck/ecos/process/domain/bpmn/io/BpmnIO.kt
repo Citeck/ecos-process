@@ -1,6 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.io
 
+import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.generateElementId
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnMutateData
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CamundaDefinitionsConverter
@@ -53,10 +55,14 @@ import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
+import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 
-object BpmnIO {
+@Component
+final class BpmnIO(
+    val workspaceService: WorkspaceService
+) {
 
     private val extensionTypeResolver = { item: Any ->
         val result: String? = when (item) {
@@ -107,7 +113,8 @@ object BpmnIO {
             BpmnCallActivityTaskConverter::class,
             BpmnMessageFlowConverter::class
         ),
-        extensionTypeResolver
+        extensionTypeResolver,
+        workspaceService = workspaceService
     )
 
     private val ecosCamundaBpmnConverters = EcosOmgConverters(
@@ -151,7 +158,8 @@ object BpmnIO {
             CamundaCallActivityTaskConverter::class,
             CamundaMessageFlowConverter::class
         ),
-        extensionTypeResolver
+        extensionTypeResolver,
+        workspaceService = workspaceService
     )
 
     fun importEcosBpmn(definitions: String, validate: Boolean = true): BpmnDefinitionDef {
@@ -183,6 +191,11 @@ object BpmnIO {
         with(defData) {
             val defId = generateElementId("Definitions")
 
+            var processId = processDefId
+            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+                processId = workspaceService.getWorkspaceSystemId(workspace) + BpmnUtils.PROC_KEY_WS_DELIM + processId
+            }
+
             val defaultDef = """
             <?xml version="1.0" encoding="UTF-8"?>
             <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -195,11 +208,11 @@ object BpmnIO {
                     targetNamespace="http://bpmn.io/schema/bpmn"
                     exporter="bpmn-js (https://demo.bpmn.io)"
                     exporterVersion="8.2.0">
-              <bpmn:process id="$processDefId" isExecutable="true">
+              <bpmn:process id="$processId" isExecutable="true">
                 <bpmn:startEvent id="StartEvent_1ew9rff" />
               </bpmn:process>
               <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-                <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="$processDefId">
+                <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="$processId">
                   <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1ew9rff">
                     <dc:Bounds x="156" y="81" width="36" height="36" />
                   </bpmndi:BPMNShape>
@@ -212,6 +225,7 @@ object BpmnIO {
             def.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
             def.otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(name)
             def.otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = processDefId
+            def.otherAttributes[BPMN_PROP_WORKSPACE] = workspace
             def.otherAttributes[BPMN_PROP_FORM_REF] = formRef.toString()
             def.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
             def.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()

@@ -16,7 +16,7 @@ journalRef: uiserv/journal@bpmn-process-def
 actions:
   - uiserv/action@module-copy
   - uiserv/action@download-base64-data-bpmn-xml
-  - uiserv/action@go-to-bpmn-designer
+  - uiserv/action@open-bpmn-editor
   - uiserv/action@download-xlsx-ecos-bpmn-def-template
 
 assignablePerms:
@@ -28,6 +28,8 @@ assignablePerms:
   - emodel/permission-def@bpmn-process-instance-run
 
 defaultCreateVariant: false
+
+postCreateActionRef: uiserv/action@open-bpmn-editor
 
 createVariants:
 

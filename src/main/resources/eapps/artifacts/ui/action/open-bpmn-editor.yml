@@ -1,5 +1,8 @@
 ---
 id: open-bpmn-editor
+name:
+  ru: Открыть в редакторе
+  en: Open in editor
 type: open-url
 config:
   url: /v2/bpmn-editor?recordRef=${recordRef}

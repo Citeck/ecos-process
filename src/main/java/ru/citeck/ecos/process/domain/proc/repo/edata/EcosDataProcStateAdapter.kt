@@ -54,6 +54,7 @@ class EcosDataProcStateAdapter(
     override fun findFirstByProcDefRevIn(procDefRev: List<ProcDefRevEntity>): ProcessStateEntity? {
         val procDefRefs = procDefRev.map { EcosDataProcDefRevAdapter.toRef(it) }
         return findAllRaw(
+            emptyList(),
             predicate = Predicates.inVals("procDefRev", procDefRefs),
             skipCount = 0,
             maxItems = 1

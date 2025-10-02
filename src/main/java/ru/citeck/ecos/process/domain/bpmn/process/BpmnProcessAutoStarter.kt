@@ -7,6 +7,7 @@ import ru.citeck.ecos.events2.type.RecordCreatedEvent
 import ru.citeck.ecos.events2.type.RecordDraftStatusChangedEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKSPACE
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -16,7 +17,6 @@ import kotlin.system.measureTimeMillis
 @Component
 class BpmnProcessAutoStarter(
     eventsService: EventsService,
-    private val procDefService: ProcDefService,
     private val bpmnProcessService: BpmnProcessService,
     private val cachedFirstEnabledProcessDefFinder: CachedFirstEnabledProcessDefFinder
 ) {
@@ -70,16 +70,16 @@ class BpmnProcessAutoStarter(
                 return
             }
 
-            startProcessIfRequired(eventData.eventRef, eventData.typeRef)
+            startProcessIfRequired(eventData.eventRef, eventData.workspace, eventData.typeRef)
         }
 
         log.trace { "Handled start process event for record ${eventData.eventRef} in $time ms" }
     }
 
-    private fun startProcessIfRequired(record: EntityRef, type: EntityRef) {
+    private fun startProcessIfRequired(record: EntityRef, workspace: String, type: EntityRef) {
         log.debug { "Processing record: $record, type: $type for auto start process" }
 
-        val procDef = cachedFirstEnabledProcessDefFinder.find(type.toString())
+        val procDef = cachedFirstEnabledProcessDefFinder.find(workspace, type.toString())
         if (procDef == null) {
             log.debug { "Process definition not found for $type" }
             return
@@ -91,6 +91,7 @@ class BpmnProcessAutoStarter(
         }
 
         val processVariables = mapOf(
+            BPMN_WORKSPACE to procDef.workspace,
             BPMN_DOCUMENT_REF to record.toString(),
             BPMN_DOCUMENT_TYPE to type.getLocalId()
         )
@@ -100,6 +101,7 @@ class BpmnProcessAutoStarter(
         // Auto-start process working only for process, which procDef.id = process.id
         bpmnProcessService.startProcessAsync(
             StartProcessRequest(
+                procDef.workspace,
                 procDef.id,
                 record.toString(),
                 processVariables
@@ -112,6 +114,9 @@ class BpmnProcessAutoStarter(
         var eventRef: EntityRef = EntityRef.EMPTY,
 
         @AttName("record._type?id")
-        var typeRef: EntityRef = EntityRef.EMPTY
+        var typeRef: EntityRef = EntityRef.EMPTY,
+
+        @AttName("record._workspace?localId!")
+        var workspace: String
     )
 }

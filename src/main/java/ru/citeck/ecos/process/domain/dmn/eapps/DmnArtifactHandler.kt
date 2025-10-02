@@ -3,13 +3,13 @@ package ru.citeck.ecos.process.domain.dmn.eapps
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.apps.app.domain.handler.EcosArtifactHandler
 import ru.citeck.ecos.apps.artifact.controller.type.binary.BinArtifact
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefActions
-import ru.citeck.ecos.process.domain.dmn.api.records.DmnDefRecords
 import ru.citeck.ecos.process.domain.dmn.io.DmnIO
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -24,7 +24,8 @@ private const val ARTIFACT_TYPE = "process/dmn"
 class DmnArtifactHandler(
     private val recordsService: RecordsService,
     private val procDefService: ProcDefService,
-    private val procDefRevDataProvider: ProcDefRevDataProvider
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val dmnIO: DmnIO
 ) : EcosArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String) {
@@ -54,25 +55,23 @@ class DmnArtifactHandler(
     }
 
     private fun validateFormatAndGetDmnString(revData: ByteArray): String {
-        val dmnDef = DmnIO.importEcosDmn(String(revData))
-        DmnIO.exportCamundaDmn(dmnDef)
+        val dmnDef = dmnIO.importEcosDmn(String(revData))
+        dmnIO.exportCamundaDmn(dmnDef)
 
-        return DmnIO.exportCamundaDmnToString(dmnDef)
+        return dmnIO.exportCamundaDmnToString(dmnDef)
     }
 
     override fun deployArtifact(artifact: BinArtifact) {
 
         val stringDef = String(artifact.data)
 
-        val dmnMutateRecord = DmnDefRecords.DmnMutateRecord(
-            id = "",
-            defId = "",
-            name = MLText.EMPTY,
-            definition = stringDef,
-            action = DmnDefActions.DEPLOY.toString(),
-            sectionRef = EntityRef.EMPTY,
-            imageBytes = null
-        )
+        val dmnMutateRecord = DataValue.createObj()
+            .set("id", "")
+            .set("defId", "")
+            .set("name", MLText.EMPTY)
+            .set("definition", stringDef)
+            .set("action", DmnDefActions.DEPLOY.toString())
+            .set("sectionRef", EntityRef.EMPTY)
 
         recordsService.mutate("${AppName.EPROC}/$DMN_DEF_RECORDS_SOURCE_ID@", dmnMutateRecord)
     }

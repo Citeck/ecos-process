@@ -3,18 +3,16 @@ package ru.citeck.ecos.process.domain.procdef.dto
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
 import java.time.Instant
 import java.util.*
 
 @Component
 class ProcDefRevDataProvider(
-    private val procDefRevRepo: ProcDefRevRepository,
-    private val tenantService: ProcTenantService
+    private val procDefRevRepo: ProcDefRevRepository
 ) {
 
     fun getData(dto: ProcDefRevDto): ByteArray {
-        val revId = EntityUuid(tenantService.getCurrent(), dto.id)
+        val revId = EntityUuid(0, dto.id)
         val revEntity = procDefRevRepo.findById(revId)
             ?: throw IllegalStateException("ProcDefRevEntity not found by id: $revId")
         return revEntity.data!!
@@ -29,6 +27,8 @@ data class ProcDefRevDto(
     var image: ByteArray? = null,
 
     var procDefId: String,
+
+    var workspace: String,
 
     var comment: String = "",
 

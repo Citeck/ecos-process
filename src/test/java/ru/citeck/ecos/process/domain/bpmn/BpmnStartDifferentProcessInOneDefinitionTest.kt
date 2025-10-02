@@ -45,6 +45,7 @@ class BpmnStartDifferentProcessInOneDefinitionTest {
     fun `should start different process in one definition`(processIdx: String) {
         bpmnProcessService.startProcess(
             StartProcessRequest(
+                "",
                 "process_different_$processIdx",
                 "test_business_key_$processIdx",
                 emptyMap()

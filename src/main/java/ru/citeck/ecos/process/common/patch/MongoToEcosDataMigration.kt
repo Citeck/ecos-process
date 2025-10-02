@@ -90,7 +90,7 @@ class MongoToEcosDataMigrationConfig {
             forEach(mongoProcDefRepo) { mongoProcDef ->
                 val procType = mongoProcDef.procType ?: return@forEach
                 val extId = mongoProcDef.extId ?: return@forEach
-                val existing = edataProcDefRepository.findOneByIdTntAndProcTypeAndExtId(0, procType, extId)
+                val existing = edataProcDefRepository.findByIdInWs("", procType, extId)
                 val procKey = mongoProcDef.procType + '$' + mongoProcDef.extId
                 if (existing == null || existing.modified.orEpoch() < mongoProcDef.modified.orEpoch()) {
                     log.info { "Run migration for '$procKey'" }

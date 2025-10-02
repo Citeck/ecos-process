@@ -300,6 +300,7 @@ class ProcTaskSyncedAttsQueryTest {
         allDocRefs.forEach { docRef ->
             val instance = bpmnProcessService.startProcess(
                 StartProcessRequest(
+                    "",
                     "bpmn-task-atts-document-simple-task-create",
                     docRef.toString(),
                     mapOf(

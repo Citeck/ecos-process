@@ -13,6 +13,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 data class BpmnDefinitionDef(
     val id: String,
+    val workspace: String,
 
     val enabled: Boolean,
     val autoStartEnabled: Boolean,

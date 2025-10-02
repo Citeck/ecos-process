@@ -26,7 +26,8 @@ class BpmnProcessArtifactHandler(
     private val recordsService: RecordsService,
     private val procDefService: ProcDefService,
     private val bpmnProcessDefRecords: BpmnProcessDefRecords,
-    private val procDefRevDataProvider: ProcDefRevDataProvider
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val bpmnIO: BpmnIO
 ) : EcosArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String) {
@@ -54,10 +55,10 @@ class BpmnProcessArtifactHandler(
     }
 
     private fun validateFormatAndGetEcosBpmnString(revData: ByteArray): String {
-        val ecosBpmnDef = BpmnIO.importEcosBpmn(String(revData))
-        BpmnIO.exportCamundaBpmn(ecosBpmnDef)
+        val ecosBpmnDef = bpmnIO.importEcosBpmn(String(revData))
+        bpmnIO.exportCamundaBpmn(ecosBpmnDef)
 
-        return BpmnIO.exportEcosBpmnToString(ecosBpmnDef)
+        return bpmnIO.exportEcosBpmnToString(ecosBpmnDef)
     }
 
     override fun deployArtifact(artifact: BinArtifact) {

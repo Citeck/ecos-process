@@ -1001,6 +1001,7 @@ class UserTaskAttsSyncTest {
     private fun startProcess() {
         val instance = bpmnProcessService.startProcess(
             StartProcessRequest(
+                "",
                 "bpmn-task-atts-document-simple-task-create",
                 docRef.toString(),
                 variables_docRef
@@ -1012,6 +1013,7 @@ class UserTaskAttsSyncTest {
     private fun startProcessForChild() {
         val instance = bpmnProcessService.startProcess(
             StartProcessRequest(
+                "",
                 "bpmn-task-atts-document-simple-task-create",
                 docRefChild.toString(),
                 mapOf(

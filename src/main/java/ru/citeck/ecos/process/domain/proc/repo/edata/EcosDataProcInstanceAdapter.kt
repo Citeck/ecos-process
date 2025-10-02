@@ -99,6 +99,7 @@ class EcosDataProcInstanceAdapter(
             stateRef?.let {
                 val entity = procStateAdapter.getByRef(it)
                 super.state = entity
+                entity?.process = this
                 entity
             }
         }

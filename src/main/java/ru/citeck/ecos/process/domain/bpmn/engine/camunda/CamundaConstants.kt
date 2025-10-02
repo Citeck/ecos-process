@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda
 
+const val BPMN_WORKSPACE = "workspace"
 const val BPMN_DOCUMENT = "document"
 const val BPMN_DOCUMENT_REF = "documentRef"
 const val BPMN_DOCUMENT_TYPE = "documentType"

@@ -10,6 +10,8 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.workspace.IdInWs
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
@@ -57,7 +59,9 @@ class DmnDefRecords(
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val camundaRepoService: RepositoryService,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords
+    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
+    private val workspaceService: WorkspaceService,
+    private val dmnIO: DmnIO
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -100,6 +104,7 @@ class DmnDefRecords(
 
         do {
             val unfilteredBatch = procDefService.findAll(
+                recsQuery.workspaces,
                 predicate,
                 QUERY_BATCH_SIZE,
                 recsQuery.page.skipCount + QUERY_BATCH_SIZE * numberOfExecutedRequests++
@@ -131,7 +136,7 @@ class DmnDefRecords(
             log.warn("Request count limit reached! Request: $recsQuery")
         }
 
-        val totalCount = procDefService.getCount(predicate)
+        val totalCount = procDefService.getCount(recsQuery.workspaces, predicate)
 
         val res = RecsQueryRes(result)
         res.setTotalCount(totalCount)
@@ -142,13 +147,15 @@ class DmnDefRecords(
 
     override fun getRecToMutate(recordId: String): DmnMutateRecord {
         return if (recordId.isBlank()) {
-            DmnMutateRecord("", "", MLText(), "", "", EntityRef.EMPTY, null)
+            DmnMutateRecord("", "", "", MLText(), "", "", EntityRef.EMPTY, null)
         } else {
-            val procDef = procDefService.getProcessDefById(ProcDefRef.create(DMN_PROC_TYPE, recordId))
+            val idInWs = workspaceService.convertToIdInWs(recordId)
+            val procDef = procDefService.getProcessDefById(ProcDefRef.create(DMN_PROC_TYPE, idInWs))
                 ?: error("Process definition is not found: $recordId")
             DmnMutateRecord(
                 recordId,
                 recordId,
+                procDef.workspace,
                 procDef.name ?: MLText(),
                 null,
                 "",
@@ -193,17 +200,17 @@ class DmnDefRecords(
 
             validateEcosDmnFormat(newDefinition)
 
-            newEcosDmnDef = DmnIO.importEcosDmn(newDefinition)
+            newEcosDmnDef = dmnIO.importEcosDmn(newDefinition)
 
-            if (log.isDebugEnabled) {
-                val ecosDmnStr = DmnIO.exportEcosDmnToString(newEcosDmnDef)
+            if (log.isDebugEnabled()) {
+                val ecosDmnStr = dmnIO.exportEcosDmnToString(newEcosDmnDef)
                 log.debug { "exportEcosDmnToString:\n$ecosDmnStr" }
 
-                val camundaStr = DmnIO.exportCamundaDmnToString(newEcosDmnDef)
+                val camundaStr = dmnIO.exportCamundaDmnToString(newEcosDmnDef)
                 log.debug { "exportCamundaDmnToString:\n$camundaStr" }
             }
 
-            newDefData = DmnIO.exportEcosDmnToString(newEcosDmnDef).toByteArray()
+            newDefData = dmnIO.exportEcosDmnToString(newEcosDmnDef).toByteArray()
 
             record.name = newEcosDmnDef.name
             record.defId = newEcosDmnDef.id
@@ -217,13 +224,13 @@ class DmnDefRecords(
             error("defId is missing")
         }
 
-        val newRef = ProcDefRef.create(DMN_PROC_TYPE, record.defId)
+        val newRef = ProcDefRef.create(DMN_PROC_TYPE, IdInWs.create(record.workspace, record.defId))
 
         val currentProc = procDefService.getProcessDefById(newRef)
         val procDefResult: ProcDefDto
 
         if ((record.id != record.defId) && currentProc != null) {
-            error("Process definition with id " + newRef.id + " already exists")
+            error("Process definition with id " + newRef.idInWs + " already exists")
         }
 
         if (currentProc == null) {
@@ -232,10 +239,11 @@ class DmnDefRecords(
                 id = record.defId,
                 name = record.name,
                 data = newDefData ?: DmnXmlUtils.writeToString(
-                    DmnIO.generateDefaultDef(record.defId, record.name)
+                    dmnIO.generateDefaultDef(record.defId, record.name)
                 ).toByteArray(),
                 format = DMN_FORMAT,
                 procType = DMN_PROC_TYPE,
+                workspace = record.workspace,
                 sectionRef = record.sectionRef,
                 image = record.imageBytes
             )
@@ -277,7 +285,7 @@ class DmnDefRecords(
                 error("Permissions denied for deploy: $procDefRef")
             }
 
-            val camundaFormat = DmnIO.exportCamundaDmnToString(newEcosDmnDef!!)
+            val camundaFormat = dmnIO.exportCamundaDmnToString(newEcosDmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
             val deployResult = camundaRepoService.createDeployment()
@@ -303,13 +311,14 @@ class DmnDefRecords(
     }
 
     private fun validateEcosDmnFormat(newDefinition: String) {
-        val ecosDmnDef = DmnIO.importEcosDmn(newDefinition)
-        DmnIO.exportEcosDmn(ecosDmnDef)
-        DmnIO.exportCamundaDmn(ecosDmnDef)
+        val ecosDmnDef = dmnIO.importEcosDmn(newDefinition)
+        dmnIO.exportEcosDmn(ecosDmnDef)
+        dmnIO.exportCamundaDmn(ecosDmnDef)
     }
 
     override fun getRecordAtts(recordId: String): Any? {
-        val ref = ProcDefRef.create(DMN_PROC_TYPE, recordId)
+        val idInWs = workspaceService.convertToIdInWs(recordId)
+        val ref = ProcDefRef.create(DMN_PROC_TYPE, idInWs)
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {
@@ -318,6 +327,7 @@ class DmnDefRecords(
                     it.id,
                     it.name,
                     it.procType,
+                    it.workspace,
                     it.format,
                     it.revisionId,
                     it.version,
@@ -338,8 +348,9 @@ class DmnDefRecords(
 
     override fun delete(recordId: String): DelStatus {
         val ref = recordId.toProcDefRef()
+        val idInWs = workspaceService.convertToIdInWs(ref.getLocalId())
         return if (ref.getPerms().hasWritePerms()) {
-            procDefService.delete(ProcDefRef.create(DMN_PROC_TYPE, ref.getLocalId()))
+            procDefService.delete(ProcDefRef.create(DMN_PROC_TYPE, idInWs))
             DelStatus.OK
         } else {
             DelStatus.PROTECTED
@@ -395,7 +406,7 @@ class DmnDefRecords(
         @AttName("model")
         fun getModel(): Map<String, String> {
             return getDefinition()?.let {
-                return DmnIO.importEcosDmn(it).model
+                return dmnIO.importEcosDmn(it).model
             } ?: emptyMap()
         }
 
@@ -436,9 +447,10 @@ class DmnDefRecords(
         }
     }
 
-    class DmnMutateRecord(
+    inner class DmnMutateRecord(
         var id: String,
         var defId: String,
+        var workspace: String,
         var name: MLText,
         var definition: String? = null,
         var action: String = "",
@@ -452,6 +464,14 @@ class DmnDefRecords(
 
         fun setImage(imageUrl: String) {
             imageBytes = DataUriUtil.parseData(imageUrl).data
+        }
+
+        @JsonProperty("_workspace")
+        fun setCtxWorkspace(workspace: String?) {
+            if (this.workspace.isNotBlank() || workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+                return
+            }
+            this.workspace = workspace ?: ""
         }
 
         @JsonProperty("_content")

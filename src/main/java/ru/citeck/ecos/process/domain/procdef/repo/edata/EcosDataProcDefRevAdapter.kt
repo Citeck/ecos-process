@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.procdef.repo.edata
 import org.springframework.data.domain.*
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.EcosDataAbstractAdapter
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
@@ -71,6 +72,7 @@ open class EcosDataProcDefRevAdapter(
 
     override fun findById(id: EntityUuid): ProcDefRevEntity? {
         return findAllRaw(
+            emptyList(),
             Predicates.eq(ATT_ID, id.id),
             0, 1
         ).getRecords().firstOrNull()?.convertToEntity()
@@ -78,6 +80,7 @@ open class EcosDataProcDefRevAdapter(
 
     override fun findAllById(ids: Iterable<EntityUuid>): List<ProcDefRevEntity> {
         return findAllRaw(
+            emptyList(),
             Predicates.inVals(ATT_ID, ids.mapTo(ArrayList()) { it.id }),
             0, 50_000
         ).getRecords().map { it.convertToEntity() }
@@ -85,6 +88,7 @@ open class EcosDataProcDefRevAdapter(
 
     override fun findAllByProcessDef(processDef: ProcDefEntity): List<ProcDefRevEntity> {
         return findAllRaw(
+            emptyList(),
             Predicates.eq(ATT_PROCESS_DEF, EcosDataProcDefAdapter.toRef(processDef)),
             0, 50_000
         ).getRecords().map { it.convertToEntity() }
@@ -92,6 +96,7 @@ open class EcosDataProcDefRevAdapter(
 
     override fun findByDeploymentId(deploymentId: String): ProcDefRevEntity? {
         return findAllRaw(
+            emptyList(),
             Predicates.eq(ATT_DEPLOYMENT_ID, deploymentId),
             0, 1
         ).getRecords().firstOrNull()?.convertToEntity()
@@ -99,6 +104,7 @@ open class EcosDataProcDefRevAdapter(
 
     override fun findByDeploymentIdIsIn(deploymentIds: List<String>): List<ProcDefRevEntity> {
         return findAllRaw(
+            emptyList(),
             Predicates.inVals(ATT_DEPLOYMENT_ID, deploymentIds),
             0, 50_000
         ).getRecords().map { it.convertToEntity() }

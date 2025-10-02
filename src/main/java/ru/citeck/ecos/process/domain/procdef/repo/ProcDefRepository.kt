@@ -13,21 +13,17 @@ interface ProcDefRepository {
 
     fun save(entity: ProcDefEntity): ProcDefEntity
 
-    fun findAll(predicate: Predicate, pageable: Pageable): Page<ProcDefEntity>
+    fun findAll(workspaces: List<String>, predicate: Predicate, pageable: Pageable): Page<ProcDefEntity>
 
-    fun findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(tenant: Int, type: String, ecosTypeRef: String): ProcDefEntity?
+    fun findFirstEnabledByEcosType(workspace: String, type: String, ecosTypeRef: String): ProcDefEntity?
 
-    fun findFirstByIdTntAndProcTypeAndExtId(tenant: Int, type: String, extId: String): ProcDefEntity?
+    fun findByIdInWs(workspace: String, type: String, extId: String): ProcDefEntity?
 
-    fun findAllByIdTnt(tenant: Int, pageable: Pageable): List<ProcDefEntity>
+    fun getCount(workspaces: List<String>, predicate: Predicate): Long
 
-    fun getCount(predicate: Predicate): Long
+    fun getCount(workspaces: List<String>): Long
 
-    fun getCount(tenant: Int): Long
+    fun getLastModifiedDate(): Instant
 
-    fun getLastModifiedDate(tenant: Int): Instant
-
-    fun findOneByIdTntAndProcTypeAndExtId(tenant: Int, procType: String, extId: String): ProcDefEntity?
-
-    fun findFirstByIdTntAndProcTypeAndAlfType(tenant: Int, type: String, alfType: String): ProcDefEntity?
+    fun findFirstByProcTypeAndAlfType(workspace: String, type: String, alfType: String): ProcDefEntity?
 }

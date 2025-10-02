@@ -53,7 +53,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "regular-bpmn-process"
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.CONVERTED)
@@ -74,7 +74,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "regular-bpmn-process"
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.CONVERTED)
@@ -86,7 +86,7 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.SAVE)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
     }
@@ -102,7 +102,7 @@ class BpmnProcessDefRecordsActionsTest {
             "StartProcessEvent" to "StartProcessEvent2"
         )
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(2)
     }
@@ -122,7 +122,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "regular-bpmn-process"
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DEPLOY)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.CONVERTED)
@@ -144,7 +144,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "draft-bpmn-process"
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.RAW)
@@ -165,7 +165,7 @@ class BpmnProcessDefRecordsActionsTest {
         val procId = "draft-bpmn-process"
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.RAW)
@@ -187,7 +187,7 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, BpmnProcessDefActions.DRAFT)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
     }
@@ -203,7 +203,7 @@ class BpmnProcessDefRecordsActionsTest {
             "StartDraftProcessEvent" to "StartDraftProcessEvent2"
         )
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(1)
     }
@@ -225,7 +225,7 @@ class BpmnProcessDefRecordsActionsTest {
             "StartDraftProcessEvent" to "StartDraftProcessEvent2"
         )
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(revisions).hasSize(2)
     }
@@ -254,9 +254,9 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
         helper.copyBpmnModule(procId, copiedId)
 
-        val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val originalDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
-        val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val copiedDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
             ?: error("Copied definition not found")
 
         assertThat(copiedDef.id).isEqualTo(copiedId)
@@ -272,9 +272,9 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
         helper.copyBpmnModule(procId, copiedId)
 
-        val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val originalDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
-        val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val copiedDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
             ?: error("Copied definition not found")
 
         assertThat(copiedDef.workingCopySourceRef).isEqualTo(
@@ -301,12 +301,12 @@ class BpmnProcessDefRecordsActionsTest {
 
         helper.copyBpmnModule(procId, copiedId)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
         assertThat(revisions.size).isEqualTo(2)
 
-        val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val originalDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
-        val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val copiedDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
             ?: error("Copied definition not found")
 
         assertThat(copiedDef.workingCopySourceRef).isEqualTo(
@@ -326,9 +326,9 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
         helper.copyBpmnModule(procId, copiedId)
 
-        val originalDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val originalDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
             ?: error("Original definition not found")
-        val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val copiedDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
             ?: error("Copied definition not found")
 
         assertThat(originalDef.enabled).isTrue()
@@ -346,7 +346,7 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
         helper.copyBpmnModule(procId, copiedId)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.CONVERTED)
@@ -360,7 +360,7 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
         helper.copyBpmnModule(procId, copiedId)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
 
         assertThat(revisions).hasSize(1)
         assertThat(revisions.first().dataState).isEqualTo(ProcDefRevDataState.RAW)
@@ -372,7 +372,7 @@ class BpmnProcessDefRecordsActionsTest {
         val comment = "New version comment"
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
 
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
         assertThat(revisions).hasSize(1)
         assertThat(revisions[0].version).isEqualTo(0)
 
@@ -383,7 +383,7 @@ class BpmnProcessDefRecordsActionsTest {
             "some documentation" to "new documentation"
         )
 
-        val newRevisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val newRevisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
         assertThat(newRevisions).hasSize(2)
         assertThat(newRevisions[0].version).isEqualTo(1)
         assertThat(newRevisions[0].comment).isEqualTo(comment)
@@ -398,7 +398,7 @@ class BpmnProcessDefRecordsActionsTest {
         helper.saveBpmnWithAction("test/bpmn/$procId.bpmn.xml", procId, null)
         helper.copyBpmnModule(procId, copiedId)
 
-        val copiedDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, copiedId))
+        val copiedDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, copiedId))
             ?: error("Copied definition not found")
 
         helper.uploadNewVersion(
@@ -408,7 +408,7 @@ class BpmnProcessDefRecordsActionsTest {
             "some documentation" to "new documentation"
         )
 
-        val rootProcessRevisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val rootProcessRevisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
         assertThat(rootProcessRevisions).hasSize(2)
 
         val modifiedNewVersionContent = String(rootProcessRevisions[0].loadData(procDefRevDataProvider))

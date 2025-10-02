@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.webapp.api.constants.AppName
@@ -93,7 +94,7 @@ class ProcDefEntity {
             .set("lastRev", EcosDataProcDefRevAdapter.toRef(lastRev))
             .set("_workspace",
                 if (workspace.isNullOrBlank()) {
-                    null
+                    ModelUtils.DEFAULT_WORKSPACE_ID
                 } else {
                     EntityRef.create(AppName.EMODEL, "workspace", workspace)
                 }

@@ -36,37 +36,29 @@ class MongoProcDefRepoAdapter(
         return impl.save(entity)
     }
 
-    override fun findAll(predicate: Predicate, pageable: Pageable): Page<ProcDefEntity> {
+    override fun findAll(workspaces: List<String>, predicate: Predicate, pageable: Pageable): Page<ProcDefEntity> {
         return impl.findAll(predicateToQuery(predicate), pageable)
     }
 
-    override fun findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(
-        tenant: Int,
-        type: String,
-        ecosTypeRef: String
-    ): ProcDefEntity? {
-        return impl.findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(tenant, type, ecosTypeRef)
+    override fun findFirstEnabledByEcosType(workspace: String, type: String, ecosTypeRef: String): ProcDefEntity? {
+        return impl.findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(0, type, ecosTypeRef)
     }
 
-    override fun findFirstByIdTntAndProcTypeAndExtId(tenant: Int, type: String, extId: String): ProcDefEntity? {
-        return impl.findFirstByIdTntAndProcTypeAndExtId(tenant, type, extId)
+    override fun findByIdInWs(workspace: String, type: String, extId: String): ProcDefEntity? {
+        return impl.findFirstByIdTntAndProcTypeAndExtId(0, type, extId)
     }
 
-    override fun findAllByIdTnt(tenant: Int, pageable: Pageable): List<ProcDefEntity> {
-        return impl.findAllByIdTnt(tenant, pageable)
-    }
-
-    override fun getCount(predicate: Predicate): Long {
+    override fun getCount(workspaces: List<String>, predicate: Predicate): Long {
         return impl.count(predicateToQuery(predicate))
     }
 
-    override fun getCount(tenant: Int): Long {
-        return impl.getCount(tenant)
+    override fun getCount(workspaces: List<String>): Long {
+        return impl.getCount(0)
     }
 
-    override fun getLastModifiedDate(tenant: Int): Instant {
+    override fun getLastModifiedDate(): Instant {
         val page = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("modified")))
-        val modified = impl.getModifiedDate(tenant, page)
+        val modified = impl.getModifiedDate(0, page)
         return if (modified.isEmpty()) {
             Instant.EPOCH
         } else {
@@ -74,12 +66,8 @@ class MongoProcDefRepoAdapter(
         }
     }
 
-    override fun findOneByIdTntAndProcTypeAndExtId(tenant: Int, procType: String, extId: String): ProcDefEntity? {
-        return impl.findOneByIdTntAndProcTypeAndExtId(tenant, procType, extId)
-    }
-
-    override fun findFirstByIdTntAndProcTypeAndAlfType(tenant: Int, type: String, alfType: String): ProcDefEntity? {
-        return impl.findFirstByIdTntAndProcTypeAndAlfType(tenant, type, alfType)
+    override fun findFirstByProcTypeAndAlfType(workspace: String, type: String, alfType: String): ProcDefEntity? {
+        return impl.findFirstByIdTntAndProcTypeAndAlfType(0, type, alfType)
     }
 
     private fun predicateToQuery(predicate: Predicate): BooleanExpression {

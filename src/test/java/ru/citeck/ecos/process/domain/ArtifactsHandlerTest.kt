@@ -89,12 +89,8 @@ class ArtifactsHandlerTest {
 
     @Test
     fun `check definition meta data of loaded dmn from artifact`() {
-        val deployed = procDefService.getProcessDefById(
-            ProcDefRef.create(
-                DMN_PROC_TYPE,
-                DMN_TEST_DEF_ID
-            )
-        )
+
+        val deployed = procDefService.getProcessDefById(ProcDefRef.createWoWs(DMN_PROC_TYPE, DMN_TEST_DEF_ID))
 
         assertNotNull(deployed)
 
@@ -132,7 +128,7 @@ class ArtifactsHandlerTest {
 
     @Test
     fun `check definition meta data of loaded bpmn process from artifact`() {
-        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+        val definition = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
 
         assertNotNull(definition)
 
@@ -154,7 +150,7 @@ class ArtifactsHandlerTest {
 
     @Test
     fun `loaded bpmn process from artifact should save revision with converted data state`() {
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
 
         assertEquals(1, revisions.size)
 
@@ -165,7 +161,7 @@ class ArtifactsHandlerTest {
 
     @Test
     fun `loaded bpmn process from artifact should save revision with deployment id`() {
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, BPMN_TEST_PROCESS_ID))
 
         val revision = revisions.first()
 
@@ -184,7 +180,7 @@ class ArtifactsHandlerTest {
 
     @Test
     fun `check definition meta data of loaded draft bpmn process from artifact`() {
-        val definition = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_DRAFT_PROCESS_ID))
+        val definition = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, BPMN_TEST_DRAFT_PROCESS_ID))
 
         assertNotNull(definition)
 
@@ -206,7 +202,7 @@ class ArtifactsHandlerTest {
 
     @Test
     fun `loaded draft bpmn process from artifact should save revision with raw data state`() {
-        val revisions = procDefService.getProcessDefRevs(ProcDefRef.create(BPMN_PROC_TYPE, BPMN_TEST_DRAFT_PROCESS_ID))
+        val revisions = procDefService.getProcessDefRevs(ProcDefRef.createWoWs(BPMN_PROC_TYPE, BPMN_TEST_DRAFT_PROCESS_ID))
 
         assertEquals(1, revisions.size)
 

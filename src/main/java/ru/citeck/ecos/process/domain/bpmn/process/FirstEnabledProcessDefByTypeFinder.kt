@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
@@ -47,8 +48,8 @@ class CachedFirstEnabledProcessDefFinder(
 ) {
 
     @Cacheable(cacheNames = [FIRST_ENABLED_PROCESS_FINDER_CACHE_KEY])
-    fun find(type: String): ProcDefWithDataDto? {
-        val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, type.toEntityRef(), emptyList()) ?: return null
-        return procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procRev.procDefId))
+    fun find(workspace: String, type: String): ProcDefWithDataDto? {
+        val procRev = procDefService.findProcDef(BPMN_PROC_TYPE, workspace, type.toEntityRef(), emptyList()) ?: return null
+        return procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, IdInWs.create(procRev.workspace, procRev.procDefId)))
     }
 }

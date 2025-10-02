@@ -7,18 +7,20 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.util.ResourceUtils
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefVersionRecords
 import ru.citeck.ecos.process.domain.bpmn.api.records.VersionQuery
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.nio.charset.StandardCharsets
@@ -42,16 +44,16 @@ class ProcessDefPerformanceTest {
     private lateinit var procDefRepo: ProcDefRepository
 
     @Autowired
-    private lateinit var tenantService: ProcTenantService
-
-    @Autowired
     private lateinit var recordsService: RecordsService
 
     @Autowired
     private lateinit var helper: BpmnProcHelper
 
-    private val procDefRef = ProcDefRef.create(BPMN_PROC_TYPE, "test-id")
-    private val procAnotherDefRef = ProcDefRef.create(BPMN_PROC_TYPE, "test-id-another")
+    @Autowired
+    private lateinit var workspaceService: WorkspaceService
+
+    private val procDefRef = ProcDefRef.createWoWs(BPMN_PROC_TYPE, "test-id")
+    private val procAnotherDefRef = ProcDefRef.createWoWs(BPMN_PROC_TYPE, "test-id-another")
 
     private val procDefDataStr = ResourceUtils.getFile("classpath:test/bpmn/large-test-process.bpmn.xml")
         .readText(StandardCharsets.UTF_8)
@@ -60,19 +62,23 @@ class ProcessDefPerformanceTest {
         private val log = KotlinLogging.logger {}
     }
 
+    private fun WorkspaceService.getProcRecordRef(ref: ProcDefRef): EntityRef {
+        return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, convertToStrId(ref.idInWs))
+    }
+
     @BeforeAll
     fun setUp() {
         procDefService.uploadProcDef(
             helper.getBpmnProcessDefDto(
                 "test/bpmn/large-test-process.bpmn.xml",
-                procDefRef.id
+                procDefRef.idInWs
             )
         )
 
         procDefService.uploadProcDef(
             helper.getBpmnProcessDefDto(
                 "test/bpmn/large-test-process.bpmn.xml",
-                procAnotherDefRef.id
+                procAnotherDefRef.idInWs
             )
         )
 
@@ -102,13 +108,12 @@ class ProcessDefPerformanceTest {
     @Test
     @Order(1)
     fun `Get revisions for specific process definition`() {
-        val tenant = tenantService.getCurrent()
 
-        val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, procDefRef.type, procDefRef.id)!!
-        val procAnotherDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(
-            tenant,
+        val procDef = procDefRepo.findByIdInWs(procDefRef.idInWs.workspace, procDefRef.type, procDefRef.idInWs.id)!!
+        val procAnotherDef = procDefRepo.findByIdInWs(
+            procAnotherDefRef.idInWs.workspace,
             procAnotherDefRef.type,
-            procAnotherDefRef.id
+            procAnotherDefRef.idInWs.id
         )!!
 
         val foundRevisions = procDefRevRepo.findAllByProcessDef(procDef)
@@ -128,12 +133,16 @@ class ProcessDefPerformanceTest {
     @Test
     @Order(3)
     fun `Getting many revisions from version records without data att should go without a memory leak`() {
+
         val allRecords = recordsService.query(
             RecordsQuery.create {
                 withSourceId(BpmnProcessDefVersionRecords.ID)
                 withQuery(
                     VersionQuery(
-                        EntityRef.create(BpmnProcessDefVersionRecords.ID, procDefRef.id),
+                        EntityRef.create(
+                            BpmnProcessDefVersionRecords.ID,
+                            workspaceService.getProcRecordRef(procDefRef).getLocalId()
+                        )
                     )
                 )
                 withMaxItems(Int.MAX_VALUE)
@@ -150,13 +159,12 @@ class ProcessDefPerformanceTest {
     @Test
     @Order(4)
     fun `Delete many revisions should go without a memory leak`() {
-        val tenant = tenantService.getCurrent()
 
-        val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, procDefRef.type, procDefRef.id)!!
-        val procAnotherDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(
-            tenant,
+        val procDef = procDefRepo.findByIdInWs(procDefRef.idInWs.workspace, procDefRef.type, procDefRef.idInWs.id)!!
+        val procAnotherDef = procDefRepo.findByIdInWs(
+            procAnotherDefRef.idInWs.workspace,
             procAnotherDefRef.type,
-            procAnotherDefRef.id
+            procAnotherDefRef.idInWs.id
         )!!
 
         procDefService.delete(procDefRef)

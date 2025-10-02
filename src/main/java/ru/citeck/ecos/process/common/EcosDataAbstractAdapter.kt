@@ -3,6 +3,9 @@ package ru.citeck.ecos.process.common
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.model.lib.workspace.convertToIdInWsSafe
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -24,7 +27,8 @@ abstract class EcosDataAbstractAdapter<T : Any>(
     val recordsService: RecordsService,
     val sourceId: String,
     val attsMapping: Map<String, String>,
-    val attsType: KClass<T>
+    val attsType: KClass<T>,
+    val workspaceService: WorkspaceService? = null
 ) {
     companion object {
         const val ATT_ID = "id"
@@ -41,14 +45,16 @@ abstract class EcosDataAbstractAdapter<T : Any>(
     }
 
     protected fun getByRefRaw(ref: EntityRef): T? {
+        val idInWs = workspaceService.convertToIdInWsSafe(ref.getLocalId())
         return findAllRaw(
-            predicate = Predicates.eq(ATT_ID, ref.getLocalId()),
+            workspaces = if (idInWs.workspace.isNotBlank()) listOf(idInWs.workspace) else emptyList(),
+            predicate = Predicates.eq(ATT_ID, idInWs.id),
             skipCount = 0,
             maxItems = 1
         ).getRecords().firstOrNull()
     }
 
-    protected fun findAllRaw(predicate: Predicate, pageable: Pageable): Page<T> {
+    protected fun findAllRaw(workspaces: List<String>, predicate: Predicate, pageable: Pageable): Page<T> {
         val (skipCount, maxItems) = if (pageable.isPaged) {
             (pageable.pageSize * pageable.pageNumber) to pageable.pageSize
         } else {
@@ -59,7 +65,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
         } else {
             emptyList()
         }
-        val res = findAllRaw(predicate, skipCount, maxItems, sortBy)
+        val res = findAllRaw(workspaces, predicate, skipCount, maxItems, sortBy)
         return PageImpl(
             res.getRecords(),
             pageable,
@@ -67,13 +73,34 @@ abstract class EcosDataAbstractAdapter<T : Any>(
         )
     }
 
+    protected fun findAllRaw(predicate: Predicate, pageable: Pageable): Page<T> {
+        return findAllRaw(emptyList(), predicate, pageable)
+    }
+
     protected fun findAllRaw(
+        workspace: String,
+        predicate: Predicate,
+        skipCount: Int,
+        maxItems: Int,
+        sortBy: List<SortBy> = emptyList()
+    ): RecsQueryRes<T>  {
+        val workspaces = if (workspace.isBlank() || workspace == ModelUtils.DEFAULT_WORKSPACE_ID) {
+            listOf("")
+        } else {
+            listOf(workspace)
+        }
+        return findAllRaw(workspaces, predicate, skipCount, maxItems, sortBy)
+    }
+
+    protected fun findAllRaw(
+        workspaces: List<String>,
         predicate: Predicate,
         skipCount: Int,
         maxItems: Int,
         sortBy: List<SortBy> = emptyList()
     ): RecsQueryRes<T>  {
         return findAllRaw(
+            workspaces,
             predicate,
             skipCount,
             maxItems,
@@ -83,6 +110,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
     }
 
     protected fun <A: Any> findAllRaw(
+        workspaces: List<String>,
         predicate: Predicate,
         skipCount: Int,
         maxItems: Int,
@@ -114,6 +142,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
             .withQuery(resPred)
             .withMaxItems(maxItems)
             .withSkipCount(skipCount)
+            .withWorkspaces(workspaces)
             .withSortBy(
                 sortBy.map {
                     SortBy(attsMapping.getOrDefault(it.attribute, it.attribute), it.ascending)
@@ -132,8 +161,14 @@ abstract class EcosDataAbstractAdapter<T : Any>(
 
     fun deleteAll() {
         fun nextChunk(): List<EntityRef> {
-            return findAllRaw(Predicates.alwaysTrue(), 0, 100, emptyList(), EntityRef::class)
-                .getRecords()
+            return findAllRaw(
+                emptyList(),
+                Predicates.alwaysTrue(),
+                0,
+                100,
+                emptyList(),
+                EntityRef::class
+            ).getRecords()
         }
         var toDelete = nextChunk()
         while (toDelete.isNotEmpty()) {

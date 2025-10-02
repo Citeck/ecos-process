@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
@@ -45,7 +46,8 @@ class BpmnProcessRecords(
     private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService,
     private val camundaProcessInstanceRestService: ProcessInstanceRestService,
-    private val bpmnPermissionResolver: BpmnPermissionResolver
+    private val bpmnPermissionResolver: BpmnPermissionResolver,
+    private val workspaceService: WorkspaceService
 ) : AbstractRecordsDao(),
     RecordAttsDao,
     RecordsQueryDao,
@@ -270,9 +272,12 @@ class BpmnProcessRecords(
 
         log.debug { "Starting process ${record.id}, businessKey: $businessKey with variables: \n$processVariables" }
 
+        val idInWs = workspaceService.convertToIdInWs(record.id)
+
         return bpmnProcessService.startProcess(
             StartProcessRequest(
-                record.id,
+                idInWs.workspace,
+                idInWs.id,
                 businessKey,
                 processVariables.toMap()
             )

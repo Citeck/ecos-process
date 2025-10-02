@@ -11,6 +11,8 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionType
+import ru.citeck.ecos.model.lib.workspace.IdInWs
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
@@ -22,6 +24,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
 import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
 import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
@@ -82,6 +85,8 @@ class BpmnProcessDefRecords(
     private val ecosContentService: EcosContentService,
     private val bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val workspaceService: WorkspaceService,
+    private val bpmnIO: BpmnIO,
     ecosPermissionsService: EcosPermissionsService,
     customRecordPermsComponent: CustomRecordPermsComponent,
     modelRecordPermsComponent: ModelRecordPermsComponent,
@@ -147,6 +152,7 @@ class BpmnProcessDefRecords(
         var numberOfPermissionsCheck = 0
         do {
             val unfilteredBatch = procDefService.findAll(
+                recsQuery.workspaces,
                 predicate,
                 QUERY_BATCH_SIZE,
                 QUERY_BATCH_SIZE * numberOfExecutedRequests++
@@ -177,7 +183,7 @@ class BpmnProcessDefRecords(
         )
 
         if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
-            log.warn("Request count limit reached! Request: $recsQuery")
+            log.warn { "Request count limit reached! Request: $recsQuery" }
         }
 
         if (skip <= result.size) {
@@ -186,12 +192,15 @@ class BpmnProcessDefRecords(
             result.clear()
         }
 
-        var totalCount = procDefService.getCount(predicate)
+        var totalCount = procDefService.getCount(recsQuery.workspaces, predicate)
 
         val isMoreRecordsRequired = recsQuery.page.maxItems == -1 ||
             result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)
 
-        if (isMoreRecordsRequired && remoteWebAppsApi.isAppAvailable(AppName.ALFRESCO)) {
+        val isSearchInGlobalWs = recsQuery.workspaces.isEmpty() ||
+            recsQuery.workspaces.any { workspaceService.isWorkspaceWithGlobalArtifacts(it) }
+
+        if (isMoreRecordsRequired && remoteWebAppsApi.isAppAvailable(AppName.ALFRESCO) && isSearchInGlobalWs) {
 
             // maybe should be changed to checking predicate directly without DTO
             val queryDto = PredicateUtils.convertToDto(
@@ -313,7 +322,7 @@ class BpmnProcessDefRecords(
             return null
         }
 
-        val ref = ProcDefRef.create(BPMN_PROC_TYPE, recordId)
+        val ref = ProcDefRef.create(BPMN_PROC_TYPE, workspaceService.convertToIdInWs(recordId))
         val currentProc = procDefService.getProcessDefById(ref)
 
         return currentProc?.let {
@@ -322,6 +331,7 @@ class BpmnProcessDefRecords(
                     it.id,
                     it.name,
                     it.procType,
+                    it.workspace,
                     it.format,
                     it.revisionId,
                     it.version,
@@ -343,26 +353,28 @@ class BpmnProcessDefRecords(
     override fun getRecToMutate(recordId: String): BpmnMutateRecord {
         return if (recordId.isBlank()) {
             BpmnMutateRecord(
-                "",
-                "",
-                MLText(),
-                EntityRef.EMPTY,
-                EntityRef.EMPTY,
-                EntityRef.EMPTY,
-                null,
-                false,
-                "",
-                false,
-                true,
-                EntityRef.EMPTY,
-                null
+                id = "",
+                processDefId = "",
+                name = MLText(),
+                ecosType = EntityRef.EMPTY,
+                formRef = EntityRef.EMPTY,
+                workingCopySourceRef = EntityRef.EMPTY,
+                definition = null,
+                enabled = false,
+                action = "",
+                autoStartEnabled = false,
+                autoDeleteEnabled = true,
+                sectionRef = EntityRef.EMPTY,
+                imageBytes = null
             )
         } else {
-            val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
-                ?: error("Process definition is not found: $recordId")
+            val procDef = procDefService.getProcessDefById(
+                ProcDefRef.create(BPMN_PROC_TYPE, workspaceService.convertToIdInWs(recordId))
+            ) ?: error("Process definition is not found: $recordId")
             BpmnMutateRecord(
                 id = recordId,
-                processDefId = recordId,
+                processDefId = procDef.id,
+                workspace = procDef.workspace,
                 name = procDef.name ?: MLText(),
                 ecosType = procDef.ecosTypeRef,
                 formRef = procDef.formRef,
@@ -380,9 +392,10 @@ class BpmnProcessDefRecords(
     }
 
     override fun saveMutatedRec(record: BpmnMutateRecord): String {
+
         if (record.action == BpmnProcessDefActions.VALIDATE_GENERAL_BPMN.name) {
-            val definition = record.definition
-            require(definition.isNullOrBlank().not()) {
+            val definition = record.definition ?: ""
+            require(definition.isNotBlank()) {
                 "BPMN definition cannot be empty for validation"
             }
 
@@ -423,128 +436,131 @@ class BpmnProcessDefRecords(
             }
         }
 
-        val mutateData = bpmnMutateDataProcessor.getCompletedMutateData(record)
+        val mutData = bpmnMutateDataProcessor.getCompletedMutateData(record)
 
-        with(mutateData) {
-            val newRef = ProcDefRef.create(BPMN_PROC_TYPE, processDefId)
-            val currentProc = procDefService.getProcessDefById(newRef)
-            val procDefResult: ProcDefDto
 
-            if (record.processDefId.isBlank()) {
-                record.processDefId = recordId
-            }
+        val newRef = ProcDefRef.create(BPMN_PROC_TYPE, IdInWs.create(mutData.workspace, mutData.processDefId))
+        val currentProc = procDefService.getProcessDefById(newRef)
+        val procDefResult: ProcDefDto
 
-            if ((recordId != processDefId) && currentProc != null) {
-                error("Process definition with id " + newRef.id + " already exists")
-            }
-
-            // create new process definition
-            if (currentProc == null) {
-
-                val newProcDef = NewProcessDefDto(
-                    id = processDefId,
-                    enabled = enabled,
-                    autoStartEnabled = autoStartEnabled,
-                    autoDeleteEnabled = autoDeleteEnabled,
-                    name = name,
-                    data = newEcosDefinition ?: BpmnXmlUtils.writeToString(
-                        BpmnIO.generateDefaultDef(mutateData)
-                    ).toByteArray(),
-                    ecosTypeRef = ecosType,
-                    formRef = formRef,
-                    workingCopySourceRef = workingCopySourceRef,
-                    format = BPMN_FORMAT,
-                    procType = BPMN_PROC_TYPE,
-                    sectionRef = sectionRef,
-                    image = image
-                )
-
-                procDefResult = if (saveAsDraft) {
-                    procDefService.uploadProcDefDraft(newProcDef)
-                } else {
-                    procDefService.uploadProcDef(newProcDef)
-                }
-            } else {
-                // update existing process definition
-                currentProc.ecosTypeRef = ecosType
-                currentProc.formRef = formRef
-                currentProc.workingCopySourceRef = workingCopySourceRef
-                currentProc.name = name
-                currentProc.enabled = enabled
-                currentProc.autoStartEnabled = autoStartEnabled
-                currentProc.autoDeleteEnabled = autoDeleteEnabled
-                currentProc.sectionRef = sectionRef
-                currentProc.createdFromVersion = createdFromVersion
-                currentProc.image = image
-
-                if (newEcosDefinition != null) {
-                    // update process definition from bpmn editor
-                    currentProc.data = newEcosDefinition
-                } else {
-                    // update process definition from form
-                    if (currentProc.format == BPMN_FORMAT) {
-
-                        val procDef = BpmnXmlUtils.readFromString(String(currentProc.data))
-                        procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(name)
-                        procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosType.toString()
-                        procDef.otherAttributes[BPMN_PROP_FORM_REF] = formRef.toString()
-                        procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = workingCopySourceRef.toString()
-                        procDef.otherAttributes[BPMN_PROP_ENABLED] = enabled.toString()
-                        procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = autoStartEnabled.toString()
-                        procDef.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED] = autoDeleteEnabled.toString()
-                        procDef.otherAttributes[BPMN_PROP_SECTION_REF] = sectionRef.toString()
-
-                        currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
-                    }
-                }
-
-                procDefResult = if (saveAsDraft) {
-                    procDefService.uploadNewDraftRev(currentProc, record.comment, record.forceMajorVersion)
-                } else {
-                    procDefService.uploadNewRev(currentProc, record.comment)
-                }
-            }
-
-            if (record.action == BpmnProcessDefActions.DEPLOY.toString()) {
-                check(perms.hasDeployPerms()) {
-                    "Permissions denied for deploy: $procDefRef"
-                }
-                check(record.processDefId.isNotBlank()) {
-                    "Process definition id cannot be blank for $procDefRef"
-                }
-
-                log.debug { "Deploy to camunda:\n $newCamundaDefinitionStr" }
-
-                val deployResult = camundaRepoService.createDeployment()
-                    .addInputStream(
-                        record.processDefId + BPMN_RESOURCE_NAME_POSTFIX,
-                        newCamundaDefinitionStr.byteInputStream()
-                    )
-                    .name(record.name.getClosest())
-                    .source("Ecos BPMN Modeler")
-                    .deployWithResult()
-
-                procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
-                bpmnEventSubscriptionService.addSubscriptionsForDefRev(procDefResult.revisionId)
-
-                procDefEventEmitter.emitProcDefDeployed(
-                    ProcDefEvent(
-                        procDefRef = procDefRef,
-                        version = procDefResult.version.toDouble().inc(),
-                        dataState = procDefResult.dataState.name
-                    )
-                )
-
-                log.debug { "Camunda deploy result: $deployResult" }
-            }
-
-            return record.processDefId
+        if (record.processDefId.isBlank()) {
+            record.processDefId = mutData.recordId
         }
+
+        val recordIdInWs = workspaceService.convertToIdInWs(mutData.recordId)
+        if ((recordIdInWs.id != mutData.processDefId) && currentProc != null) {
+            error("Process definition with id " + newRef.idInWs + " already exists")
+        }
+
+        // create new process definition
+        if (currentProc == null) {
+
+            val newProcDef = NewProcessDefDto(
+                id = mutData.processDefId,
+                workspace = mutData.workspace,
+                enabled = mutData.enabled,
+                autoStartEnabled = mutData.autoStartEnabled,
+                autoDeleteEnabled = mutData.autoDeleteEnabled,
+                name = mutData.name,
+                data = mutData.newEcosDefinition
+                    ?: BpmnXmlUtils.writeToString(bpmnIO.generateDefaultDef(mutData)).toByteArray(),
+                ecosTypeRef = mutData.ecosType,
+                formRef = mutData.formRef,
+                workingCopySourceRef = mutData.workingCopySourceRef,
+                format = BPMN_FORMAT,
+                procType = BPMN_PROC_TYPE,
+                sectionRef = mutData.sectionRef,
+                image = mutData.image
+            )
+
+            procDefResult = if (mutData.saveAsDraft) {
+                procDefService.uploadProcDefDraft(newProcDef)
+            } else {
+                procDefService.uploadProcDef(newProcDef)
+            }
+        } else {
+            // update existing process definition
+            currentProc.ecosTypeRef = mutData.ecosType
+            currentProc.formRef = mutData.formRef
+            currentProc.workingCopySourceRef = mutData.workingCopySourceRef
+            currentProc.name = mutData.name
+            currentProc.enabled = mutData.enabled
+            currentProc.autoStartEnabled = mutData.autoStartEnabled
+            currentProc.autoDeleteEnabled = mutData.autoDeleteEnabled
+            currentProc.sectionRef = mutData.sectionRef
+            currentProc.createdFromVersion = mutData.createdFromVersion
+            currentProc.image = mutData.image
+
+            if (mutData.newEcosDefinition != null) {
+                // update process definition from bpmn editor
+                currentProc.data = mutData.newEcosDefinition
+            } else {
+                // update process definition from form
+                if (currentProc.format == BPMN_FORMAT) {
+
+                    val procDef = BpmnXmlUtils.readFromString(String(currentProc.data))
+                    procDef.otherAttributes[BPMN_PROP_NAME_ML] = mapper.toString(mutData.name)
+                    procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = mutData.ecosType.toString()
+                    procDef.otherAttributes[BPMN_PROP_FORM_REF] = mutData.formRef.toString()
+                    procDef.otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] =
+                        mutData.workingCopySourceRef.toString()
+                    procDef.otherAttributes[BPMN_PROP_ENABLED] = mutData.enabled.toString()
+                    procDef.otherAttributes[BPMN_PROP_AUTO_START_ENABLED] = mutData.autoStartEnabled.toString()
+                    procDef.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED] = mutData.autoDeleteEnabled.toString()
+                    procDef.otherAttributes[BPMN_PROP_SECTION_REF] = mutData.sectionRef.toString()
+
+                    currentProc.data = BpmnXmlUtils.writeToString(procDef).toByteArray()
+                }
+            }
+
+            procDefResult = if (mutData.saveAsDraft) {
+                procDefService.uploadNewDraftRev(currentProc, record.comment, record.forceMajorVersion)
+            } else {
+                procDefService.uploadNewRev(currentProc, record.comment)
+            }
+        }
+        if (record.action == BpmnProcessDefActions.DEPLOY.toString()) {
+            check(perms.hasDeployPerms()) {
+                "Permissions denied for deploy: $procDefRef"
+            }
+            check(record.processDefId.isNotBlank()) {
+                "Process definition id cannot be blank for $procDefRef"
+            }
+
+            log.debug { "Deploy to camunda:\n ${mutData.newCamundaDefinitionStr}" }
+
+            var resName = record.processDefId
+            if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
+                resName = workspaceService.getWorkspaceSystemId(record.workspace) + BpmnUtils.PROC_KEY_WS_DELIM + resName
+            }
+            resName += BPMN_RESOURCE_NAME_POSTFIX
+
+            val deployResult = camundaRepoService.createDeployment()
+                .addInputStream(resName, mutData.newCamundaDefinitionStr.byteInputStream())
+                .name(record.name.getClosest())
+                .source("Ecos BPMN Modeler")
+                .deployWithResult()
+
+            procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
+            bpmnEventSubscriptionService.addSubscriptionsForDefRev(procDefResult.revisionId)
+
+            procDefEventEmitter.emitProcDefDeployed(
+                ProcDefEvent(
+                    procDefRef = procDefRef,
+                    version = procDefResult.version.toDouble().inc(),
+                    dataState = procDefResult.dataState.name
+                )
+            )
+
+            log.debug { "Camunda deploy result: $deployResult" }
+        }
+
+        return workspaceService.addWsPrefixToId(record.processDefId, record.workspace)
     }
 
     override fun delete(recordId: String): DelStatus {
         return if (recordId.toProcDefRef().getPerms().hasWritePerms()) {
-            procDefService.delete(ProcDefRef.create(BPMN_PROC_TYPE, recordId))
+            procDefService.delete(ProcDefRef.create(BPMN_PROC_TYPE, workspaceService.convertToIdInWs(recordId)))
             DelStatus.OK
         } else {
             DelStatus.PROTECTED
@@ -608,6 +624,12 @@ class BpmnProcessDefRecords(
         private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef(), SectionType.BPMN) }
         private val revision: ProcDefRevDto? by lazy {
             procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId)
+        }
+
+        @AttName("?id")
+        fun getRef(): EntityRef {
+            val localId = workspaceService.addWsPrefixToId(procDef.id, procDef.workspace)
+            return EntityRef.create(AppName.EPROC, ID, localId)
         }
 
         @AttName("_permissions")
@@ -726,7 +748,7 @@ class BpmnProcessDefRecords(
         }
 
         fun getBpmnReport(): List<ReportElement>? {
-            val def = getDefinition()?.let { BpmnIO.importEcosBpmn(it, validate = false) }
+            val def = getDefinition()?.let { bpmnIO.importEcosBpmn(it, validate = false) }
             return def?.let { bpmnProcessReportService.generateReportElementListForBpmnDefinition(it) }
         }
 
@@ -835,8 +857,7 @@ class BpmnProcessDefRecords(
         var forceMajorVersion: Boolean = false,
         var comment: String = "",
         var isUploadNewVersion: Boolean = false,
-        @AttName("_workspace")
-        var workspace: EntityRef? = null
+        var workspace: String = ""
     ) {
         val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
         val isNewRecord = id.isBlank()
@@ -858,6 +879,14 @@ class BpmnProcessDefRecords(
         @JsonProperty("version:comment")
         fun setVersionComment(comment: String) {
             this.comment = comment
+        }
+
+        @JsonProperty(RecordConstants.ATT_WORKSPACE)
+        fun setCtxWorkspace(workspace: String?) {
+            if (this.workspace.isNotBlank() || workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+                return
+            }
+            this.workspace = workspace ?: ""
         }
 
         fun setImage(imageUrl: String) {

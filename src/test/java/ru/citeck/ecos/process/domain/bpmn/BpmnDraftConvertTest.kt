@@ -4,10 +4,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.util.ResourceUtils
+import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import java.nio.charset.StandardCharsets
 
 class BpmnDraftConvertTest {
+
+    private val bpmnIO = BpmnIO(ModelServiceFactory().workspaceService)
 
     @Test
     fun `convert draft with invalid ecos state should throw by default`() {
@@ -16,7 +19,7 @@ class BpmnDraftConvertTest {
         ).readText(StandardCharsets.UTF_8)
 
         assertThrows<RuntimeException> {
-            BpmnIO.importEcosBpmn(definition)
+            bpmnIO.importEcosBpmn(definition)
         }
     }
 
@@ -26,7 +29,7 @@ class BpmnDraftConvertTest {
             "classpath:test/bpmn/convert-draft-without-validation.bpmn.xml"
         ).readText(StandardCharsets.UTF_8)
 
-        val result = BpmnIO.importEcosBpmn(definition, false)
+        val result = bpmnIO.importEcosBpmn(definition, false)
 
         assertThat(result.process).hasSize(1)
         assertThat(result.process[0].flowElements).hasSize(25)

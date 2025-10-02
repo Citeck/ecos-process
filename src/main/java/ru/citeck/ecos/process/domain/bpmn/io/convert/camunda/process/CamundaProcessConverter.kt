@@ -17,7 +17,7 @@ class CamundaProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
 
     override fun export(element: BpmnProcessDef, context: ExportContext): TProcess {
         return TProcess().apply {
-            id = element.id
+            id = context.createWsScopedId(element.id)
             isIsExecutable = element.isExecutable
 
             val tFlowElements = element.flowElements.map {

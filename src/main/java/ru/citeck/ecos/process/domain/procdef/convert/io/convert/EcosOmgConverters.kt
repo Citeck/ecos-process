@@ -4,6 +4,7 @@ import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.ReflectUtils
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.cmmn.model.omg.ObjectFactory
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -16,14 +17,16 @@ class EcosOmgConverters(
     val base: EcosOmgConverters?,
     converters: List<KClass<out EcosOmgConverter<*, *>>>,
     private val typeResolver: (Any) -> String? = { null },
-    private val otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null }
+    private val otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null },
+    private val workspaceService: WorkspaceService
 ) {
 
     constructor(
         converters: List<KClass<out EcosOmgConverter<*, *>>>,
         typeResolver: (Any) -> String? = { null },
-        otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null }
-    ) : this(null, converters, typeResolver, otherAttsResolver)
+        otherAttsResolver: (Any) -> MutableMap<QName, String>? = { null },
+        workspaceService: WorkspaceService
+    ) : this(null, converters, typeResolver, otherAttsResolver, workspaceService)
 
     private val convertersByType: Map<String, ConverterInfo>
     private val convertersByOmgType: Map<Class<*>, ConverterInfo>
@@ -80,16 +83,14 @@ class EcosOmgConverters(
     }
 
     fun <T : Any> export(element: Any): T {
-        return export(element, ExportContext(this))
+        return export(element, ExportContext(this, workspaceService = workspaceService))
     }
 
     fun <T : Any> export(element: Any, context: ExportContext): T {
-        @Suppress("UNCHECKED_CAST")
         return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
     }
 
     fun <T : Any> export(element: Any, expectedType: Class<T>, context: ExportContext): T {
-        @Suppress("UNCHECKED_CAST")
         return export(ConvertUtils.getTypeByClass(element::class.java), element, context)
     }
 

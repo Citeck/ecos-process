@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.citeck.ecos.commands.CommandsService;
 import ru.citeck.ecos.commons.data.MLText;
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils;
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService;
 import ru.citeck.ecos.process.EprocApp;
 import ru.citeck.ecos.process.domain.BpmnProcHelperJava;
 import ru.citeck.ecos.process.domain.cmmn.CmmnConstantsKt;
@@ -29,7 +30,6 @@ import ru.citeck.ecos.process.domain.procdef.service.ProcDefService;
 import ru.citeck.ecos.webapp.api.entity.EntityRef;
 import ru.citeck.ecos.records2.predicate.model.Predicates;
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate;
-import ru.citeck.ecos.webapp.api.entity.EntityRef;
 import ru.citeck.ecos.webapp.lib.model.type.dto.TypeDef;
 import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry;
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension;
@@ -59,12 +59,22 @@ public class ProcessDefServiceTest {
     private CommandsService commandsService;
     @Autowired
     private EcosTypesRegistry ecosTypeRegistry;
+    @Autowired
+    private WorkspaceService workspaceService;
 
     @BeforeEach
     public void setUp() {
-        List<ProcDefDto> definitions = procDefService.findAll(VoidPredicate.INSTANCE, Integer.MAX_VALUE, 0);
+        List<ProcDefDto> definitions = procDefService.findAll(
+            Collections.emptyList(),
+            VoidPredicate.INSTANCE,
+            Integer.MAX_VALUE,
+            0
+        );
 
-        definitions.forEach(d -> procDefService.delete(ProcDefRef.create(d.getProcType(), d.getId())));
+        definitions.forEach(d -> procDefService.delete(ProcDefRef.create(
+            d.getProcType(),
+            workspaceService.convertToIdInWs(d.getId())
+        )));
 
         ecosTypeRegistry.setValue(type0Id, TypeDef.create().withId(type0Id).build());
         ecosTypeRegistry.setValue(type1Id, TypeDef.create()
@@ -93,6 +103,7 @@ public class ProcessDefServiceTest {
             "test-id",
             MLText.EMPTY,
             CmmnConstantsKt.CMMN_TYPE,
+            "",
             "xml",
             alfType,
             ecosTypeRef,
@@ -188,6 +199,7 @@ public class ProcessDefServiceTest {
                 id,
                 MLText.EMPTY,
                 BPMN_PROC_TYPE,
+                "",
                 "xml",
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 EntityRef.EMPTY,
@@ -208,11 +220,11 @@ public class ProcessDefServiceTest {
             procDefService.uploadProcDef(dto);
         }
 
-        List<ProcDefDto> testSectionDefs = procDefService.findAll(
+        List<ProcDefDto> testSectionDefs = procDefService.findAll(Collections.emptyList(),
             Predicates.eq("sectionRef", "eproc/bpmn-section@testSection"), Integer.MAX_VALUE, 0);
-        List<ProcDefDto> customSectionDefs = procDefService.findAll(
+        List<ProcDefDto> customSectionDefs = procDefService.findAll(Collections.emptyList(),
             Predicates.eq("sectionRef", "eproc/bpmn-section@someCustomSection"), Integer.MAX_VALUE, 0);
-        List<ProcDefDto> defaultSectionDefs = procDefService.findAll(
+        List<ProcDefDto> defaultSectionDefs = procDefService.findAll(Collections.emptyList(),
             Predicates.eq("sectionRef", "eproc/bpmn-section@DEFAULT"), Integer.MAX_VALUE, 0);
 
         assertEquals(9, testSectionDefs.size());

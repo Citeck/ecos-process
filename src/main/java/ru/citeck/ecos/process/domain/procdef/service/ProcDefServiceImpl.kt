@@ -22,7 +22,6 @@ import ru.citeck.ecos.process.domain.procdef.dto.*
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEvent
 import ru.citeck.ecos.process.domain.procdef.events.ProcDefEventEmitter
 import ru.citeck.ecos.process.domain.procdef.repo.*
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.RecordsService
@@ -40,7 +39,6 @@ class ProcDefServiceImpl(
     private val procDefRepo: ProcDefRepository,
     private val procDefRevRepo: ProcDefRevRepository,
     private val procStateRepo: ProcStateRepository,
-    private val tenantService: ProcTenantService,
     private val recordsService: RecordsService,
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val procDefRevDataProvider: ProcDefRevDataProvider
@@ -73,11 +71,10 @@ class ProcDefServiceImpl(
         comment: String = ""
     ): ProcDefDto {
 
-        val currentTenant = tenantService.getCurrent()
         val now = Instant.now()
 
-        var currentProcDef = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(
-            currentTenant,
+        var currentProcDef = procDefRepo.findByIdInWs(
+            processDef.workspace,
             processDef.procType,
             processDef.id
         )
@@ -115,6 +112,7 @@ class ProcDefServiceImpl(
             currentProcDef.autoStartEnabled = processDef.autoStartEnabled
             currentProcDef.autoDeleteEnabled = processDef.autoDeleteEnabled
             currentProcDef.sectionRef = processDef.sectionRef.toString()
+            currentProcDef.workspace = processDef.workspace
 
             currentProcDef = procDefRepo.save(currentProcDef)
             newRevision.version = 0
@@ -204,39 +202,38 @@ class ProcDefServiceImpl(
         )
     }
 
-    override fun findAll(predicate: Predicate, max: Int, skip: Int): List<ProcDefDto> {
-        return findAllProcDefEntities(predicate, max, skip)
+    override fun findAll(workspaces: List<String>, predicate: Predicate, max: Int, skip: Int): List<ProcDefDto> {
+        return findAllProcDefEntities(workspaces, predicate, max, skip)
             .map { entity: ProcDefEntity -> entity.toDto() }
     }
 
-    override fun findAllWithData(predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto> {
-        return findAllProcDefEntities(predicate ?: VoidPredicate.INSTANCE, max, skip).map { entity: ProcDefEntity ->
+    override fun findAllWithData(workspaces: List<String>, predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto> {
+        return findAllProcDefEntities(workspaces, predicate ?: VoidPredicate.INSTANCE, max, skip).map { entity: ProcDefEntity ->
             val procDefDto = entity.toDto()
             val procDefRevDto = entity.lastRev!!.toDto()
             ProcDefWithDataDto(procDefDto, procDefRevDto, procDefRevDataProvider)
         }
     }
 
-    private fun findAllProcDefEntities(predicate: Predicate, max: Int, skip: Int): List<ProcDefEntity> {
+    private fun findAllProcDefEntities(workspaces: List<String>, predicate: Predicate, max: Int, skip: Int): List<ProcDefEntity> {
         val page = PageRequest.of(skip / max, max, Sort.by(Sort.Order.desc("created")))
-        return procDefRepo.findAll(predicate, page).content
+        return procDefRepo.findAll(workspaces, predicate, page).content
     }
 
-    override fun getCount(): Long {
-        return procDefRepo.getCount(tenantService.getCurrent())
+    override fun getCount(workspaces: List<String>): Long {
+        return procDefRepo.getCount(workspaces)
     }
 
-    override fun getCount(predicate: Predicate): Long {
-        return procDefRepo.getCount(predicate)
+    override fun getCount(workspaces: List<String>, predicate: Predicate): Long {
+        return procDefRepo.getCount(workspaces, predicate)
     }
 
     override fun uploadNewRev(dto: ProcDefWithDataDto, comment: String): ProcDefDto {
 
-        val currentTenant = tenantService.getCurrent()
         val id = dto.id
         val procType = dto.procType
 
-        val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, procType, id)
+        val procDefEntity = procDefRepo.findByIdInWs(dto.workspace, procType, id)
 
         val result: ProcDefDto
 
@@ -285,6 +282,7 @@ class ProcDefServiceImpl(
             workingCopySourceRef = workingCopySourceRef,
             format = format,
             procType = procType,
+            workspace = workspace,
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
             autoDeleteEnabled = autoDeleteEnabled,
@@ -296,14 +294,13 @@ class ProcDefServiceImpl(
     override fun uploadNewDraftRev(dto: ProcDefWithDataDto, comment: String, forceMajorVersion: Boolean): ProcDefDto {
         with(dto) {
 
-            val currentTenant = tenantService.getCurrent()
-            var currentProcDef = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, procType, id)
+            var currentProcDef = procDefRepo.findByIdInWs(workspace, procType, id)
                 ?: error("Process definition is mandatory for draft upload. Id: $id")
 
             val now = Instant.now()
             val currentRev = currentProcDef.lastRev!!
             val currentData = currentRev.data
-            val definitionDataIsChanged = !Arrays.equals(currentData, data)
+            val definitionDataIsChanged = !currentData.contentEquals(data)
             val currentUser = AuthContext.getCurrentUser()
 
             val updateCurrentProcDefFromDto = {
@@ -390,7 +387,7 @@ class ProcDefServiceImpl(
     }
 
     override fun getProcessDefRev(procType: String, procDefRevId: UUID): ProcDefRevDto? {
-        val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
+        val revId = EntityUuid(0, procDefRevId)
         val revEntity = procDefRevRepo.findById(revId) ?: return null
         return revEntity.toDto()
     }
@@ -398,7 +395,7 @@ class ProcDefServiceImpl(
     override fun saveProcessDefRevDeploymentId(procDefRevId: UUID, deploymentId: String) {
         log.debug { "Save deployment id $deploymentId for process definition revision $procDefRevId" }
 
-        val revId = EntityUuid(tenantService.getCurrent(), procDefRevId)
+        val revId = EntityUuid(0, procDefRevId)
         val revEntity = procDefRevRepo.findById(revId)
             ?: error("Proc def rev with id $revId not found")
 
@@ -408,14 +405,13 @@ class ProcDefServiceImpl(
     }
 
     override fun getProcessDefRevs(procDefRevIds: List<UUID>): List<ProcDefRevDto> {
-        val ids = procDefRevIds.map { EntityUuid(tenantService.getCurrent(), it) }
+        val ids = procDefRevIds.map { EntityUuid(0, it) }
         return procDefRevRepo.findAllById(ids).map { it.toDto() }
     }
 
     @Transactional(readOnly = true)
     override fun getProcessDefRevs(ref: ProcDefRef): List<ProcDefRevDto> {
-        val tenant = tenantService.getCurrent()
-        val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, ref.type, ref.id)
+        val procDef = procDefRepo.findByIdInWs(ref.idInWs.workspace, ref.type, ref.idInWs.id)
             ?: return emptyList()
 
         val result: List<ProcDefRevDto>
@@ -439,42 +435,56 @@ class ProcDefServiceImpl(
     }
 
     override fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto? {
-        val currentTenant = tenantService.getCurrent()
-        val procDefEntity = procDefRepo.findFirstByIdTntAndProcTypeAndExtId(currentTenant, id.type, id.id)
+        val procDefEntity = procDefRepo.findByIdInWs(id.idInWs.workspace, id.type, id.idInWs.id)
         return procDefEntity?.let { def: ProcDefEntity ->
             ProcDefWithDataDto(def.toDto(), def.lastRev!!.toDto(), procDefRevDataProvider)
         }
     }
 
     override fun getCacheKey(): String {
-        val currentTenant = tenantService.getCurrent()
-        val modified = procDefRepo.getLastModifiedDate(currentTenant)
-        return modified.toEpochMilli().toString() + "-" + getCount() + "-" + STARTUP_TIME_STR
+        val modified = procDefRepo.getLastModifiedDate()
+        return modified.toEpochMilli().toString() + "-" + getCount(emptyList()) + "-" + STARTUP_TIME_STR
     }
 
-    @Transactional(readOnly = true)
-    override fun findProcDef(procType: String, ecosTypeRef: EntityRef?, alfTypes: List<String>?): ProcDefRevDto? {
+    override fun findProcDef(
+        procType: String,
+        workspace: String,
+        ecosTypeRef: EntityRef?,
+        alfTypes: List<String>?
+    ): ProcDefRevDto? {
+        return internalFindProcDef(procType, workspace, ecosTypeRef, null, alfTypes)
+    }
 
-        val currentTenant = tenantService.getCurrent()
+    private fun internalFindProcDef(
+        procType: String,
+        workspace: String,
+        ecosTypeRef: EntityRef?,
+        ecosTypeParents: TypeParents?,
+        alfTypes: List<String>?,
+    ): ProcDefRevDto? {
+
         var processDef: ProcDefEntity? = null
+        var typeAtts: TypeParents? = ecosTypeParents
 
         if (EntityRef.isNotEmpty(ecosTypeRef)) {
 
             val ecosType = ecosTypeRef.toString()
-            processDef = procDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(
-                currentTenant,
+            processDef = procDefRepo.findFirstEnabledByEcosType(
+                workspace,
                 procType,
                 ecosType
             )
+
             if (processDef == null) {
 
-                val typeInfo = recordsService.getAtts(ecosTypeRef, TypeParents::class.java)
-                requireNotNull(typeInfo.parents) { "ECOS type parents can't be resolved" }
+                typeAtts = typeAtts ?: recordsService.getAtts(ecosTypeRef, TypeParents::class.java)
+                val parentRefs = typeAtts.parents
+                requireNotNull(parentRefs) { "ECOS type parents can't be resolved" }
 
-                for (parentRef in typeInfo.parents) {
+                for (parentRef in parentRefs) {
                     val parentRefStr = parentRef.toString()
-                    processDef = procDefRepo.findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(
-                        currentTenant,
+                    processDef = procDefRepo.findFirstEnabledByEcosType(
+                        workspace,
                         procType,
                         parentRefStr
                     )
@@ -486,8 +496,8 @@ class ProcDefServiceImpl(
         }
         if (processDef == null && alfTypes != null) {
             for (alfType in alfTypes) {
-                processDef = procDefRepo.findFirstByIdTntAndProcTypeAndAlfType(
-                    currentTenant,
+                processDef = procDefRepo.findFirstByProcTypeAndAlfType(
+                    workspace,
                     procType,
                     alfType
                 )
@@ -497,14 +507,16 @@ class ProcDefServiceImpl(
             }
         }
 
+        if (processDef == null && workspace.isNotEmpty()) {
+            return internalFindProcDef(procType, "", ecosTypeRef, typeAtts, alfTypes)
+        }
+
         return processDef?.let { it.lastRev!!.toDto() }
     }
 
     override fun delete(ref: ProcDefRef) {
 
-        val tenant = tenantService.getCurrent()
-
-        val procDef = procDefRepo.findOneByIdTntAndProcTypeAndExtId(tenant, ref.type, ref.id) ?: return
+        val procDef = procDefRepo.findByIdInWs(ref.idInWs.workspace, ref.type, ref.idInWs.id) ?: return
         val revisions = procDefRevRepo.findAllByProcessDef(procDef)
 
         val procRev = procStateRepo.findFirstByProcDefRevIn(revisions)

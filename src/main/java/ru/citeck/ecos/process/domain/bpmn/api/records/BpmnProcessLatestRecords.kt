@@ -4,9 +4,11 @@ import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
+import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -94,15 +96,15 @@ class BpmnProcessLatestRecords(
         definition = let {
             val processDefIdFromResourceName = resourceName.substringBefore(BPMN_RESOURCE_NAME_POSTFIX)
 
-            val procDefId = processDefIdFromResourceName.ifBlank {
+            val procDefRefLocalId = processDefIdFromResourceName.ifBlank {
                 val procDefRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
                 procDefRev?.procDefId ?: ""
-            }
+            }.replace(BpmnUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
 
             EntityRef.create(
                 AppName.EPROC,
                 BpmnProcessDefRecords.ID,
-                procDefId
+                procDefRefLocalId
             )
         },
         version = version,

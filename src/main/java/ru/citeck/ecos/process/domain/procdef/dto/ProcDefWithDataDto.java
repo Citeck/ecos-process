@@ -21,6 +21,8 @@ public class ProcDefWithDataDto {
     @NotNull
     private String procType;
 
+    private String workspace;
+
     @NotNull
     private EntityRef ecosTypeRef;
 
@@ -90,6 +92,7 @@ public class ProcDefWithDataDto {
         this.id = def.getId();
         this.name = def.getName();
         this.procType = def.getProcType();
+        this.workspace = def.getWorkspace();
         this.revisionId = def.getRevisionId();
         this.format = rev.getFormat();
         this.data = rev.loadData(dataProvider);
@@ -129,6 +132,14 @@ public class ProcDefWithDataDto {
 
     public void setProcType(String procType) {
         this.procType = procType;
+    }
+
+    public String getWorkspace() {
+        return workspace;
+    }
+
+    public void setWorkspace(String workspace) {
+        this.workspace = workspace != null ? workspace : "";
     }
 
     public EntityRef getEcosTypeRef() {

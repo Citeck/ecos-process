@@ -1,38 +1,25 @@
 package ru.citeck.ecos.process.domain.procdef.dto
 
-import org.apache.commons.lang3.StringUtils
+import ru.citeck.ecos.model.lib.workspace.IdInWs
 
 class ProcDefRef private constructor(
     val type: String,
-    val id: String
+    val idInWs: IdInWs
 ) {
     companion object {
 
         @JvmField
-        val EMPTY = ProcDefRef("", "")
+        val EMPTY = ProcDefRef("", IdInWs.EMPTY)
 
         private const val TYPE_DELIMITER = "$"
 
         @JvmStatic
-        fun create(type: String, id: String): ProcDefRef {
+        fun create(type: String, id: IdInWs): ProcDefRef {
             return ProcDefRef(type, id)
         }
 
-        @JvmStatic
-        fun valueOf(str: String): ProcDefRef {
-
-            if (StringUtils.isBlank(str) || TYPE_DELIMITER == str) {
-                return EMPTY
-            }
-            val delimIdx = str.indexOf(TYPE_DELIMITER)
-            val type = str.substring(0, delimIdx)
-            val id: String
-            id = if (delimIdx == str.length - 1) {
-                StringUtils.EMPTY
-            } else {
-                str.substring(delimIdx + 1)
-            }
-            return create(type, id)
+        fun createWoWs(type: String, id: String): ProcDefRef {
+            return ProcDefRef(type, IdInWs.create(id))
         }
     }
 
@@ -45,7 +32,7 @@ class ProcDefRef private constructor(
         }
         other as ProcDefRef
 
-        if (type != other.type || id != other.id) {
+        if (type != other.type || idInWs != other.idInWs) {
             return false
         }
         return true
@@ -53,7 +40,7 @@ class ProcDefRef private constructor(
 
     override fun hashCode(): Int {
         var result = type.hashCode()
-        result = 31 * result + id.hashCode()
+        result = 31 * result + idInWs.hashCode()
         return result
     }
 
@@ -61,7 +48,7 @@ class ProcDefRef private constructor(
         return if (this == EMPTY) {
             ""
         } else {
-            "$type$TYPE_DELIMITER$id"
+            "$type$TYPE_DELIMITER$idInWs"
         }
     }
 }

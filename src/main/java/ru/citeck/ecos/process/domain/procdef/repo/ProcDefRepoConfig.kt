@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefAdapter
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepo
@@ -30,10 +31,11 @@ class ProcDefRepoConfig {
         @Bean
         fun procDefRepository(
             recordsService: RecordsService,
-            ecosDataProcDefRevAdapter: ProcDefRevRepository
+            ecosDataProcDefRevAdapter: ProcDefRevRepository,
+            workspaceService: WorkspaceService
         ): ProcDefRepository {
             val rev = ecosDataProcDefRevAdapter as EcosDataProcDefRevAdapter
-            return EcosDataProcDefAdapter(recordsService, rev)
+            return EcosDataProcDefAdapter(recordsService, rev, workspaceService)
         }
 
         @Bean

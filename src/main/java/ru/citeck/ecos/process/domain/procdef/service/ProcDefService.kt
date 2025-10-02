@@ -19,13 +19,13 @@ interface ProcDefService {
 
     fun uploadNewDraftRev(dto: ProcDefWithDataDto, comment: String = "", forceMajorVersion: Boolean = false): ProcDefDto
 
-    fun findAllWithData(predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto>
+    fun findAllWithData(workspaces: List<String>, predicate: Predicate?, max: Int, skip: Int): List<ProcDefWithDataDto>
 
-    fun findAll(predicate: Predicate, max: Int, skip: Int): List<ProcDefDto>
+    fun findAll(workspaces: List<String>, predicate: Predicate, max: Int, skip: Int): List<ProcDefDto>
 
-    fun getCount(): Long
+    fun getCount(workspaces: List<String>): Long
 
-    fun getCount(predicate: Predicate): Long
+    fun getCount(workspaces: List<String>, predicate: Predicate): Long
 
     fun getCacheKey(): String
 
@@ -44,7 +44,12 @@ interface ProcDefService {
     /**
      * return first enabled process definition by ecosTypeRef hierarchy
      */
-    fun findProcDef(procType: String, ecosTypeRef: EntityRef?, alfTypes: List<String>?): ProcDefRevDto?
+    fun findProcDef(
+        procType: String,
+        workspace: String,
+        ecosTypeRef: EntityRef?,
+        alfTypes: List<String>?
+    ): ProcDefRevDto?
 
     fun getProcessDefById(id: ProcDefRef): ProcDefWithDataDto?
 

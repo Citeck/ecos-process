@@ -98,6 +98,7 @@ class BpmnAutoDeleteTest {
 
         val startedProcess = bpmnProcessService.startProcess(
             StartProcessRequest(
+                "",
                 procId,
                 testType1Ref.toString(),
                 emptyMap()
@@ -129,6 +130,7 @@ class BpmnAutoDeleteTest {
 
         val startedProcess = bpmnProcessService.startProcess(
             StartProcessRequest(
+                "",
                 procId,
                 testType2Ref.toString(),
                 emptyMap()

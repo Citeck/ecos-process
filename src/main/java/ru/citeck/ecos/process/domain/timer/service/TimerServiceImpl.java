@@ -15,7 +15,6 @@ import ru.citeck.ecos.process.domain.timer.entity.TimerEntity;
 import ru.citeck.ecos.process.domain.timer.dto.TimerCommandDto;
 import ru.citeck.ecos.process.domain.timer.dto.TimerDto;
 import ru.citeck.ecos.process.domain.timer.repo.TimerRepository;
-import ru.citeck.ecos.process.domain.tenant.service.ProcTenantService;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommand;
 import ru.citeck.ecos.process.domain.timer.command.createtimer.CreateTimerCommandRes;
 
@@ -30,7 +29,6 @@ import java.util.UUID;
 public class TimerServiceImpl implements TimerService {
 
     private TimerRepository timerRepository;
-    private final ProcTenantService tenantService;
     private final CommandsService commandsService;
 
     @Value("${ecos-process.timers.delay-after-fail-ms}")
@@ -53,7 +51,7 @@ public class TimerServiceImpl implements TimerService {
 
         TimerEntity entity = new TimerEntity();
 
-        entity.setId(new EntityUuid(tenantService.getCurrent(), id));
+        entity.setId(new EntityUuid(0, id));
         entity.setTriggerTime(createTimerCommand.getTriggerTime());
         entity.setCommand(Json.getMapper().toString(createTimerCommand.getCommand()));
 
@@ -69,7 +67,7 @@ public class TimerServiceImpl implements TimerService {
 
         checkRepo();
 
-        EntityUuid id = new EntityUuid(tenantService.getCurrent(), timerId);
+        EntityUuid id = new EntityUuid(0, timerId);
         TimerEntity entity = timerRepository.findFirstByActiveAndId(true, id).orElse(null);
 
         if (entity != null) {
@@ -128,7 +126,7 @@ public class TimerServiceImpl implements TimerService {
         if (timerCommand == null) {
             throw new IllegalStateException("Incorrect command: '" + entity.getCommand() + "'");
         }
-        builder.setTenant(tenantService.getTenant(entity.getId().getTnt()));
+        builder.setTenant("");
         builder.setId(timerCommand.getId());
         builder.setTargetApp(timerCommand.getTargetApp());
         builder.setType(timerCommand.getType());
@@ -164,9 +162,9 @@ public class TimerServiceImpl implements TimerService {
 
     private TimerEntity dtoToEntity(TimerDto dto) {
 
-        TimerEntity entity = timerRepository.findById(new EntityUuid(tenantService.getCurrent(), dto.getId()))
+        TimerEntity entity = timerRepository.findById(new EntityUuid(0, dto.getId()))
             .orElseThrow(() -> new IllegalArgumentException(
-                "TimerEntity with tenant: '" + tenantService.getCurrent() + "', id '" + dto.getId() + "' not found")
+                "TimerEntity with tenant: '" + 0 + "', id '" + dto.getId() + "' not found")
             );
 
         entity.setRetryCounter(dto.getRetryCounter());

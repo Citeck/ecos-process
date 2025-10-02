@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.procdef.repo.edata
 import org.springframework.data.domain.*
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.EcosDataAbstractAdapter
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
@@ -23,7 +24,8 @@ import java.util.*
 
 class EcosDataProcDefAdapter(
     recordsService: RecordsService,
-    val ecosDataProcDefRevAdapter: EcosDataProcDefRevAdapter
+    val ecosDataProcDefRevAdapter: EcosDataProcDefRevAdapter,
+    workspaceService: WorkspaceService
 ) : ProcDefRepository, EcosDataAbstractAdapter<EcosDataProcDefAdapter.ProcDefRecordAtts>(
     recordsService,
     SRC_ID,
@@ -32,7 +34,8 @@ class EcosDataProcDefAdapter(
         "modified" to RecordConstants.ATT_MODIFIED,
         "moduleId" to ATT_EXT_ID
     ),
-    ProcDefRecordAtts::class
+    ProcDefRecordAtts::class,
+    workspaceService
 ) {
 
     companion object {
@@ -95,27 +98,29 @@ class EcosDataProcDefAdapter(
         return entity.copyWithId(idAfterMutation.getLocalId())
     }
 
-    override fun findAll(predicate: Predicate, pageable: Pageable): Page<ProcDefEntity> {
-        return findAllRaw(predicate, pageable).map { it.convertToEntity() }
+    override fun findAll(workspaces: List<String>, predicate: Predicate, pageable: Pageable): Page<ProcDefEntity> {
+        return findAllRaw(workspaces, predicate, pageable).map { it.convertToEntity() }
     }
 
-    override fun findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(
-        tenant: Int,
+    override fun findFirstEnabledByEcosType(
+        workspace: String,
         type: String,
         ecosTypeRef: String
     ): ProcDefEntity? {
-        return findAllRaw(
-            Predicates.and(
-                Predicates.eq(ATT_PROC_TYPE, type),
-                Predicates.eq(ATT_ECOS_TYPE_REF, ecosTypeRef),
-                Predicates.eq(ATT_ENABLED, true)
-            ),
-            0, 1
-        ).getRecords().firstOrNull()?.convertToEntity()
+        val predicate = Predicates.and(
+            Predicates.eq(ATT_PROC_TYPE, type),
+            Predicates.eq(ATT_ECOS_TYPE_REF, ecosTypeRef),
+            Predicates.eq(ATT_ENABLED, true)
+        )
+        return findAllRaw(workspace, predicate, 0, 1)
+            .getRecords()
+            .firstOrNull()
+            ?.convertToEntity()
     }
 
-    override fun findFirstByIdTntAndProcTypeAndExtId(tenant: Int, type: String, extId: String): ProcDefEntity? {
+    override fun findByIdInWs(workspace: String, type: String, extId: String): ProcDefEntity? {
         return findAllRaw(
+            workspace,
             Predicates.and(
                 Predicates.eq(ATT_PROC_TYPE, type),
                 Predicates.eq(ATT_EXT_ID, extId)
@@ -124,20 +129,17 @@ class EcosDataProcDefAdapter(
         ).getRecords().firstOrNull()?.convertToEntity()
     }
 
-    override fun findAllByIdTnt(tenant: Int, pageable: Pageable): List<ProcDefEntity> {
-        return findAll(Predicates.alwaysTrue(), pageable).toList()
+    override fun getCount(workspaces: List<String>, predicate: Predicate): Long {
+        return findAllRaw(workspaces, predicate, 0, 0).getTotalCount()
     }
 
-    override fun getCount(predicate: Predicate): Long {
-        return findAllRaw(predicate, 0, 0).getTotalCount()
+    override fun getCount(workspaces: List<String>): Long {
+        return getCount(workspaces, Predicates.alwaysTrue())
     }
 
-    override fun getCount(tenant: Int): Long {
-        return getCount(Predicates.alwaysTrue())
-    }
-
-    override fun getLastModifiedDate(tenant: Int): Instant {
+    override fun getLastModifiedDate(): Instant {
         return findAllRaw(
+            emptyList(),
             Predicates.alwaysTrue(),
             0, 1, listOf(
                 SortBy(RecordConstants.ATT_MODIFIED, ascending = false)
@@ -145,18 +147,9 @@ class EcosDataProcDefAdapter(
         ).getRecords().firstOrNull()?.modified ?: Instant.EPOCH
     }
 
-    override fun findOneByIdTntAndProcTypeAndExtId(tenant: Int, procType: String, extId: String): ProcDefEntity? {
+    override fun findFirstByProcTypeAndAlfType(workspace: String, type: String, alfType: String): ProcDefEntity? {
         return findAllRaw(
-            Predicates.and(
-                Predicates.eq(ATT_PROC_TYPE, procType),
-                Predicates.eq(ATT_EXT_ID, extId)
-            ),
-            0, 1
-        ).getRecords().firstOrNull()?.convertToEntity()
-    }
-
-    override fun findFirstByIdTntAndProcTypeAndAlfType(tenant: Int, type: String, alfType: String): ProcDefEntity? {
-        return findAllRaw(
+            listOf(workspace),
             Predicates.and(
                 Predicates.eq(ATT_PROC_TYPE, type),
                 Predicates.eq(ATT_ALF_TYPE, alfType)
@@ -166,6 +159,7 @@ class EcosDataProcDefAdapter(
     }
 
     private fun ProcDefRecordAtts.convertToEntity(): WrappedProcDefEntity {
+
         val entity = WrappedProcDefEntity(this.lastRev)
         entity.id = EntityUuid(0, UUID.fromString(this.id))
 
@@ -217,6 +211,7 @@ class EcosDataProcDefAdapter(
             lastRevRef?.let {
                 val entity = ecosDataProcDefRevAdapter.getByRef(it)
                 super.lastRev = entity
+                entity?.processDef = this
                 entity
             }
         }

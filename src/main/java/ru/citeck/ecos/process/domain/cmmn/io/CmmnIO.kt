@@ -1,7 +1,9 @@
 package ru.citeck.ecos.process.domain.cmmn.io
 
+import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.DefinitionsConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.AssociationConverter
 import ru.citeck.ecos.process.domain.cmmn.io.convert.ecos.artifact.TextAnnotationConverter
@@ -26,7 +28,10 @@ import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-object CmmnIO {
+@Component
+class CmmnIO(
+    workspaceService: WorkspaceService
+) {
     private val extensionTypeResolver = { item: Any ->
         val result: String? = when (item) {
             is DiagramElement -> item.otherAttributes[CmmnXmlUtils.PROP_ECOS_CMMN_TYPE]
@@ -65,7 +70,8 @@ object CmmnIO {
             SetStatusConverter::class
         ),
         extensionTypeResolver,
-        otherAttsResolver
+        otherAttsResolver,
+        workspaceService
     )
 
     private val ecosAlfCmmnConverters = EcosOmgConverters(
@@ -76,35 +82,30 @@ object CmmnIO {
             AlfPlanItemOnPartConverter::class,
             AlfSetStatusConverter::class
         ),
-        extensionTypeResolver
+        extensionTypeResolver,
+        workspaceService = workspaceService
     )
 
-    @JvmStatic
     fun importEcosCmmn(definitions: String): CmmnProcessDef {
         return importEcosCmmn(CmmnXmlUtils.readFromString(definitions))
     }
 
-    @JvmStatic
     fun importEcosCmmn(definitions: Definitions): CmmnProcessDef {
         return ecosCmmnConverters.import(definitions, CmmnProcessDef::class.java).data
     }
 
-    @JvmStatic
     fun exportEcosCmmn(procDef: CmmnProcessDef): Definitions {
         return ecosCmmnConverters.export(procDef)
     }
 
-    @JvmStatic
     fun exportEcosCmmnToString(procDef: CmmnProcessDef): String {
         return CmmnXmlUtils.writeToString(exportEcosCmmn(procDef))
     }
 
-    @JvmStatic
     fun exportAlfCmmn(procDef: CmmnProcessDef): Definitions {
         return ecosAlfCmmnConverters.export(procDef)
     }
 
-    @JvmStatic
     fun exportAlfCmmnToString(procDef: CmmnProcessDef): String {
         return CmmnXmlUtils.writeToString(exportAlfCmmn(procDef))
     }

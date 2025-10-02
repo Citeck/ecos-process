@@ -26,6 +26,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
     private final RecordsServiceFactory recordsServices;
     private final ProcDefService procDefService;
     private final ProcDefRevDataProvider procDefRevDataProvider;
+    private final CmmnIO cmmnIO;
 
     @Nullable
     @Override
@@ -51,7 +52,7 @@ public class GetProcDefRevExecutor implements CommandExecutor<GetProcDefRev> {
                     + procDefRev.getId());
             }
             data = RequestContext.doWithCtx(recordsServices, ctx -> {
-                String cmmnDef = CmmnIO.exportAlfCmmnToString(def);
+                String cmmnDef = cmmnIO.exportAlfCmmnToString(def);
                 log.info(cmmnDef);
                 return cmmnDef.getBytes(StandardCharsets.UTF_8);
             });

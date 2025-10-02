@@ -174,6 +174,7 @@ class BpmnProcessDefRecordsPermissionsTest {
                 id,
                 MLText.EMPTY,
                 BPMN_PROC_TYPE,
+                "",
                 "xml",
                 "{http://www.citeck.ru/model/test/1.0}test-type",
                 ModelUtils.getTypeRef("type1"),
@@ -419,7 +420,7 @@ class BpmnProcessDefRecordsPermissionsTest {
             )
         }
 
-        val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val procDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(procDef!!.id).isEqualTo(procId)
     }
@@ -458,7 +459,7 @@ class BpmnProcessDefRecordsPermissionsTest {
             )
         }
 
-        val procDef = procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, procId))
+        val procDef = procDefService.getProcessDefById(ProcDefRef.createWoWs(BPMN_PROC_TYPE, procId))
 
         assertThat(procDef!!.id).isEqualTo(procId)
     }

@@ -33,9 +33,11 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
         val (processes, collaboration) = element.extractRootElements(context)
 
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
+        val workspace = element.otherAttributes[BPMN_PROP_WORKSPACE] ?: ""
 
         val result = BpmnDefinitionDef(
             id = processDefId,
+            workspace = workspace,
             enabled = element.otherAttributes[BPMN_PROP_ENABLED].toBoolean(),
             autoStartEnabled = element.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean(),
             autoDeleteEnabled = element.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED]?.toBoolean() ?: true,
@@ -71,6 +73,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
         element.errors.forEach {
             context.bpmnErrorsByNames.computeIfAbsent(it.name) { _ -> it }
         }
+        context.setWorkspace(element.workspace)
 
         return TDefinitions().apply {
             id = element.definitionsId
@@ -109,6 +112,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()
             otherAttributes[BPMN_PROP_PROCESS_DEF_ID] = element.id
+            otherAttributes[BPMN_PROP_WORKSPACE] = element.workspace
             otherAttributes[BPMN_PROP_FORM_REF] = element.formRef.toString()
             otherAttributes[BPMN_PROP_WORKING_COPY_SOURCE_REF] = element.workingCopySourceRef.toString()
             otherAttributes[BPMN_PROP_SECTION_REF] = element.sectionRef.toString()

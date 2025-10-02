@@ -3,6 +3,7 @@ id: proc-def
 sourceId: 'eproc/proc-def-repo'
 
 system: true
+workspaceScope: PRIVATE
 
 model:
   attributes:

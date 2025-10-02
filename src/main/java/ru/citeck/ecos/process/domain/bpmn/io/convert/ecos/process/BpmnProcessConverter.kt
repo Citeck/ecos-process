@@ -8,6 +8,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.omg.TArtifact
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TLaneSet
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
+import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -16,7 +17,7 @@ class BpmnProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
 
     override fun import(element: TProcess, context: ImportContext): BpmnProcessDef {
         return BpmnProcessDef(
-            id = element.id,
+            id = element.id.substringAfter(BpmnUtils.PROC_KEY_WS_DELIM),
             isExecutable = element.isIsExecutable ?: true,
             flowElements = element.flowElement.map { it.value.toBpmnFlowElementDef(context) },
             artifacts = element.artifact.map { it.value.toBpmnArtifactDef(context) },
@@ -27,7 +28,7 @@ class BpmnProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
 
     override fun export(element: BpmnProcessDef, context: ExportContext): TProcess {
         return TProcess().apply {
-            id = element.id
+            id = context.createWsScopedId(element.id)
             isIsExecutable = element.isExecutable
 
             val tFlowElements = element.flowElements.map {

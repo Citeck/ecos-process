@@ -21,6 +21,7 @@ public class FindProcDefExecutor implements CommandExecutor<FindProcDef> {
         ProcDefRevDto procDefRev = AuthContext.runAsSystem(() ->
             procDefService.findProcDef(
                 findProcDef.getProcType(),
+                findProcDef.getWorkspace(),
                 findProcDef.getEcosTypeRef(),
                 findProcDef.getAlfTypes()
             )
