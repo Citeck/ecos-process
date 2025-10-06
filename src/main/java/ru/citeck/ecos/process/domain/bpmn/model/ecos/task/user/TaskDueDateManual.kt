@@ -6,13 +6,14 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import java.time.Duration
 
 data class TaskDueDateManual(
     val durationType: DurationType? = null,
     val duration: Duration? = null,
     val workingDays: Int? = null,
-    val workingSchedule: EntityRef = EntityRef.EMPTY
+    val workingSchedule: EntityRef = "emodel/working-schedule@DEFAULT".toEntityRef()
 ) {
 
     fun validate(elementId: String) {
@@ -32,13 +33,6 @@ data class TaskDueDateManual(
             throw EcosBpmnElementDefinitionException(
                 elementId,
                 "Duration or working days must be set for business duration type"
-            )
-        }
-
-        if (durationType == DurationType.BUSINESS && workingSchedule.isEmpty()) {
-            throw EcosBpmnElementDefinitionException(
-                elementId,
-                "Working schedule must be set for business duration type"
             )
         }
 
