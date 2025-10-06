@@ -37,7 +37,10 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
 
         val dueDate = element.otherAttributes[BPMN_PROP_DUE_DATE]
         val dueDateManual = if (dueDate.isNullOrBlank()) {
-            val dueDateManualData = DataValue.of(element.otherAttributes[BPMN_PROP_DUE_DATE_MANUAL])
+            var dueDateManualData = DataValue.of(element.otherAttributes[BPMN_PROP_DUE_DATE_MANUAL])
+            if (dueDateManualData.isNull()) {
+                dueDateManualData = DataValue.createObj()
+            }
             val durationRaw = dueDateManualData["duration"].asText()
             if (durationRaw.isNotBlank() && !allowedDurationRegex.containsMatchIn(durationRaw)) {
                 throw EcosBpmnElementDefinitionException(
