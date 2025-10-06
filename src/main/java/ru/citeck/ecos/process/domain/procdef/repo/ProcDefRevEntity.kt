@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.procdef.repo
 import com.fasterxml.jackson.annotation.JsonValue
 import com.mongodb.annotations.Immutable
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.mapping.DBRef
 import org.springframework.data.mongodb.core.mapping.Document
 import ru.citeck.ecos.commons.data.DataValue
@@ -14,6 +15,7 @@ import java.util.*
 
 @Immutable
 @Document(collection = "process_def_rev")
+@CompoundIndex(name = "created_idx", def = "{'created': 1}")
 class ProcDefRevEntity {
 
     @Id
