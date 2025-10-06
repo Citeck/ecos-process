@@ -74,12 +74,6 @@ object BpmnXmlUtils {
         }
     }
 
-    fun validateEcosBpmnFormat(definition: String) {
-        val ecosBpmnDef = BpmnIO.importEcosBpmn(definition)
-        BpmnIO.exportEcosBpmn(ecosBpmnDef)
-        BpmnIO.exportCamundaBpmn(ecosBpmnDef)
-    }
-
     //  Bpmn modeler failed to parse definition with empty xmlns.
     // I didn’t find a way to get rid of it when converting, so we use the replacement hack
     private fun removeEmptyXmlns(data: String): String {

@@ -400,7 +400,7 @@ class BpmnProcessDefRecords(
                 "BPMN definition cannot be empty for validation"
             }
 
-            BpmnXmlUtils.validateEcosBpmnFormat(definition)
+            bpmnIO.validateEcosBpmnFormat(definition)
 
             return "ok"
         }

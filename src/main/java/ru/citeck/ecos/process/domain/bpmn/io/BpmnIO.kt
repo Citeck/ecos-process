@@ -236,4 +236,10 @@ final class BpmnIO(
             return def
         }
     }
+
+    fun validateEcosBpmnFormat(definition: String) {
+        val ecosBpmnDef = importEcosBpmn(definition)
+        exportEcosBpmn(ecosBpmnDef)
+        exportCamundaBpmn(ecosBpmnDef)
+    }
 }
