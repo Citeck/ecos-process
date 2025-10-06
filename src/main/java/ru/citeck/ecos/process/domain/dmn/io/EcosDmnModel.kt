@@ -10,5 +10,6 @@ val DMN_PROP_NAME_ML = QName(NS_ECOS_DMN, "name_ml")
 val DMN_PROP_MODEL = QName(NS_ECOS_DMN, "model")
 val DMN_PROP_SECTION_REF = QName(NS_ECOS_DMN, "sectionRef")
 val DMN_PROP_DEF_ID = QName(NS_ECOS_DMN, "defId")
+val DMN_PROP_WORKSPACE = QName(NS_ECOS_DMN, "workspace")
 
 val DMN_PROP_ECOS_DMN_TYPE = QName(NS_ECOS_BPMN, "dmnType")

@@ -14,6 +14,7 @@ import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
+import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
@@ -33,6 +34,7 @@ import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
@@ -154,7 +156,7 @@ class DmnDefRecords(
                 ?: error("Process definition is not found: $recordId")
             DmnMutateRecord(
                 recordId,
-                recordId,
+                procDef.id,
                 procDef.workspace,
                 procDef.name ?: MLText(),
                 null,
@@ -195,12 +197,14 @@ class DmnDefRecords(
         val newDefinition = record.definition ?: ""
         var newDefData: ByteArray? = null
         var newEcosDmnDef: DmnDefinitionDef? = null
+        val workspace = record.workspace
 
         if (newDefinition.isNotBlank()) {
 
             validateEcosDmnFormat(newDefinition)
 
             newEcosDmnDef = dmnIO.importEcosDmn(newDefinition)
+            newEcosDmnDef = newEcosDmnDef.copy(workspace = workspace)
 
             if (log.isDebugEnabled()) {
                 val ecosDmnStr = dmnIO.exportEcosDmnToString(newEcosDmnDef)
@@ -216,7 +220,7 @@ class DmnDefRecords(
             record.defId = newEcosDmnDef.id
 
             if (record.id.isBlank()) {
-                record.id = record.defId
+                record.id = workspaceService.addWsPrefixToId(record.defId, record.workspace)
             }
         }
 
@@ -229,8 +233,9 @@ class DmnDefRecords(
         val currentProc = procDefService.getProcessDefById(newRef)
         val procDefResult: ProcDefDto
 
-        if ((record.id != record.defId) && currentProc != null) {
-            error("Process definition with id " + newRef.idInWs + " already exists")
+        val recordIdInWs = workspaceService.convertToIdInWs(record.id)
+        if ((recordIdInWs.id != record.defId) && currentProc != null) {
+            error("DMN definition with id " + newRef.idInWs + " already exists")
         }
 
         if (currentProc == null) {
@@ -239,7 +244,7 @@ class DmnDefRecords(
                 id = record.defId,
                 name = record.name,
                 data = newDefData ?: DmnXmlUtils.writeToString(
-                    dmnIO.generateDefaultDef(record.defId, record.name)
+                    dmnIO.generateDefaultDef(record.defId, record.name, record.workspace)
                 ).toByteArray(),
                 format = DMN_FORMAT,
                 procType = DMN_PROC_TYPE,
@@ -288,8 +293,14 @@ class DmnDefRecords(
             val camundaFormat = dmnIO.exportCamundaDmnToString(newEcosDmnDef!!)
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
+            var resName = record.defId
+            if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
+                resName = workspaceService.getWorkspaceSystemId(record.workspace) + BpmnUtils.PROC_KEY_WS_DELIM + resName
+            }
+            resName += DMN_RESOURCE_NAME_POSTFIX
+
             val deployResult = camundaRepoService.createDeployment()
-                .addInputStream(record.defId + DMN_RESOURCE_NAME_POSTFIX, camundaFormat.byteInputStream())
+                .addInputStream(resName, camundaFormat.byteInputStream())
                 .name(record.name.getClosest())
                 .source("Ecos DMN Modeler")
                 .deployWithResult()
@@ -307,7 +318,7 @@ class DmnDefRecords(
             log.debug { "Camunda deploy result: $deployResult" }
         }
 
-        return record.defId
+        return workspaceService.addWsPrefixToId(record.defId, record.workspace)
     }
 
     private fun validateEcosDmnFormat(newDefinition: String) {
@@ -365,6 +376,12 @@ class DmnDefRecords(
 
         fun getPermissions(): BpmnProcessDefRecords.ProcDefPermsValue {
             return permsValue
+        }
+
+        @AttName(ScalarType.ID_SCHEMA)
+        fun getRef(): EntityRef {
+            val localId = workspaceService.addWsPrefixToId(procDef.id, procDef.workspace)
+            return EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, localId)
         }
 
         fun getId(): String {

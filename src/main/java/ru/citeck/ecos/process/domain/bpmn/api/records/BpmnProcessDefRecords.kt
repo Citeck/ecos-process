@@ -43,6 +43,7 @@ import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records2.predicate.model.ValuePredicate
+import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttContext
 import ru.citeck.ecos.records3.record.atts.value.AttValue
@@ -626,7 +627,7 @@ class BpmnProcessDefRecords(
             procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId)
         }
 
-        @AttName("?id")
+        @AttName(ScalarType.ID_SCHEMA)
         fun getRef(): EntityRef {
             val localId = workspaceService.addWsPrefixToId(procDef.id, procDef.workspace)
             return EntityRef.create(AppName.EPROC, ID, localId)

@@ -8,6 +8,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_DEF_ID
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_MODEL
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
+import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_WORKSPACE
 import ru.citeck.ecos.process.domain.dmn.model.ecos.DmnDefinitionDef
 import ru.citeck.ecos.process.domain.dmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
@@ -23,6 +24,7 @@ class DmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions>
         }
 
         val name = element.otherAttributes[DMN_PROP_NAME_ML] ?: element.name
+        val workspace = element.otherAttributes[DMN_PROP_WORKSPACE] ?: ""
 
         @Suppress("UNCHECKED_CAST")
         return DmnDefinitionDef(
@@ -32,6 +34,7 @@ class DmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions>
                 element.otherAttributes[DMN_PROP_MODEL],
                 Map::class.java
             ) as Map<String, String>? ?: emptyMap(),
+            workspace = workspace,
             dmnDef = element
         )
     }
@@ -42,6 +45,7 @@ class DmnDefinitionsConverter : EcosOmgConverter<DmnDefinitionDef, TDefinitions>
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
 
             otherAttributes[DMN_PROP_MODEL] = Json.mapper.toString(element.model)
+            otherAttributes[DMN_PROP_WORKSPACE] = element.workspace
         }
     }
 }

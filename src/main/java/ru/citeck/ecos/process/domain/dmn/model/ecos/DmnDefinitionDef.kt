@@ -10,6 +10,7 @@ data class DmnDefinitionDef(
     val id: String,
     val name: MLText,
     val model: Map<String, String> = emptyMap(),
+    val workspace: String,
 
     val dmnDef: TDefinitions
 )

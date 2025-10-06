@@ -67,7 +67,7 @@ class DmnIO(
         return DmnXmlUtils.writeToString(exportCamundaDmn(definitions))
     }
 
-    fun generateDefaultDef(defId: String, name: MLText): TDefinitions {
+    fun generateDefaultDef(defId: String, name: MLText, workspace: String): TDefinitions {
 
         val defName = let {
             MLText.getClosestValue(name, I18nContext.getLocale()).ifBlank {
@@ -112,6 +112,7 @@ class DmnIO(
         val def = DmnXmlUtils.readFromString(defaultDef)
         def.otherAttributes[DMN_PROP_NAME_ML] = Json.mapper.toString(name)
         def.otherAttributes[DMN_PROP_DEF_ID] = defId
+        def.otherAttributes[DMN_PROP_WORKSPACE] = workspace
 
         return def
     }
