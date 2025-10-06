@@ -7,8 +7,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.repository.MongoRepository
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.proc.repo.ProcInstanceRepository
 import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
@@ -32,6 +35,7 @@ class MongoToEcosDataMigrationConfig {
 
     @Bean
     fun mongoToEcosDataMigration(
+        mongoTemplate: ObjectProvider<MongoTemplate>,
         mongoProcDefRepo: ObjectProvider<MongoProcDefRepo>,
         mongoProcDefRevRepo: ObjectProvider<MongoProcDefRevRepo>,
         mongoProcInstanceRepo: ObjectProvider<MongoProcInstanceRepository>,
@@ -42,6 +46,7 @@ class MongoToEcosDataMigrationConfig {
         edataProcStateRepo: ProcStateRepository
     ): MongoToEcosDataMigration {
         return MongoToEcosDataMigration(
+            mongoTemplate.getIfAvailable(),
             mongoProcDefRepo.getIfAvailable(),
             mongoProcDefRevRepo.getIfAvailable(),
             mongoProcInstanceRepo.getIfAvailable(),
@@ -55,6 +60,7 @@ class MongoToEcosDataMigrationConfig {
 
     @EcosLocalPatch("mongo-to-ecos-data-migration", "2025-09-30T00:00:02Z")
     class MongoToEcosDataMigration(
+        private val mongoTemplate: MongoTemplate?,
         private val mongoProcDefRepo: MongoProcDefRepo?,
         private val mongoProcDefRevRepo: MongoProcDefRevRepo?,
         private val mongoProcInstanceRepo: MongoProcInstanceRepository?,
@@ -183,12 +189,30 @@ class MongoToEcosDataMigrationConfig {
         }
 
         private fun <T : Any> forEach(repo: MongoRepository<T, EntityUuid>, action: (T) -> Unit) {
-            var pageReq = PageRequest.of(0, 20, Sort.Direction.ASC, "created")
-            var pageData = repo.findAll(pageReq)
-            while (!pageData.isEmpty) {
-                pageData.content.forEach(action)
-                pageReq = pageReq.next()
-                pageData = repo.findAll(pageReq)
+
+            if (mongoTemplate != null) {
+
+                val query = Query()
+                    .cursorBatchSize(20)
+                    .noCursorTimeout()
+
+                val genericArgs = ReflectUtils.getGenericArgs(repo::class.java, MongoRepository::class.java)
+                val entityType = genericArgs[0]
+
+                mongoTemplate.stream(query, entityType).use { cursor ->
+                    cursor.forEach {
+                        @Suppress("UNCHECKED_CAST")
+                        action(it as T)
+                    }
+                }
+            } else {
+                var pageReq = PageRequest.of(0, 20, Sort.Direction.ASC, "created")
+                var pageData = repo.findAll(pageReq)
+                while (!pageData.isEmpty) {
+                    pageData.content.forEach(action)
+                    pageReq = pageReq.next()
+                    pageData = repo.findAll(pageReq)
+                }
             }
         }
     }
