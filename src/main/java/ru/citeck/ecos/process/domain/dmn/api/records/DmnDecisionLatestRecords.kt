@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.dmn.api.records
 
-import ch.qos.logback.core.model.ModelUtil
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.DecisionDefinition
 import org.springframework.stereotype.Component
@@ -11,7 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.IdentifiableRecord
 import ru.citeck.ecos.process.domain.bpmn.api.records.sortByIds
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestDecisionDefinitionsByKeys
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
@@ -56,7 +55,7 @@ class DmnDecisionLatestRecords(
         if (workspaceToFilter.isNotBlank()) {
             // todo: add support of multiple workspaces in one query
             query = query.decisionDefinitionResourceNameLike(
-                workspaceToFilter + BpmnUtils.PROC_KEY_WS_DELIM + "%"
+                workspaceToFilter + ProcUtils.PROC_KEY_WS_DELIM + "%"
             )
         }
 
@@ -85,7 +84,7 @@ class DmnDecisionLatestRecords(
     private fun DecisionDefinition.toDecisionRecord(): DecisionLatestRecord {
 
         val dmnDefLocalId = resourceName.substringBefore(DMN_RESOURCE_NAME_POSTFIX)
-            .replace(BpmnUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
+            .replace(ProcUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
 
         return DecisionLatestRecord(
             id = key,

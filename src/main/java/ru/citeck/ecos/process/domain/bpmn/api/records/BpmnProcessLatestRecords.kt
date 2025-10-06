@@ -8,7 +8,7 @@ import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -99,7 +99,7 @@ class BpmnProcessLatestRecords(
             val procDefRefLocalId = processDefIdFromResourceName.ifBlank {
                 val procDefRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
                 procDefRev?.procDefId ?: ""
-            }.replace(BpmnUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
+            }.replace(ProcUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
 
             EntityRef.create(
                 AppName.EPROC,

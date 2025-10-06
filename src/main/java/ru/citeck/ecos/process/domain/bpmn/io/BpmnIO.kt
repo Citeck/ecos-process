@@ -55,7 +55,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 
@@ -193,7 +193,7 @@ final class BpmnIO(
 
             var processId = processDefId
             if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
-                processId = workspaceService.getWorkspaceSystemId(workspace) + BpmnUtils.PROC_KEY_WS_DELIM + processId
+                processId = workspaceService.getWorkspaceSystemId(workspace) + ProcUtils.PROC_KEY_WS_DELIM + processId
             }
 
             val defaultDef = """

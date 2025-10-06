@@ -24,7 +24,7 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefWithDataDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -81,7 +81,7 @@ class BpmnProcessServiceImpl(
         var processKey = request.processId
         if (!workspaceService.isWorkspaceWithGlobalArtifacts(request.workspace)) {
             val wsSysId = workspaceService.getWorkspaceSystemId(request.workspace)
-            processKey = wsSysId + BpmnUtils.PROC_KEY_WS_DELIM + processKey
+            processKey = wsSysId + ProcUtils.PROC_KEY_WS_DELIM + processKey
         }
 
         with(request) {

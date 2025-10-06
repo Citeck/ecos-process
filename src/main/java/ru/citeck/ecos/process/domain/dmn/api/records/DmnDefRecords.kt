@@ -14,7 +14,7 @@ import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.io.DMN_PROP_NAME_ML
@@ -63,7 +63,8 @@ class DmnDefRecords(
     private val procDefRevDataProvider: ProcDefRevDataProvider,
     private val bpmnProcessDefRecords: BpmnProcessDefRecords,
     private val workspaceService: WorkspaceService,
-    private val dmnIO: DmnIO
+    private val dmnIO: DmnIO,
+    private val procUtils: ProcUtils
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -295,7 +296,7 @@ class DmnDefRecords(
 
             var resName = record.defId
             if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
-                resName = workspaceService.getWorkspaceSystemId(record.workspace) + BpmnUtils.PROC_KEY_WS_DELIM + resName
+                resName = workspaceService.getWorkspaceSystemId(record.workspace) + ProcUtils.PROC_KEY_WS_DELIM + resName
             }
             resName += DMN_RESOURCE_NAME_POSTFIX
 
@@ -483,12 +484,9 @@ class DmnDefRecords(
             imageBytes = DataUriUtil.parseData(imageUrl).data
         }
 
-        @JsonProperty("_workspace")
+        @JsonProperty(RecordConstants.ATT_WORKSPACE)
         fun setCtxWorkspace(workspace: String?) {
-            if (this.workspace.isNotBlank() || workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
-                return
-            }
-            this.workspace = workspace ?: ""
+            this.workspace = procUtils.getUpdatedWsInMutation(this.workspace, workspace)
         }
 
         @JsonProperty("_content")

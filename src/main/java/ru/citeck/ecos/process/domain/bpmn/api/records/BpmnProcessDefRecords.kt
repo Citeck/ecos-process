@@ -24,7 +24,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
 import ru.citeck.ecos.process.domain.bpmnsection.BpmnSectionPermissionsProvider
@@ -88,6 +88,7 @@ class BpmnProcessDefRecords(
     private val procDefRevDataProvider: ProcDefRevDataProvider,
     private val workspaceService: WorkspaceService,
     private val bpmnIO: BpmnIO,
+    private val procUtils: ProcUtils,
     ecosPermissionsService: EcosPermissionsService,
     customRecordPermsComponent: CustomRecordPermsComponent,
     modelRecordPermsComponent: ModelRecordPermsComponent,
@@ -532,7 +533,7 @@ class BpmnProcessDefRecords(
 
             var resName = record.processDefId
             if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
-                resName = workspaceService.getWorkspaceSystemId(record.workspace) + BpmnUtils.PROC_KEY_WS_DELIM + resName
+                resName = workspaceService.getWorkspaceSystemId(record.workspace) + ProcUtils.PROC_KEY_WS_DELIM + resName
             }
             resName += BPMN_RESOURCE_NAME_POSTFIX
 
@@ -884,10 +885,7 @@ class BpmnProcessDefRecords(
 
         @JsonProperty(RecordConstants.ATT_WORKSPACE)
         fun setCtxWorkspace(workspace: String?) {
-            if (this.workspace.isNotBlank() || workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
-                return
-            }
-            this.workspace = workspace ?: ""
+            this.workspace = procUtils.getUpdatedWsInMutation(this.workspace, workspace)
         }
 
         fun setImage(imageUrl: String) {

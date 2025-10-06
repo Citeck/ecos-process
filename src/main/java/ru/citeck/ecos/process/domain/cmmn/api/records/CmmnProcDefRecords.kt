@@ -9,6 +9,7 @@ import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnFormat
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnIO
 import ru.citeck.ecos.process.domain.cmmn.io.CmmnProcDefImporter
@@ -43,7 +44,8 @@ class CmmnProcDefRecords(
     private val cmmnProcDefImporter: CmmnProcDefImporter,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
     private val workspaceService: WorkspaceService,
-    private val cmmnIO: CmmnIO
+    private val cmmnIO: CmmnIO,
+    private val procUtils: ProcUtils
 ) : RecordsQueryDao,
     RecordAttsDao,
     RecordDeleteDao,
@@ -353,12 +355,9 @@ class CmmnProcDefRecords(
         var format: String = ""
     ) {
 
-        @JsonProperty("_workspace")
+        @JsonProperty(RecordConstants.ATT_WORKSPACE)
         fun setCtxWorkspace(workspace: String?) {
-            if (this.workspace.isNotBlank() || workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
-                return
-            }
-            this.workspace = workspace ?: ""
+            this.workspace = procUtils.getUpdatedWsInMutation(this.workspace, workspace)
         }
 
         @JsonProperty("_content")

@@ -4,7 +4,7 @@ import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.error.BpmnErrorDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.signal.BpmnSignalDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
-import ru.citeck.ecos.process.domain.bpmn.utils.BpmnUtils
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverters
 
@@ -31,6 +31,6 @@ class ExportContext(
         if (workspaceSysId.isBlank()) {
             return id
         }
-        return workspaceSysId + BpmnUtils.PROC_KEY_WS_DELIM + id
+        return workspaceSysId + ProcUtils.PROC_KEY_WS_DELIM + id
     }
 }

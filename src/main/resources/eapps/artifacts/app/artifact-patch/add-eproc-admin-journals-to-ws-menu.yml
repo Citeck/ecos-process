@@ -1,0 +1,33 @@
+---
+id: add-eproc-admin-journals-to-ws-menu
+name:
+  ru: Добавить журналы администрирования eproc в меню рабочей области
+  en: Add eproc admin journals to default workspace menu
+
+target: 'ui/menu$default-ws-admin-menu-items'
+system: true
+order: 300
+
+type: json
+config:
+  operations:
+    - op: add
+      path: '$.subMenu.left.items'
+      value:
+        - id: bpmn-process-def
+          label:
+            ru: Процессы BPMN
+            en: BPMN Processes
+          icon: ui/icon@i-leftmenu-running-processes
+          hidden: false
+          type: JOURNAL
+          config:
+            recordRef: uiserv/journal@bpmn-process-def
+        - id: dmn-def
+          label:
+            en: DMN
+          icon: ui/icon@i-leftmenu-organizational-structure
+          hidden: false
+          type: JOURNAL
+          config:
+            recordRef: uiserv/journal@dmn-def
