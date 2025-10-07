@@ -25,6 +25,8 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
 
     companion object {
         private const val DEFAULT_EXPORTER = "bpmn-js (https://demo.bpmn.io)"
+        private const val DEFAULT_EXPORTER_VERSION = "8.2.0"
+        private const val DEFAULT_TARGET_NAMESPACE = "http://bpmn.io/schema/bpmn"
     }
 
     override fun import(element: TDefinitions, context: ImportContext): BpmnDefinitionDef {
@@ -62,8 +64,8 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             errors = context.generateErrorsFromDefs(),
             errorsEventDefsMeta = context.bpmnErrorEventDefs.values.toList(),
             exporter = element.exporter ?: DEFAULT_EXPORTER,
-            exporterVersion = element.exporterVersion,
-            targetNamespace = element.targetNamespace
+            exporterVersion = element.exporterVersion ?: DEFAULT_EXPORTER_VERSION,
+            targetNamespace = element.targetNamespace ?: DEFAULT_TARGET_NAMESPACE
         )
 
         return result
