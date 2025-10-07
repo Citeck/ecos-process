@@ -84,6 +84,11 @@ class SendNotificationDelegate : JavaDelegate {
             }
         }
 
+        var lang = notificationLang?.expressionText?.ifBlank { null }
+        if (lang == "null") {
+            lang = null
+        }
+
         val recipients = getRecipientsEmailsFromExpression(notificationTo, execution)
         val notification = Notification.Builder()
             .record(document)
@@ -98,7 +103,7 @@ class SendNotificationDelegate : JavaDelegate {
             .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
             .bcc(getRecipientsEmailsFromExpression(notificationBcc, execution))
-            .lang(notificationLang?.expressionText?.ifBlank { null })
+            .lang(lang)
             .additionalMeta(getAdditionalMeta(recipients, execution))
             .build()
 
