@@ -98,7 +98,7 @@ class SendNotificationDelegate : JavaDelegate {
             .from(notificationFrom)
             .cc(getRecipientsEmailsFromExpression(notificationCc, execution))
             .bcc(getRecipientsEmailsFromExpression(notificationBcc, execution))
-            .lang(notificationLang?.expressionText)
+            .lang(notificationLang?.expressionText?.ifBlank { null })
             .additionalMeta(getAdditionalMeta(recipients, execution))
             .build()
 
