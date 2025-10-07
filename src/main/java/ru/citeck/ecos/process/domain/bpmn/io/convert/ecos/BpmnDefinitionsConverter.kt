@@ -23,6 +23,10 @@ private const val ERROR_PREFIX = "Error"
 
 class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinitions> {
 
+    companion object {
+        private const val DEFAULT_EXPORTER = "bpmn-js (https://demo.bpmn.io)"
+    }
+
     override fun import(element: TDefinitions, context: ImportContext): BpmnDefinitionDef {
 
         val processDefId = element.otherAttributes[BPMN_PROP_PROCESS_DEF_ID]
@@ -57,7 +61,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             conditionalEventDefsMeta = context.conditionalEventDefs,
             errors = context.generateErrorsFromDefs(),
             errorsEventDefsMeta = context.bpmnErrorEventDefs.values.toList(),
-            exporter = element.exporter,
+            exporter = element.exporter ?: DEFAULT_EXPORTER,
             exporterVersion = element.exporterVersion,
             targetNamespace = element.targetNamespace
         )
@@ -78,7 +82,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
         return TDefinitions().apply {
             id = element.definitionsId
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
-            exporter = element.exporter
+            exporter = element.exporter.ifBlank { DEFAULT_EXPORTER }
             exporterVersion = element.exporterVersion
             targetNamespace = element.targetNamespace
 
