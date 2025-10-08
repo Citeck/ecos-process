@@ -58,7 +58,7 @@ class CamundaEventSubscriptionFinder(
                 defRevs.map { it.toDto() }.forEach { defRev ->
                     if (defRev.deploymentId.isNullOrBlank()) {
                         log.warn {
-                            "Deployment id is null or blank for proc def rev: $defRev. " +
+                            "Deployment id is null or blank for proc def rev: ${defRev.id}. " +
                                 "Its wrong, because we find only deployed proc defs"
                         }
                         return@forEach
