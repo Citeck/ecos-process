@@ -22,5 +22,4 @@ class ProcUtils(
         }
         return ctxWorkspace.replace(WS_REF_PREFIX, "")
     }
-
 }

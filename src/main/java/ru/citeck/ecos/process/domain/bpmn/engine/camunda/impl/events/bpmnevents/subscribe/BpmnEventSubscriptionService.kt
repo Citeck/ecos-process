@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.type.RecordChangedEvent
@@ -15,17 +16,23 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional.RecordUpdatedEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventProcessor
 import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
+import java.time.Duration
 import java.time.Instant
 import java.util.*
+import kotlin.concurrent.thread
 
 @Service
 class BpmnEventSubscriptionService(
+    private val webappApi: EcosWebAppApi,
     private val camundaEventSubscriptionFinder: CamundaEventSubscriptionFinder,
     private val eventsService: EventsService,
     private val camundaEventProcessor: CamundaEventProcessor,
-    private val bpmnConditionalEventsProcessor: BpmnConditionalEventsProcessor
+    private val bpmnConditionalEventsProcessor: BpmnConditionalEventsProcessor,
+    private val ecosTypesRegistry: EcosTypesRegistry
 ) {
 
     companion object {
@@ -38,31 +45,40 @@ class BpmnEventSubscriptionService(
 
     @PostConstruct
     fun initListeners() {
-        Thread {
-            val deployedData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
-            val combinedSubscriptions = deployedData.subscriptions.combine()
+        webappApi.doBeforeAppReady {
+            // wait types initialization in main thread
+            ecosTypesRegistry.initializationPromise().get(Duration.ofMinutes(100))
+            val eventsRegistrationThread = thread(name = "cit-events-reg", start = true) {
+                AuthContext.runAsSystem {
+                    log.info { "===========Begin BPMN Citeck Event Listeners Registration===========" }
 
-            for (subscription in combinedSubscriptions) {
-                if (eventListeners.containsKey(subscription.eventName)) {
-                    throw IllegalStateException("Event ${subscription.eventName} already registered")
-                }
+                    val deployedData = camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+                    val combinedSubscriptions = deployedData.subscriptions.combine()
 
-                addSubscriptionListener(subscription)
-            }
+                    for (subscription in combinedSubscriptions) {
+                        if (eventListeners.containsKey(subscription.eventName)) {
+                            throw IllegalStateException("Event ${subscription.eventName} already registered")
+                        }
 
-            registerConditionalEventsListeners(deployedData.conditionalEventsEcosTypes)
-
-            log.info {
-                buildString {
-                    appendLine("\n================Register BPMN Ecos Event Subscriptions======================")
-                    for ((eventName, listener) in eventListeners) {
-                        appendLine("Event: $eventName, atts: ${listener.first.attributes}")
+                        addSubscriptionListener(subscription)
                     }
-                    appendLine("Conditional events: ${deployedData.conditionalEventsEcosTypes}")
-                    appendLine("============================================================================")
+
+                    registerConditionalEventsListeners(deployedData.conditionalEventsEcosTypes)
+
+                    log.info {
+                        buildString {
+                            appendLine("\n===========Register BPMN Ecos Event Subscriptions===========")
+                            for ((eventName, listener) in eventListeners) {
+                                appendLine("Event: $eventName, atts: ${listener.first.attributes}")
+                            }
+                            appendLine("Conditional events: ${deployedData.conditionalEventsEcosTypes}")
+                            appendLine("==============================================================")
+                        }
+                    }
                 }
             }
-        }.start()
+            eventsRegistrationThread.join(Duration.ofSeconds(10))
+        }
     }
 
     fun clean() {
