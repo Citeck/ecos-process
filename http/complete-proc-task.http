@@ -1,0 +1,17 @@
+POST https://enterprise.ecos24.ru/gateway/api/records/mutate
+Authorization: Bearer {{$auth.token("eis-qa")}}
+Content-Type: application/json
+
+{
+    "records": [
+        {
+            "id": "eproc/proc-task@153cb845-a48d-11f0-970d-6a930e918264",
+            "attributes": {
+                "outcome_approve": true,
+                "comment": "Хорошо, согласую"
+            }
+        }
+    ]
+}
+
+
