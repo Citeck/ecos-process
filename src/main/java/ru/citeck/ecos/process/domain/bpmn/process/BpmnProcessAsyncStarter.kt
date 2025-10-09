@@ -7,13 +7,17 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.rabbitmq.ds.RabbitMqConnection
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.txn.lib.TxnContext
+import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
 class BpmnProcessAsyncStarter(
     private val bpmnProcessService: BpmnProcessService,
     @Qualifier("bpmnRabbitmqConnection")
     bpmnRabbitmqConnection: RabbitMqConnection,
+    private val recordsService: RecordsService,
 
     @Value("\${ecos-process.bpmn.async-start-process.consumer.count}")
     private val consumersCount: Int,
@@ -57,7 +61,10 @@ class BpmnProcessAsyncStarter(
                     bpmnProcessService.startProcess(msg)
                 }
             } else {
-                AuthContext.runAsFull(workflowInitiator) {
+                val personRef = EntityRef.create(AppName.EMODEL, "person", workflowInitiator)
+                val initiatorAuthorities = recordsService.getAtt(personRef, "authorities.list[]?str!").toStrList()
+
+                AuthContext.runAsFull(workflowInitiator, initiatorAuthorities) {
                     bpmnProcessService.startProcess(msg)
                 }
             }
