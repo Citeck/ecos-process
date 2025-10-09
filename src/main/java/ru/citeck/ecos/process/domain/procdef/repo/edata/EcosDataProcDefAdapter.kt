@@ -125,7 +125,8 @@ class EcosDataProcDefAdapter(
                 Predicates.eq(ATT_PROC_TYPE, type),
                 Predicates.eq(ATT_EXT_ID, extId)
             ),
-            0, 1
+            0,
+            1
         ).getRecords().firstOrNull()?.convertToEntity()
     }
 
@@ -141,7 +142,9 @@ class EcosDataProcDefAdapter(
         return findAllRaw(
             emptyList(),
             Predicates.alwaysTrue(),
-            0, 1, listOf(
+            0,
+            1,
+            listOf(
                 SortBy(RecordConstants.ATT_MODIFIED, ascending = false)
             )
         ).getRecords().firstOrNull()?.modified ?: Instant.EPOCH
@@ -154,7 +157,8 @@ class EcosDataProcDefAdapter(
                 Predicates.eq(ATT_PROC_TYPE, type),
                 Predicates.eq(ATT_ALF_TYPE, alfType)
             ),
-            0, 1
+            0,
+            1
         ).getRecords().firstOrNull()?.convertToEntity()
     }
 

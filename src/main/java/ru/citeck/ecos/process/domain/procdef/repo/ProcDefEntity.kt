@@ -92,7 +92,8 @@ class ProcDefEntity {
             .set("autoDeleteEnabled", autoDeleteEnabled)
             .set("sectionRef", sectionRef)
             .set("lastRev", EcosDataProcDefRevAdapter.toRef(lastRev))
-            .set("_workspace",
+            .set(
+                "_workspace",
                 if (workspace.isNullOrBlank()) {
                     ModelUtils.DEFAULT_WORKSPACE_ID
                 } else {

@@ -124,7 +124,8 @@ class MongoToEcosDataMigrationConfig {
 
         private fun migrateProcDefRevs(): Int {
             return migrateEntities(
-                "proc-def-revs", mongoProcDefRevRepo,
+                "proc-def-revs",
+                mongoProcDefRevRepo,
                 { it.id },
                 { it.created },
                 { edataProcDefRevRepository.findById(it) },
@@ -157,7 +158,8 @@ class MongoToEcosDataMigrationConfig {
         private fun <T : Any> migrateEntities(
             type: String,
             repo: MongoRepository<T, EntityUuid>?,
-            getId: (T) -> EntityUuid?, getCreated: (T) -> Instant,
+            getId: (T) -> EntityUuid?,
+            getCreated: (T) -> Instant,
             findExistingById: (EntityUuid) -> T?,
             saveMigratedEntity: (T) -> Unit
         ): Int {
@@ -217,5 +219,3 @@ class MongoToEcosDataMigrationConfig {
         }
     }
 }
-
-

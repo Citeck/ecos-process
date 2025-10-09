@@ -83,7 +83,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
         skipCount: Int,
         maxItems: Int,
         sortBy: List<SortBy> = emptyList()
-    ): RecsQueryRes<T>  {
+    ): RecsQueryRes<T> {
         val workspaces = if (workspace.isBlank() || workspace == ModelUtils.DEFAULT_WORKSPACE_ID) {
             listOf("")
         } else {
@@ -98,7 +98,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
         skipCount: Int,
         maxItems: Int,
         sortBy: List<SortBy> = emptyList()
-    ): RecsQueryRes<T>  {
+    ): RecsQueryRes<T> {
         return findAllRaw(
             workspaces,
             predicate,
@@ -109,7 +109,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
         )
     }
 
-    protected fun <A: Any> findAllRaw(
+    protected fun <A : Any> findAllRaw(
         workspaces: List<String>,
         predicate: Predicate,
         skipCount: Int,

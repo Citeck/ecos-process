@@ -441,7 +441,8 @@ class BpmnProcessDefRecords(
                 if (record.workspace.isNotBlank() && !workspaceService.isUserManagerOf(
                         AuthContext.getCurrentUser(),
                         record.workspace
-                )) {
+                    )
+                ) {
                     error("Permission denied. You can't create process instances in workspace '${record.workspace}'")
                 }
             }
@@ -451,7 +452,6 @@ class BpmnProcessDefRecords(
         }
 
         val mutData = bpmnMutateDataProcessor.getCompletedMutateData(record)
-
 
         val newRef = ProcDefRef.create(BPMN_PROC_TYPE, IdInWs.create(mutData.workspace, mutData.processDefId))
         val currentProc = procDefService.getProcessDefById(newRef)

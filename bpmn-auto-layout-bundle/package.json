@@ -1,0 +1,21 @@
+{
+  "name": "bpmn-auto-layout-bundle",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GNU General Public License",
+  "type": "commonjs",
+  "dependencies": {
+    "bpmn-auto-layout": "^1.0.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.2",
+    "rollup": "^4.52.4"
+  }
+}

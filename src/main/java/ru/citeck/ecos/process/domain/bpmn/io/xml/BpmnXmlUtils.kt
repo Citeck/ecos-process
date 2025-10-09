@@ -4,7 +4,6 @@ import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.JAXBElement
 import jakarta.xml.bind.JAXBException
 import jakarta.xml.bind.Marshaller
-import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.bpmn.io.NS_BPMN
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.procdef.convert.io.xml.XmlDefUtils
