@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.patch
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao.Companion.BPMN_ELEMENTS_SOURCE_ID
@@ -134,9 +135,11 @@ class CacheableProcDefRefResolver(
     fun getProcessDefRefByProcessId(processId: String): String {
         log.info { "Get process def ref by process id: $processId" }
 
-        return recordsService.getAtt(
-            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processId),
-            "definition?id"
-        ).asText()
+        return AuthContext.runAsSystem {
+            recordsService.getAtt(
+                EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processId),
+                "definition?localId"
+            ).asText()
+        }
     }
 }

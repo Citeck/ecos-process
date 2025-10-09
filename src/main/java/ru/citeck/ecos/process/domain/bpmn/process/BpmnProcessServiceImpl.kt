@@ -93,10 +93,12 @@ class BpmnProcessServiceImpl(
             val time = measureTimeMillis {
                 val definitionId: String
                 val getDefinitionIdTime = measureTimeMillis {
-                    definitionId = recordsService.getAtt(
-                        EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processKey),
-                        "definition.id"
-                    ).asText()
+                    definitionId = AuthContext.runAsSystem {
+                        recordsService.getAtt(
+                            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processKey),
+                            "definition?localId"
+                        ).asText()
+                    }
                 }
 
                 val defIdInWs = workspaceService.convertToIdInWs(definitionId)
