@@ -111,7 +111,7 @@ open class EcosDataProcDefRevAdapter(
     }
 
     override fun queryAllByDeploymentIdIsNotNull(pageable: Pageable): Slice<ProcDefRevEntity> {
-        return findAll(Predicates.alwaysTrue(), pageable)
+        return findAll(Predicates.notEmpty(ATT_DEPLOYMENT_ID), pageable)
     }
 
     override fun deleteAll(entities: List<ProcDefRevEntity>) {
