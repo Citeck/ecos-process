@@ -16,6 +16,7 @@ import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
+import ru.citeck.ecos.process.common.section.records.SectionsProxyDao
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
@@ -424,13 +425,24 @@ class BpmnProcessDefRecords(
 
             if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-                val hasPermissionToCreateDefinitions = bpmnSectionPermissionsProvider.hasPermissions(
-                    record.sectionRef,
-                    BpmnPermission.SECTION_CREATE_PROC_DEF
-                )
+                val hasPermissionToCreateDefinitionsInSection = if (record.workspace.isNotBlank()) {
+                    record.sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
+                } else {
+                    bpmnSectionPermissionsProvider.hasPermissions(
+                        record.sectionRef,
+                        BpmnPermission.SECTION_CREATE_PROC_DEF
+                    )
+                }
 
-                if (!hasPermissionToCreateDefinitions) {
+                if (!hasPermissionToCreateDefinitionsInSection) {
                     error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                }
+
+                if (record.workspace.isNotBlank() && !workspaceService.isUserManagerOf(
+                        AuthContext.getCurrentUser(),
+                        record.workspace
+                )) {
+                    error("Permission denied. You can't create process instances in workspace '${record.workspace}'")
                 }
             }
             if (!record.isNewRecord && !perms.hasWritePerms()) {
@@ -623,7 +635,7 @@ class BpmnProcessDefRecords(
         private val procDef: ProcDefDto
     ) {
 
-        private val permsValue by lazy { ProcDefPermsValue(getId().toProcDefRef(), SectionType.BPMN) }
+        private val permsValue by lazy { ProcDefPermsValue(getRef(), SectionType.BPMN) }
         private val revision: ProcDefRevDto? by lazy {
             procDefService.getProcessDefRev(BPMN_PROC_TYPE, procDef.revisionId)
         }
@@ -745,6 +757,10 @@ class BpmnProcessDefRecords(
             return procDef.sectionRef
         }
 
+        fun getWorkspace(): String {
+            return procDef.workspace
+        }
+
         fun getPreview(): EprocBpmnPreviewValue {
             return EprocBpmnPreviewValue(procDef.id, procDef.modified.toEpochMilli())
         }
@@ -787,8 +803,14 @@ class BpmnProcessDefRecords(
         private val sectionType: SectionType
     ) : AttValue {
 
+        private val currentUser = AuthContext.getCurrentUser()
         private val recordPerms: RecordPerms by lazy {
             permsCalculator.getPermissions(record)
+        }
+        private val workspace: String by lazy {
+            AuthContext.runAsSystem {
+                recordsService.getAtt(record, "workspace").asText()
+            }
         }
 
         private val sectionPerms: RecordPerms by lazy {
@@ -817,12 +839,22 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
+            if (workspace.isNotBlank()) {
+                return AuthContext.runAsSystem {
+                    workspaceService.isUserMemberOf(currentUser, workspace)
+                }
+            }
             return has(PERMS_READ)
         }
 
         fun hasWritePerms(): Boolean {
             if (AuthContext.isRunAsSystem()) {
                 return true
+            }
+            if (workspace.isNotBlank()) {
+                return AuthContext.runAsSystem {
+                    workspaceService.isUserManagerOf(currentUser, workspace)
+                }
             }
             return has(PERMS_WRITE)
         }
