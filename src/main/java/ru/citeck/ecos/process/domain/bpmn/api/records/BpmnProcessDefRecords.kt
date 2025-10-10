@@ -812,6 +812,11 @@ class BpmnProcessDefRecords(
                 recordsService.getAtt(record, "workspace").asText()
             }
         }
+        private val isCurrentUserManagerOfWs: Boolean by lazy {
+            workspace.isNotBlank() && AuthContext.runAsSystem {
+                workspaceService.isUserManagerOf(currentUser, workspace)
+            }
+        }
 
         private val sectionPerms: RecordPerms by lazy {
             var sectionRef = recordsService.getAtt(record, ATT_SECTION_REF_ID).asText().toEntityRef()
@@ -823,6 +828,9 @@ class BpmnProcessDefRecords(
 
         override fun has(name: String): Boolean {
             if (AuthContext.isRunAsSystem()) {
+                return true
+            }
+            if (workspace.isNotBlank() && isCurrentUserManagerOfWs) {
                 return true
             }
             var hasPermission = recordPerms.hasPermission(name)
@@ -852,9 +860,7 @@ class BpmnProcessDefRecords(
                 return true
             }
             if (workspace.isNotBlank()) {
-                return AuthContext.runAsSystem {
-                    workspaceService.isUserManagerOf(currentUser, workspace)
-                }
+                return isCurrentUserManagerOfWs
             }
             return has(PERMS_WRITE)
         }
