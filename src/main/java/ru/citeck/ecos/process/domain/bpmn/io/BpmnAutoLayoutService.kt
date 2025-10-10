@@ -78,8 +78,11 @@ class BpmnAutoLayoutService {
             val promise = asyncFunction.execute(bpmnXml)
 
             // Wait for the promise to resolve
-            val resultHandler = context.eval("js", "(promise) => { let result; " +
-                "promise.then(r => result = r); return () => result; }")
+            val resultHandler = context.eval(
+                "js",
+                "(promise) => { let result; " +
+                    "promise.then(r => result = r); return () => result; }"
+            )
             val getResult = resultHandler.execute(promise)
 
             // Poll for result (with timeout)

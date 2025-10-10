@@ -130,7 +130,7 @@ class EcosOmgConverters(
     }
 
     fun import(item: Any, validate: Boolean = true): EcosElementData<ObjectData> {
-        return import(item, ImportContext(this, validate))
+        return import(item, ImportContext(converters = this, validateRequired = validate))
     }
 
     fun import(item: Any, context: ImportContext): EcosElementData<ObjectData> {
@@ -138,7 +138,7 @@ class EcosOmgConverters(
     }
 
     fun <T : Any> import(item: Any, expectedType: Class<T>, validate: Boolean = true): EcosElementData<T> {
-        return import(item, expectedType, ImportContext(this, validate))
+        return import(item, expectedType, ImportContext(converters = this, validateRequired = validate))
     }
 
     fun <T : Any> import(item: Any, expectedType: Class<T>, context: ImportContext): EcosElementData<T> {

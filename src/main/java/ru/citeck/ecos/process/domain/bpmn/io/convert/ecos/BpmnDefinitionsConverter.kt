@@ -36,6 +36,9 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
             propMandatoryError(BPMN_PROP_PROCESS_DEF_ID, BpmnDefinitionDef::class)
         }
 
+        val definitionEnabled = element.otherAttributes[BPMN_PROP_ENABLED].toBoolean()
+        context.definitionEnabled = definitionEnabled
+
         val (processes, collaboration) = element.extractRootElements(context)
 
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
@@ -44,7 +47,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
         val result = BpmnDefinitionDef(
             id = processDefId,
             workspace = workspace,
-            enabled = element.otherAttributes[BPMN_PROP_ENABLED].toBoolean(),
+            enabled = definitionEnabled,
             autoStartEnabled = element.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean(),
             autoDeleteEnabled = element.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED]?.toBoolean() ?: true,
             definitionsId = element.id,
@@ -128,7 +131,7 @@ class BpmnDefinitionsConverter : EcosOmgConverter<BpmnDefinitionDef, TDefinition
 }
 
 private fun TDefinitions.extractRootElements(context: ImportContext): RootElements {
-    val process = mutableListOf<BpmnProcessDef>()
+    val processes = mutableListOf<BpmnProcessDef>()
     var collaboration: BpmnCollaborationDef? = null
 
     rootElement.forEach { rootElement ->
@@ -136,7 +139,7 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
             is TProcess -> {
                 val bpmnProcessDef =
                     context.converters.import(rootElement.value, BpmnProcessDef::class.java, context).data
-                process.add(bpmnProcessDef)
+                processes.add(bpmnProcessDef)
             }
 
             is TSignal -> {
@@ -163,7 +166,7 @@ private fun TDefinitions.extractRootElements(context: ImportContext): RootElemen
         }
     }
 
-    return RootElements(process, collaboration)
+    return RootElements(processes, collaboration)
 }
 
 private data class RootElements(

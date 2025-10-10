@@ -9,5 +9,6 @@ data class BpmnParticipantDef(
     val number: String?,
     val documentation: MLText,
     val processRef: String,
-    val ecosType: EntityRef
+    val ecosType: EntityRef,
+    val enabled: Boolean
 )

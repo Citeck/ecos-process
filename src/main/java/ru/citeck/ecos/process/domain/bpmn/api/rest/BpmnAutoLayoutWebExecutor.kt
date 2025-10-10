@@ -7,7 +7,6 @@ import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorResp
 
-
 @Component
 class BpmnAutoLayoutWebExecutor(
     private val bpmnAutoLayoutService: BpmnAutoLayoutService

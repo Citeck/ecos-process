@@ -18,7 +18,8 @@ class BpmnProcessConverter : EcosOmgConverter<BpmnProcessDef, TProcess> {
     override fun import(element: TProcess, context: ImportContext): BpmnProcessDef {
         return BpmnProcessDef(
             id = element.id.substringAfter(ProcUtils.PROC_KEY_WS_DELIM),
-            isExecutable = element.isIsExecutable ?: true,
+            // if we deploy to camunda, then process allways should be executable
+            isExecutable = true,
             flowElements = element.flowElement.map { it.value.toBpmnFlowElementDef(context) },
             artifacts = element.artifact.map { it.value.toBpmnArtifactDef(context) },
             lanes = element.laneSet?.map { context.converters.import(it, BpmnLaneSetDef::class.java, context).data }

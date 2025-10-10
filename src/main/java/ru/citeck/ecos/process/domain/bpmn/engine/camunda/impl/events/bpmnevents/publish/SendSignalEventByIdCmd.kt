@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.interceptor.Command
 import org.camunda.bpm.engine.impl.interceptor.CommandContext
@@ -12,12 +13,22 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EVENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
+import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
+import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class SendSignalEventByIdCmd(
     private val signalId: String,
-    eventData: BpmnDataValue
+    eventData: BpmnDataValue,
+    private val procDefService: ProcDefService,
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val bpmnIO: BpmnIO
 ) : Command<Unit> {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     private val notifyEventVariables = mapOf(BPMN_EVENT to eventData)
 
@@ -112,10 +123,39 @@ class SendSignalEventByIdCmd(
             )
             val processDefinition = deploymentCache.findDeployedProcessDefinitionById(processDefinitionId)
             if (processDefinition != null && !processDefinition.isSuspended) {
-                processDefinitions[eventSubscription.id] = processDefinition
+                if (isProcessEnabled(processDefinition)) {
+                    processDefinitions[eventSubscription.id] = processDefinition
+                }
             }
         }
         return processDefinitions
+    }
+
+    /**
+     * Check if process enabled flag (ecos:enabled) is set in Citeck Bpmn.
+     *
+     * - If process does not have participants, then use definition enabled flag.
+     * - If definition enabled flag is false, then all inside processes are disabled.
+     */
+    private fun isProcessEnabled(processDefinition: ProcessDefinitionEntity): Boolean {
+        return try {
+            val deploymentId = processDefinition.deploymentId
+            val procDefRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
+                ?: return false
+
+            val defXml = String(procDefRev.loadData(procDefRevDataProvider), Charsets.UTF_8)
+            val definition = bpmnIO.importEcosBpmn(defXml)
+            if (definition.enabled.not()) {
+                return false
+            }
+
+            definition.collaboration?.participants?.find {
+                it.processRef == processDefinition.key
+            }?.enabled ?: definition.enabled
+        } catch (e: Exception) {
+            log.warn(e) { "Cannot determine enabled state of process definition ${processDefinition.id}" }
+            false
+        }
     }
 
     private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {

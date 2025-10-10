@@ -98,7 +98,7 @@ class CamundaEventSubscriptionFinder(
             val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
                 .map { it.toComposedString() }
 
-            if (log.isTraceEnabled) {
+            if (log.isTraceEnabled()) {
                 log.trace { "Generate composed event names: $composedEventNames" }
 
                 val allNames = camundaRuntimeService.createEventSubscriptionQuery().unlimitedList().map { it.eventName }

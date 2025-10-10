@@ -83,6 +83,19 @@
         "input": true
       },
       {
+        "label": {
+          "ru": "Включен",
+          "en": "Enabled"
+        },
+        "key": "enabled",
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
+        "input": true,
+        "reorder": false,
+        "dataGridLabel": false
+      },
+      {
         "label": "ECOS Type",
         "journalId": "ecos-types",
         "key": "ecosType",
@@ -90,14 +103,7 @@
         "input": true,
         "customPredicateJs": null,
         "presetFilterPredicatesJs": null,
-        "sortAscending": "asc",
-        "source": {
-          "custom": {
-            "columns": []
-          },
-          "type": "journal",
-          "customValues": []
-        }
+        "sortAscending": "asc"
       }
     ],
     "formId": "bpmn-type-bpmn:Participant"
