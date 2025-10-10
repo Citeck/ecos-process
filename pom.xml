@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>3.18.3_eproc</version>
+        <version>3.18.4_eproc</version>
     </parent>
 
     <properties>

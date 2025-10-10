@@ -5,19 +5,19 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.context.lib.auth.AuthUser
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.rabbitmq.ds.RabbitMqConnection
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.txn.lib.TxnContext
-import ru.citeck.ecos.webapp.api.constants.AppName
-import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 
 @Component
 class BpmnProcessAsyncStarter(
     private val bpmnProcessService: BpmnProcessService,
     @Qualifier("bpmnRabbitmqConnection")
     bpmnRabbitmqConnection: RabbitMqConnection,
-    private val recordsService: RecordsService,
+    private val authoritiesApi: EcosAuthoritiesApi,
 
     @Value("\${ecos-process.bpmn.async-start-process.consumer.count}")
     private val consumersCount: Int,
@@ -56,14 +56,12 @@ class BpmnProcessAsyncStarter(
         val workflowInitiator = msg.variables[BPMN_WORKFLOW_INITIATOR]?.toString()
 
         TxnContext.doInNewTxn {
-            if (workflowInitiator.isNullOrBlank()) {
+            if (workflowInitiator.isNullOrBlank() || workflowInitiator == AuthUser.SYSTEM) {
                 AuthContext.runAsSystem {
                     bpmnProcessService.startProcess(msg)
                 }
             } else {
-                val personRef = EntityRef.create(AppName.EMODEL, "person", workflowInitiator)
-                val initiatorAuthorities = recordsService.getAtt(personRef, "authorities.list[]?str!").toStrList()
-
+                val initiatorAuthorities = authoritiesApi.getUserAuthorities(workflowInitiator)
                 AuthContext.runAsFull(workflowInitiator, initiatorAuthorities) {
                     bpmnProcessService.startProcess(msg)
                 }
