@@ -64,17 +64,26 @@
                   "en": "Section"
                 },
                 "key": "sectionRef",
+                "validate": {
+                  "select": false
+                },
                 "dataSrc": "custom",
                 "data": {
-                  "custom": "values = _.get(data, 'sectionsList.records', []);"
+                  "custom": "values = _.get(data, 'sectionsList.records', []);",
+                  "headers": [
+                    {}
+                  ]
                 },
-                "defaultValue": "",
                 "refreshOn": [
                   "sectionsList"
                 ],
                 "optionalWhenDisabled": false,
+                "customConditional": "const sections = _.get(data, 'sectionsList.records', []);\nshow = sections.length > 1 || sections.length === 1 && sections[0].value !== 'eproc/dmn-section@DEFAULT';",
                 "type": "ecosSelect",
-                "input": true
+                "input": true,
+                "reorder": false,
+                "reference": false,
+                "defaultValue": ""
               }
             ],
             "clearOnHide": true,
@@ -144,11 +153,11 @@
         "input": false
       },
       {
-        "label": "Sections",
+        "label": "sectionsList",
         "source": {
           "type": "recordsQuery",
           "recordsQuery": {
-            "query": "value = {\n  sourceId: 'eproc/dmn-section',\n  language: 'predicate',\n  query: {}\n}",
+            "query": "value = {\n  sourceId: 'eproc/dmn-section',\n  language: 'predicate',\n  query: {t: 'not-eq', a: 'id', v: 'ROOT'}\n}",
             "attributes": {
               "label": "?disp",
               "value": "?id"
@@ -162,7 +171,8 @@
         },
         "key": "sectionsList",
         "type": "asyncData",
-        "input": true
+        "input": true,
+        "triggerEventOnChange": false
       }
     ],
     "formId": "dmn-def"

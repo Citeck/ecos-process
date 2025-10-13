@@ -9,6 +9,7 @@ name:
   ru: Процессы BPMN
 
 actions:
+  - uiserv/action@view-dashboard
   - uiserv/action@open-bpmn-editor
   - uiserv/action@download-base64-data-bpmn-xml
   - uiserv/action@edit

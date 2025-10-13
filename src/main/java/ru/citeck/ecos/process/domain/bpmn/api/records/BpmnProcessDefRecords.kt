@@ -425,7 +425,8 @@ class BpmnProcessDefRecords(
 
             if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-                val hasPermissionToCreateDefinitionsInSection = if (record.workspace.isNotBlank()) {
+                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
+                val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
                     record.sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
                 } else {
                     bpmnSectionPermissionsProvider.hasPermissions(
@@ -438,10 +439,8 @@ class BpmnProcessDefRecords(
                     error("Permission denied. You can't create process instances in section ${record.sectionRef}")
                 }
 
-                if (record.workspace.isNotBlank() && !workspaceService.isUserManagerOf(
-                        AuthContext.getCurrentUser(),
-                        record.workspace
-                    )
+                if (isNonGlobalWs &&
+                    !workspaceService.isUserManagerOf(AuthContext.getCurrentUser(), record.workspace)
                 ) {
                     error("Permission denied. You can't create process instances in workspace '${record.workspace}'")
                 }
@@ -545,7 +544,8 @@ class BpmnProcessDefRecords(
 
             var resName = record.processDefId
             if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
-                resName = workspaceService.getWorkspaceSystemId(record.workspace) + ProcUtils.PROC_KEY_WS_DELIM + resName
+                resName = workspaceService.getWorkspaceSystemId(record.workspace) +
+                    ProcUtils.PROC_KEY_WS_DELIM + resName
             }
             resName += BPMN_RESOURCE_NAME_POSTFIX
 
@@ -830,7 +830,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (workspace.isNotBlank() && isCurrentUserManagerOfWs) {
+            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace) && isCurrentUserManagerOfWs) {
                 return true
             }
             var hasPermission = recordPerms.hasPermission(name)
@@ -847,7 +847,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (workspace.isNotBlank()) {
+            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
                 return AuthContext.runAsSystem {
                     workspaceService.isUserMemberOf(currentUser, workspace)
                 }
@@ -859,7 +859,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (workspace.isNotBlank()) {
+            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
                 return isCurrentUserManagerOfWs
             }
             return has(PERMS_WRITE)

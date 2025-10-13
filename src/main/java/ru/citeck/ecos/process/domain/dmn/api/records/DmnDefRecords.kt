@@ -13,6 +13,7 @@ import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.section.SectionType
+import ru.citeck.ecos.process.common.section.records.SectionsProxyDao
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
@@ -136,7 +137,7 @@ class DmnDefRecords(
         } while (hasMore && requiredAmount != 0 && numberOfExecutedRequests < LIMIT_REQUESTS_COUNT)
 
         if (numberOfExecutedRequests == LIMIT_REQUESTS_COUNT) {
-            log.warn("Request count limit reached! Request: $recsQuery")
+            log.warn { "Request count limit reached! Request: $recsQuery" }
         }
 
         val totalCount = procDefService.getCount(recsQuery.workspaces, predicate)
@@ -181,17 +182,33 @@ class DmnDefRecords(
             record.sectionRef = DEFAULT_SECTION_REF
         }
 
-        if (AuthContext.isNotRunAsSystemOrAdmin() &&
-            (record.isNewRecord || record.sectionRef != record.sectionRefBefore)
-        ) {
+        if (AuthContext.isNotRunAsSystemOrAdmin()) {
 
-            val hasPermissionToCreateDefinitions = recordsService.getAtt(
-                record.sectionRef,
-                DmnPermission.SECTION_CREATE_DMN_DEF.getAttribute()
-            ).asBoolean()
+            if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-            if (!hasPermissionToCreateDefinitions) {
-                error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
+                val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
+                    record.sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
+                } else {
+                    recordsService.getAtt(
+                        record.sectionRef,
+                        DmnPermission.SECTION_CREATE_DMN_DEF.getAttribute()
+                    ).asBoolean()
+                }
+
+                if (!hasPermissionToCreateDefinitionsInSection) {
+                    error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                }
+
+                if (isNonGlobalWs &&
+                    !workspaceService.isUserManagerOf(AuthContext.getCurrentUser(), record.workspace)
+                ) {
+                    error("Permission denied. You can't create process instances in workspace '${record.workspace}'")
+                }
+            }
+
+            if (!record.isNewRecord && !perms.hasWritePerms()) {
+                error("Permissions denied. You can't edit process definition: $procDefRef")
             }
         }
 
@@ -450,6 +467,10 @@ class DmnDefRecords(
 
         fun getSectionRef(): EntityRef {
             return procDef.sectionRef
+        }
+
+        fun getWorkspace(): String {
+            return procDef.workspace
         }
 
         fun getPreview(): EprocDmnPreviewValue {

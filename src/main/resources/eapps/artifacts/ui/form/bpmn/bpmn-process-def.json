@@ -94,6 +94,9 @@
                   "en": "Section"
                 },
                 "key": "sectionRef",
+                "validate": {
+                  "select": false
+                },
                 "dataSrc": "custom",
                 "data": {
                   "custom": "const records = _.get(data, 'sectionsList.records', []);\nconst currentSection = _.get(data, 'sectionRef', \"\");\nvalues = records.filter((category) => category.canCreate || category.id === currentSection);",
@@ -101,13 +104,17 @@
                     {}
                   ]
                 },
-                "defaultValue": "",
                 "refreshOn": [
                   "sectionsList"
                 ],
+                "customDefaultValue": "value = _.get(data, 'sectionsList.records', [])[0].id || null;",
                 "optionalWhenDisabled": false,
+                "customConditional": "const sections = _.get(data, 'sectionsList.records', []);\nshow = sections.length > 1 || sections[0].value !== 'eproc/bpmn-section@DEFAULT';",
+                "defaultValue": "",
                 "type": "ecosSelect",
-                "input": true
+                "input": true,
+                "reorder": false,
+                "reference": false
               },
               {
                 "label": {
@@ -222,17 +229,12 @@
         "input": false
       },
       {
-        "label": "Sections",
+        "label": "sectionsList",
         "source": {
-          "type": "recordsQuery",
-          "recordsQuery": {
-            "query": "value = {\n  sourceId: 'eproc/bpmn-section',\n  language: 'predicate',\n  query: {}\n}",
-            "attributes": {
-              "label": "?disp",
-              "value": "?id",
-              "canCreate": "permissions._has.bpmn-section-create-process-def?bool"
-            },
-            "isSingle": false
+          "type": "custom",
+          "custom": {
+            "syncData": "value = {};",
+            "asyncData": "const currentWs = Citeck.Navigator.getWorkspaceId();\nif (currentWs && currentWs != 'default' && currentWs.indexOf('admin$') !== 0) {\n  value = Records.get('eproc/bpmn-section@DEFAULT').load({\n    'label': '?disp',\n    'value': '?id'\n  }).then(atts => {\n    atts[\"canCreate\"] = true;\n    return { records: [ atts ] };\n  });\n} else {\n  value = Records.query({\n    'sourceId': 'eproc/bpmn-section',\n    'language': 'predicate',\n    'query': { t: 'not-eq', a: 'id', v: 'ROOT' }\n  }, {\n    'label': '?disp',\n    'value': '?id',\n    'canCreate': 'permissions._has.bpmn-section-create-process-def?bool'\n  }).then(qres => {\n    return {\n      records: qres.records.filter(rec => !!rec.canCreate)\n    };\n  });\n}"
           },
           "forceLoad": false
         },
@@ -241,7 +243,8 @@
         },
         "key": "sectionsList",
         "type": "asyncData",
-        "input": true
+        "input": true,
+        "triggerEventOnChange": false
       }
     ],
     "formId": "bpmn-process-def"
