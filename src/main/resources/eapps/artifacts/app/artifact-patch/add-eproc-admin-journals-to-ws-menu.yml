@@ -16,8 +16,8 @@ config:
       value:
         - id: bpmn-process-def
           label:
-            ru: Процессы BPMN
-            en: BPMN Processes
+            en: BPMN models
+            ru: Модели BPMN
           icon: ui/icon@i-leftmenu-running-processes
           hidden: false
           type: JOURNAL
@@ -25,7 +25,8 @@ config:
             recordRef: uiserv/journal@bpmn-process-def
         - id: dmn-def
           label:
-            en: DMN
+            en: DMN models
+            ru: Модели DMN
           icon: ui/icon@i-leftmenu-organizational-structure
           hidden: false
           type: JOURNAL

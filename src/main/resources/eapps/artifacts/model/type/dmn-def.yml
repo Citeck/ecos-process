@@ -17,6 +17,8 @@ actions:
   - uiserv/action@download-base64-data-dmn-xml
   - uiserv/action@go-to-dmn-designer
 
+postCreateActionRef: uiserv/action@open-dmn-editor
+
 assignablePerms:
   - emodel/permission-def@dmn-def-deploy
   - emodel/permission-def@dmn-instance-edit
