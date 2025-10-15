@@ -107,7 +107,7 @@ class BpmnProcessDefRecords(
         private const val LIMIT_REQUESTS_COUNT = 100000
         private const val DEFAULT_MAX_ITEMS = 10000000
 
-        private val DEFAULT_SECTION_REF = SectionType.BPMN.getRef("DEFAULT")
+        val DEFAULT_SECTION_REF = SectionType.BPMN.getRef("DEFAULT")
 
         private val log = KotlinLogging.logger {}
     }
@@ -414,11 +414,11 @@ class BpmnProcessDefRecords(
             procDefRef.getPerms()
         }
 
-        if (record.sectionRef.getLocalId() == "ROOT") {
+        val sectionRef = record.sectionRef.ifEmpty { DEFAULT_SECTION_REF }
+        record.sectionRef = sectionRef
+
+        if (sectionRef.getLocalId() == "ROOT") {
             error("You can't create processes in ROOT category")
-        }
-        if (record.sectionRef.isEmpty()) {
-            record.sectionRef = DEFAULT_SECTION_REF
         }
 
         if (AuthContext.isNotRunAsSystemOrAdmin()) {
@@ -427,16 +427,16 @@ class BpmnProcessDefRecords(
 
                 val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
                 val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
-                    record.sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
+                    sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
                 } else {
                     bpmnSectionPermissionsProvider.hasPermissions(
-                        record.sectionRef,
+                        sectionRef,
                         BpmnPermission.SECTION_CREATE_PROC_DEF
                     )
                 }
 
                 if (!hasPermissionToCreateDefinitionsInSection) {
-                    error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                    error("Permission denied. You can't create process instances in section $sectionRef")
                 }
 
                 if (isNonGlobalWs &&
@@ -890,7 +890,7 @@ class BpmnProcessDefRecords(
         var action: String = "",
         var autoStartEnabled: Boolean,
         var autoDeleteEnabled: Boolean,
-        var sectionRef: EntityRef,
+        var sectionRef: EntityRef?,
         var imageBytes: ByteArray?,
         var createdFromVersion: EntityRef = EntityRef.EMPTY,
         var moduleId: String? = null,

@@ -174,12 +174,11 @@ class DmnDefRecords(
         val procDefRef = record.id.toProcDefRef()
         val perms = procDefRef.getPerms()
 
-        if (record.sectionRef.getLocalId() == "ROOT") {
-            error("You can't create processes in ROOT category")
-        }
+        val sectionRef = record.sectionRef.ifEmpty { DEFAULT_SECTION_REF }
+        record.sectionRef = sectionRef
 
-        if (record.sectionRef.isEmpty()) {
-            record.sectionRef = DEFAULT_SECTION_REF
+        if (sectionRef.getLocalId() == "ROOT") {
+            error("You can't create processes in ROOT category")
         }
 
         if (AuthContext.isNotRunAsSystemOrAdmin()) {
@@ -188,16 +187,16 @@ class DmnDefRecords(
 
                 val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
                 val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
-                    record.sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
+                    sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
                 } else {
                     recordsService.getAtt(
-                        record.sectionRef,
+                        sectionRef,
                         DmnPermission.SECTION_CREATE_DMN_DEF.getAttribute()
                     ).asBoolean()
                 }
 
                 if (!hasPermissionToCreateDefinitionsInSection) {
-                    error("Permission denied. You can't create process instances in section ${record.sectionRef}")
+                    error("Permission denied. You can't create process instances in section $sectionRef")
                 }
 
                 if (isNonGlobalWs &&
@@ -267,7 +266,7 @@ class DmnDefRecords(
                 format = DMN_FORMAT,
                 procType = DMN_PROC_TYPE,
                 workspace = record.workspace,
-                sectionRef = record.sectionRef,
+                sectionRef = sectionRef,
                 image = record.imageBytes
             )
 
@@ -278,13 +277,13 @@ class DmnDefRecords(
 
                 currentProc.data = newDefData
                 currentProc.name = record.name
-                currentProc.sectionRef = record.sectionRef
+                currentProc.sectionRef = sectionRef
                 currentProc.createdFromVersion = record.createdFromVersion
                 currentProc.image = record.imageBytes
             } else {
 
                 currentProc.name = record.name
-                currentProc.sectionRef = record.sectionRef
+                currentProc.sectionRef = sectionRef
                 currentProc.createdFromVersion = record.createdFromVersion
                 currentProc.image = record.imageBytes
 
@@ -292,7 +291,7 @@ class DmnDefRecords(
 
                     val procDef = DmnXmlUtils.readFromString(String(currentProc.data))
                     procDef.otherAttributes[DMN_PROP_NAME_ML] = Json.mapper.toString(record.name)
-                    procDef.otherAttributes[DMN_PROP_SECTION_REF] = record.sectionRef.toString()
+                    procDef.otherAttributes[DMN_PROP_SECTION_REF] = sectionRef.toString()
 
                     currentProc.data = DmnXmlUtils.writeToString(procDef).toByteArray()
                 }
@@ -493,7 +492,7 @@ class DmnDefRecords(
         var name: MLText,
         var definition: String? = null,
         var action: String = "",
-        var sectionRef: EntityRef,
+        var sectionRef: EntityRef?,
         var imageBytes: ByteArray?,
         var createdFromVersion: EntityRef = EntityRef.EMPTY
     ) {

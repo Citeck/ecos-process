@@ -15,6 +15,7 @@ import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.util.*
 
 @Component
@@ -141,7 +142,7 @@ class BpmnMutateDataProcessor(
             enabled = enabled,
             autoStartEnabled = autoStartEnabled,
             autoDeleteEnabled = autoDeleteEnabled,
-            sectionRef = sectionRef,
+            sectionRef = sectionRef.ifEmpty { BpmnProcessDefRecords.DEFAULT_SECTION_REF },
             createdFromVersion = mutateRecord.createdFromVersion,
             image = mutateRecord.imageBytes,
             newEcosDefinition = if (newEcosDefinition.isBlank()) {
