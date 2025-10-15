@@ -21,6 +21,7 @@ import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepo
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRevRepo
+import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosLocalPatch
 import java.time.Instant
 import java.util.concurrent.Callable
@@ -185,14 +186,30 @@ class MongoToEcosDataMigrationConfig {
             log.info { "Start '$type' migration" }
             var migratedCount = 0
 
+            val batchToSave = ArrayList<T>()
+            val txnBatchSize = 100
+            fun processBatch() {
+                if (batchToSave.isEmpty()) {
+                    return
+                }
+                TxnContext.doInNewTxn {
+                    batchToSave.forEach { saveMigratedEntity(it) }
+                }
+                migratedCount += batchToSave.size
+                batchToSave.clear()
+            }
+
             forEach(repo) { mongoEntity ->
                 val entityId = getId(mongoEntity) ?: return@forEach
                 val existing = findExistingById(entityId)
                 if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
-                    migratedCount++
-                    saveMigratedEntity(mongoEntity)
+                    batchToSave.add(mongoEntity)
+                }
+                if (batchToSave.size >= txnBatchSize) {
+                    processBatch()
                 }
             }
+            processBatch()
 
             log.info {
                 "'$type' migration completed in ${System.currentTimeMillis() - startedAt} ms. " +
