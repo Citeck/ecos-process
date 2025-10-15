@@ -3,8 +3,10 @@ package ru.citeck.ecos.process.domain.procdef.repo.edata
 import org.springframework.data.domain.*
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.data.sql.records.DbRecordsControlAtts
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.EcosDataAbstractAdapter
+import ru.citeck.ecos.process.common.patch.MongoToEcosDataMigrationConfig
 import ru.citeck.ecos.process.domain.bpmn.DEFAULT_BPMN_SECTION
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
@@ -89,6 +91,10 @@ class EcosDataProcDefAdapter(
         } else {
             mutation[ATT_EXT_ID] = atts[ATT_ID]
             atts.remove(ATT_ID)
+        }
+        if (MongoToEcosDataMigrationConfig.isMigrationContext()) {
+            atts[DbRecordsControlAtts.DISABLE_AUDIT] = true
+            atts[DbRecordsControlAtts.DISABLE_EVENTS] = true
         }
         mutation.setAtts(atts)
         // permissions should be checked before

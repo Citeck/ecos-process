@@ -2,7 +2,9 @@ package ru.citeck.ecos.process.domain.proc.repo.edata
 
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.data.sql.records.DbRecordsControlAtts
 import ru.citeck.ecos.process.common.EcosDataAbstractAdapter
+import ru.citeck.ecos.process.common.patch.MongoToEcosDataMigrationConfig
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.proc.repo.ProcInstanceRepository
 import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity
@@ -61,6 +63,10 @@ class EcosDataProcInstanceAdapter(
             atts[ATT_ID] = entity.id!!.id.toString()
         } else {
             atts.remove(ATT_ID)
+        }
+        if (MongoToEcosDataMigrationConfig.isMigrationContext()) {
+            atts[DbRecordsControlAtts.DISABLE_AUDIT] = true
+            atts[DbRecordsControlAtts.DISABLE_EVENTS] = true
         }
         mutation.setAtts(atts)
         // permissions should be checked before

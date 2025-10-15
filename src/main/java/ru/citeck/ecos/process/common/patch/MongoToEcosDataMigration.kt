@@ -31,6 +31,12 @@ class MongoToEcosDataMigrationConfig {
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        private val migrationContext = ThreadLocal<Boolean>()
+
+        fun isMigrationContext(): Boolean {
+            return migrationContext.get() == true
+        }
     }
 
     @Bean
@@ -72,11 +78,16 @@ class MongoToEcosDataMigrationConfig {
     ) : Callable<DataValue> {
 
         override fun call(): DataValue {
-            return DataValue.createObj()
-                .set("migratedProcDefs", migrateProcDefs())
-                .set("migratedProcDefRevsCount", migrateProcDefRevs())
-                .set("migratedProcInstancesCount", migrateProcInstances())
-                .set("migratedProcStatesCount", migrateProcStates())
+            migrationContext.set(true)
+            try {
+                return DataValue.createObj()
+                    .set("migratedProcDefs", migrateProcDefs())
+                    .set("migratedProcDefRevsCount", migrateProcDefRevs())
+                    .set("migratedProcInstancesCount", migrateProcInstances())
+                    .set("migratedProcStatesCount", migrateProcStates())
+            } finally {
+                migrationContext.set(false)
+            }
         }
 
         private fun migrateProcDefs(): List<String> {
