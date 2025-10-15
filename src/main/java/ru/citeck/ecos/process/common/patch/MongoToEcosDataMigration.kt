@@ -201,7 +201,7 @@ class MongoToEcosDataMigrationConfig {
 
             forEach(repo) { mongoEntity ->
                 val entityId = getId(mongoEntity) ?: return@forEach
-                val existing = findExistingById(entityId)
+                val existing = TxnContext.doInNewTxn(true) { findExistingById(entityId) }
                 if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
                     batchToSave.add(mongoEntity)
                 }
