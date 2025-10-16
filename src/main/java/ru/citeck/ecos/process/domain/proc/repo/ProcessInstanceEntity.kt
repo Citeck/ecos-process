@@ -24,6 +24,8 @@ class ProcessInstanceEntity {
     var created: Instant? = null
     var modified: Instant? = null
 
+    var migrated: Boolean? = false
+
     fun copyWithId(id: String): ProcessInstanceEntity {
         val copy = copy()
         copy.id = EntityUuid(0, UUID.fromString(id))

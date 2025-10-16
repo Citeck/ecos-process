@@ -29,4 +29,6 @@ public class TimerEntity {
     private boolean active = true;
     private String command;
     private String result;
+
+    private Boolean migrated = false;
 }

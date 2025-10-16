@@ -9,8 +9,10 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.repository.MongoRepository
+import ru.citeck.beans.BeanUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
@@ -80,7 +82,7 @@ class MongoToEcosDataMigrationConfig {
     }
 
     @EcosPatchDependsOnApps(AppName.EMODEL)
-    @EcosLocalPatch("mongo-to-ecos-data-migration", "2025-09-30T00:00:06Z", afterStart = true)
+    @EcosLocalPatch("mongo-to-ecos-data-migration", "2025-09-30T00:00:07Z", afterStart = true)
     class MongoToEcosDataMigration(
         private val mongoTemplate: MongoTemplate?,
         private val mongoProcDefRepo: MongoProcDefRepo?,
@@ -255,17 +257,25 @@ class MongoToEcosDataMigrationConfig {
             if (mongoTemplate != null) {
 
                 val query = Query()
-                    .cursorBatchSize(20)
-                    .noCursorTimeout()
+                    .limit(100)
+                    .addCriteria(
+                        Criteria().orOperator(
+                            Criteria.where("migrated").ne(true)
+                        )
+                    )
 
                 val genericArgs = ReflectUtils.getGenericArgs(repo::class.java, MongoRepository::class.java)
                 val entityType = genericArgs[0]
 
-                mongoTemplate.stream(query, entityType).use { cursor ->
-                    cursor.forEach {
+                var entities = mongoTemplate.find(query, entityType)
+                while (entities.isNotEmpty()) {
+                    for (entity in entities) {
                         @Suppress("UNCHECKED_CAST")
-                        action(it as T)
+                        action(entity as T)
+                        BeanUtils.setProperty(entity, "migrated", true)
+                        mongoTemplate.save(entity)
                     }
+                    entities = mongoTemplate.find(query, entityType)
                 }
             } else {
                 var pageReq = PageRequest.of(0, 20, Sort.Direction.ASC, "created")

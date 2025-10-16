@@ -30,6 +30,8 @@ class ProcessStateEntity {
     var created: Instant = Instant.now()
     var version = 0
 
+    var migrated: Boolean? = false
+
     fun copyWithId(id: String): ProcessStateEntity {
         val copy = copy()
         copy.id = EntityUuid(0, UUID.fromString(id))

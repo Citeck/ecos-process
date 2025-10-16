@@ -44,6 +44,8 @@ class ProcDefRevEntity {
 
     var image: ByteArray? = null
 
+    var migrated: Boolean? = false
+
     fun copyWithId(id: String): ProcDefRevEntity {
         val copy = copy()
         copy.id = EntityUuid(0, UUID.fromString(id))

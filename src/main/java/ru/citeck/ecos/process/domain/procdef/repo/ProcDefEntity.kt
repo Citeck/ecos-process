@@ -44,6 +44,8 @@ class ProcDefEntity {
     var sectionRef: String? = null
     var workspace: String? = null
 
+    var migrated: Boolean? = false
+
     @DBRef(lazy = true)
     var lastRev: ProcDefRevEntity? = null
 
