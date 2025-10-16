@@ -222,11 +222,20 @@ class MongoToEcosDataMigrationConfig {
                 log.info { "Processed $migratedCount records of type '$type'" }
             }
 
+            var skippedCount = 0
+            var skippedCountLogIter = 0
+
             forEach(repo) { mongoEntity ->
                 val entityId = getId(mongoEntity) ?: return@forEach
                 val existing = TxnContext.doInNewTxn(true) { findExistingById(entityId) }
                 if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
                     batchToSave.add(mongoEntity)
+                } else {
+                    val nextSkippedCountIter = (++skippedCount) / 100
+                    if (skippedCountLogIter != nextSkippedCountIter) {
+                        log.info { "Skipped $skippedCount records of type '$type'" }
+                        skippedCountLogIter = nextSkippedCountIter
+                    }
                 }
                 if (batchToSave.size >= txnBatchSize) {
                     processBatch()
@@ -236,7 +245,7 @@ class MongoToEcosDataMigrationConfig {
 
             log.info {
                 "'$type' migration completed in ${System.currentTimeMillis() - startedAt} ms. " +
-                    "Migrated count: $migratedCount"
+                    "Migrated count: $migratedCount Skipped count: $skippedCount"
             }
             return migratedCount
         }
