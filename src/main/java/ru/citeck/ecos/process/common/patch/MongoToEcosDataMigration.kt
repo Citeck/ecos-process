@@ -32,6 +32,8 @@ import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosPatchDependsOnApps
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Callable
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.thread
 
 @Configuration
 @Profile("!test")
@@ -51,6 +53,13 @@ class MongoToEcosDataMigrationConfig {
 
         fun isMigrationContext(): Boolean {
             return migrationContext.get() == true
+        }
+
+        private val isRuntimeShutdownInitiated = AtomicBoolean(false)
+        init {
+            Runtime.getRuntime().addShutdownHook(thread(start = false) {
+                isRuntimeShutdownInitiated.set(true)
+            })
         }
     }
 
@@ -267,15 +276,20 @@ class MongoToEcosDataMigrationConfig {
                 val genericArgs = ReflectUtils.getGenericArgs(repo::class.java, MongoRepository::class.java)
                 val entityType = genericArgs[0]
 
-                var entities = mongoTemplate.find(query, entityType)
+                var entities = doWithMongoTemplate(mongoTemplate) { it.find(query, entityType) }
                 while (entities.isNotEmpty()) {
                     for (entity in entities) {
                         @Suppress("UNCHECKED_CAST")
                         action(entity as T)
                         BeanUtils.setProperty(entity, "migrated", true)
-                        mongoTemplate.save(entity)
+                        try {
+                            mongoTemplate.save(entity)
+                        } catch (e: Throwable) {
+                            log.error(e) { "Entity save failed. Let's process it in next iteration" }
+                            Thread.sleep(10_000)
+                        }
                     }
-                    entities = mongoTemplate.find(query, entityType)
+                    entities = doWithMongoTemplate(mongoTemplate) { it.find(query, entityType) }
                 }
             } else {
                 var pageReq = PageRequest.of(0, 20, Sort.Direction.ASC, "created")
@@ -284,6 +298,38 @@ class MongoToEcosDataMigrationConfig {
                     pageData.content.forEach(action)
                     pageReq = pageReq.next()
                     pageData = repo.findAll(pageReq)
+                }
+            }
+        }
+
+        private fun <T> doWithMongoTemplate(mongoTemplate: MongoTemplate, action: (MongoTemplate) -> T): T {
+            var lastError: Throwable? = null
+            fun handleError(e: Throwable) {
+                log.error(lastError) {
+                    "Exception occurred while mongoTemplate usage. " +
+                        "Sleep 10sec and try again"
+                }
+                if (e is InterruptedException || isRuntimeShutdownInitiated.get()) {
+                    Thread.currentThread().interrupt()
+                    if (e is InterruptedException) {
+                        throw e
+                    } else {
+                        throw InterruptedException("Runtime shutdown initiated")
+                    }
+                }
+                lastError = e
+            }
+            try {
+                return action(mongoTemplate)
+            } catch (e: Throwable) {
+                handleError(e)
+                while (true) {
+                    try {
+                        Thread.sleep(10_000)
+                        return action(mongoTemplate)
+                    } catch (e: Throwable) {
+                        handleError(e)
+                    }
                 }
             }
         }
