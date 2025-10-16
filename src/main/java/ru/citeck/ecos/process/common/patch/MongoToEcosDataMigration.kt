@@ -5,6 +5,7 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -23,17 +24,26 @@ import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepo
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRevRepo
 import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.constants.AppName
+import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
 import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosLocalPatch
 import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosPatchDependsOnApps
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Callable
 
 @Configuration
+@Profile("!test")
 @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
 class MongoToEcosDataMigrationConfig {
 
     companion object {
         private val log = KotlinLogging.logger {}
+        private val TYPES_TO_CHECK = listOf(
+            "proc-def",
+            "proc-def-rev",
+            "proc-instance",
+            "proc-instance-state"
+        )
 
         private val migrationContext = ThreadLocal<Boolean>()
 
@@ -52,7 +62,8 @@ class MongoToEcosDataMigrationConfig {
         edataProcDefRepository: ProcDefRepository,
         edataProcDefRevRepository: ProcDefRevRepository,
         edataProcInstanceRepo: ProcInstanceRepository,
-        edataProcStateRepo: ProcStateRepository
+        edataProcStateRepo: ProcStateRepository,
+        ecosTypesRegistry: EcosTypesRegistry
     ): MongoToEcosDataMigration {
         return MongoToEcosDataMigration(
             mongoTemplate.getIfAvailable(),
@@ -63,7 +74,8 @@ class MongoToEcosDataMigrationConfig {
             edataProcDefRepository,
             edataProcDefRevRepository,
             edataProcInstanceRepo,
-            edataProcStateRepo
+            edataProcStateRepo,
+            ecosTypesRegistry
         )
     }
 
@@ -78,12 +90,19 @@ class MongoToEcosDataMigrationConfig {
         private val edataProcDefRepository: ProcDefRepository,
         private val edataProcDefRevRepository: ProcDefRevRepository,
         private val edataProcInstanceRepo: ProcInstanceRepository,
-        private val edataProcStateRepo: ProcStateRepository
+        private val edataProcStateRepo: ProcStateRepository,
+        private val ecosTypesRegistry: EcosTypesRegistry
     ) : Callable<DataValue> {
 
         override fun call(): DataValue {
             migrationContext.set(true)
             try {
+                ecosTypesRegistry.initializationPromise().get(Duration.ofMinutes(100))
+                for (typeId in TYPES_TO_CHECK) {
+                    if (ecosTypesRegistry.getValue(typeId) == null) {
+                        log.error { "Type doesn't exists in types registry: $typeId" }
+                    }
+                }
                 return DataValue.createObj()
                     .set("migratedProcDefs", migrateProcDefs())
                     .set("migratedProcDefRevsCount", migrateProcDefRevs())
@@ -200,6 +219,7 @@ class MongoToEcosDataMigrationConfig {
                 }
                 migratedCount += batchToSave.size
                 batchToSave.clear()
+                log.info { "Processed $migratedCount records of type '$type'" }
             }
 
             forEach(repo) { mongoEntity ->
