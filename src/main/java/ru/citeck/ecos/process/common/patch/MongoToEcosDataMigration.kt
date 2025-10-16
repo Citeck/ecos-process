@@ -266,7 +266,7 @@ class MongoToEcosDataMigrationConfig {
             if (mongoTemplate != null) {
 
                 val query = Query()
-                    .limit(100)
+                    .limit(20)
                     .addCriteria(
                         Criteria().orOperator(
                             Criteria.where("migrated").ne(true)
