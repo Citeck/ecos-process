@@ -22,7 +22,9 @@ import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepo
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRevRepo
 import ru.citeck.ecos.txn.lib.TxnContext
+import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosLocalPatch
+import ru.citeck.ecos.webapp.lib.patch.annotaion.EcosPatchDependsOnApps
 import java.time.Instant
 import java.util.concurrent.Callable
 
@@ -65,7 +67,8 @@ class MongoToEcosDataMigrationConfig {
         )
     }
 
-    @EcosLocalPatch("mongo-to-ecos-data-migration", "2025-09-30T00:00:02Z")
+    @EcosPatchDependsOnApps(AppName.EMODEL)
+    @EcosLocalPatch("mongo-to-ecos-data-migration", "2025-09-30T00:00:06Z", afterStart = true)
     class MongoToEcosDataMigration(
         private val mongoTemplate: MongoTemplate?,
         private val mongoProcDefRepo: MongoProcDefRepo?,
