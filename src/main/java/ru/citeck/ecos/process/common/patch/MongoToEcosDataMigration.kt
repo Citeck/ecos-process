@@ -302,10 +302,8 @@ class MongoToEcosDataMigrationConfig {
                     }
                 }
                 if (!saveIterationInterruptedByError) {
-                    query.limit(min(query.limit + 1, BATCH_SIZE))
-                    errorsCount = 0
+                    errorsCount = max(0, errorsCount - 1)
                 }
-                query.limit(BATCH_SIZE)
                 entities = findNextBatch()
             }
         }
