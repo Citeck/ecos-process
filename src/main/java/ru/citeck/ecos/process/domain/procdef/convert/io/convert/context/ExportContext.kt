@@ -27,10 +27,11 @@ class ExportContext(
         }
     }
 
-    fun createWsScopedId(id: String): String {
+    fun createWsScopedId(id: String?): String {
+        id ?: return ""
         if (workspaceSysId.isBlank()) {
-            return id
+            return id.substringAfter(ProcUtils.PROC_KEY_WS_DELIM)
         }
-        return workspaceSysId + ProcUtils.PROC_KEY_WS_DELIM + id
+        return workspaceSysId + ProcUtils.PROC_KEY_WS_DELIM + id.substringAfter(ProcUtils.PROC_KEY_WS_DELIM)
     }
 }

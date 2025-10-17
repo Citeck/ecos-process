@@ -11,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NUMBER
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnParticipantDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TParticipant
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
@@ -23,7 +24,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
         val name = element.otherAttributes[BPMN_PROP_NAME_ML] ?: element.name
 
         val enabledAtt = element.otherAttributes[BPMN_PROP_ENABLED]
-        val participantEnabled = if (enabledAtt == null || enabledAtt.isBlank()) {
+        val participantEnabled = if (enabledAtt.isNullOrBlank()) {
             // Backward compatibility - if attribute is missing, use definition enabled
             context.definitionEnabled
         } else {
@@ -35,7 +36,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
             name = Json.mapper.convert(name, MLText::class.java) ?: MLText(),
             number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() },
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
-            processRef = element.processRef.localPart,
+            processRef = (element.processRef.localPart ?: "").substringAfter(ProcUtils.PROC_KEY_WS_DELIM),
             ecosType = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_ECOS_TYPE]),
             enabled = participantEnabled
         )
@@ -45,7 +46,7 @@ class BpmnParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TParticipa
         return TParticipant().apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
-            processRef = QName("", element.processRef)
+            processRef = QName("", context.createWsScopedId(element.processRef))
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()

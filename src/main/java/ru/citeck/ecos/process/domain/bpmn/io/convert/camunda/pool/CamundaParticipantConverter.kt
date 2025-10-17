@@ -22,7 +22,7 @@ class CamundaParticipantConverter : EcosOmgConverter<BpmnParticipantDef, TPartic
         return TParticipant().apply {
             id = element.id
             name = MLText.getClosestValue(element.name, I18nContext.getLocale())
-            processRef = QName("", element.processRef)
+            processRef = QName("", context.createWsScopedId(element.processRef))
 
             otherAttributes[BPMN_PROP_NAME_ML] = Json.mapper.toString(element.name)
             otherAttributes[BPMN_PROP_ECOS_TYPE] = element.ecosType.toString()

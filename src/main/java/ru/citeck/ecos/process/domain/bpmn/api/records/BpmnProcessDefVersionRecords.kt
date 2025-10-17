@@ -58,7 +58,8 @@ class BpmnProcessDefVersionRecords(
 
         versionRef.set(procDefRev.getProcessDefVersionsRef())
 
-        return bpmnProcessDefRecords.getRecToMutate(procDefRev.procDefId)
+        val procDefRecId = workspaceService.addWsPrefixToId(procDefRev.procDefId, procDefRev.workspace)
+        return bpmnProcessDefRecords.getRecToMutate(procDefRecId)
     }
 
     override fun saveMutatedRec(record: BpmnProcessDefRecords.BpmnMutateRecord): String {
