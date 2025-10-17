@@ -2,6 +2,6 @@
 type: 'maven-webapp'
 properties:
   jdk: JDK21
-  skipTests: true
+  skipTests: false
   image:
     multiplatform: true
