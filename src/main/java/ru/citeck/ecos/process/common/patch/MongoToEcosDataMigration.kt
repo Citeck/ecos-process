@@ -33,6 +33,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 import kotlin.math.max
+import kotlin.math.min
 
 @Configuration
 @Profile("!test")
@@ -300,9 +301,8 @@ class MongoToEcosDataMigrationConfig {
                         break
                     }
                 }
-                if (!saveIterationInterruptedByError && errorsCount != 0) {
-                    log.info { "Restore batch size: $BATCH_SIZE. Errors count before: $errorsCount" }
-                    query.limit(BATCH_SIZE)
+                if (!saveIterationInterruptedByError) {
+                    query.limit(min(query.limit + 1, BATCH_SIZE))
                     errorsCount = 0
                 }
                 query.limit(BATCH_SIZE)
