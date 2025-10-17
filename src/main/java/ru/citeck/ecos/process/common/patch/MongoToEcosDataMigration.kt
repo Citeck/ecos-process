@@ -6,8 +6,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
@@ -34,6 +32,7 @@ import java.time.Instant
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
+import kotlin.math.max
 
 @Configuration
 @Profile("!test")
@@ -48,6 +47,7 @@ class MongoToEcosDataMigrationConfig {
             "proc-instance",
             "proc-instance-state"
         )
+        private const val BATCH_SIZE = 20
 
         private val migrationContext = ThreadLocal<Boolean>()
 
@@ -138,24 +138,26 @@ class MongoToEcosDataMigrationConfig {
 
             fun Instant?.orEpoch() = this ?: Instant.EPOCH
 
-            forEach(mongoProcDefRepo) { mongoProcDef ->
-                val procType = mongoProcDef.procType ?: return@forEach
-                val extId = mongoProcDef.extId ?: return@forEach
-                val existing = edataProcDefRepository.findByIdInWs("", procType, extId)
-                val procKey = mongoProcDef.procType + '$' + mongoProcDef.extId
-                if (existing == null || existing.modified.orEpoch() < mongoProcDef.modified.orEpoch()) {
-                    log.info { "Run migration for '$procKey'" }
-                    if (existing != null && existing.id != mongoProcDef.id) {
-                        log.info {
-                            "Process def for '$procKey' was found, but id doesn't match. " +
-                                "Delete existing definition to "
+            forEach(mongoProcDefRepo) { procDefsBatch ->
+                for (mongoProcDef in procDefsBatch) {
+                    val procType = mongoProcDef.procType ?: return@forEach
+                    val extId = mongoProcDef.extId ?: return@forEach
+                    val existing = edataProcDefRepository.findByIdInWs("", procType, extId)
+                    val procKey = mongoProcDef.procType + '$' + mongoProcDef.extId
+                    if (existing == null || existing.modified.orEpoch() < mongoProcDef.modified.orEpoch()) {
+                        log.info { "Run migration for '$procKey'" }
+                        if (existing != null && existing.id != mongoProcDef.id) {
+                            log.info {
+                                "Process def for '$procKey' was found, but id doesn't match. " +
+                                    "Delete existing definition"
+                            }
+                            edataProcDefRepository.delete(existing)
                         }
-                        edataProcDefRepository.delete(existing)
+                        edataProcDefRepository.save(mongoProcDef)
+                        migratedProcesses.add(procKey)
+                    } else {
+                        log.info { "Migration of '$procKey' doesn't required" }
                     }
-                    edataProcDefRepository.save(mongoProcDef)
-                    migratedProcesses.add(procKey)
-                } else {
-                    log.info { "Migration of '$procKey' doesn't required" }
                 }
             }
 
@@ -214,45 +216,43 @@ class MongoToEcosDataMigrationConfig {
                 return 0
             }
 
+            if (mongoTemplate == null) {
+                log.info { "MongoTemplate is not available. Migration will be skipped" }
+                return 0
+            }
+
             val startedAt = System.currentTimeMillis()
 
             log.info { "Start '$type' migration" }
-            var migratedCount = 0
-
-            val batchToSave = ArrayList<T>()
-            val txnBatchSize = 100
-            fun processBatch() {
-                if (batchToSave.isEmpty()) {
-                    return
-                }
-                TxnContext.doInNewTxn {
-                    batchToSave.forEach { saveMigratedEntity(it) }
-                }
-                migratedCount += batchToSave.size
-                batchToSave.clear()
-                log.info { "Processed $migratedCount records of type '$type'" }
-            }
 
             var skippedCount = 0
             var skippedCountLogIter = 0
 
-            forEach(repo) { mongoEntity ->
-                val entityId = getId(mongoEntity) ?: return@forEach
-                val existing = TxnContext.doInNewTxn(true) { findExistingById(entityId) }
-                if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
-                    batchToSave.add(mongoEntity)
-                } else {
-                    val nextSkippedCountIter = (++skippedCount) / 100
-                    if (skippedCountLogIter != nextSkippedCountIter) {
-                        log.info { "Skipped $skippedCount records of type '$type'" }
-                        skippedCountLogIter = nextSkippedCountIter
+            var migratedCount = 0
+            var migratedCountLogIter = 0
+
+            forEach(repo) { entitiesBatch ->
+                TxnContext.doInNewTxn {
+                    for (mongoEntity in entitiesBatch) {
+                        val entityId = getId(mongoEntity) ?: return@doInNewTxn
+                        val existing = TxnContext.doInNewTxn(true) { findExistingById(entityId) }
+                        if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
+                            saveMigratedEntity(mongoEntity)
+                            val nextProcessedCountLogIter = (++migratedCount) / 100
+                            if (migratedCountLogIter != nextProcessedCountLogIter) {
+                                log.info { "Migrated $migratedCount records of type '$type'" }
+                                migratedCountLogIter = nextProcessedCountLogIter
+                            }
+                        } else {
+                            val nextSkippedCountIter = (++skippedCount) / 100
+                            if (skippedCountLogIter != nextSkippedCountIter) {
+                                log.info { "Skipped $skippedCount records of type '$type'" }
+                                skippedCountLogIter = nextSkippedCountIter
+                            }
+                        }
                     }
                 }
-                if (batchToSave.size >= txnBatchSize) {
-                    processBatch()
-                }
             }
-            processBatch()
 
             log.info {
                 "'$type' migration completed in ${System.currentTimeMillis() - startedAt} ms. " +
@@ -261,50 +261,63 @@ class MongoToEcosDataMigrationConfig {
             return migratedCount
         }
 
-        private fun <T : Any> forEach(repo: MongoRepository<T, EntityUuid>, action: (T) -> Unit) {
+        private fun <T : Any> forEach(repo: MongoRepository<T, EntityUuid>, action: (List<T>) -> Unit) {
 
-            if (mongoTemplate != null) {
-
-                val query = Query()
-                    .limit(20)
-                    .addCriteria(
-                        Criteria().orOperator(
-                            Criteria.where("migrated").ne(true)
-                        )
+            val query = Query()
+                .limit(BATCH_SIZE)
+                .addCriteria(
+                    Criteria().orOperator(
+                        Criteria.where("migrated").ne(true)
                     )
+                )
 
-                val genericArgs = ReflectUtils.getGenericArgs(repo::class.java, MongoRepository::class.java)
-                val entityType = genericArgs[0]
+            val genericArgs = ReflectUtils.getGenericArgs(repo::class.java, MongoRepository::class.java)
+            val entityType = genericArgs[0]
+            var errorsCount = 0
 
-                var entities = doWithMongoTemplate(mongoTemplate) { it.find(query, entityType) }
-                while (entities.isNotEmpty()) {
-                    for (entity in entities) {
-                        @Suppress("UNCHECKED_CAST")
-                        action(entity as T)
-                        BeanUtils.setProperty(entity, "migrated", true)
-                        try {
-                            mongoTemplate.save(entity)
-                        } catch (e: Throwable) {
-                            log.error(e) { "Entity save failed. Let's process it in next iteration" }
-                            Thread.sleep(10_000)
-                        }
+            mongoTemplate!!
+
+            fun findNextBatch(): List<T> {
+                return doWithMongoTemplate(mongoTemplate, { errorsCount++ }) {
+                    @Suppress("UNCHECKED_CAST")
+                    it.find(query.limit(max(1, BATCH_SIZE / errorsCount)), entityType) as List<T>
+                }
+            }
+
+            var entities = findNextBatch()
+            while (entities.isNotEmpty()) {
+                action(entities)
+                var saveIterationInterruptedByError = false
+                for (entity in entities) {
+                    BeanUtils.setProperty(entity, "migrated", true)
+                    try {
+                        mongoTemplate.save(entity)
+                    } catch (e: Throwable) {
+                        log.error(e) { "Entity save failed. Let's process it in next iteration" }
+                        Thread.sleep(10_000)
+                        errorsCount++
+                        saveIterationInterruptedByError = true
+                        break
                     }
-                    entities = doWithMongoTemplate(mongoTemplate) { it.find(query, entityType) }
                 }
-            } else {
-                var pageReq = PageRequest.of(0, 20, Sort.Direction.ASC, "created")
-                var pageData = repo.findAll(pageReq)
-                while (!pageData.isEmpty) {
-                    pageData.content.forEach(action)
-                    pageReq = pageReq.next()
-                    pageData = repo.findAll(pageReq)
+                if (!saveIterationInterruptedByError && errorsCount != 0) {
+                    log.info { "Restore batch size: $BATCH_SIZE. Errors count before: $errorsCount" }
+                    query.limit(BATCH_SIZE)
+                    errorsCount = 0
                 }
+                query.limit(BATCH_SIZE)
+                entities = findNextBatch()
             }
         }
 
-        private fun <T> doWithMongoTemplate(mongoTemplate: MongoTemplate, action: (MongoTemplate) -> T): T {
+        private fun <T> doWithMongoTemplate(
+            mongoTemplate: MongoTemplate,
+            onError: () -> Unit,
+            action: (MongoTemplate) -> T
+        ): T {
             var lastError: Throwable? = null
             fun handleError(e: Throwable) {
+                onError.invoke()
                 log.error(lastError) {
                     "Exception occurred while mongoTemplate usage. " +
                         "Sleep 10sec and try again"
