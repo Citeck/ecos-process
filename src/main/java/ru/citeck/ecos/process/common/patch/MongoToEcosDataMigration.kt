@@ -280,7 +280,7 @@ class MongoToEcosDataMigrationConfig {
             fun findNextBatch(): List<T> {
                 return doWithMongoTemplate(mongoTemplate, { errorsCount++ }) {
                     @Suppress("UNCHECKED_CAST")
-                    it.find(query.limit(max(1, BATCH_SIZE / errorsCount)), entityType) as List<T>
+                    it.find(query.limit(max(1, BATCH_SIZE / (errorsCount + 1))), entityType) as List<T>
                 }
             }
 
