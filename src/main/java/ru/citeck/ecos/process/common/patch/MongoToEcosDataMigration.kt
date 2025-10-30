@@ -33,7 +33,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 import kotlin.math.max
-import kotlin.math.min
 
 @Configuration
 @Profile("!test")
@@ -58,9 +57,11 @@ class MongoToEcosDataMigrationConfig {
 
         private val isRuntimeShutdownInitiated = AtomicBoolean(false)
         init {
-            Runtime.getRuntime().addShutdownHook(thread(start = false) {
-                isRuntimeShutdownInitiated.set(true)
-            })
+            Runtime.getRuntime().addShutdownHook(
+                thread(start = false) {
+                    isRuntimeShutdownInitiated.set(true)
+                }
+            )
         }
     }
 

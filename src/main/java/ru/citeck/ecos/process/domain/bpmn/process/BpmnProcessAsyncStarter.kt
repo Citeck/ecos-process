@@ -8,7 +8,6 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.AuthUser
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.rabbitmq.ds.RabbitMqConnection
-import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 
