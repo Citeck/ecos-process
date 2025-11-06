@@ -67,7 +67,7 @@ columns:
     editor:
       type: journal
       config:
-        journalId: ecos-types-def
+        journalId: ecos-types
     searchable: true
     sortable: false
 
