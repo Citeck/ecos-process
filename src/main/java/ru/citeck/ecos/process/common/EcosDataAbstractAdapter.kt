@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.common
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.model.lib.workspace.convertToIdInWsSafe
@@ -28,6 +29,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
     val sourceId: String,
     val attsMapping: Map<String, String>,
     val attsType: KClass<T>,
+    val runQueryAsSystem: Boolean = false,
     val workspaceService: WorkspaceService? = null
 ) {
     companion object {
@@ -109,7 +111,7 @@ abstract class EcosDataAbstractAdapter<T : Any>(
         )
     }
 
-    protected fun <A : Any> findAllRaw(
+    protected open fun <A : Any> findAllRaw(
         workspaces: List<String>,
         predicate: Predicate,
         skipCount: Int,
@@ -151,9 +153,17 @@ abstract class EcosDataAbstractAdapter<T : Any>(
                 }
             )
 
+        return if (runQueryAsSystem) {
+            AuthContext.runAsSystem { execQueryImpl(recsQuery, attsType) }
+        } else {
+            execQueryImpl(recsQuery, attsType)
+        }
+    }
+
+    private fun <T : Any> execQueryImpl(recsQuery: RecordsQuery.Builder, attsType: KClass<T>): RecsQueryRes<T> {
         return if (EntityRef::class.isSuperclassOf(attsType)) {
             @Suppress("UNCHECKED_CAST")
-            recordsService.query(recsQuery.build()) as RecsQueryRes<A>
+            recordsService.query(recsQuery.build()) as RecsQueryRes<T>
         } else {
             recordsService.query(recsQuery.build(), attsType.java)
         }

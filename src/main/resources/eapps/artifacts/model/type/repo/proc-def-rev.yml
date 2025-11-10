@@ -3,6 +3,7 @@ id: proc-def-rev
 sourceId: 'eproc/proc-def-rev-repo'
 
 system: true
+workspaceScope: PUBLIC
 
 model:
   attributes:
