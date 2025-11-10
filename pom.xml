@@ -5,7 +5,7 @@
 
     <groupId>ru.citeck.ecos.process</groupId>
     <artifactId>ecos-process</artifactId>
-    <version>2.25.1</version>
+    <version>2.25.2-SNAPSHOT</version>
     <name>ecos-process</name>
 
     <parent>

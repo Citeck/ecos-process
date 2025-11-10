@@ -115,7 +115,11 @@ class BpmnProcessDefVersionRecords(
             }
             .sortByIds(recordIds)
 
-        val uniqueProcDefs = revisions.map { it?.procDefId }.distinct()
+        val uniqueProcDefs = revisions.map {
+            it?.let { rev ->
+                workspaceService.addWsPrefixToId(rev.procDefId, rev.workspace)
+            }
+        }.distinct()
         check(uniqueProcDefs.size == 1) {
             "Support get atts of revision only for one process definition"
         }
@@ -231,7 +235,10 @@ class BpmnProcessDefVersionRecords(
 
         @get:AttName("processDefRef")
         val processDefRef: EntityRef
-            get() = EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, procDefId)
+            get() {
+                val localId = workspaceService.addWsPrefixToId(procDefId, dto.workspace)
+                return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, localId)
+            }
 
         /**
          *  Lazy load data to avoid memory leaks. See [ProcDefRevDto.data]

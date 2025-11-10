@@ -9,6 +9,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.model.lib.authorities.AuthorityType
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_CAMUNDA_ENGINE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
@@ -36,7 +37,8 @@ class BpmnElementConverter(
     @Lazy
     private val bpmnProcessService: BpmnProcessService,
     private val procDefService: ProcDefService,
-    private val taskDefinitionUtils: TaskDefinitionUtils
+    private val taskDefinitionUtils: TaskDefinitionUtils,
+    private val workspaceService: WorkspaceService
 ) {
 
     fun toRawFlowElement(dataValue: DataValue): RawFlowElementEvent {
@@ -117,7 +119,8 @@ class BpmnElementConverter(
                     roles = taskDefinitionUtils.getTaskRoles(delegateTask),
                     procDefId = rev?.procDefId,
                     procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
+                        val localId = workspaceService.addWsPrefixToId(rev.procDefId, rev.workspace)
+                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, localId)
                     } else {
                         EntityRef.EMPTY
                     },
@@ -178,7 +181,8 @@ class BpmnElementConverter(
                     engine = BPMN_CAMUNDA_ENGINE,
                     procDefId = rev?.procDefId,
                     procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
+                        val localId = workspaceService.addWsPrefixToId(rev.procDefId, rev.workspace)
+                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, localId)
                     } else {
                         EntityRef.EMPTY
                     },
