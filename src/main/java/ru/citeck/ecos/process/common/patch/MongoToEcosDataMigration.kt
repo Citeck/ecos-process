@@ -237,7 +237,7 @@ class MongoToEcosDataMigrationConfig {
                 TxnContext.doInNewTxn {
                     for (mongoEntity in entitiesBatch) {
                         val entityId = getId(mongoEntity) ?: return@doInNewTxn
-                        val existing = TxnContext.doInNewTxn(true) { findExistingById(entityId) }
+                        val existing = findExistingById(entityId)
                         if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
                             saveMigratedEntity(mongoEntity)
                             val nextProcessedCountLogIter = (++migratedCount) / 100
