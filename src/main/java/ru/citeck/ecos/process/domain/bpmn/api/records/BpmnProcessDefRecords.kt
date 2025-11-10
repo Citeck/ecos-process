@@ -543,9 +543,11 @@ class BpmnProcessDefRecords(
             log.debug { "Deploy to camunda:\n ${mutData.newCamundaDefinitionStr}" }
 
             var resName = record.processDefId
+            var eventWorkspace = ""
             if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
                 resName = workspaceService.getWorkspaceSystemId(record.workspace) +
                     ProcUtils.PROC_KEY_WS_DELIM + resName
+                eventWorkspace = record.workspace
             }
             resName += BPMN_RESOURCE_NAME_POSTFIX
 
@@ -562,7 +564,8 @@ class BpmnProcessDefRecords(
                 ProcDefEvent(
                     procDefRef = procDefRef,
                     version = procDefResult.version.toDouble().inc(),
-                    dataState = procDefResult.dataState.name
+                    dataState = procDefResult.dataState.name,
+                    workspace = eventWorkspace
                 )
             )
 
