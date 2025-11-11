@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.proc.repo
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.citeck.ecos.process.domain.proc.repo.edata.EcosDataProcInstanceAdapter
@@ -21,7 +20,6 @@ class ProcInstanceRepoConfig {
     }
 
     @Configuration
-    @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
     class EcosDataConfig {
 
         init {
@@ -46,7 +44,6 @@ class ProcInstanceRepoConfig {
     }
 
     @Configuration
-    @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "true")
     class MongoConfig {
 
         init {
@@ -54,12 +51,12 @@ class ProcInstanceRepoConfig {
         }
 
         @Bean
-        fun procInstanceRepository(procInstanceRepo: MongoProcInstanceRepository): ProcInstanceRepository {
+        fun procInstanceMongoRepo(procInstanceRepo: MongoProcInstanceRepository): MongoProcInstanceAdapter {
             return MongoProcInstanceAdapter(procInstanceRepo)
         }
 
         @Bean
-        fun procStateRepository(procStateRepo: MongoProcStateRepository): ProcStateRepository {
+        fun procStateMongoRepo(procStateRepo: MongoProcStateRepository): MongoProcStateAdapter {
             return MongoProcStateAdapter(procStateRepo)
         }
     }

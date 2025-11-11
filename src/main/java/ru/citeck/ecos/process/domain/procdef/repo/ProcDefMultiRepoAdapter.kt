@@ -25,7 +25,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun delete(entity: ProcDefEntity) {
-        if (migrationState.isEdataStoragePrimary()) {
+        if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.delete(entity)
         } else {
             mongo!!.delete(entity)
@@ -36,7 +36,7 @@ class ProcDefMultiRepoAdapter(
         if (!AuthContext.isRunAsSystem()) {
             error("Permission denied")
         }
-        if (migrationState.isEdataStoragePrimary()) {
+        if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.deleteAll()
         } else {
             mongo!!.deleteAll()
@@ -44,7 +44,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun save(entity: ProcDefEntity): ProcDefEntity {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.save(entity)
         } else {
             mongo!!.save(entity)
@@ -52,7 +52,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun findAll(workspaces: List<String>, predicate: Predicate, pageable: Pageable): Page<ProcDefEntity> {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findAll(workspaces, predicate, pageable)
         } else {
             mongo!!.findAll(workspaces, predicate, pageable)
@@ -60,7 +60,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun findFirstEnabledByEcosType(workspace: String, type: String, ecosTypeRef: String): ProcDefEntity? {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findFirstEnabledByEcosType(workspace, type, ecosTypeRef)
         } else {
             mongo!!.findFirstEnabledByEcosType(workspace, type, ecosTypeRef)
@@ -68,7 +68,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun findByIdInWs(workspace: String, type: String, extId: String): ProcDefEntity? {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findByIdInWs(workspace, type, extId)
         } else {
             mongo!!.findByIdInWs(workspace, type, extId)
@@ -76,7 +76,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun getCount(workspaces: List<String>, predicate: Predicate): Long {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.getCount(workspaces, predicate)
         } else {
             mongo!!.getCount(workspaces, predicate)
@@ -84,7 +84,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun getCount(workspaces: List<String>): Long {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.getCount(workspaces)
         } else {
             mongo!!.getCount(workspaces)
@@ -92,7 +92,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun getLastModifiedDate(): Instant {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.getLastModifiedDate()
         } else {
             mongo!!.getLastModifiedDate()
@@ -100,7 +100,7 @@ class ProcDefMultiRepoAdapter(
     }
 
     override fun findFirstByProcTypeAndAlfType(workspace: String, type: String, alfType: String): ProcDefEntity? {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findFirstByProcTypeAndAlfType(workspace, type, alfType)
         } else {
             mongo!!.findFirstByProcTypeAndAlfType(workspace, type, alfType)

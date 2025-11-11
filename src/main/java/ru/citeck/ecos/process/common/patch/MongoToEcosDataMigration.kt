@@ -2,7 +2,6 @@ package ru.citeck.ecos.process.common.patch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.ObjectProvider
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -146,8 +145,7 @@ class MongoToEcosDataMigrationConfig {
                     .set("migratedProcDefs", migrateProcDefs(traceLogs))
                     .set("migratedProcDefRevsCount", migrateProcDefRevs(traceLogs))
 
-                // this flag doesn't matter for proc instances and proc states
-                ecosDataMigrationState.setMigrationPatchExecuted(true)
+                ecosDataMigrationState.setProcDefMigrationCompleted(true)
 
                 log.info { "= Run final proc-def migrations" }
                 // additional migration to process records which may be created or updated after
@@ -156,8 +154,13 @@ class MongoToEcosDataMigrationConfig {
                 migrateProcDefRevs(traceLogs)
                 log.info { "= Final proc-def migrations completed" }
 
-                return result.set("migratedProcInstancesCount", migrateProcInstances())
+                @Suppress("ReplaceGetOrSet")
+                result.set("migratedProcInstancesCount", migrateProcInstances())
                     .set("migratedProcStatesCount", migrateProcStates())
+
+                ecosDataMigrationState.setProcInstancesMigrationCompleted(true)
+
+                return result
             } finally {
                 migrationContext.set(false)
             }

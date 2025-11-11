@@ -5133,7 +5133,7 @@ class BpmnMonsterTestWithRunProcessTest {
                 taskId = it.id,
                 taskOutcome = "Approve",
                 userId = "german",
-                token = "bed-token",
+                token = "bad-token",
                 comment = "comment"
             )
 

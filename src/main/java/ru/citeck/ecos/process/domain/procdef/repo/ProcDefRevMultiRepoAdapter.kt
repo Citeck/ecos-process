@@ -24,7 +24,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun save(entity: ProcDefRevEntity): ProcDefRevEntity {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.save(entity)
         } else {
             mongo!!.save(entity)
@@ -32,7 +32,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun findById(id: EntityUuid): ProcDefRevEntity? {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findById(id)
         } else {
             mongo!!.findById(id)
@@ -40,7 +40,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun findAllById(ids: Iterable<EntityUuid>): List<ProcDefRevEntity> {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findAllById(ids)
         } else {
             mongo!!.findAllById(ids)
@@ -48,7 +48,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun findAllByProcessDef(processDef: ProcDefEntity): List<ProcDefRevEntity> {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findAllByProcessDef(processDef)
         } else {
             mongo!!.findAllByProcessDef(processDef)
@@ -56,7 +56,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun findByDeploymentId(deploymentId: String): ProcDefRevEntity? {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findByDeploymentId(deploymentId)
         } else {
             mongo!!.findByDeploymentId(deploymentId)
@@ -64,7 +64,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun findByDeploymentIdIsIn(deploymentIds: List<String>): List<ProcDefRevEntity> {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.findByDeploymentIdIsIn(deploymentIds)
         } else {
             mongo!!.findByDeploymentIdIsIn(deploymentIds)
@@ -72,7 +72,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun queryAllByDeploymentIdIsNotNull(pageable: Pageable): Slice<ProcDefRevEntity> {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.queryAllByDeploymentIdIsNotNull(pageable)
         } else {
             mongo!!.queryAllByDeploymentIdIsNotNull(pageable)
@@ -80,7 +80,7 @@ class ProcDefRevMultiRepoAdapter(
     }
 
     override fun deleteAll(entities: List<ProcDefRevEntity>) {
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.deleteAll(entities)
         } else {
             mongo!!.deleteAll(entities)
@@ -91,7 +91,7 @@ class ProcDefRevMultiRepoAdapter(
         if (!AuthContext.isRunAsSystem()) {
             error("Permission denied")
         }
-        return if (migrationState.isEdataStoragePrimary()) {
+        return if (migrationState.isEdataStoragePrimaryForProcDefs()) {
             edata.deleteAll()
         } else {
             mongo!!.deleteAll()
