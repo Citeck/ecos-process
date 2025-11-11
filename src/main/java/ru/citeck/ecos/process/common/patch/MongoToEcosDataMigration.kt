@@ -155,8 +155,6 @@ class MongoToEcosDataMigrationConfig {
                 // main migration was completed, but before migrationPatchExecuted flag become true.
                 migrateProcDefs()
                 migrateProcDefRevs()
-                migrateProcInstances()
-                migrateProcStates()
                 log.info { "= Final proc-def migrations completed" }
 
                 return result.set("migratedProcInstancesCount", migrateProcInstances())
