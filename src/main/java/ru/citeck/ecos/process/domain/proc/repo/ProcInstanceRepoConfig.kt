@@ -10,7 +10,6 @@ import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcInstanceAdapter
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcInstanceRepository
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcStateAdapter
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcStateRepository
-import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.records3.RecordsService
 
@@ -30,16 +29,19 @@ class ProcInstanceRepoConfig {
         }
 
         @Bean
-        fun procInstanceRepository(recordsService: RecordsService, procStateRepo: ProcStateRepository): ProcInstanceRepository {
-            return EcosDataProcInstanceAdapter(recordsService, procStateRepo as EcosDataProcStateAdapter)
+        fun procInstanceRepository(
+            recordsService: RecordsService,
+            procStateRepo: EcosDataProcStateAdapter
+        ): EcosDataProcInstanceAdapter {
+            return EcosDataProcInstanceAdapter(recordsService, procStateRepo)
         }
 
         @Bean
         fun procStateRepository(
             recordsService: RecordsService,
-            ecosDataProcDefRevAdapter: ProcDefRevRepository
-        ): ProcStateRepository {
-            return EcosDataProcStateAdapter(recordsService, ecosDataProcDefRevAdapter as EcosDataProcDefRevAdapter)
+            ecosDataProcDefRevAdapter: EcosDataProcDefRevAdapter
+        ): EcosDataProcStateAdapter {
+            return EcosDataProcStateAdapter(recordsService, ecosDataProcDefRevAdapter)
         }
     }
 
