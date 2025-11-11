@@ -142,24 +142,26 @@ class MongoToEcosDataMigrationConfig {
                     }
                 }
                 resetMigratedState(resetMigratedStateFor)
+
                 val result = DataValue.createObj()
                     .set("migratedProcDefs", migrateProcDefs())
                     .set("migratedProcDefRevsCount", migrateProcDefRevs())
-                    .set("migratedProcInstancesCount", migrateProcInstances())
-                    .set("migratedProcStatesCount", migrateProcStates())
 
+                // this flag doesn't matter for proc instances and proc states
                 ecosDataMigrationState.setMigrationPatchExecuted(true)
 
-                log.info { "Run final migrations" }
+                log.info { "= Run final proc-def migrations" }
                 // additional migration to process records which may be created or updated after
                 // main migration was completed, but before migrationPatchExecuted flag become true.
                 migrateProcDefs()
                 migrateProcDefRevs()
                 migrateProcInstances()
                 migrateProcStates()
-                log.info { "Final migrations completed" }
+                log.info { "= Final proc-def migrations completed" }
 
-                return result
+                return result.set("migratedProcInstancesCount", migrateProcInstances())
+                    .set("migratedProcStatesCount", migrateProcStates())
+
             } finally {
                 migrationContext.set(false)
             }
