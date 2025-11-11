@@ -30,7 +30,7 @@ class MongoToEcosDataRecordsDao(
             if (migration == null) {
                 error("Migration is not registered. You doesn't disable mongo repo?")
             } else {
-                return migration.run(value.resetMigratedStateFor)
+                return migration.run(value.resetMigratedStateFor, value.traceLogs)
             }
         }
         error("Action doesn't supported: '${value.action}'")
@@ -38,6 +38,7 @@ class MongoToEcosDataRecordsDao(
 
     class ActionDto(
         val action: String,
-        val resetMigratedStateFor: List<String> = emptyList()
+        val resetMigratedStateFor: List<String> = emptyList(),
+        val traceLogs: Boolean = false
     )
 }

@@ -5,12 +5,15 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepoAdapter
+import ru.citeck.ecos.webapp.api.constants.WebAppProfile
+import ru.citeck.ecos.webapp.lib.env.EcosWebAppEnvironment
 import ru.citeck.ecos.webapp.lib.patch.local.EcosLocalPatchRunner
 
 @Component
 class EcosDataMigrationState(
     private val localPatchRunner: EcosLocalPatchRunner,
-    private val optionalMongoRepo: ObjectProvider<MongoProcDefRepoAdapter>
+    private val optionalMongoRepo: ObjectProvider<MongoProcDefRepoAdapter>,
+    private val environment: EcosWebAppEnvironment
 ) {
     companion object {
         private val log = KotlinLogging.logger { }
@@ -36,9 +39,13 @@ class EcosDataMigrationState(
             edataStoragePrimary = if (optionalMongoRepo.ifAvailable == null) {
                 true
             } else {
-                !mongoRepoEnabledByProperty && localPatchRunner.isLocalPatchExecuted(
-                    MongoToEcosDataMigrationConfig.MongoToEcosDataMigration::class.java
-                )
+                if (environment.acceptsProfiles(WebAppProfile.TEST)) {
+                    !mongoRepoEnabledByProperty
+                } else {
+                    !mongoRepoEnabledByProperty && localPatchRunner.isLocalPatchExecuted(
+                        MongoToEcosDataMigrationConfig.MongoToEcosDataMigration::class.java
+                    )
+                }
             }
             log.info { "===== ECOS DATA storage is primary: $edataStoragePrimary =====" }
             this.edataStoragePrimary = edataStoragePrimary

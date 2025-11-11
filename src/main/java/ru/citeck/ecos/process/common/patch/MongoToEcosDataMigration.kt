@@ -41,7 +41,6 @@ import kotlin.math.max
 
 @Configuration
 @Profile("!test")
-@ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
 class MongoToEcosDataMigrationConfig {
 
     companion object {
@@ -129,10 +128,10 @@ class MongoToEcosDataMigrationConfig {
     ) : Callable<DataValue> {
 
         override fun call(): DataValue {
-            return run(emptyList())
+            return run(emptyList(), false)
         }
 
-        fun run(resetMigratedStateFor: List<String>): DataValue {
+        fun run(resetMigratedStateFor: List<String>, traceLogs: Boolean): DataValue {
             migrationContext.set(true)
             try {
                 ecosTypesRegistry.initializationPromise().get(Duration.ofMinutes(100))
@@ -144,8 +143,8 @@ class MongoToEcosDataMigrationConfig {
                 resetMigratedState(resetMigratedStateFor)
 
                 val result = DataValue.createObj()
-                    .set("migratedProcDefs", migrateProcDefs())
-                    .set("migratedProcDefRevsCount", migrateProcDefRevs())
+                    .set("migratedProcDefs", migrateProcDefs(traceLogs))
+                    .set("migratedProcDefRevsCount", migrateProcDefRevs(traceLogs))
 
                 // this flag doesn't matter for proc instances and proc states
                 ecosDataMigrationState.setMigrationPatchExecuted(true)
@@ -153,19 +152,18 @@ class MongoToEcosDataMigrationConfig {
                 log.info { "= Run final proc-def migrations" }
                 // additional migration to process records which may be created or updated after
                 // main migration was completed, but before migrationPatchExecuted flag become true.
-                migrateProcDefs()
-                migrateProcDefRevs()
+                migrateProcDefs(traceLogs)
+                migrateProcDefRevs(traceLogs)
                 log.info { "= Final proc-def migrations completed" }
 
                 return result.set("migratedProcInstancesCount", migrateProcInstances())
                     .set("migratedProcStatesCount", migrateProcStates())
-
             } finally {
                 migrationContext.set(false)
             }
         }
 
-        private fun migrateProcDefs(): List<String> {
+        private fun migrateProcDefs(traceLogs: Boolean): List<String> {
 
             if (mongoProcDefRepo == null) {
                 log.info { "Mongo proc def repo is not available. Migration will be skipped" }
@@ -194,6 +192,9 @@ class MongoToEcosDataMigrationConfig {
                                         "Delete existing definition"
                                 }
                                 edataProcDefRepository.delete(existing)
+                            }
+                            if (traceLogs) {
+                                log.info { "Save following proc def: " + mongoProcDef.getAsJson() }
                             }
                             edataProcDefRepository.save(mongoProcDef)
                             migratedProcesses.add(procKey)
@@ -231,14 +232,19 @@ class MongoToEcosDataMigrationConfig {
             }
         }
 
-        private fun migrateProcDefRevs(): Int {
+        private fun migrateProcDefRevs(traceLogs: Boolean): Int {
             return migrateEntities(
                 "proc-def-revs",
                 mongoProcDefRevRepo,
                 { it.id },
                 { it.created },
                 { edataProcDefRevRepository.findById(it) },
-                { edataProcDefRevRepository.save(it) }
+                {
+                    if (traceLogs) {
+                        log.info { "Save following proc def rev: " + it.getAsJson() }
+                    }
+                    edataProcDefRevRepository.save(it)
+                }
             )
         }
 
