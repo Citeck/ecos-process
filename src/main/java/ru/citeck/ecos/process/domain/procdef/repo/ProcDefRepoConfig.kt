@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.procdef.repo
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
@@ -21,7 +21,6 @@ class ProcDefRepoConfig {
     }
 
     @Configuration
-    @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
     class EcosDataConfig {
 
         init {
@@ -31,21 +30,20 @@ class ProcDefRepoConfig {
         @Bean
         fun procDefRepository(
             recordsService: RecordsService,
-            ecosDataProcDefRevAdapter: ProcDefRevRepository,
+            ecosDataProcDefRevAdapter: EcosDataProcDefRevAdapter,
             workspaceService: WorkspaceService
-        ): ProcDefRepository {
-            val rev = ecosDataProcDefRevAdapter as EcosDataProcDefRevAdapter
-            return EcosDataProcDefAdapter(recordsService, rev, workspaceService)
+        ): EcosDataProcDefAdapter {
+            return EcosDataProcDefAdapter(recordsService, ecosDataProcDefRevAdapter, workspaceService)
         }
 
         @Bean
-        fun procDefRevRepository(recordsService: RecordsService): ProcDefRevRepository {
+        fun procDefRevRepository(recordsService: RecordsService): EcosDataProcDefRevAdapter {
             return EcosDataProcDefRevAdapter(recordsService)
         }
     }
 
     @Configuration
-    @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "true")
+    @ConditionalOnExpression("'\${spring.data.mongodb.uri}'.startsWith('mongodb:')")
     class MongoConfig {
 
         init {
@@ -53,12 +51,12 @@ class ProcDefRepoConfig {
         }
 
         @Bean
-        fun procDefRepository(mongoProcDefRepo: MongoProcDefRepo): ProcDefRepository {
+        fun procDefMongoRepo(mongoProcDefRepo: MongoProcDefRepo): MongoProcDefRepoAdapter {
             return MongoProcDefRepoAdapter(mongoProcDefRepo)
         }
 
         @Bean
-        fun procDefRevRepository(procDefRevMongoRepo: MongoProcDefRevRepo): ProcDefRevRepository {
+        fun procDefRevMongoRepo(procDefRevMongoRepo: MongoProcDefRevRepo): MongoProcDefRevRepoAdapter {
             return MongoProcDefRevRepoAdapter(procDefRevMongoRepo)
         }
     }

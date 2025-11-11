@@ -47,8 +47,8 @@ class BpmnProcessDefFinder(
         if (procDefId.isBlank()) {
             return EntityRef.EMPTY
         }
-
-        return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, procDefId)
+        val localId = workspaceService.addWsPrefixToId(procDefId, defRev.workspace)
+        return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, localId)
     }
 
     @RunAsSystem
@@ -56,6 +56,7 @@ class BpmnProcessDefFinder(
         val idInWs = workspaceService.convertToIdInWs(processKey)
         val procDef =
             procDefService.getProcessDefById(ProcDefRef.create(BPMN_PROC_TYPE, idInWs)) ?: return EntityRef.EMPTY
-        return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, procDef.id)
+        val localId = workspaceService.addWsPrefixToId(procDef.id, procDef.workspace)
+        return EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, localId)
     }
 }

@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.model.lib.workspace.IdInWs
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
@@ -34,7 +35,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 class BpmnProcessLatestRecords(
     private val camundaRepositoryService: RepositoryService,
     private val procDefService: ProcDefService,
-    private val camundaMyBatisExtension: CamundaMyBatisExtension
+    private val camundaMyBatisExtension: CamundaMyBatisExtension,
+    private val workspaceService: WorkspaceService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
@@ -98,7 +100,9 @@ class BpmnProcessLatestRecords(
 
             val procDefRefLocalId = processDefIdFromResourceName.ifBlank {
                 val procDefRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
-                procDefRev?.procDefId ?: ""
+                procDefRev?.let { rev ->
+                    workspaceService.addWsPrefixToId(rev.procDefId, rev.workspace)
+                } ?: ""
             }.replace(ProcUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
 
             EntityRef.create(

@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.procdef.command.finddef;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.citeck.ecos.commands.CommandExecutor;
@@ -21,7 +22,7 @@ public class FindProcDefExecutor implements CommandExecutor<FindProcDef> {
         ProcDefRevDto procDefRev = AuthContext.runAsSystem(() ->
             procDefService.findProcDef(
                 findProcDef.getProcType(),
-                findProcDef.getWorkspace(),
+                StringUtils.defaultString(findProcDef.getWorkspace()),
                 findProcDef.getEcosTypeRef(),
                 findProcDef.getAlfTypes()
             )

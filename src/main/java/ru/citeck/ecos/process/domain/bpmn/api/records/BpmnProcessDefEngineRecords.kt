@@ -9,6 +9,7 @@ import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.repository.ProcessDefinitionQuery
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.process.ActivityStatistics
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessStatistics
 import ru.citeck.ecos.process.domain.bpmn.process.IncidentStatistics
@@ -32,7 +33,8 @@ class BpmnProcessDefEngineRecords(
     private val camundaRepositoryService: RepositoryService,
     private val procDefService: ProcDefService,
     private val managementService: ManagementService,
-    private val camundaRuntimeService: RuntimeService
+    private val camundaRuntimeService: RuntimeService,
+    private val workspaceService: WorkspaceService
 ) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
 
     companion object {
@@ -188,7 +190,8 @@ class BpmnProcessDefEngineRecords(
             val deploymentIds = map { it.deploymentId }.toList()
             val ecosProcDefsWithDeploymentIds = procDefService.getProcessDefRevByDeploymentIds(deploymentIds)
             val ecosProcDefRefs = ecosProcDefsWithDeploymentIds.map {
-                EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, it.procDefId)
+                val localId = workspaceService.addWsPrefixToId(it.procDefId, it.workspace)
+                EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, localId)
             }
 
             val deploymentsWithReadPerms = recordsService.getAtts(ecosProcDefRefs, HasReadPerms::class.java)

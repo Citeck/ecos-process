@@ -37,6 +37,7 @@ class EcosDataProcDefAdapter(
         "moduleId" to ATT_EXT_ID
     ),
     ProcDefRecordAtts::class,
+    runQueryAsSystem = true,
     workspaceService
 ) {
 

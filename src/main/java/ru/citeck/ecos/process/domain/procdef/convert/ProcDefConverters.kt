@@ -13,6 +13,9 @@ import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.time.Instant
 
 fun ProcDefRevEntity.toDto(): ProcDefRevDto {
+    if (processDef == null) {
+        throw IllegalStateException("processDef is null for proc def revision: ${getAsJson()}")
+    }
     return ProcDefRevDto(
         id = id!!.id,
         format = format!!,

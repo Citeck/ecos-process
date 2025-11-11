@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.cmmn.api.records.CmmnProcDefRecords
@@ -41,7 +42,8 @@ class ProcDefServiceImpl(
     private val procStateRepo: ProcStateRepository,
     private val recordsService: RecordsService,
     private val procDefEventEmitter: ProcDefEventEmitter,
-    private val procDefRevDataProvider: ProcDefRevDataProvider
+    private val procDefRevDataProvider: ProcDefRevDataProvider,
+    private val workspaceService: WorkspaceService
 ) : ProcDefService {
 
     companion object {
@@ -122,6 +124,7 @@ class ProcDefServiceImpl(
                     createEvent(
                         processDef.procType,
                         processDef.id,
+                        processDef.workspace,
                         FIRST_VERSION,
                         processDef.createdFromVersion,
                         dataState
@@ -149,6 +152,7 @@ class ProcDefServiceImpl(
                     createEvent(
                         procType = currentProcDef!!.procType!!,
                         currentProcDef!!.extId!!,
+                        currentProcDef!!.workspace ?: "",
                         newRevision.version.toDouble().inc(),
                         processDef.createdFromVersion,
                         dataState
@@ -171,20 +175,23 @@ class ProcDefServiceImpl(
     private fun createEvent(
         procType: String,
         id: String,
+        workspace: String,
         version: Double,
         createdFromVersion: EntityRef,
         dataState: ProcDefRevDataState
     ): ProcDefEvent {
+        val procDefRefLocalId = workspaceService.addWsPrefixToId(id, workspace)
         return ProcDefEvent(
             procDefRef = when (procType) {
-                BPMN_PROC_TYPE -> EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, id)
-                DMN_PROC_TYPE -> EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, id)
+                BPMN_PROC_TYPE -> EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, procDefRefLocalId)
+                DMN_PROC_TYPE -> EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, procDefRefLocalId)
                 CmmnProcDefRecords.CMMN_PROC_TYPE -> {
-                    EntityRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, id)
+                    EntityRef.create(AppName.EPROC, CmmnProcDefRecords.SOURCE_ID, procDefRefLocalId)
                 }
 
                 else -> throw IllegalArgumentException("Unknown proc type: $procType")
             },
+            workspace = workspace,
             version = version,
             createdFromVersion = let {
                 if (createdFromVersion == EntityRef.EMPTY) {
@@ -366,6 +373,7 @@ class ProcDefServiceImpl(
                         createEvent(
                             procType = currentProcDef.procType!!,
                             currentProcDef.extId!!,
+                            currentProcDef.workspace ?: "",
                             newRevision.version.toDouble().inc(),
                             createdFromVersion,
                             ProcDefRevDataState.RAW
