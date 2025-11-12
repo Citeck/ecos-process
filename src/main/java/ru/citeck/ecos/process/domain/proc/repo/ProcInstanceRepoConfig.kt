@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.proc.repo
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.citeck.ecos.process.domain.proc.repo.edata.EcosDataProcInstanceAdapter
@@ -10,7 +9,6 @@ import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcInstanceAdapter
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcInstanceRepository
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcStateAdapter
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcStateRepository
-import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.records3.RecordsService
 
@@ -22,7 +20,6 @@ class ProcInstanceRepoConfig {
     }
 
     @Configuration
-    @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
     class EcosDataConfig {
 
         init {
@@ -30,21 +27,23 @@ class ProcInstanceRepoConfig {
         }
 
         @Bean
-        fun procInstanceRepository(recordsService: RecordsService, procStateRepo: ProcStateRepository): ProcInstanceRepository {
-            return EcosDataProcInstanceAdapter(recordsService, procStateRepo as EcosDataProcStateAdapter)
+        fun procInstanceRepository(
+            recordsService: RecordsService,
+            procStateRepo: EcosDataProcStateAdapter
+        ): EcosDataProcInstanceAdapter {
+            return EcosDataProcInstanceAdapter(recordsService, procStateRepo)
         }
 
         @Bean
         fun procStateRepository(
             recordsService: RecordsService,
-            ecosDataProcDefRevAdapter: ProcDefRevRepository
-        ): ProcStateRepository {
-            return EcosDataProcStateAdapter(recordsService, ecosDataProcDefRevAdapter as EcosDataProcDefRevAdapter)
+            ecosDataProcDefRevAdapter: EcosDataProcDefRevAdapter
+        ): EcosDataProcStateAdapter {
+            return EcosDataProcStateAdapter(recordsService, ecosDataProcDefRevAdapter)
         }
     }
 
     @Configuration
-    @ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "true")
     class MongoConfig {
 
         init {
@@ -52,12 +51,12 @@ class ProcInstanceRepoConfig {
         }
 
         @Bean
-        fun procInstanceRepository(procInstanceRepo: MongoProcInstanceRepository): ProcInstanceRepository {
+        fun procInstanceMongoRepo(procInstanceRepo: MongoProcInstanceRepository): MongoProcInstanceAdapter {
             return MongoProcInstanceAdapter(procInstanceRepo)
         }
 
         @Bean
-        fun procStateRepository(procStateRepo: MongoProcStateRepository): ProcStateRepository {
+        fun procStateMongoRepo(procStateRepo: MongoProcStateRepository): MongoProcStateAdapter {
             return MongoProcStateAdapter(procStateRepo)
         }
     }

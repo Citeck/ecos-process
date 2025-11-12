@@ -2,24 +2,28 @@ package ru.citeck.ecos.process.common.patch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.ObjectProvider
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.Update
 import org.springframework.data.mongodb.repository.MongoRepository
 import ru.citeck.beans.BeanUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.utils.ReflectUtils
 import ru.citeck.ecos.process.domain.common.repo.EntityUuid
-import ru.citeck.ecos.process.domain.proc.repo.ProcInstanceRepository
-import ru.citeck.ecos.process.domain.proc.repo.ProcStateRepository
+import ru.citeck.ecos.process.domain.proc.repo.ProcessInstanceEntity
+import ru.citeck.ecos.process.domain.proc.repo.ProcessStateEntity
+import ru.citeck.ecos.process.domain.proc.repo.edata.EcosDataProcInstanceAdapter
+import ru.citeck.ecos.process.domain.proc.repo.edata.EcosDataProcStateAdapter
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcInstanceRepository
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcStateRepository
-import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRepository
-import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevRepository
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
+import ru.citeck.ecos.process.domain.procdef.repo.ProcDefRevEntity
+import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefAdapter
+import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepo
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRevRepo
 import ru.citeck.ecos.txn.lib.TxnContext
@@ -36,17 +40,29 @@ import kotlin.math.max
 
 @Configuration
 @Profile("!test")
-@ConditionalOnProperty(name = ["ecos-process.repo.mongo.enabled"], havingValue = "false")
 class MongoToEcosDataMigrationConfig {
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        private const val TYPE_PROC_DEF = "proc-def"
+        private const val TYPE_PROC_DEF_REV = "proc-def-rev"
+        private const val TYPE_PROC_INSTANCE = "proc-instance"
+        private const val TYPE_PROC_INSTANCE_STATE = "proc-instance-state"
+
         private val TYPES_TO_CHECK = listOf(
-            "proc-def",
-            "proc-def-rev",
-            "proc-instance",
-            "proc-instance-state"
+            TYPE_PROC_DEF,
+            TYPE_PROC_DEF_REV,
+            TYPE_PROC_INSTANCE,
+            TYPE_PROC_INSTANCE_STATE
         )
+        private val ENTITY_BY_TYPE = mapOf(
+            TYPE_PROC_DEF to ProcDefEntity::class,
+            TYPE_PROC_DEF_REV to ProcDefRevEntity::class,
+            TYPE_PROC_INSTANCE to ProcessInstanceEntity::class,
+            TYPE_PROC_INSTANCE_STATE to ProcessStateEntity::class
+        )
+
         private const val BATCH_SIZE = 20
 
         private val migrationContext = ThreadLocal<Boolean>()
@@ -72,11 +88,12 @@ class MongoToEcosDataMigrationConfig {
         mongoProcDefRevRepo: ObjectProvider<MongoProcDefRevRepo>,
         mongoProcInstanceRepo: ObjectProvider<MongoProcInstanceRepository>,
         mongoProcStateRepo: ObjectProvider<MongoProcStateRepository>,
-        edataProcDefRepository: ProcDefRepository,
-        edataProcDefRevRepository: ProcDefRevRepository,
-        edataProcInstanceRepo: ProcInstanceRepository,
-        edataProcStateRepo: ProcStateRepository,
-        ecosTypesRegistry: EcosTypesRegistry
+        edataProcDefRepository: EcosDataProcDefAdapter,
+        edataProcDefRevRepository: EcosDataProcDefRevAdapter,
+        edataProcInstanceRepo: EcosDataProcInstanceAdapter,
+        edataProcStateRepo: EcosDataProcStateAdapter,
+        ecosTypesRegistry: EcosTypesRegistry,
+        ecosDataMigrationState: EcosDataMigrationState
     ): MongoToEcosDataMigration {
         return MongoToEcosDataMigration(
             mongoTemplate.getIfAvailable(),
@@ -88,26 +105,32 @@ class MongoToEcosDataMigrationConfig {
             edataProcDefRevRepository,
             edataProcInstanceRepo,
             edataProcStateRepo,
-            ecosTypesRegistry
+            ecosTypesRegistry,
+            ecosDataMigrationState
         )
     }
 
     @EcosPatchDependsOnApps(AppName.EMODEL)
-    @EcosLocalPatch("mongo-to-ecos-data-migration", "2025-09-30T00:00:07Z", afterStart = true)
+    @EcosLocalPatch("mongo-to-ecos-data-migration2", "2025-09-30T00:00:07Z", afterStart = true)
     class MongoToEcosDataMigration(
         private val mongoTemplate: MongoTemplate?,
         private val mongoProcDefRepo: MongoProcDefRepo?,
         private val mongoProcDefRevRepo: MongoProcDefRevRepo?,
         private val mongoProcInstanceRepo: MongoProcInstanceRepository?,
         private val mongoProcStateRepository: MongoProcStateRepository?,
-        private val edataProcDefRepository: ProcDefRepository,
-        private val edataProcDefRevRepository: ProcDefRevRepository,
-        private val edataProcInstanceRepo: ProcInstanceRepository,
-        private val edataProcStateRepo: ProcStateRepository,
-        private val ecosTypesRegistry: EcosTypesRegistry
+        private val edataProcDefRepository: EcosDataProcDefAdapter,
+        private val edataProcDefRevRepository: EcosDataProcDefRevAdapter,
+        private val edataProcInstanceRepo: EcosDataProcInstanceAdapter,
+        private val edataProcStateRepo: EcosDataProcStateAdapter,
+        private val ecosTypesRegistry: EcosTypesRegistry,
+        private val ecosDataMigrationState: EcosDataMigrationState
     ) : Callable<DataValue> {
 
         override fun call(): DataValue {
+            return run(emptyList(), false)
+        }
+
+        fun run(resetMigratedStateFor: List<String>, traceLogs: Boolean): DataValue {
             migrationContext.set(true)
             try {
                 ecosTypesRegistry.initializationPromise().get(Duration.ofMinutes(100))
@@ -116,17 +139,34 @@ class MongoToEcosDataMigrationConfig {
                         log.error { "Type doesn't exists in types registry: $typeId" }
                     }
                 }
-                return DataValue.createObj()
-                    .set("migratedProcDefs", migrateProcDefs())
-                    .set("migratedProcDefRevsCount", migrateProcDefRevs())
-                    .set("migratedProcInstancesCount", migrateProcInstances())
+                resetMigratedState(resetMigratedStateFor)
+
+                val result = DataValue.createObj()
+                    .set("migratedProcDefs", migrateProcDefs(traceLogs))
+                    .set("migratedProcDefRevsCount", migrateProcDefRevs(traceLogs))
+
+                ecosDataMigrationState.setProcDefMigrationCompleted(true)
+
+                log.info { "= Run final proc-def migrations" }
+                // additional migration to process records which may be created or updated after
+                // main migration was completed, but before migrationPatchExecuted flag become true.
+                migrateProcDefs(traceLogs)
+                migrateProcDefRevs(traceLogs)
+                log.info { "= Final proc-def migrations completed" }
+
+                @Suppress("ReplaceGetOrSet")
+                result.set("migratedProcInstancesCount", migrateProcInstances())
                     .set("migratedProcStatesCount", migrateProcStates())
+
+                ecosDataMigrationState.setProcInstancesMigrationCompleted(true)
+
+                return result
             } finally {
                 migrationContext.set(false)
             }
         }
 
-        private fun migrateProcDefs(): List<String> {
+        private fun migrateProcDefs(traceLogs: Boolean): List<String> {
 
             if (mongoProcDefRepo == null) {
                 log.info { "Mongo proc def repo is not available. Migration will be skipped" }
@@ -141,24 +181,29 @@ class MongoToEcosDataMigrationConfig {
             fun Instant?.orEpoch() = this ?: Instant.EPOCH
 
             forEach(mongoProcDefRepo) { procDefsBatch ->
-                for (mongoProcDef in procDefsBatch) {
-                    val procType = mongoProcDef.procType ?: return@forEach
-                    val extId = mongoProcDef.extId ?: return@forEach
-                    val existing = edataProcDefRepository.findByIdInWs("", procType, extId)
-                    val procKey = mongoProcDef.procType + '$' + mongoProcDef.extId
-                    if (existing == null || existing.modified.orEpoch() < mongoProcDef.modified.orEpoch()) {
-                        log.info { "Run migration for '$procKey'" }
-                        if (existing != null && existing.id != mongoProcDef.id) {
-                            log.info {
-                                "Process def for '$procKey' was found, but id doesn't match. " +
-                                    "Delete existing definition"
+                TxnContext.doInNewTxn {
+                    for (mongoProcDef in procDefsBatch) {
+                        val procType = mongoProcDef.procType ?: return@doInNewTxn
+                        val extId = mongoProcDef.extId ?: return@doInNewTxn
+                        val existing = edataProcDefRepository.findByIdInWs("", procType, extId)
+                        val procKey = mongoProcDef.procType + '$' + mongoProcDef.extId
+                        if (existing == null || existing.modified.orEpoch() < mongoProcDef.modified.orEpoch()) {
+                            log.info { "Run migration for '$procKey'" }
+                            if (existing != null && existing.id != mongoProcDef.id) {
+                                log.info {
+                                    "Process def for '$procKey' was found, but id doesn't match. " +
+                                        "Delete existing definition"
+                                }
+                                edataProcDefRepository.delete(existing)
                             }
-                            edataProcDefRepository.delete(existing)
+                            if (traceLogs) {
+                                log.info { "Save following proc def: " + mongoProcDef.getAsJson() }
+                            }
+                            edataProcDefRepository.save(mongoProcDef)
+                            migratedProcesses.add(procKey)
+                        } else {
+                            log.info { "Migration of '$procKey' doesn't required" }
                         }
-                        edataProcDefRepository.save(mongoProcDef)
-                        migratedProcesses.add(procKey)
-                    } else {
-                        log.info { "Migration of '$procKey' doesn't required" }
                     }
                 }
             }
@@ -171,14 +216,38 @@ class MongoToEcosDataMigrationConfig {
             return migratedProcesses
         }
 
-        private fun migrateProcDefRevs(): Int {
+        private fun resetMigratedState(types: List<String>) {
+            if (types.isEmpty()) {
+                return
+            }
+            for (type in types) {
+                val entityType = ENTITY_BY_TYPE[type]
+                if (entityType == null) {
+                    log.warn { "Entity type doesn't found for type '$type'" }
+                    continue
+                }
+                val query = Query()
+                val update = Update().set("migrated", false)
+
+                log.info { "Reset migration state for type '$type'" }
+                val result = mongoTemplate!!.updateMulti(query, update, entityType.java)
+                log.info { "Matched: ${result.matchedCount}, Modified: ${result.modifiedCount}" }
+            }
+        }
+
+        private fun migrateProcDefRevs(traceLogs: Boolean): Int {
             return migrateEntities(
                 "proc-def-revs",
                 mongoProcDefRevRepo,
                 { it.id },
                 { it.created },
                 { edataProcDefRevRepository.findById(it) },
-                { edataProcDefRevRepository.save(it) }
+                {
+                    if (traceLogs) {
+                        log.info { "Save following proc def rev: " + it.getAsJson() }
+                    }
+                    edataProcDefRevRepository.save(it)
+                }
             )
         }
 
@@ -187,7 +256,7 @@ class MongoToEcosDataMigrationConfig {
                 "proc-instances",
                 mongoProcInstanceRepo,
                 { it.id },
-                { it.created ?: Instant.EPOCH },
+                { it.modified ?: Instant.EPOCH },
                 { edataProcInstanceRepo.findById(it) },
                 { edataProcInstanceRepo.save(it) }
             )
@@ -208,7 +277,7 @@ class MongoToEcosDataMigrationConfig {
             type: String,
             repo: MongoRepository<T, EntityUuid>?,
             getId: (T) -> EntityUuid?,
-            getCreated: (T) -> Instant,
+            getModified: (T) -> Instant,
             findExistingById: (EntityUuid) -> T?,
             saveMigratedEntity: (T) -> Unit
         ): Int {
@@ -237,8 +306,8 @@ class MongoToEcosDataMigrationConfig {
                 TxnContext.doInNewTxn {
                     for (mongoEntity in entitiesBatch) {
                         val entityId = getId(mongoEntity) ?: return@doInNewTxn
-                        val existing = TxnContext.doInNewTxn(true) { findExistingById(entityId) }
-                        if (existing == null || getCreated(existing) < getCreated(mongoEntity)) {
+                        val existing = findExistingById(entityId)
+                        if (existing == null || getModified(existing) < getModified(mongoEntity)) {
                             saveMigratedEntity(mongoEntity)
                             val nextProcessedCountLogIter = (++migratedCount) / 100
                             if (migratedCountLogIter != nextProcessedCountLogIter) {
