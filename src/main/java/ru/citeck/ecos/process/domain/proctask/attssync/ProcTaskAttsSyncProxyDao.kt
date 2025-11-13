@@ -1,10 +1,8 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.security.access.annotation.Secured
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_REPO_SOURCE_ID
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_SOURCE_ID
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
@@ -23,7 +21,6 @@ class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
         private val log = KotlinLogging.logger {}
     }
 
-    @Secured(AuthRole.ADMIN, AuthRole.SYSTEM)
     override fun mutate(records: List<LocalRecordAtts>): List<String> {
 
         log.debug { "Mutate task atts sync: \n${Json.mapper.toPrettyString(records)}" }
