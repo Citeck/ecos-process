@@ -1,7 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi.processors
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.security.access.annotation.Secured
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiEventType
 import ru.citeck.ecos.process.domain.bpmn.kpi.BpmnKpiService
@@ -28,10 +30,12 @@ class BpmnCountKpiProcessor(
         private val log = KotlinLogging.logger {}
     }
 
+    @Secured(AuthRole.ADMIN, AuthRole.SYSTEM)
     override fun processStartEvent(bpmnEvent: BpmnElementEvent) {
         saveCountKpi(bpmnEvent, BpmnKpiEventType.START)
     }
 
+    @Secured(AuthRole.ADMIN, AuthRole.SYSTEM)
     override fun processEndEvent(bpmnEvent: BpmnElementEvent) {
         saveCountKpi(bpmnEvent, BpmnKpiEventType.END)
     }
