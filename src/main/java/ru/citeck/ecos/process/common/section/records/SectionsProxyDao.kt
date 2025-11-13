@@ -73,6 +73,20 @@ class SectionsProxyDao(
         if (recordIds.any { PROTECTED_SECTIONS.contains(it) }) {
             error("You can't delete protected section")
         }
+        if (AuthContext.isRunAsSystemOrAdmin()) {
+            return super.delete(recordIds)
+        }
+
+        recordIds.forEach {
+            val hasPermissionToEdit = recordsService.getAtt(
+                sectionType.getRef(it),
+                "permissions._has.write?bool!"
+            ).asBoolean()
+            if (!hasPermissionToEdit) {
+                error("Permission denied")
+            }
+        }
+
         return super.delete(recordIds)
     }
 
