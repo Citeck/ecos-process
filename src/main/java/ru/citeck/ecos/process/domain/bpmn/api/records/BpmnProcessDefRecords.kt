@@ -201,7 +201,7 @@ class BpmnProcessDefRecords(
             result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         val isSearchInGlobalWs = recsQuery.workspaces.isEmpty() ||
-            recsQuery.workspaces.any { workspaceService.isWorkspaceWithGlobalArtifacts(it) }
+            recsQuery.workspaces.any { workspaceService.isWorkspaceWithGlobalEntities(it) }
 
         if (isMoreRecordsRequired && remoteWebAppsApi.isAppAvailable(AppName.ALFRESCO) && isSearchInGlobalWs) {
 
@@ -425,7 +425,7 @@ class BpmnProcessDefRecords(
 
             if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
+                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalEntities(record.workspace)
                 val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
                     sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
                 } else {
@@ -544,18 +544,20 @@ class BpmnProcessDefRecords(
 
             var resName = record.processDefId
             var eventWorkspace = ""
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(record.workspace)) {
                 resName = workspaceService.getWorkspaceSystemId(record.workspace) +
                     ProcUtils.PROC_KEY_WS_DELIM + resName
                 eventWorkspace = record.workspace
             }
             resName += BPMN_RESOURCE_NAME_POSTFIX
 
-            val deployResult = camundaRepoService.createDeployment()
-                .addInputStream(resName, mutData.newCamundaDefinitionStr.byteInputStream())
-                .name(record.name.getClosest())
-                .source("Ecos BPMN Modeler")
-                .deployWithResult()
+            val deployResult = ProcUtils.doWithWorkspaceContext(eventWorkspace) {
+                camundaRepoService.createDeployment()
+                    .addInputStream(resName, mutData.newCamundaDefinitionStr.byteInputStream())
+                    .name(record.name.getClosest())
+                    .source("Ecos BPMN Modeler")
+                    .deployWithResult()
+            }
 
             procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
             bpmnEventSubscriptionService.addSubscriptionsForDefRev(procDefResult.revisionId)
@@ -833,7 +835,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace) && isCurrentUserManagerOfWs) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace) && isCurrentUserManagerOfWs) {
                 return true
             }
             var hasPermission = recordPerms.hasPermission(name)
@@ -850,7 +852,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
                 return AuthContext.runAsSystem {
                     workspaceService.isUserMemberOf(currentUser, workspace)
                 }
@@ -862,7 +864,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
                 return isCurrentUserManagerOfWs
             }
             return has(PERMS_WRITE)

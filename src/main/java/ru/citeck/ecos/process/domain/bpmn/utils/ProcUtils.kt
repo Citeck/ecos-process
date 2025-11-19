@@ -7,19 +7,44 @@ import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 class ProcUtils(
     val workspaceService: WorkspaceService
 ) {
-
     companion object {
         const val PROC_KEY_WS_DELIM = ".."
-        const val WS_REF_PREFIX = "emodel/workspace@"
+
+        private val contextWorkspace = ThreadLocal<String>()
+
+        fun <T> doWithWorkspaceContext(workspace: String, action: () -> T): T {
+            if (workspace.isBlank()) {
+                return action.invoke()
+            }
+            val wsBefore = contextWorkspace.get()
+            contextWorkspace.set(workspace)
+            try {
+                return action.invoke()
+            } finally {
+                if (wsBefore.isNullOrBlank()) {
+                    contextWorkspace.remove()
+                } else {
+                    contextWorkspace.set(wsBefore)
+                }
+            }
+        }
+
+        fun getContextWorkspace(): String {
+            return contextWorkspace.get() ?: ""
+        }
+    }
+
+    fun <T> runAsWsSystemIfRequiredForProcDef(procDefId: String?, action: () -> T): T {
+        procDefId ?: return action()
+        return if (procDefId.contains(PROC_KEY_WS_DELIM)) {
+            val workspaceSysId = procDefId.substringBefore(PROC_KEY_WS_DELIM)
+            workspaceService.runAsWsSystemBySystemId(workspaceSysId, action)
+        } else {
+            action()
+        }
     }
 
     fun getUpdatedWsInMutation(currentWs: String, ctxWorkspace: String?): String {
-        if (currentWs.isNotBlank() ||
-            ctxWorkspace.isNullOrBlank() ||
-            workspaceService.isWorkspaceWithGlobalArtifacts(ctxWorkspace)
-        ) {
-            return currentWs
-        }
-        return ctxWorkspace.replace(WS_REF_PREFIX, "")
+        return workspaceService.getUpdatedWsInMutation(currentWs, ctxWorkspace)
     }
 }

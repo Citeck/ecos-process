@@ -20,7 +20,7 @@ class ExportContext(
     private var workspaceSysId = ""
 
     fun setWorkspace(workspace: String) {
-        workspaceSysId = if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+        workspaceSysId = if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
             workspaceService.getWorkspaceSystemId(workspace)
         } else {
             ""

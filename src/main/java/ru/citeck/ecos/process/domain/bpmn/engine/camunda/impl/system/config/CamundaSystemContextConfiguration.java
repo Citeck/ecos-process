@@ -5,7 +5,6 @@ import org.camunda.bpm.engine.impl.interceptor.CommandInterceptor;
 import org.camunda.bpm.spring.boot.starter.configuration.CamundaProcessEngineConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.interceptors.ExecuteJobAsSystemInterceptor;
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.interceptors.InvokeScriptAsSystemDelegateInterceptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,6 @@ public class CamundaSystemContextConfiguration extends AbstractCamundaConfigurat
 
     @Override
     public void postInit(ProcessEngineConfigurationImpl processEngineConfiguration) {
-        processEngineConfiguration.setDelegateInterceptor(new InvokeScriptAsSystemDelegateInterceptor());
     }
 
     @Override
@@ -32,5 +30,4 @@ public class CamundaSystemContextConfiguration extends AbstractCamundaConfigurat
 
         processEngineConfiguration.setCustomPreCommandInterceptorsTxRequired(interceptors);
     }
-
 }
