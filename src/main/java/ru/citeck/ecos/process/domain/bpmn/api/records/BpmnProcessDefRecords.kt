@@ -698,7 +698,24 @@ class BpmnProcessDefRecords(
         }
 
         fun getData(): ByteArray? {
-            return getDefinition()?.toByteArray(StandardCharsets.UTF_8)
+            val definition = getDefinition()
+            val preparedDefinition = prepareDefinitionForDataAtt(definition)
+            return preparedDefinition?.toByteArray(StandardCharsets.UTF_8)
+        }
+
+        private fun prepareDefinitionForDataAtt(definition: String?): String? {
+            if (definition == null) {
+                return null
+            }
+
+            val procDef = BpmnXmlUtils.readFromString(definition)
+            val ecosTypeStr = procDef.otherAttributes[BPMN_PROP_ECOS_TYPE]
+            if (!ecosTypeStr.isNullOrBlank()) {
+                val ecosTypeRef = EntityRef.valueOf(ecosTypeStr)
+                val localId = workspaceService.replaceWsPrefixFromIdToMask(ecosTypeRef.getLocalId())
+                procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosTypeRef.withLocalId(localId).toString()
+            }
+            return BpmnXmlUtils.writeToString(procDef)
         }
 
         fun getArtifactId() = procDef.id

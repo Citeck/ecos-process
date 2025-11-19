@@ -79,6 +79,8 @@ class BpmnMutateDataProcessor(
         var newCamundaDefinitionStr = ""
 
         if (statedInitialDefinition.isNotBlank()) {
+            statedInitialDefinition = prepareDefinitionForMutateData(statedInitialDefinition, workspace)
+
             if (saveAsDraft) {
                 // parse definition data from raw bpmn
 
@@ -225,6 +227,17 @@ class BpmnMutateDataProcessor(
             val camundaStr = bpmnIO.exportCamundaBpmnToString(ecosBpmnDef)
             log.debug { "exportCamundaBpmnToString:\n$camundaStr" }
         }
+    }
+
+    private fun prepareDefinitionForMutateData(definition: String, workspace: String): String {
+        val procDef = BpmnXmlUtils.readFromString(definition)
+        val ecosTypeStr = procDef.otherAttributes[BPMN_PROP_ECOS_TYPE]
+        if (!ecosTypeStr.isNullOrBlank()) {
+            val ecosTypeRef = EntityRef.valueOf(ecosTypeStr)
+            val localId = workspaceService.replaceMaskFromIdToWsPrefix(ecosTypeRef.getLocalId(), workspace)
+            procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosTypeRef.withLocalId(localId).toString()
+        }
+        return BpmnXmlUtils.writeToString(procDef)
     }
 }
 
