@@ -32,7 +32,7 @@ class ScriptTaskParseListener(
 
     private fun getProcWorkspace(definition: ProcessDefinitionImpl): String {
         var workspace = ProcUtils.getContextWorkspace()
-        if (workspace.isNotBlank()) {
+        if (workspace != null) {
             return workspace
         }
         workspace = procDefService.getProcessDefRevByDeploymentId(definition.deploymentId)?.workspace

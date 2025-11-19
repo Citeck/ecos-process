@@ -13,15 +13,12 @@ class ProcUtils(
         private val contextWorkspace = ThreadLocal<String>()
 
         fun <T> doWithWorkspaceContext(workspace: String, action: () -> T): T {
-            if (workspace.isBlank()) {
-                return action.invoke()
-            }
             val wsBefore = contextWorkspace.get()
             contextWorkspace.set(workspace)
             try {
                 return action.invoke()
             } finally {
-                if (wsBefore.isNullOrBlank()) {
+                if (wsBefore == null) {
                     contextWorkspace.remove()
                 } else {
                     contextWorkspace.set(wsBefore)
@@ -29,8 +26,8 @@ class ProcUtils(
             }
         }
 
-        fun getContextWorkspace(): String {
-            return contextWorkspace.get() ?: ""
+        fun getContextWorkspace(): String? {
+            return contextWorkspace.get()
         }
     }
 
