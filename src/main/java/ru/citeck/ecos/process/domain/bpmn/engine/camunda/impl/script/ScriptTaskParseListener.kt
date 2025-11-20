@@ -77,8 +77,9 @@ class ScriptTaskParseListener(
         private val impl: ActivityBehavior,
         private val workspace: String
     ) : TaskActivityBehavior() {
+
         override fun execute(execution: ActivityExecution) {
-            if (workspace.isBlank()) {
+            if (workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
                 AuthContext.runAsSystem {
                     impl.execute(execution)
                 }
