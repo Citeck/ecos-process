@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.xml.bind.JAXBElement
 import org.apache.commons.lang3.StringUtils
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
@@ -25,6 +26,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
@@ -70,6 +72,7 @@ import ru.citeck.ecos.webapp.lib.spring.context.content.EcosContentService
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
+import javax.xml.namespace.QName
 
 private const val PERMS_READ = "read"
 private const val PERMS_WRITE = "write"
@@ -114,6 +117,7 @@ class BpmnProcessDefRecords(
 
     @Volatile
     private var allProcDefsFromAlfresco: List<AlfProcDefRecord> = emptyList()
+
     @Volatile
     private var allProcDefsFromAlfrescoNextUpdateTime = Instant.EPOCH
 
@@ -709,13 +713,47 @@ class BpmnProcessDefRecords(
             }
 
             val procDef = BpmnXmlUtils.readFromString(definition)
-            val ecosTypeStr = procDef.otherAttributes[BPMN_PROP_ECOS_TYPE]
-            if (!ecosTypeStr.isNullOrBlank()) {
-                val ecosTypeRef = EntityRef.valueOf(ecosTypeStr)
-                val localId = workspaceService.replaceWsPrefixFromIdToMask(ecosTypeRef.getLocalId())
-                procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosTypeRef.withLocalId(localId).toString()
+
+            prepareExtRefAttribute(procDef.otherAttributes, BPMN_PROP_ECOS_TYPE)
+
+            procDef.rootElement?.forEach { rootElement ->
+                val rootElement = rootElement.value
+                if (rootElement is TProcess) {
+                    processElements(rootElement.flowElement)
+                }
             }
+
             return BpmnXmlUtils.writeToString(procDef)
+        }
+
+        private fun processElements(elements: List<JAXBElement<out TFlowElement>>?) {
+            elements?.forEach { flowElementJaxb ->
+                when (val element = flowElementJaxb.value) {
+                    is TSendTask -> {
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_NOTIFICATION_TEMPLATE)
+                    }
+
+                    is TUserTask -> {
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_FORM_REF)
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_NOTIFICATION_TEMPLATE)
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE)
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE)
+                    }
+
+                    is TSubProcess -> {
+                        processElements(element.flowElement)
+                    }
+                }
+            }
+        }
+
+        private fun prepareExtRefAttribute(attributes: MutableMap<QName, String>, attributeName: QName) {
+            val attributeValue = attributes[attributeName]
+            if (!attributeValue.isNullOrBlank()) {
+                val entityRef = EntityRef.valueOf(attributeValue)
+                val localId = workspaceService.replaceWsPrefixToCurrentWsPlaceholder(entityRef.getLocalId())
+                attributes[attributeName] = entityRef.withLocalId(localId).toString()
+            }
         }
 
         fun getArtifactId() = procDef.id

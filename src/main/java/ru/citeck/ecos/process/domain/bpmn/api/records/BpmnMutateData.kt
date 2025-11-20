@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.xml.bind.JAXBElement
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
@@ -10,6 +11,7 @@ import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRef
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
@@ -17,6 +19,7 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.util.*
+import javax.xml.namespace.QName
 
 @Component
 class BpmnMutateDataProcessor(
@@ -231,13 +234,47 @@ class BpmnMutateDataProcessor(
 
     private fun prepareDefinitionForMutateData(definition: String, workspace: String): String {
         val procDef = BpmnXmlUtils.readFromString(definition)
-        val ecosTypeStr = procDef.otherAttributes[BPMN_PROP_ECOS_TYPE]
-        if (!ecosTypeStr.isNullOrBlank()) {
-            val ecosTypeRef = EntityRef.valueOf(ecosTypeStr)
-            val localId = workspaceService.replaceMaskFromIdToWsPrefix(ecosTypeRef.getLocalId(), workspace)
-            procDef.otherAttributes[BPMN_PROP_ECOS_TYPE] = ecosTypeRef.withLocalId(localId).toString()
+
+        prepareExtRefAttribute(procDef.otherAttributes, BPMN_PROP_ECOS_TYPE, workspace)
+
+        procDef.rootElement?.forEach { rootElement ->
+            val rootElement = rootElement.value
+            if (rootElement is TProcess) {
+                processElements(rootElement.flowElement, workspace)
+            }
         }
+
         return BpmnXmlUtils.writeToString(procDef)
+    }
+
+    private fun processElements(elements: List<JAXBElement<out TFlowElement>>?, workspace: String) {
+        elements?.forEach { flowElementJaxb ->
+            when (val element = flowElementJaxb.value) {
+                is TSendTask -> {
+                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_NOTIFICATION_TEMPLATE, workspace)
+                }
+
+                is TUserTask -> {
+                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_FORM_REF, workspace)
+                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_NOTIFICATION_TEMPLATE, workspace)
+                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE, workspace)
+                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE, workspace)
+                }
+
+                is TSubProcess -> {
+                    processElements(element.flowElement, workspace)
+                }
+            }
+        }
+    }
+
+    private fun prepareExtRefAttribute(attributes: MutableMap<QName, String>, attributeName: QName, workspace: String) {
+        val attributeValue = attributes[attributeName]
+        if (!attributeValue.isNullOrBlank()) {
+            val entityRef = EntityRef.valueOf(attributeValue)
+            val localId = workspaceService.replaceCurrentWsPlaceholderToWsPrefix(entityRef.getLocalId(), workspace)
+            attributes[attributeName] = entityRef.withLocalId(localId).toString()
+        }
     }
 }
 
