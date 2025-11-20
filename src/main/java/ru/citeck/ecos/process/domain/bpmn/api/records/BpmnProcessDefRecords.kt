@@ -551,7 +551,7 @@ class BpmnProcessDefRecords(
             }
             resName += BPMN_RESOURCE_NAME_POSTFIX
 
-            val deployResult = ProcUtils.doWithWorkspaceContext(eventWorkspace) {
+            val deployResult = ProcUtils.doWithWorkspaceDeployContext(eventWorkspace) {
                 camundaRepoService.createDeployment()
                     .addInputStream(resName, mutData.newCamundaDefinitionStr.byteInputStream())
                     .name(record.name.getClosest())

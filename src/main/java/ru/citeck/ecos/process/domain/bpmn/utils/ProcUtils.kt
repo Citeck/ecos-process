@@ -12,7 +12,7 @@ class ProcUtils(
 
         private val contextWorkspace = ThreadLocal<String>()
 
-        fun <T> doWithWorkspaceContext(workspace: String, action: () -> T): T {
+        fun <T> doWithWorkspaceDeployContext(workspace: String, action: () -> T): T {
             val wsBefore = contextWorkspace.get()
             contextWorkspace.set(workspace)
             try {
@@ -26,7 +26,7 @@ class ProcUtils(
             }
         }
 
-        fun getContextWorkspace(): String? {
+        fun getDeployContextWorkspace(): String? {
             return contextWorkspace.get()
         }
     }
