@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.utils
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 
 @Component
@@ -32,12 +33,14 @@ class ProcUtils(
     }
 
     fun <T> runAsWsSystemIfRequiredForProcDef(procDefId: String?, action: () -> T): T {
-        procDefId ?: return action()
+        if (procDefId.isNullOrBlank()) {
+            return action()
+        }
         return if (procDefId.contains(PROC_KEY_WS_DELIM)) {
             val workspaceSysId = procDefId.substringBefore(PROC_KEY_WS_DELIM)
             workspaceService.runAsWsSystemBySystemId(workspaceSysId, action)
         } else {
-            action()
+            AuthContext.runAsSystem { action() }
         }
     }
 

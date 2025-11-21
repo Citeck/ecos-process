@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.impl.interceptor.CommandInterceptor;
 import org.camunda.bpm.spring.boot.starter.configuration.CamundaProcessEngineConfiguration;
 import org.camunda.bpm.spring.boot.starter.configuration.impl.AbstractCamundaConfiguration;
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.interceptors.ExecuteJobAsSystemInterceptor;
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,19 +16,25 @@ import java.util.List;
 public class CamundaSystemContextConfiguration extends AbstractCamundaConfiguration
     implements CamundaProcessEngineConfiguration {
 
+    private final ProcUtils procUtils;
+
+    public CamundaSystemContextConfiguration(ProcUtils procUtils) {
+        this.procUtils = procUtils;
+    }
+
     @Override
     public void postInit(ProcessEngineConfigurationImpl processEngineConfiguration) {
     }
 
     @Override
     public void preInit(ProcessEngineConfigurationImpl processEngineConfiguration) {
-        List<CommandInterceptor> interceptors = processEngineConfiguration.getCustomPreCommandInterceptorsTxRequired();
+        List<CommandInterceptor> interceptors = processEngineConfiguration.getCustomPostCommandInterceptorsTxRequired();
         if (interceptors == null) {
             interceptors = new ArrayList<>();
         }
 
-        interceptors.add(new ExecuteJobAsSystemInterceptor());
+        interceptors.add(new ExecuteJobAsSystemInterceptor(procUtils));
 
-        processEngineConfiguration.setCustomPreCommandInterceptorsTxRequired(interceptors);
+        processEngineConfiguration.setCustomPostCommandInterceptorsTxRequired(interceptors);
     }
 }
