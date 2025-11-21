@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.xml.bind.JAXBElement
 import org.apache.commons.lang3.StringUtils
 import org.camunda.bpm.engine.RepositoryService
 import org.springframework.stereotype.Component
@@ -25,6 +26,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
+import ru.citeck.ecos.process.domain.bpmn.model.omg.*
 import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.bpmnreport.model.ReportElement
 import ru.citeck.ecos.process.domain.bpmnreport.service.BpmnProcessReportService
@@ -70,6 +72,7 @@ import ru.citeck.ecos.webapp.lib.spring.context.content.EcosContentService
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
+import javax.xml.namespace.QName
 
 private const val PERMS_READ = "read"
 private const val PERMS_WRITE = "write"
@@ -114,6 +117,7 @@ class BpmnProcessDefRecords(
 
     @Volatile
     private var allProcDefsFromAlfresco: List<AlfProcDefRecord> = emptyList()
+
     @Volatile
     private var allProcDefsFromAlfrescoNextUpdateTime = Instant.EPOCH
 
@@ -201,7 +205,7 @@ class BpmnProcessDefRecords(
             result.size < (recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         val isSearchInGlobalWs = recsQuery.workspaces.isEmpty() ||
-            recsQuery.workspaces.any { workspaceService.isWorkspaceWithGlobalArtifacts(it) }
+            recsQuery.workspaces.any { workspaceService.isWorkspaceWithGlobalEntities(it) }
 
         if (isMoreRecordsRequired && remoteWebAppsApi.isAppAvailable(AppName.ALFRESCO) && isSearchInGlobalWs) {
 
@@ -425,7 +429,7 @@ class BpmnProcessDefRecords(
 
             if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
+                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalEntities(record.workspace)
                 val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
                     sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
                 } else {
@@ -543,17 +547,21 @@ class BpmnProcessDefRecords(
             log.debug { "Deploy to camunda:\n ${mutData.newCamundaDefinitionStr}" }
 
             var resName = record.processDefId
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
+            var eventWorkspace = ""
+            if (!workspaceService.isWorkspaceWithGlobalEntities(record.workspace)) {
                 resName = workspaceService.getWorkspaceSystemId(record.workspace) +
                     ProcUtils.PROC_KEY_WS_DELIM + resName
+                eventWorkspace = record.workspace
             }
             resName += BPMN_RESOURCE_NAME_POSTFIX
 
-            val deployResult = camundaRepoService.createDeployment()
-                .addInputStream(resName, mutData.newCamundaDefinitionStr.byteInputStream())
-                .name(record.name.getClosest())
-                .source("Ecos BPMN Modeler")
-                .deployWithResult()
+            val deployResult = ProcUtils.doWithWorkspaceDeployContext(eventWorkspace) {
+                camundaRepoService.createDeployment()
+                    .addInputStream(resName, mutData.newCamundaDefinitionStr.byteInputStream())
+                    .name(record.name.getClosest())
+                    .source("Ecos BPMN Modeler")
+                    .deployWithResult()
+            }
 
             procDefService.saveProcessDefRevDeploymentId(procDefResult.revisionId, deployResult.id)
             bpmnEventSubscriptionService.addSubscriptionsForDefRev(procDefResult.revisionId)
@@ -562,7 +570,8 @@ class BpmnProcessDefRecords(
                 ProcDefEvent(
                     procDefRef = procDefRef,
                     version = procDefResult.version.toDouble().inc(),
-                    dataState = procDefResult.dataState.name
+                    dataState = procDefResult.dataState.name,
+                    workspace = eventWorkspace
                 )
             )
 
@@ -693,7 +702,58 @@ class BpmnProcessDefRecords(
         }
 
         fun getData(): ByteArray? {
-            return getDefinition()?.toByteArray(StandardCharsets.UTF_8)
+            val definition = getDefinition()
+            val preparedDefinition = prepareDefinitionForDataAtt(definition)
+            return preparedDefinition?.toByteArray(StandardCharsets.UTF_8)
+        }
+
+        private fun prepareDefinitionForDataAtt(definition: String?): String? {
+            if (definition == null) {
+                return null
+            }
+
+            val procDef = BpmnXmlUtils.readFromString(definition)
+
+            prepareExtRefAttribute(procDef.otherAttributes, BPMN_PROP_ECOS_TYPE)
+
+            procDef.rootElement?.forEach { rootElement ->
+                val rootElement = rootElement.value
+                if (rootElement is TProcess) {
+                    processElements(rootElement.flowElement)
+                }
+            }
+
+            return BpmnXmlUtils.writeToString(procDef)
+        }
+
+        private fun processElements(elements: List<JAXBElement<out TFlowElement>>?) {
+            elements?.forEach { flowElementJaxb ->
+                when (val element = flowElementJaxb.value) {
+                    is TSendTask -> {
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_NOTIFICATION_TEMPLATE)
+                    }
+
+                    is TUserTask -> {
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_FORM_REF)
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_NOTIFICATION_TEMPLATE)
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE)
+                        prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE)
+                    }
+
+                    is TSubProcess -> {
+                        processElements(element.flowElement)
+                    }
+                }
+            }
+        }
+
+        private fun prepareExtRefAttribute(attributes: MutableMap<QName, String>, attributeName: QName) {
+            val attributeValue = attributes[attributeName]
+            if (!attributeValue.isNullOrBlank()) {
+                val entityRef = EntityRef.valueOf(attributeValue)
+                val localId = workspaceService.replaceWsPrefixToCurrentWsPlaceholder(entityRef.getLocalId())
+                attributes[attributeName] = entityRef.withLocalId(localId).toString()
+            }
         }
 
         fun getArtifactId() = procDef.id
@@ -830,7 +890,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace) && isCurrentUserManagerOfWs) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace) && isCurrentUserManagerOfWs) {
                 return true
             }
             var hasPermission = recordPerms.hasPermission(name)
@@ -847,7 +907,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
                 return AuthContext.runAsSystem {
                     workspaceService.isUserMemberOf(currentUser, workspace)
                 }
@@ -859,7 +919,7 @@ class BpmnProcessDefRecords(
             if (AuthContext.isRunAsSystem()) {
                 return true
             }
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
                 return isCurrentUserManagerOfWs
             }
             return has(PERMS_WRITE)

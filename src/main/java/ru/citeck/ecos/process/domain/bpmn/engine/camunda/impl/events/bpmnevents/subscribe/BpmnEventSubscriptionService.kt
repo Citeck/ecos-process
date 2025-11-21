@@ -10,6 +10,7 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.type.RecordChangedEvent
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.elements.config.BPMN_PROCESS_ELEMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional.BpmnConditionalEventsProcessor
@@ -224,6 +225,7 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
     lateinit var time: Instant
     lateinit var type: String
     lateinit var user: String
+    var workspace = ""
     val attributes = mutableMapOf<String, DataValue>()
 
     this.forEach { att, dataValue ->
@@ -232,6 +234,7 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
             EventSubscriptionCombiner.EVENT_TIME_ATT -> time = dataValue.getAsInstant()!!
             EventSubscriptionCombiner.EVENT_TYPE_ATT -> type = dataValue.asText()
             EventSubscriptionCombiner.EVENT_USER_ATT -> user = dataValue.asText()
+            EventSubscriptionCombiner.EVENT_RECORD_WORKSPACE -> workspace = dataValue.asText()
             EventSubscriptionCombiner.EVENT_RECORD_ID_ATT -> attributes[EcosEventType.RECORD_ATT] = dataValue
             EventSubscriptionCombiner.EVENT_RECORD_TYPE_ID_ATT -> attributes[EcosEventType.RECORD_TYPE_ATT] = dataValue
             else -> attributes[att] = dataValue
@@ -242,7 +245,7 @@ private fun ObjectData.toGeneralEvent(): GeneralEvent {
     require(type.isNotBlank()) { "Event type is blank" }
     require(user.isNotBlank()) { "Event user is blank" }
 
-    return GeneralEvent(id, time, type, user, attributes)
+    return GeneralEvent(id, time, type, user, workspace.ifBlank { ModelUtils.DEFAULT_WORKSPACE_ID }, attributes)
 }
 
 data class GeneralEvent(
@@ -250,5 +253,6 @@ data class GeneralEvent(
     val time: Instant,
     val type: String,
     val user: String,
+    val workspace: String,
     val attributes: Map<String, DataValue>
 )

@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.aitask.AiTaskParseListener
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.listener.BpmnElementsEventsParseListener
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.script.ScriptTaskParseListener
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.task.listener.TaskVariablesParseListener
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask.UserTaskAssignParseListener
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask.UserTaskAttsSyncParseListener
@@ -17,7 +18,8 @@ class EcosCamundaParseListenerPlugin(
     private val bpmnElementsEventsParseListener: BpmnElementsEventsParseListener,
     private val taskParseListener: TaskVariablesParseListener,
     private val taskAttsSyncParseListener: UserTaskAttsSyncParseListener,
-    private val aiTaskParseListener: AiTaskParseListener
+    private val aiTaskParseListener: AiTaskParseListener,
+    private val scriptTaskParseListener: ScriptTaskParseListener
 ) : AbstractProcessEnginePlugin() {
 
     override fun preInit(processEngineConfiguration: ProcessEngineConfigurationImpl) {
@@ -29,6 +31,7 @@ class EcosCamundaParseListenerPlugin(
         listeners.add(taskParseListener)
         listeners.add(taskAttsSyncParseListener)
         listeners.add(aiTaskParseListener)
+        listeners.add(scriptTaskParseListener)
 
         processEngineConfiguration.customPreBPMNParseListeners = listeners
     }

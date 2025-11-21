@@ -32,7 +32,8 @@ open class EcosDataProcDefRevAdapter(
         "modified" to RecordConstants.ATT_MODIFIED,
         "modifiedBy" to RecordConstants.ATT_MODIFIER
     ),
-    ProcDefRevRecordAtts::class
+    ProcDefRevRecordAtts::class,
+    runQueryAsSystem = true
 ) {
 
     companion object {

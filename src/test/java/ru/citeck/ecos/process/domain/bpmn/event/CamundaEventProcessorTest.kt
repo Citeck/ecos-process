@@ -12,6 +12,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventExploder
@@ -64,7 +65,8 @@ internal class CamundaEventProcessorTest {
             attributes = mapOf(
                 EcosEventType.RECORD_ATT to DataValue.create(record),
                 EcosEventType.RECORD_TYPE_ATT to DataValue.create(recordType)
-            )
+            ),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -105,7 +107,8 @@ internal class CamundaEventProcessorTest {
             time = Instant.now(),
             type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
-            attributes = mapOf("text" to DataValue.create(commentValue))
+            attributes = mapOf("text" to DataValue.create(commentValue)),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -152,7 +155,8 @@ internal class CamundaEventProcessorTest {
             attributes = mapOf(
                 "text" to DataValue.create(commentValue),
                 "commentRecord?id" to DataValue.create(commentRecord)
-            )
+            ),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -199,7 +203,8 @@ internal class CamundaEventProcessorTest {
             attributes = mapOf(
                 "textAfter" to DataValue.create(commentValue),
                 "commentRec?id" to DataValue.create(commentRecord)
-            )
+            ),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -246,7 +251,8 @@ internal class CamundaEventProcessorTest {
             attributes = mapOf(
                 "text" to DataValue.create(commentValue),
                 "commentRecord?id" to DataValue.create(commentRecord)
-            )
+            ),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -289,7 +295,8 @@ internal class CamundaEventProcessorTest {
             time = Instant.now(),
             type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
-            attributes = mapOf("text" to DataValue.create("its comment"))
+            attributes = mapOf("text" to DataValue.create("its comment")),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -335,7 +342,8 @@ internal class CamundaEventProcessorTest {
             time = Instant.now(),
             type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
-            attributes = mapOf("text" to DataValue.create(commentValue))
+            attributes = mapOf("text" to DataValue.create(commentValue)),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))
@@ -386,7 +394,8 @@ internal class CamundaEventProcessorTest {
             time = Instant.now(),
             type = EcosEventType.COMMENT_CREATE.availableEventNames()[0],
             user = "ivan",
-            attributes = mapOf("text" to DataValue.create(anotherCommentValue))
+            attributes = mapOf("text" to DataValue.create(anotherCommentValue)),
+            workspace = ModelUtils.DEFAULT_WORKSPACE_ID
         )
 
         `when`(camundaEventSubscriptionFinder.getActualCamundaSubscriptions(incomingEvent.toIncomingEventData()))

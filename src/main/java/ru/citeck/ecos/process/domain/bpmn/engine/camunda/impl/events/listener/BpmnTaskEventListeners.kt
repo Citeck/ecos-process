@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.txn.lib.TxnContext
 
 @Component
@@ -20,7 +21,8 @@ class BpmnTaskCreateEventListener : TaskListener {
 @Component
 class BpmnTaskAssignEventListener(
     private val emitter: BpmnEventEmitter,
-    private val bpmnElementConverter: BpmnElementConverter
+    private val bpmnElementConverter: BpmnElementConverter,
+    private val procUtils: ProcUtils
 ) : TaskListener {
 
     companion object {
@@ -32,8 +34,9 @@ class BpmnTaskAssignEventListener(
             TxnContext.doInTxn {
                 val converterFlowElement = bpmnElementConverter.toUserTaskEvent(delegateTask)
                 log.debug { "Emit task assign element:\n $converterFlowElement" }
-
-                emitter.emitUserTaskAssignEvent(converterFlowElement)
+                procUtils.runAsWsSystemIfRequiredForProcDef(converterFlowElement.procDefId) {
+                    emitter.emitUserTaskAssignEvent(converterFlowElement)
+                }
             }
         }
     }
@@ -42,7 +45,8 @@ class BpmnTaskAssignEventListener(
 @Component
 class BpmnTaskCompleteEventListener(
     private val emitter: BpmnEventEmitter,
-    private val bpmnElementConverter: BpmnElementConverter
+    private val bpmnElementConverter: BpmnElementConverter,
+    private val procUtils: ProcUtils
 ) : TaskListener {
 
     companion object {
@@ -54,8 +58,9 @@ class BpmnTaskCompleteEventListener(
             TxnContext.doInTxn {
                 val converterFlowElement = bpmnElementConverter.toUserTaskEvent(delegateTask)
                 log.debug { "Emit task complete element:\n $converterFlowElement" }
-
-                emitter.emitUserTaskCompleteEvent(converterFlowElement)
+                procUtils.runAsWsSystemIfRequiredForProcDef(converterFlowElement.procDefId) {
+                    emitter.emitUserTaskCompleteEvent(converterFlowElement)
+                }
             }
         }
     }
@@ -64,7 +69,8 @@ class BpmnTaskCompleteEventListener(
 @Component
 class BpmnTaskDeleteEventListener(
     private val emitter: BpmnEventEmitter,
-    private val bpmnElementConverter: BpmnElementConverter
+    private val bpmnElementConverter: BpmnElementConverter,
+    private val procUtils: ProcUtils
 ) : TaskListener {
 
     companion object {
@@ -76,8 +82,9 @@ class BpmnTaskDeleteEventListener(
             TxnContext.doInTxn {
                 val converterFlowElement = bpmnElementConverter.toUserTaskEvent(delegateTask)
                 log.debug { "Emit task delete element:\n $converterFlowElement" }
-
-                emitter.emitUserTaskDeleteEvent(converterFlowElement)
+                procUtils.runAsWsSystemIfRequiredForProcDef(converterFlowElement.procDefId) {
+                    emitter.emitUserTaskDeleteEvent(converterFlowElement)
+                }
             }
         }
     }

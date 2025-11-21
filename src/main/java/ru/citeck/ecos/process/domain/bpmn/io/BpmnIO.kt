@@ -192,7 +192,7 @@ final class BpmnIO(
             val defId = generateElementId("Definitions")
 
             var processId = processDefId
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(workspace)) {
+            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
                 processId = workspaceService.getWorkspaceSystemId(workspace) + ProcUtils.PROC_KEY_WS_DELIM + processId
             }
 

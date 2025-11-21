@@ -185,7 +185,7 @@ class DmnDefRecords(
 
             if (record.isNewRecord || record.sectionRef != record.sectionRefBefore) {
 
-                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)
+                val isNonGlobalWs = !workspaceService.isWorkspaceWithGlobalEntities(record.workspace)
                 val hasPermissionToCreateDefinitionsInSection = if (isNonGlobalWs) {
                     sectionRef.getLocalId() == SectionsProxyDao.SECTION_DEFAULT
                 } else {
@@ -311,8 +311,10 @@ class DmnDefRecords(
             log.debug { "Deploy to camunda:\n $camundaFormat" }
 
             var resName = record.defId
-            if (!workspaceService.isWorkspaceWithGlobalArtifacts(record.workspace)) {
+            var eventWorkspace = ""
+            if (!workspaceService.isWorkspaceWithGlobalEntities(record.workspace)) {
                 resName = workspaceService.getWorkspaceSystemId(record.workspace) + ProcUtils.PROC_KEY_WS_DELIM + resName
+                eventWorkspace = record.workspace
             }
             resName += DMN_RESOURCE_NAME_POSTFIX
 
@@ -328,7 +330,8 @@ class DmnDefRecords(
                 ProcDefEvent(
                     procDefRef = procDefRef,
                     version = procDefResult.version.toDouble().inc(),
-                    dataState = procDefResult.dataState.name
+                    dataState = procDefResult.dataState.name,
+                    workspace = eventWorkspace
                 )
             )
 

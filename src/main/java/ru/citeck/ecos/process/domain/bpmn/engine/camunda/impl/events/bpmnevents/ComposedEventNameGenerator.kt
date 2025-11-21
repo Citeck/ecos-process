@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents
 
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 object ComposedEventNameGenerator {
@@ -42,5 +43,6 @@ object ComposedEventNameGenerator {
 data class IncomingEventData(
     val eventName: String,
     val record: EntityRef = EntityRef.EMPTY,
-    val recordType: EntityRef = EntityRef.EMPTY
+    val recordType: EntityRef = EntityRef.EMPTY,
+    val workspace: String = ModelUtils.DEFAULT_WORKSPACE_ID
 )

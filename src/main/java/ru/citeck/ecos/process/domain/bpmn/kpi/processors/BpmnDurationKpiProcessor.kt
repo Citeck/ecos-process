@@ -1,8 +1,10 @@
 package ru.citeck.ecos.process.domain.bpmn.kpi.processors
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.security.access.annotation.Secured
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.auth.AuthRole
 import ru.citeck.ecos.process.common.toPrettyString
 import ru.citeck.ecos.process.domain.bpmn.elements.api.records.BpmnProcessElementsProxyDao
 import ru.citeck.ecos.process.domain.bpmn.kpi.*
@@ -32,6 +34,7 @@ class BpmnDurationKpiProcessor(
         private val log = KotlinLogging.logger {}
     }
 
+    @Secured(AuthRole.ADMIN, AuthRole.SYSTEM)
     override fun processStartEvent(bpmnEvent: BpmnElementEvent) {
         saveStakeholdersKpi(
             bpmnEvent,
@@ -63,6 +66,7 @@ class BpmnDurationKpiProcessor(
         }
     }
 
+    @Secured(AuthRole.ADMIN, AuthRole.SYSTEM)
     override fun processEndEvent(bpmnEvent: BpmnElementEvent) {
         check(bpmnEvent.completed != null) {
             "Completed date must be not null: \n${Json.mapper.toPrettyString(bpmnEvent)}"

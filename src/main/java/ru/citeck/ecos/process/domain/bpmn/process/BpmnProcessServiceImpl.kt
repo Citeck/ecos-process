@@ -79,7 +79,7 @@ class BpmnProcessServiceImpl(
     override fun startProcess(request: StartProcessRequest): ProcessInstance {
 
         var processKey = request.processId
-        if (!workspaceService.isWorkspaceWithGlobalArtifacts(request.workspace)) {
+        if (!workspaceService.isWorkspaceWithGlobalEntities(request.workspace)) {
             val wsSysId = workspaceService.getWorkspaceSystemId(request.workspace)
             processKey = wsSysId + ProcUtils.PROC_KEY_WS_DELIM + processKey
         }

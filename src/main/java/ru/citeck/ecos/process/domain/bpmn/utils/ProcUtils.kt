@@ -1,25 +1,50 @@
 package ru.citeck.ecos.process.domain.bpmn.utils
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 
 @Component
 class ProcUtils(
     val workspaceService: WorkspaceService
 ) {
-
     companion object {
         const val PROC_KEY_WS_DELIM = ".."
-        const val WS_REF_PREFIX = "emodel/workspace@"
+
+        private val contextWorkspace = ThreadLocal<String>()
+
+        fun <T> doWithWorkspaceDeployContext(workspace: String, action: () -> T): T {
+            val wsBefore = contextWorkspace.get()
+            contextWorkspace.set(workspace)
+            try {
+                return action.invoke()
+            } finally {
+                if (wsBefore == null) {
+                    contextWorkspace.remove()
+                } else {
+                    contextWorkspace.set(wsBefore)
+                }
+            }
+        }
+
+        fun getDeployContextWorkspace(): String? {
+            return contextWorkspace.get()
+        }
+    }
+
+    fun <T> runAsWsSystemIfRequiredForProcDef(procDefId: String?, action: () -> T): T {
+        if (procDefId.isNullOrBlank()) {
+            return action()
+        }
+        return if (procDefId.contains(PROC_KEY_WS_DELIM)) {
+            val workspaceSysId = procDefId.substringBefore(PROC_KEY_WS_DELIM)
+            workspaceService.runAsWsSystemBySystemId(workspaceSysId, action)
+        } else {
+            AuthContext.runAsSystem { action() }
+        }
     }
 
     fun getUpdatedWsInMutation(currentWs: String, ctxWorkspace: String?): String {
-        if (currentWs.isNotBlank() ||
-            ctxWorkspace.isNullOrBlank() ||
-            workspaceService.isWorkspaceWithGlobalArtifacts(ctxWorkspace)
-        ) {
-            return currentWs
-        }
-        return ctxWorkspace.replace(WS_REF_PREFIX, "")
+        return workspaceService.getUpdatedWsInMutation(currentWs, ctxWorkspace)
     }
 }

@@ -9,6 +9,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.datasource.Camun
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.config.CamundaSystemContextConfiguration
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.config.CamundaResolveVariablesConfiguration
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.config.CamundaScriptEnvResolvesConfiguration
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.webapp.api.datasource.JdbcDataSource
 import ru.citeck.ecos.webapp.api.properties.EcosWebAppProps
 import ru.citeck.ecos.webapp.lib.env.EcosWebAppEnvironment
@@ -51,8 +52,8 @@ class EcosCamundaConfiguration(
     }
 
     @Bean
-    fun camundaSystemContextConfiguration(): CamundaProcessEngineConfiguration {
-        return CamundaSystemContextConfiguration()
+    fun camundaSystemContextConfiguration(procUtils: ProcUtils): CamundaProcessEngineConfiguration {
+        return CamundaSystemContextConfiguration(procUtils)
     }
 
     @Bean
