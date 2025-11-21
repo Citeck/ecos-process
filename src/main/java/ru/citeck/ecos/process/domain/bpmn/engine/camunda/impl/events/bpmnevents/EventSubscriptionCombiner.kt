@@ -13,6 +13,7 @@ object EventSubscriptionCombiner {
     const val EVENT_TYPE_ATT = "\$event.type"
     const val EVENT_USER_ATT = "\$event.user"
     const val EVENT_RECORD_ID_ATT = "${EcosEventType.RECORD_ATT}?id"
+    const val EVENT_RECORD_WORKSPACE = "${EcosEventType.RECORD_ATT}.${RecordConstants.ATT_WORKSPACE}?localId"
     const val EVENT_RECORD_TYPE_ID_ATT = "${EcosEventType.RECORD_ATT}.${RecordConstants.ATT_TYPE}?id"
 
     val DEFAULT_ATTS = listOf(
@@ -22,6 +23,7 @@ object EventSubscriptionCombiner {
         EVENT_USER_ATT,
         EVENT_RECORD_ID_ATT,
         EVENT_RECORD_TYPE_ID_ATT,
+        EVENT_RECORD_WORKSPACE
     )
 
     /**

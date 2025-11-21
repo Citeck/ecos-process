@@ -7,6 +7,7 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.TmplUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -144,7 +145,8 @@ fun GeneralEvent.toIncomingEventData(): IncomingEventData {
     return IncomingEventData(
         eventName = this.type,
         record = getEntityRefByAttKey(attributes, EcosEventType.RECORD_ATT),
-        recordType = getEntityRefByAttKey(attributes, EcosEventType.RECORD_TYPE_ATT)
+        recordType = getEntityRefByAttKey(attributes, EcosEventType.RECORD_TYPE_ATT),
+        workspace = this.workspace.ifBlank { ModelUtils.DEFAULT_WORKSPACE_ID }
     )
 }
 

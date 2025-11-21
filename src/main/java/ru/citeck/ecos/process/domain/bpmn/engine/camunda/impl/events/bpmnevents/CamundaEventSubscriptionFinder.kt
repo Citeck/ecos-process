@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getConditionalEventSubscriptionsByProcessInstanceIds
@@ -40,7 +42,8 @@ class CamundaEventSubscriptionFinder(
     private val cachedEventSubscriptionProvider: CachedEventSubscriptionProvider,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
     private val camundaMyBatisExtension: CamundaMyBatisExtension,
-    private val bpmnIO: BpmnIO
+    private val bpmnIO: BpmnIO,
+    private val workspaceService: WorkspaceService
 ) {
 
     companion object {
@@ -119,12 +122,17 @@ class CamundaEventSubscriptionFinder(
                     }
 
                     val eventSubscription = getExactEventSubscription(deploymentId, sub.activityId)
-
                     eventSubscription?.let {
-                        CamundaEventSubscription(
-                            id = sub.id,
-                            event = it
-                        )
+                        if (workspaceService.isWorkspaceWithGlobalEntities(it.workspace)
+                            || it.workspace == eventData.workspace
+                        ) {
+                            CamundaEventSubscription(
+                                id = sub.id,
+                                event = it
+                            )
+                        } else {
+                            null
+                        }
                     }
                 }
         }
@@ -305,18 +313,23 @@ private fun ProcDefRevDto.parseDeployedSubscriptionsData(
             elementId = it.elementId,
             name = ComposedEventName.fromString(it.signalName),
             model = it.eventModel,
-            predicate = it.eventFilterByPredicate?.let { pr -> Json.mapper.toString(pr) }
+            predicate = it.eventFilterByPredicate?.let { pr -> Json.mapper.toString(pr) },
+            workspace = definition.workspace.ifBlank { ModelUtils.DEFAULT_WORKSPACE_ID }
         )
     }
 
     return DeployedSubscriptionsData(notEmptyTypes, subscriptions)
 }
 
-private fun ProcDefRevDto.getBpmnConditionalEvents(bpmnIO: BpmnIO, dataProvider: ProcDefRevDataProvider): List<ConditionalEvent> {
+private fun ProcDefRevDto.getBpmnConditionalEvents(
+    bpmnIO: BpmnIO,
+    dataProvider: ProcDefRevDataProvider
+): List<ConditionalEvent> {
     val defXml = String(this.loadData(dataProvider), Charsets.UTF_8)
 
     return try {
-        bpmnIO.importEcosBpmn(defXml).conditionalEventDefsMeta.map { conditionalEvent ->
+        val parsedDef = bpmnIO.importEcosBpmn(defXml)
+        parsedDef.conditionalEventDefsMeta.map { conditionalEvent ->
             ConditionalEvent(
                 reactOnDocumentChange = conditionalEvent.reactOnDocumentChange,
                 documentVariables = conditionalEvent.documentVariables.filter { it.isNotBlank() },
@@ -339,6 +352,7 @@ data class EventSubscription(
     val elementId: String,
     val name: ComposedEventName,
     val model: Map<String, String>,
+    val workspace: String = ModelUtils.DEFAULT_WORKSPACE_ID,
 
     // store predicates as string for Hazelcast serialization
     val predicate: String? = null
@@ -353,6 +367,7 @@ data class EventSubscription(
 
         if (name != other.name) return false
         if (model != other.model) return false
+        if (workspace != other.workspace) return false
         if (getPredicateValue() != other.getPredicateValue()) return false
 
         return true
@@ -362,6 +377,7 @@ data class EventSubscription(
         var result = name.hashCode()
         result = 31 * result + model.hashCode()
         result = 31 * result + getPredicateValue().hashCode()
+        result = 31 * result + workspace.hashCode()
         return result
     }
 
