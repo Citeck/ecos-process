@@ -123,8 +123,8 @@ class CamundaEventSubscriptionFinder(
 
                     val eventSubscription = getExactEventSubscription(deploymentId, sub.activityId)
                     eventSubscription?.let {
-                        if (workspaceService.isWorkspaceWithGlobalEntities(it.workspace)
-                            || it.workspace == eventData.workspace
+                        if (workspaceService.isWorkspaceWithGlobalEntities(it.workspace) ||
+                            it.workspace == eventData.workspace
                         ) {
                             CamundaEventSubscription(
                                 id = sub.id,

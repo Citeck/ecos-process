@@ -218,11 +218,14 @@ class BpmnProcHelper(
         recordsService.mutate(recordAtts)
     }
 
-    fun saveAndDeployBpmnFromString(bpmnData: String, id: String) {
+    fun saveAndDeployBpmnFromString(bpmnData: String, id: String, workspace: String = "") {
         val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, "")).apply {
             this["processDefId"] = id
             this["definition"] = bpmnData
             this["action"] = BpmnProcessDefActions.DEPLOY.toString()
+            if (workspace.isNotBlank()) {
+                this[RecordConstants.ATT_WORKSPACE] = workspace
+            }
         }
 
         recordsService.mutate(recordAtts)

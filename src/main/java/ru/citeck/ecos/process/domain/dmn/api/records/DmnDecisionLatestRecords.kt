@@ -41,12 +41,16 @@ class DmnDecisionLatestRecords(
             recsQuery.workspaces
         )?.map { workspaceService.getWorkspaceSystemId(it) } ?: return null
 
+        val totalCount = camundaMyBatisExtension.getCountOfLatestDmnDefsByWsSysId(wsSysIdsToFilter)
+        if (totalCount == 0L) {
+            return null
+        }
+
         val resultRefs = camundaMyBatisExtension.getLatestDmnDefsByWorkspacesSysId(
             wsSysIdsToFilter,
             recsQuery.page.skipCount,
             recsQuery.page.maxItems
         ).map { EntityRef.create(AppName.EPROC, ID, it.key) }
-        val totalCount = camundaMyBatisExtension.getCountOfLatestDmnDefsByWsSysId(wsSysIdsToFilter)
 
         val result = RecsQueryRes<EntityRef>()
         result.setRecords(resultRefs)

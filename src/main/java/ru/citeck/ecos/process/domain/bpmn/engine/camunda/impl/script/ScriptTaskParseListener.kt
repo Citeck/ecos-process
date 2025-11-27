@@ -64,7 +64,7 @@ class ScriptTaskParseListener(
             if (workspaceId.isBlank()) {
                 error(
                     "Workspace doesn't found for systemId: '$workspaceSysId'. " +
-                    "ProcKey: '${procDefKeyInCamunda}' DeploymentId: '$deploymentId'"
+                        "ProcKey: '$procDefKeyInCamunda' DeploymentId: '$deploymentId'"
                 )
             }
             workspaceId

@@ -33,4 +33,34 @@
         and DEF.version_ = (select max(version_) from ${prefix}ACT_RE_PROCDEF where key_ = DEF.key_)
     </select>
 
+    <select id="selectLatestBpmnDefsByWsSysId" parameterType="map" resultMap="processDefinitionResultMap">
+        select * from ${prefix}ACT_RE_PROCDEF DEF
+        <include refid="latestBpmnDefsByWsSysIdSql"/>
+        LIMIT #{maxItems} OFFSET #{skipCount}
+    </select>
+
+    <select id="selectCountOfLatestBpmnDefsByWsSysId" parameterType="map" resultType="long">
+        select COUNT(*) from ${prefix}ACT_RE_PROCDEF DEF
+        <include refid="latestBpmnDefsByWsSysIdSql"/>
+    </select>
+
+    <sql id="latestBpmnDefsByWsSysIdSql">
+        <where>
+            <foreach collection="workspacesSysId" item="wsSysId" open="(" separator=" OR " close=")">
+                <choose>
+                    <when test="wsSysId != ''">
+                        resource_name_ like CONCAT(#{wsSysId}, '..%')
+                    </when>
+                    <otherwise>
+                        resource_name_ not like '%..%'
+                    </otherwise>
+                </choose>
+            </foreach>
+            <if test="keyLike != null">
+                and RES.KEY_ like #{keyLike} ESCAPE ${escapeChar}
+            </if>
+            and DEF.version_ = (select max(version_) from ${prefix}ACT_RE_PROCDEF where key_ = DEF.key_)
+        </where>
+    </sql>
+
 </mapper>

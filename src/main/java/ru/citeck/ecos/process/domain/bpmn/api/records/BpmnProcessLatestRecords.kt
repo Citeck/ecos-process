@@ -4,6 +4,7 @@ import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
@@ -48,38 +49,40 @@ class BpmnProcessLatestRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): RecsQueryRes<EntityRef> {
+
+        val wsSysIdsToFilter = workspaceService.getAvailableWorkspacesToQuery(
+            AuthContext.getCurrentRunAsAuth(),
+            recsQuery.workspaces
+        )?.map { workspaceService.getWorkspaceSystemId(it) } ?: return RecsQueryRes()
+
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val query = PredicateUtils.convertToDto(predicate, ProcessLatestQuery::class.java)
 
-        val countQuery = camundaRepositoryService
-            .createProcessDefinitionQuery()
-            .latestVersion()
+        var procDefKeyLike: String? = null
         if (query.definition.isNotBlank()) {
-            countQuery.processDefinitionKeyLike("%${query.definition}%")
+            procDefKeyLike = "%${query.definition}%"
         }
 
-        val count = countQuery.count()
-        if (count == 0L) {
+        val totalCount = camundaMyBatisExtension.getCountOfLatestBpmnDefsByWsSysId(
+            wsSysIdsToFilter,
+            procDefKeyLike
+        )
+        if (totalCount == 0L) {
             return RecsQueryRes()
         }
 
-        val processesQuery = camundaRepositoryService
-            .createProcessDefinitionQuery()
-            .latestVersion()
-        if (query.definition.isNotBlank()) {
-            processesQuery.processDefinitionKeyLike("%${query.definition}%")
-        }
-
-        val processes = processesQuery
-            .listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
-                EntityRef.create(AppName.EPROC, ID, it.key)
-            }
+        val processes = camundaMyBatisExtension.getLatestBpmnDefsByWorkspacesSysId(
+            wsSysIdsToFilter,
+            procDefKeyLike,
+            recsQuery.page.skipCount,
+            recsQuery.page.maxItems
+        ).map { EntityRef.create(AppName.EPROC, ID, it.key) }
 
         val result = RecsQueryRes<EntityRef>()
 
         result.setRecords(processes)
-        result.setTotalCount(count)
-        result.setHasMore(count > recsQuery.page.maxItems + recsQuery.page.skipCount)
+        result.setTotalCount(totalCount)
+        result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return result
     }

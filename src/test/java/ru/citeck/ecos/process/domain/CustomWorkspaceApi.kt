@@ -59,7 +59,7 @@ class CustomWorkspaceApi(
         this.userWorkspaces[user] = workspaces
     }
 
-    fun cleanUp(){
+    fun cleanUp() {
         userWorkspaces.clear()
     }
 }

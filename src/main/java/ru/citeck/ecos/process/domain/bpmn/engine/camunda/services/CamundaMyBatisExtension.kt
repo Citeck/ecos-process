@@ -24,10 +24,16 @@ private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES_LIKE_START = "select
 private const val SELECT_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_PROCESS_INSTANCE_IDS =
     "selectConditionalEventSubscriptionsByProcessInstanceIds"
 private const val TRUNCATE_EVENT_SUBSCRIPTIONS = "truncateEventSubscriptions"
+
+// DMN
 private const val SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS = "selectLatestDecisionDefinitionsByKeys"
 private const val SELECT_LATEST_DMN_DEFS_BY_WS_SYS_ID = "selectLatestDmnDefsByWsSysId"
 private const val SELECT_COUNT_OF_LATEST_DMN_DEFS_BY_WS_SYS_ID = "selectCountOfLatestDmnDefsByWsSysId"
+
+// BPMN
 private const val SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS = "selectLatestProcessDefinitionsByKeys"
+private const val SELECT_LATEST_BPMN_DEFS_BY_WS_SYS_ID = "selectLatestBpmnDefsByWsSysId"
+private const val SELECT_COUNT_OF_LATEST_BPMN_DEFS_BY_WS_SYS_ID = "selectCountOfLatestBpmnDefsByWsSysId"
 
 @Component
 class CamundaMyBatisExtension(
@@ -154,34 +160,34 @@ class CamundaMyBatisExtension(
         factory.commandExecutorTxRequired.execute(command)
     }
 
-    fun getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {
+    private fun <T : Any> selectList(statementId: String, param: Any): List<T> {
         val command = Command {
-            val params: Map<String, Any> = mapOf(
-                "keys" to keys
-            )
-
             @Suppress("UNCHECKED_CAST")
-            it.dbSqlSession.selectList(
-                SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS,
-                params
-            ) as List<DecisionDefinitionEntity>
+            it.dbSqlSession.selectList(statementId, param) as List<T>
         }
-
         return factory.commandExecutorTxRequired.execute(command)
     }
 
-    fun getCountOfLatestDmnDefsByWsSysId(workspacesSysId: List<String>): Long {
+    private fun selectCount(statementId: String, param: Any): Long {
         val command = Command {
-            val params: Map<String, Any> = mapOf(
-                "workspacesSysId" to workspacesSysId
-            )
             @Suppress("UNCHECKED_CAST")
-            it.dbSqlSession.selectOne(
-                SELECT_COUNT_OF_LATEST_DMN_DEFS_BY_WS_SYS_ID,
-                params
-            ) as Long
+            it.dbSqlSession.selectOne(statementId, param) as Long
         }
         return factory.commandExecutorTxRequired.execute(command)
+    }
+
+    fun getLatestDecisionDefinitionsByKeys(keys: List<String>): List<DecisionDefinitionEntity> {
+        return selectList(
+            SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS,
+            mapOf("keys" to keys)
+        )
+    }
+
+    fun getCountOfLatestDmnDefsByWsSysId(workspacesSysId: List<String>): Long {
+        return selectCount(
+            SELECT_COUNT_OF_LATEST_DMN_DEFS_BY_WS_SYS_ID,
+            mapOf("workspacesSysId" to workspacesSysId)
+        )
     }
 
     fun getLatestDmnDefsByWorkspacesSysId(
@@ -189,35 +195,51 @@ class CamundaMyBatisExtension(
         skipCount: Int,
         maxItems: Int
     ): List<DecisionDefinitionEntity> {
-        val command = Command {
-            val params: Map<String, Any> = mapOf(
+        return selectList(
+            SELECT_LATEST_DMN_DEFS_BY_WS_SYS_ID,
+            mapOf(
                 "workspacesSysId" to workspacesSysId,
                 "skipCount" to skipCount,
                 "maxItems" to maxItems
             )
-            @Suppress("UNCHECKED_CAST")
-            it.dbSqlSession.selectList(
-                SELECT_LATEST_DMN_DEFS_BY_WS_SYS_ID,
-                params
-            ) as List<DecisionDefinitionEntity>
-        }
-        return factory.commandExecutorTxRequired.execute(command)
+        )
+    }
+
+    fun getCountOfLatestBpmnDefsByWsSysId(
+        workspacesSysId: List<String>,
+        definitionKeyLike: String?
+    ): Long {
+        return selectCount(
+            SELECT_COUNT_OF_LATEST_BPMN_DEFS_BY_WS_SYS_ID,
+            mapOf(
+                "keyLike" to definitionKeyLike,
+                "workspacesSysId" to workspacesSysId
+            )
+        )
+    }
+
+    fun getLatestBpmnDefsByWorkspacesSysId(
+        workspacesSysId: List<String>,
+        definitionKeyLike: String?,
+        skipCount: Int,
+        maxItems: Int
+    ): List<ProcessDefinitionEntity> {
+        return selectList(
+            SELECT_LATEST_BPMN_DEFS_BY_WS_SYS_ID,
+            mapOf(
+                "workspacesSysId" to workspacesSysId,
+                "keyLike" to definitionKeyLike,
+                "skipCount" to skipCount,
+                "maxItems" to maxItems
+            )
+        )
     }
 
     fun getLatestProcessDefinitionsByKeys(keys: List<String>): List<ProcessDefinitionEntity> {
-        val command = Command {
-            val params: Map<String, Any> = mapOf(
-                "keys" to keys
-            )
-
-            @Suppress("UNCHECKED_CAST")
-            it.dbSqlSession.selectList(
-                SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS,
-                params
-            ) as List<ProcessDefinitionEntity>
-        }
-
-        return factory.commandExecutorTxRequired.execute(command)
+        return selectList(
+            SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS,
+            mapOf("keys" to keys)
+        )
     }
 }
 
