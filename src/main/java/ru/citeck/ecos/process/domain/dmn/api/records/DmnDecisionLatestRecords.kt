@@ -3,7 +3,7 @@ package ru.citeck.ecos.process.domain.dmn.api.records
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.DecisionDefinition
 import org.springframework.stereotype.Component
-import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.api.records.IdentifiableRecord
@@ -35,39 +35,23 @@ class DmnDecisionLatestRecords(
     }
 
     override fun queryRecords(recsQuery: RecordsQuery): Any? {
-        val count = camundaRepositoryService
-            .createDecisionDefinitionQuery()
-            .latestVersion()
-            .count()
 
-        val workspaceToFilter = if (recsQuery.workspaces.isEmpty()) {
-            ""
-        } else {
-            recsQuery.workspaces.first().let {
-                it.ifEmpty { ModelUtils.DEFAULT_WORKSPACE_ID }
-            }
-        }
+        val wsSysIdsToFilter = workspaceService.getAvailableWorkspacesToQuery(
+            AuthContext.getCurrentRunAsAuth(),
+            recsQuery.workspaces
+        )?.map { workspaceService.getWorkspaceSystemId(it) } ?: return null
 
-        var query = camundaRepositoryService
-            .createDecisionDefinitionQuery()
-            .latestVersion()
-
-        if (workspaceToFilter.isNotBlank()) {
-            // todo: add support of multiple workspaces in one query
-            query = query.decisionDefinitionResourceNameLike(
-                workspaceToFilter + ProcUtils.PROC_KEY_WS_DELIM + "%"
-            )
-        }
-
-        val decisions = query.listPage(recsQuery.page.skipCount, recsQuery.page.maxItems).map {
-            EntityRef.create(AppName.EPROC, ID, it.key)
-        }
+        val resultRefs = camundaMyBatisExtension.getLatestDmnDefsByWorkspacesSysId(
+            wsSysIdsToFilter,
+            recsQuery.page.skipCount,
+            recsQuery.page.maxItems
+        ).map { EntityRef.create(AppName.EPROC, ID, it.key) }
+        val totalCount = camundaMyBatisExtension.getCountOfLatestDmnDefsByWsSysId(wsSysIdsToFilter)
 
         val result = RecsQueryRes<EntityRef>()
-
-        result.setRecords(decisions)
-        result.setTotalCount(count)
-        result.setHasMore(count > recsQuery.page.maxItems + recsQuery.page.skipCount)
+        result.setRecords(resultRefs)
+        result.setTotalCount(totalCount)
+        result.setHasMore(totalCount > recsQuery.page.maxItems + recsQuery.page.skipCount)
 
         return result
     }

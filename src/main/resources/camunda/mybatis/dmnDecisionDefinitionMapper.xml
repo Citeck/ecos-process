@@ -32,4 +32,31 @@
         and DEF.version_ = (select max(version_) from ${prefix}ACT_RE_DECISION_DEF where key_ = DEF.key_)
     </select>
 
+    <select id="selectLatestDmnDefsByWsSysId" parameterType="map" resultMap="decisionDefinitionResultMap">
+        select * from ${prefix}ACT_RE_DECISION_DEF DEF
+        <include refid="latestDmnDefsByWsSysIdSql"/>
+        LIMIT #{maxItems} OFFSET #{skipCount}
+    </select>
+
+    <select id="selectCountOfLatestDmnDefsByWsSysId" parameterType="map" resultType="long">
+        select COUNT(*) from ${prefix}ACT_RE_DECISION_DEF DEF
+        <include refid="latestDmnDefsByWsSysIdSql"/>
+    </select>
+
+    <sql id="latestDmnDefsByWsSysIdSql">
+        <where>
+            <foreach collection="workspacesSysId" item="wsSysId" open="(" separator=" OR " close=")">
+                <choose>
+                    <when test="wsSysId != ''">
+                        resource_name_ like CONCAT(#{wsSysId}, '..%')
+                    </when>
+                    <otherwise>
+                        resource_name_ not like '%..%'
+                    </otherwise>
+                </choose>
+            </foreach>
+            and DEF.version_ = (select max(version_) from ${prefix}ACT_RE_DECISION_DEF where key_ = DEF.key_)
+        </where>
+    </sql>
+
 </mapper>

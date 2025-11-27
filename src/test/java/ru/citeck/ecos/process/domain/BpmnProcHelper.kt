@@ -33,6 +33,7 @@ import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.
 import ru.citeck.ecos.process.domain.proctask.attssync.TaskAttsSyncSource
 import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttribute
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASK_ATTS_SYNC_SOURCE_ID
+import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
@@ -227,21 +228,24 @@ class BpmnProcHelper(
         recordsService.mutate(recordAtts)
     }
 
-    fun saveAndDeployDmnFromResource(resource: String, id: String) {
+    fun saveAndDeployDmnFromResource(resource: String, id: String, workspace: String = "") {
         saveAndDeployDmnFromString(
             ResourceUtils.getFile("classpath:$resource")
                 .readText(StandardCharsets.UTF_8),
-            id
+            id,
+            workspace
         )
     }
 
-    fun saveAndDeployDmnFromString(dmnData: String, id: String) {
+    fun saveAndDeployDmnFromString(dmnData: String, id: String, workspace: String = "") {
         val recordAtts = RecordAtts(EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, "")).apply {
             this["defId"] = id
             this["definition"] = dmnData
             this["action"] = DmnDefActions.DEPLOY.toString()
+            if (workspace.isNotBlank()) {
+                this[RecordConstants.ATT_WORKSPACE] = workspace
+            }
         }
-
         recordsService.mutate(recordAtts)
     }
 

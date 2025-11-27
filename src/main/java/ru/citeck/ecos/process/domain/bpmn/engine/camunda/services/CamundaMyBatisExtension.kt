@@ -25,6 +25,8 @@ private const val SELECT_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_PROCESS_INSTANCE_IDS
     "selectConditionalEventSubscriptionsByProcessInstanceIds"
 private const val TRUNCATE_EVENT_SUBSCRIPTIONS = "truncateEventSubscriptions"
 private const val SELECT_LATEST_DECISION_DEFINITIONS_BY_KEYS = "selectLatestDecisionDefinitionsByKeys"
+private const val SELECT_LATEST_DMN_DEFS_BY_WS_SYS_ID = "selectLatestDmnDefsByWsSysId"
+private const val SELECT_COUNT_OF_LATEST_DMN_DEFS_BY_WS_SYS_ID = "selectCountOfLatestDmnDefsByWsSysId"
 private const val SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS = "selectLatestProcessDefinitionsByKeys"
 
 @Component
@@ -165,6 +167,40 @@ class CamundaMyBatisExtension(
             ) as List<DecisionDefinitionEntity>
         }
 
+        return factory.commandExecutorTxRequired.execute(command)
+    }
+
+    fun getCountOfLatestDmnDefsByWsSysId(workspacesSysId: List<String>): Long {
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "workspacesSysId" to workspacesSysId
+            )
+            @Suppress("UNCHECKED_CAST")
+            it.dbSqlSession.selectOne(
+                SELECT_COUNT_OF_LATEST_DMN_DEFS_BY_WS_SYS_ID,
+                params
+            ) as Long
+        }
+        return factory.commandExecutorTxRequired.execute(command)
+    }
+
+    fun getLatestDmnDefsByWorkspacesSysId(
+        workspacesSysId: List<String>,
+        skipCount: Int,
+        maxItems: Int
+    ): List<DecisionDefinitionEntity> {
+        val command = Command {
+            val params: Map<String, Any> = mapOf(
+                "workspacesSysId" to workspacesSysId,
+                "skipCount" to skipCount,
+                "maxItems" to maxItems
+            )
+            @Suppress("UNCHECKED_CAST")
+            it.dbSqlSession.selectList(
+                SELECT_LATEST_DMN_DEFS_BY_WS_SYS_ID,
+                params
+            ) as List<DecisionDefinitionEntity>
+        }
         return factory.commandExecutorTxRequired.execute(command)
     }
 
