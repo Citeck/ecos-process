@@ -6,6 +6,7 @@ import ru.citeck.ecos.apps.artifact.controller.type.binary.BinArtifact
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_DEF_RECORDS_SOURCE_ID
 import ru.citeck.ecos.process.domain.dmn.api.records.DMN_RESOURCE_NAME_POSTFIX
@@ -39,18 +40,20 @@ class DmnArtifactHandler(
     override fun listenChanges(listener: Consumer<BinArtifact>) {
         procDefService.listenChanges(DMN_PROC_TYPE) { dto ->
 
-            val rev = procDefService.getProcessDefRev(DMN_PROC_TYPE, dto.revisionId)
-                ?: error("Revision not found for procDef: ${dto.id}")
+            if (dto.workspace.isBlank() || ModelUtils.DEFAULT_WORKSPACE_ID == dto.workspace) {
+                val rev = procDefService.getProcessDefRev(DMN_PROC_TYPE, dto.revisionId)
+                    ?: error("Revision not found for procDef: ${dto.id}")
 
-            val data = validateFormatAndGetDmnString(rev.loadData(procDefRevDataProvider))
+                val data = validateFormatAndGetDmnString(rev.loadData(procDefRevDataProvider))
 
-            listener.accept(
-                BinArtifact(
-                    "${rev.procDefId}$DMN_RESOURCE_NAME_POSTFIX.xml",
-                    ObjectData.create(),
-                    data.toByteArray()
+                listener.accept(
+                    BinArtifact(
+                        "${rev.procDefId}$DMN_RESOURCE_NAME_POSTFIX.xml",
+                        ObjectData.create(),
+                        data.toByteArray()
+                    )
                 )
-            )
+            }
         }
     }
 
