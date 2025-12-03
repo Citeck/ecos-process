@@ -22,6 +22,7 @@ import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKSPACE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.ProcessStartEvent
 import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
@@ -121,11 +122,17 @@ class BpmnProcessServiceImpl(
                 val workflowInitiator = variables[BPMN_WORKFLOW_INITIATOR].takeIf { it.toString().isNotBlank() }
                     ?: AuthContext.getCurrentUser()
                 processVariables[BPMN_WORKFLOW_INITIATOR] = workflowInitiator
+                if (processVariables[BPMN_WORKSPACE] == null) {
+                    processVariables[BPMN_WORKSPACE] = definition.workspace
+                }
 
                 val instance: ProcessInstance
                 val startProcessTime = measureTimeMillis {
-                    instance =
-                        camundaRuntimeService.startProcessInstanceByKey(processKey, businessKey, processVariables)
+                    instance = camundaRuntimeService.startProcessInstanceByKey(
+                        processKey,
+                        businessKey,
+                        processVariables
+                    )
                 }
 
                 val emitProcessStartTime = measureTimeMillis {
