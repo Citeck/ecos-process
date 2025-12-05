@@ -68,7 +68,7 @@ class BpmnUserTaskConverter : EcosOmgConverter<BpmnUserTaskDef, TUserTask> {
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
-            outcomes = Json.mapper.readList(element.otherAttributes[BPMN_PROP_OUTCOMES], TaskOutcome::class.java),
+            outcomes = Json.mapper.readListNotNull(element.otherAttributes[BPMN_PROP_OUTCOMES] ?: "", TaskOutcome::class.java),
             manualRecipientsMode = element.otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE]?.toBoolean() ?: false,
             manualRecipients = Json.mapper.readList(
                 element.otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS],
