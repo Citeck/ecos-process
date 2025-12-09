@@ -1,8 +1,6 @@
 include:
   - project: 'infrastructure/gitlab-ci'
-    file: '/templates/maven/.maven-microservice-ci-full.yml'
-    inputs:
-      jdk_version: "21"
+    file: '/templates/.community-microservice-jdk21-ci.yml'
 variables:
   KUBERNETES_MEMORY_REQUEST: "5Gi"
   KUBERNETES_MEMORY_LIMIT: "6Gi"
