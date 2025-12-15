@@ -34,7 +34,7 @@ class CamundaCallActivityTaskConverter : EcosOmgConverter<BpmnCallActivityDef, T
             calledElement = if (element.calledElement.isNullOrBlank()) {
                 QName("", element.processRef.toProcessKey())
             } else {
-                QName("", element.calledElement)
+                QName("", context.createWsScopedId(element.calledElement))
             }
             otherAttributes[CAMUNDA_CALLED_ELEMENT_BINDING] = element.binding.value
             otherAttributes.putIfNotBlank(CAMUNDA_CALLED_ELEMENT_VERSION, element.version?.toString())
