@@ -5,6 +5,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_ATT_PREFIX
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_TYPE_ATT_PREFIX
@@ -121,14 +122,16 @@ class ProcTaskSyncCache(
 
     @Cacheable(ATTS_SYNC_CACHE_NAME)
     fun getTaskSyncAttribute(attName: String): TaskSyncAttribute? {
-        return recordsService.query(
-            RecordsQuery.create {
-                withSourceId(PROC_TASK_ATTS_SYNC_SOURCE_ID)
-            },
-            TaskAttsSyncSettingsMeta::class.java
-        ).getRecords()
-            .flatMap { it.attributesSync }
-            .find { it.id == attName }
+        return AuthContext.runAsSystem {
+            recordsService.query(
+                RecordsQuery.create {
+                    withSourceId(PROC_TASK_ATTS_SYNC_SOURCE_ID)
+                },
+                TaskAttsSyncSettingsMeta::class.java
+            ).getRecords()
+                .flatMap { it.attributesSync }
+                .find { it.id == attName }
+        }
     }
 
     @CacheEvict(ATTS_SYNC_CACHE_NAME, allEntries = true)
