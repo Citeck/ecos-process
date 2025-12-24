@@ -69,6 +69,6 @@ class ProcTaskAttsSync(
     @AttName("record.source!")
     val source: String,
 
-    @AttName("record.attributesSync?json")
-    var attributesSync: DataValue
+    @AttName("record.attributesSync[]?json!")
+    var attributesSync: List<DataValue>
 )
