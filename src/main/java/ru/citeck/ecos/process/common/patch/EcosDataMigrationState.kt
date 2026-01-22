@@ -82,9 +82,10 @@ class EcosDataMigrationState(
                     if (environment.acceptsProfiles(WebAppProfile.TEST)) {
                         !mongoRepoEnabledByProperty
                     } else {
-                        !mongoRepoEnabledByProperty && localPatchRunner.isLocalPatchExecuted(
-                            MongoToEcosDataMigrationConfig.MongoToEcosDataMigration::class.java
-                        )
+                        !mongoRepoEnabledByProperty &&
+                            localPatchRunner.isLocalPatchExecuted(
+                                MongoToEcosDataMigrationConfig.MongoToEcosDataMigration::class.java
+                            )
                     }
                 }
                 log.info { "===== ECOS DATA storage is primary for '$type': $edataStoragePrimary =====" }

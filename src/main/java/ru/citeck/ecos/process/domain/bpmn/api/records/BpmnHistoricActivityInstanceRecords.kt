@@ -14,7 +14,8 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
 class BpmnHistoricActivityInstanceRecords(
     private val camundaHistoryService: HistoryService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) : AbstractRecordsDao(), RecordAttsDao {
+) : AbstractRecordsDao(),
+    RecordAttsDao {
 
     companion object {
         const val ID = "bpmn-historic-activity-instance"

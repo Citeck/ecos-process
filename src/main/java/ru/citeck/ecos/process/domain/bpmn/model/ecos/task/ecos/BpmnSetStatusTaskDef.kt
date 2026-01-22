@@ -9,7 +9,8 @@ const val ECOS_TASK_SET_STATUS = "setStatus"
 @JsonTypeName(ECOS_TASK_SET_STATUS)
 data class BpmnSetStatusTaskDef(
     val status: String
-) : BpmnAbstractEcosTaskDef(), Validated {
+) : BpmnAbstractEcosTaskDef(),
+    Validated {
 
     override fun validate() {
         if (status.isBlank()) {

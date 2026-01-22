@@ -621,8 +621,10 @@ class ProcTaskSqlQueryBuilder(
                     } else {
                         // Check if these are range conditions (GE/LE and LT/GT combinations)
                         val hasRangeConditions = otherConditions.any { condition ->
-                            condition.contains(" >= ") || condition.contains(" <= ") ||
-                                condition.contains(" > ") || condition.contains(" < ")
+                            condition.contains(" >= ") ||
+                                condition.contains(" <= ") ||
+                                condition.contains(" > ") ||
+                                condition.contains(" < ")
                         }
                         val hasLikeConditions = otherConditions.any { condition ->
                             condition.contains(" LIKE ")

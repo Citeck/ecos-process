@@ -29,7 +29,10 @@ import java.util.*
 class BpmnJobRecords(
     private val managementService: ManagementService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao,
+    RecordMutateDao {
 
     companion object {
         const val ID = "bpmn-job"

@@ -15,7 +15,8 @@ data class BpmnAiTaskDef(
 
     val addDocumentToContext: Boolean,
     val saveResultToDocumentAtt: String
-) : BpmnAbstractEcosTaskDef(), Validated {
+) : BpmnAbstractEcosTaskDef(),
+    Validated {
 
     override fun validate() {
         if (userInput.isBlank()) {

@@ -16,8 +16,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportCo
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
-class CamundaIntermediateCatchEventConverter :
-    EcosOmgConverter<BpmnIntermediateCatchEventDef, TIntermediateCatchEvent> {
+class CamundaIntermediateCatchEventConverter : EcosOmgConverter<BpmnIntermediateCatchEventDef, TIntermediateCatchEvent> {
 
     override fun import(element: TIntermediateCatchEvent, context: ImportContext): BpmnIntermediateCatchEventDef {
         error("Not supported")

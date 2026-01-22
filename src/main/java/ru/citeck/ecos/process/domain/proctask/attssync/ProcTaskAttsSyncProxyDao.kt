@@ -14,10 +14,11 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
 
 @Component
-class ProcTaskAttsSyncProxyDao : RecordsDaoProxy(
-    PROC_TASK_ATTS_SYNC_SOURCE_ID,
-    PROC_TASK_ATTS_SYNC_REPO_SOURCE_ID
-) {
+class ProcTaskAttsSyncProxyDao :
+    RecordsDaoProxy(
+        PROC_TASK_ATTS_SYNC_SOURCE_ID,
+        PROC_TASK_ATTS_SYNC_REPO_SOURCE_ID
+    ) {
 
     companion object {
         private val log = KotlinLogging.logger {}

@@ -21,7 +21,7 @@ import java.util.*
 class EcosDataProcInstanceAdapter(
     recordsService: RecordsService,
     val procStateAdapter: EcosDataProcStateAdapter
-) : ProcInstanceRepository, EcosDataAbstractAdapter<EcosDataProcInstanceAdapter.ProcInstanceAtts>(
+) : EcosDataAbstractAdapter<EcosDataProcInstanceAdapter.ProcInstanceAtts>(
     recordsService,
     SRC_ID,
     mapOf(
@@ -31,7 +31,8 @@ class EcosDataProcInstanceAdapter(
         "modifiedBy" to RecordConstants.ATT_MODIFIER
     ),
     ProcInstanceAtts::class
-) {
+),
+    ProcInstanceRepository {
 
     companion object {
         const val SRC_ID = EcosDataProcStateConfig.PROC_INSTANCE_REPO_SRC_ID

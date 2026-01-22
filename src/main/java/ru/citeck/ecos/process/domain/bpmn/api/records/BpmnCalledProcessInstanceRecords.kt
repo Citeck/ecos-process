@@ -19,7 +19,8 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 class BpmnCalledProcessInstanceRecords(
     private val bpmnProcessService: BpmnProcessService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) : AbstractRecordsDao(), RecordsQueryDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao {
 
     companion object {
         const val ID = "bpmn-called-process-instance"

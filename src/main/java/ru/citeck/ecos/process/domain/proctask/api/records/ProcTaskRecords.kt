@@ -69,7 +69,10 @@ class ProcTaskRecords(
     private val procTaskAttsSyncService: ProcTaskAttsSyncService,
     private val authoritiesApi: EcosAuthoritiesApi,
     private val taskConverter: TaskConverter
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao,
+    RecordMutateDao {
 
     companion object {
         private val log = KotlinLogging.logger {}

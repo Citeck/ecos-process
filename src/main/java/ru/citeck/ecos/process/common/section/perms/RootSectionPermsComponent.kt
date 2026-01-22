@@ -7,7 +7,9 @@ import ru.citeck.ecos.webapp.lib.perms.component.RecordPermsData
 import ru.citeck.ecos.webapp.lib.perms.component.RecordReadersPermsComponent
 import ru.citeck.ecos.webapp.lib.perms.component.RecordReadersPermsData
 
-class RootSectionPermsComponent : RecordPermsComponent, RecordReadersPermsComponent {
+class RootSectionPermsComponent :
+    RecordPermsComponent,
+    RecordReadersPermsComponent {
 
     override fun getRecordPerms(context: RecordPermsContext): RecordPermsData? {
         if (!isAcceptable(context)) {

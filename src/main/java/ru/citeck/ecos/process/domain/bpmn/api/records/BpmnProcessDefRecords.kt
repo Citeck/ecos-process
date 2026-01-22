@@ -310,7 +310,8 @@ class BpmnProcessDefRecords(
         val atts = AttContext.getInnerAttsMap().values
         val allowRead = if (AuthContext.isRunAsSystem()) {
             true
-        } else if (atts.size == 1 && StringUtils.startsWithAny(
+        } else if (atts.size == 1 &&
+            StringUtils.startsWithAny(
                 atts.first(),
                 "?id",
                 "permissions",
@@ -873,9 +874,10 @@ class BpmnProcessDefRecords(
             }
         }
         private val isCurrentUserManagerOfWs: Boolean by lazy {
-            workspace.isNotBlank() && AuthContext.runAsSystem {
-                workspaceService.isUserManagerOf(currentUser, workspace)
-            }
+            workspace.isNotBlank() &&
+                AuthContext.runAsSystem {
+                    workspaceService.isUserManagerOf(currentUser, workspace)
+                }
         }
 
         private val sectionPerms: RecordPerms by lazy {

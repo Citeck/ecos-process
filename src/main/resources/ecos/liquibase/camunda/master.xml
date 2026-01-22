@@ -166,4 +166,40 @@
             WHERE type_ = 'candidate';</sql>
     </changeSet>
 
+    <changeSet author="Camunda" id="7.21-to-7.22">
+        <sqlFile path="upgrade/postgres_engine_7.21_to_7.22.sql"
+                 encoding="UTF-8"
+                 relativeToChangelogFile="true"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet author="Camunda" id="7.22.0-tag">
+        <tagDatabase tag="7.22.0"/>
+    </changeSet>
+
+    <changeSet author="Camunda" id="7.22-to-7.23">
+        <sqlFile path="upgrade/postgres_engine_7.22_to_7.23.sql"
+                 encoding="UTF-8"
+                 relativeToChangelogFile="true"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet author="Camunda" id="7.23.0-tag">
+        <tagDatabase tag="7.23.0"/>
+    </changeSet>
+
+    <changeSet author="Camunda" id="7.23-to-7.24">
+        <sqlFile path="upgrade/postgres_engine_7.23_to_7.24.sql"
+                 encoding="UTF-8"
+                 relativeToChangelogFile="true"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet author="Camunda" id="7.24.0-tag">
+        <tagDatabase tag="7.24.0"/>
+    </changeSet>
+
 </databaseChangeLog>

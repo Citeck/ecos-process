@@ -11,7 +11,8 @@ import java.time.Instant
 @Component
 class BpmnHistoricBatchRecords(
     private val historyService: HistoryService
-) : AbstractRecordsDao(), RecordAttsDao {
+) : AbstractRecordsDao(),
+    RecordAttsDao {
 
     companion object {
         const val ID = "bpmn-historic-batch"

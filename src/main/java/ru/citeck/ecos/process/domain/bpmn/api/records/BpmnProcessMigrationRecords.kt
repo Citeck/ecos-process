@@ -23,8 +23,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 class BpmnProcessMigrationRecords(
     private val camundaMigrationRestService: MigrationRestService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) :
-    AbstractRecordsDao(),
+) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordMutateDao {
 
@@ -57,7 +56,8 @@ class BpmnProcessMigrationRecords(
         if (!bpmnPermissionResolver.isAllowForBpmnDefEngine(
                 BpmnPermission.PROC_INSTANCE_MIGRATE,
                 BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.sourceProcessDefinitionId)
-            ) || !bpmnPermissionResolver.isAllowForBpmnDefEngine(
+            ) ||
+            !bpmnPermissionResolver.isAllowForBpmnDefEngine(
                 BpmnPermission.PROC_INSTANCE_MIGRATE,
                 BpmnProcessDefEngineRecords.createRef(migrationPlanGeneration.targetProcessDefinitionId)
             )

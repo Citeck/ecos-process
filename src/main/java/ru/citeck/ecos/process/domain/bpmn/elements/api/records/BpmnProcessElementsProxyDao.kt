@@ -13,10 +13,11 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @Component
-class BpmnProcessElementsProxyDao : RecordsDaoProxy(
-    BPMN_ELEMENTS_SOURCE_ID,
-    BPMN_ELEMENTS_REPO_SOURCE_ID
-) {
+class BpmnProcessElementsProxyDao :
+    RecordsDaoProxy(
+        BPMN_ELEMENTS_SOURCE_ID,
+        BPMN_ELEMENTS_REPO_SOURCE_ID
+    ) {
 
     companion object {
         const val BPMN_ELEMENTS_SOURCE_ID = "bpmn-process-elements"

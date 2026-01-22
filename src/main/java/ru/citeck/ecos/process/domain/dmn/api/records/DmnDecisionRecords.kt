@@ -14,7 +14,9 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 @Component
 class DmnDecisionRecords(
     private val camundaRepositoryService: RepositoryService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao {
 
     companion object {
         const val ID = "dmn-decision"

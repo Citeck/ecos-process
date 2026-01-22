@@ -35,7 +35,11 @@ import java.util.*
 class BpmnVariableInstanceRecords(
     private val camundaRuntimeService: RuntimeService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao, RecordMutateDao, RecordDeleteDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordAttsDao,
+    RecordMutateDao,
+    RecordDeleteDao {
 
     companion object {
         private val log = KotlinLogging.logger {}

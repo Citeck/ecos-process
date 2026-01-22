@@ -21,7 +21,9 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 class BpmnJobDefRecords(
     private val managementService: ManagementService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) : AbstractRecordsDao(), RecordsQueryDao, RecordAttsDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordAttsDao {
 
     companion object {
         const val ID = "bpmn-job-def"

@@ -50,7 +50,8 @@ object XmlDefUtils {
                 namespaceURI: String?,
                 publicId: String?,
                 systemId: String?,
-                baseURI: String? ->
+                baseURI: String?
+            ->
 
             object : XmlLsInput(type, namespaceURI, publicId, systemId, baseURI) {
 

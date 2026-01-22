@@ -29,7 +29,9 @@ class ProcHistoricTaskRecords(
     private val procHistoricTaskService: ProcHistoricTaskService,
     private val taskConverter: TaskConverter,
     private val procTaskRecords: ProcTaskRecords
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao {
 
     companion object {
         const val ID = "proc-historic-task"

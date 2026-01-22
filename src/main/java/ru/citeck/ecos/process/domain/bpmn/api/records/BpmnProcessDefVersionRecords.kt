@@ -37,7 +37,10 @@ class BpmnProcessDefVersionRecords(
     private val procDefRevDataProvider: ProcDefRevDataProvider,
     private val bpmnPermissionResolver: BpmnPermissionResolver,
     private val workspaceService: WorkspaceService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao,
+    RecordMutateDtoDao<BpmnProcessDefRecords.BpmnMutateRecord> {
 
     companion object {
         const val ID = "${BpmnProcessDefRecords.ID}-version"

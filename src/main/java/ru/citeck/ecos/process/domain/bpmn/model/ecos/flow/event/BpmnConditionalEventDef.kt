@@ -19,7 +19,8 @@ data class BpmnConditionalEventDef(
     val variableEvents: Set<BpmnVariableEvents> = emptySet(),
 
     val condition: BpmnConditionDef
-) : BpmnAbstractEventDef(), Validated {
+) : BpmnAbstractEventDef(),
+    Validated {
 
     override fun validate() {
         if (condition.type == ConditionType.OUTCOME) {

@@ -23,7 +23,7 @@ import java.util.*
 
 open class EcosDataProcDefRevAdapter(
     recordsService: RecordsService
-) : ProcDefRevRepository, EcosDataAbstractAdapter<EcosDataProcDefRevAdapter.ProcDefRevRecordAtts>(
+) : EcosDataAbstractAdapter<EcosDataProcDefRevAdapter.ProcDefRevRecordAtts>(
     recordsService,
     SRC_ID,
     mapOf(
@@ -34,7 +34,8 @@ open class EcosDataProcDefRevAdapter(
     ),
     ProcDefRevRecordAtts::class,
     runQueryAsSystem = true
-) {
+),
+    ProcDefRevRepository {
 
     companion object {
 

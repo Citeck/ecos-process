@@ -58,8 +58,10 @@ class BpmnSignalEventDefinitionConverter : EcosOmgConverter<BpmnSignalEventDef, 
                 typeRef.withSourceId("type")
             } ?: EntityRef.EMPTY,
             eventFilterByRecordVariable = element.otherAttributes[BPMN_PROP_EVENT_FILTER_BY_RECORD_VARIABLE],
-            eventFilterByPredicate = if (eventType == EcosEventType.RECORD_STATUS_CHANGED && statusChangeType != null &&
-                manualStatus != null && manualStatus.isNotBlank()
+            eventFilterByPredicate = if (eventType == EcosEventType.RECORD_STATUS_CHANGED &&
+                statusChangeType != null &&
+                manualStatus != null &&
+                manualStatus.isNotBlank()
             ) {
                 convertManualStatusSelectionToPredicate(statusChangeType, manualStatus)
             } else {

@@ -9,7 +9,9 @@ import ru.citeck.ecos.process.domain.common.repo.EntityUuid
 import ru.citeck.ecos.process.domain.procdef.repo.ProcDefEntity
 
 @Repository
-interface MongoProcDefRepo : MongoRepository<ProcDefEntity, EntityUuid>, QuerydslPredicateExecutor<ProcDefEntity> {
+interface MongoProcDefRepo :
+    MongoRepository<ProcDefEntity, EntityUuid>,
+    QuerydslPredicateExecutor<ProcDefEntity> {
 
     fun findFirstByIdTntAndProcTypeAndEcosTypeRefAndEnabledTrue(tenant: Int, type: String, ecosTypeRef: String): ProcDefEntity?
 

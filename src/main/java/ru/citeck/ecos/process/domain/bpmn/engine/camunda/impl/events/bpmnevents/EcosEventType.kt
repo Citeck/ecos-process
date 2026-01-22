@@ -103,12 +103,11 @@ enum class EcosEventType(
         const val RECORD_ATT = "record"
         const val RECORD_TYPE_ATT = "recordType"
 
-        fun from(value: String): EcosEventType =
-            EcosEventType.entries.find { event ->
-                event.eventRepresentations.any { it.eventName == value }
-            } ?: let {
-                EcosEventType.entries.find { it.name == value } ?: UNDEFINED
-            }
+        fun from(value: String): EcosEventType = EcosEventType.entries.find { event ->
+            event.eventRepresentations.any { it.eventName == value }
+        } ?: let {
+            EcosEventType.entries.find { it.name == value } ?: UNDEFINED
+        }
 
         fun findRepresentation(eventName: String): EventRepresentation? {
             return from(eventName).representation(eventName)

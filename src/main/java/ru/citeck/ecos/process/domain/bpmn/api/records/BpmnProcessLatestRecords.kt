@@ -38,7 +38,9 @@ class BpmnProcessLatestRecords(
     private val procDefService: ProcDefService,
     private val camundaMyBatisExtension: CamundaMyBatisExtension,
     private val workspaceService: WorkspaceService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao {
 
     companion object {
         const val ID = "bpmn-proc-latest"

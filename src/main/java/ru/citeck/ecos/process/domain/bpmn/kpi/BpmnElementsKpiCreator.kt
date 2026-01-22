@@ -200,7 +200,9 @@ class BpmnElementsKpiMutationAsyncProcessor(
     }
 
     private fun handleChangedEvent(event: BpmnElementEventData) {
-        if (event.procInstanceId.isBlank() || (event.processRef?.isEmpty() == true) || event.elementDefId.isBlank() ||
+        if (event.procInstanceId.isBlank() ||
+            (event.processRef?.isEmpty() == true) ||
+            event.elementDefId.isBlank() ||
             event.completed == null
         ) {
             error(

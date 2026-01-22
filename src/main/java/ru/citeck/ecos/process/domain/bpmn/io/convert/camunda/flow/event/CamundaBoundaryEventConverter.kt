@@ -16,8 +16,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportCo
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 import javax.xml.namespace.QName
 
-class CamundaBoundaryEventConverter :
-    EcosOmgConverter<BpmnBoundaryEventDef, TBoundaryEvent> {
+class CamundaBoundaryEventConverter : EcosOmgConverter<BpmnBoundaryEventDef, TBoundaryEvent> {
 
     override fun import(element: TBoundaryEvent, context: ImportContext): BpmnBoundaryEventDef {
         error("Not supported")

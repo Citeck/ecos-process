@@ -49,7 +49,7 @@ class TaskAttsSyncSettingsChangeListener(
                 procTaskSyncCache.evictTaskSyncAttributesCache()
                 metaDataChangeTaskAttsSyncListener.updateListeners()
 
-                TxnContext.doAfterCommit(100f, true) { ->
+                TxnContext.doAfterCommit(100f, true) {
                     AuthContext.runAsSystem {
                         if (it.record == null || it.record.isEmpty()) {
                             log.warn { "Task Atts Sync Settings was changed, but record is empty: ${it.record}" }
@@ -80,7 +80,7 @@ class TaskAttsSyncSettingsChangeListener(
                 procTaskSyncCache.evictTaskSyncAttributesCache()
                 metaDataChangeTaskAttsSyncListener.updateListeners()
 
-                TxnContext.doAfterCommit(100f, true) { ->
+                TxnContext.doAfterCommit(100f, true) {
                     AuthContext.runAsSystem {
                         if (it.record == null || it.record.isEmpty()) {
                             log.warn { "Task Atts Sync Settings was created, but record is empty: ${it.record}" }
@@ -115,7 +115,7 @@ class TaskAttsSyncSettingsChangeListener(
                     return@withAction
                 }
 
-                TxnContext.doAfterCommit(100f, true) { ->
+                TxnContext.doAfterCommit(100f, true) {
                     AuthContext.runAsSystem {
                         procTaskAttsSynchronizer.fullSyncForTypeAsync(it.record)
                     }

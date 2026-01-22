@@ -16,7 +16,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.toCamundaKey
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
 
 @Component
-class AiTaskParseListener() : AbstractBpmnParseListener() {
+class AiTaskParseListener : AbstractBpmnParseListener() {
 
     companion object {
         private const val AI_TASK_SCRIPT_LANGUAGE = "javascript"

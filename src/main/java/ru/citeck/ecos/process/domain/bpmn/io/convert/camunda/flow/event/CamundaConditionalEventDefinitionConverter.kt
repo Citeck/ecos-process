@@ -12,8 +12,7 @@ import ru.citeck.ecos.process.domain.procdef.convert.io.convert.EcosOmgConverter
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ExportContext
 import ru.citeck.ecos.process.domain.procdef.convert.io.convert.context.ImportContext
 
-class CamundaConditionalEventDefinitionConverter :
-    EcosOmgConverter<BpmnConditionalEventDef, TConditionalEventDefinition> {
+class CamundaConditionalEventDefinitionConverter : EcosOmgConverter<BpmnConditionalEventDef, TConditionalEventDefinition> {
     override fun import(element: TConditionalEventDefinition, context: ImportContext): BpmnConditionalEventDef {
         error("Not supported")
     }

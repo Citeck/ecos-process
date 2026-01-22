@@ -327,7 +327,8 @@ class ProcDefServiceImpl(
 
             if (definitionDataIsChanged) {
 
-                if (!forceMajorVersion && currentRev.dataState == ProcDefRevDataState.RAW.name &&
+                if (!forceMajorVersion &&
+                    currentRev.dataState == ProcDefRevDataState.RAW.name &&
                     currentUser == currentRev.createdBy
                 ) {
                     // update existing revision

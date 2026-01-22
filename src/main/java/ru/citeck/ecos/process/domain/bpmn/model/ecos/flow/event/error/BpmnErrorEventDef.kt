@@ -18,7 +18,8 @@ data class BpmnErrorEventDef(
 
     val errorCodeVariable: String = "",
     val errorMessageVariable: String = "",
-) : BpmnAbstractEventDef(), Validated {
+) : BpmnAbstractEventDef(),
+    Validated {
 
     override fun validate() {
         if (errorName.isBlank()) {

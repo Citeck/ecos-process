@@ -26,7 +26,10 @@ import java.time.Instant
 class BpmnExternalTaskRecords(
     private val externalTaskService: ExternalTaskService,
     private val bpmnPermissionResolver: BpmnPermissionResolver
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao, RecordMutateDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao,
+    RecordMutateDao {
 
     companion object {
         const val ID = "bpmn-external-task"

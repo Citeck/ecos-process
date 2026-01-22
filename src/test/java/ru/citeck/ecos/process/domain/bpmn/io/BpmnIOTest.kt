@@ -19,7 +19,7 @@ class BpmnIOTest {
     @BeforeEach
     fun init() {
         val modelServices = ModelServiceFactory()
-        modelServices.setWorkspaceApi(object: WorkspaceApi {
+        modelServices.setWorkspaceApi(object : WorkspaceApi {
             override fun getNestedWorkspaces(workspaces: Collection<String>): List<Set<String>> {
                 return workspaces.map { emptySet() }
             }

@@ -35,7 +35,9 @@ class BpmnProcessDefEngineRecords(
     private val managementService: ManagementService,
     private val camundaRuntimeService: RuntimeService,
     private val workspaceService: WorkspaceService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao {
 
     companion object {
         private val log = KotlinLogging.logger {}

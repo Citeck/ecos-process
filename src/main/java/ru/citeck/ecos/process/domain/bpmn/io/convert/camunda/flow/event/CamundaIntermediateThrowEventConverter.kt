@@ -19,8 +19,7 @@ import javax.xml.namespace.QName
 /**
  * @author Roman Makarskiy
  */
-class CamundaIntermediateThrowEventConverter :
-    EcosOmgConverter<BpmnIntermediateThrowEventDef, TIntermediateThrowEvent> {
+class CamundaIntermediateThrowEventConverter : EcosOmgConverter<BpmnIntermediateThrowEventDef, TIntermediateThrowEvent> {
 
     override fun import(element: TIntermediateThrowEvent, context: ImportContext): BpmnIntermediateThrowEventDef {
         error("Not supported")

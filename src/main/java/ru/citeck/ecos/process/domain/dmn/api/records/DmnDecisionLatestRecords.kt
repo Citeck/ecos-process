@@ -24,7 +24,9 @@ class DmnDecisionLatestRecords(
     private val camundaRepositoryService: RepositoryService,
     private val camundaMyBatisExtension: CamundaMyBatisExtension,
     private val workspaceService: WorkspaceService
-) : AbstractRecordsDao(), RecordsQueryDao, RecordsAttsDao {
+) : AbstractRecordsDao(),
+    RecordsQueryDao,
+    RecordsAttsDao {
 
     companion object {
         const val ID = "dmn-decision-latest"

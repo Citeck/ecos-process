@@ -28,7 +28,7 @@ class EcosDataProcDefAdapter(
     recordsService: RecordsService,
     val ecosDataProcDefRevAdapter: EcosDataProcDefRevAdapter,
     workspaceService: WorkspaceService
-) : ProcDefRepository, EcosDataAbstractAdapter<EcosDataProcDefAdapter.ProcDefRecordAtts>(
+) : EcosDataAbstractAdapter<EcosDataProcDefAdapter.ProcDefRecordAtts>(
     recordsService,
     SRC_ID,
     mapOf(
@@ -39,7 +39,8 @@ class EcosDataProcDefAdapter(
     ProcDefRecordAtts::class,
     runQueryAsSystem = true,
     workspaceService
-) {
+),
+    ProcDefRepository {
 
     companion object {
         private const val SRC_ID = EcosDataProcDefConfig.PROC_DEF_REPO_SRC_ID

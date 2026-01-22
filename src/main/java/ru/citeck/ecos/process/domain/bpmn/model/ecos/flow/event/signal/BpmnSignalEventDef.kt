@@ -32,7 +32,8 @@ data class BpmnSignalEventDef(
 
     val statusChangeType: StatusChangeType? = null,
     val manualStatus: String? = null
-) : BpmnAbstractEventDef(), Validated {
+) : BpmnAbstractEventDef(),
+    Validated {
 
     val signalName: String
         get() = let {
@@ -124,7 +125,9 @@ data class BpmnSignalEventDef(
                     )
                 }
 
-                if (statusChangeType != null && manualStatus != null && manualStatus.isNotBlank() &&
+                if (statusChangeType != null &&
+                    manualStatus != null &&
+                    manualStatus.isNotBlank() &&
                     eventFilterByPredicate == null
                 ) {
                     throw EcosBpmnElementDefinitionException(

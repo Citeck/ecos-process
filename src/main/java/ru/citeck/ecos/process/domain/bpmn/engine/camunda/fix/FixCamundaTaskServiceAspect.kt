@@ -43,7 +43,8 @@ class FixCamundaTaskServiceAspect(
  */
 class FixedGetIdentityLinksForTaskCmd(
     private val taskId: String
-) : Command<MutableList<IdentityLink>>, Serializable {
+) : Command<MutableList<IdentityLink>>,
+    Serializable {
 
     override fun execute(commandContext: CommandContext): MutableList<IdentityLink> {
         EnsureUtil.ensureNotNull("taskId", taskId)
