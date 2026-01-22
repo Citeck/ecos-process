@@ -1,6 +1,5 @@
 include:
-  - project: 'infrastructure/gitlab-ci'
-    file: '/templates/.community-microservice-jdk25-ci.yml'
+  - component: gitlab.citeck.ru/infrastructure/gitlab-ci/maven-microservice@2
 variables:
   KUBERNETES_MEMORY_REQUEST: "5Gi"
   KUBERNETES_MEMORY_LIMIT: "6Gi"
