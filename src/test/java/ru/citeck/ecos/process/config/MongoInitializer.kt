@@ -9,6 +9,7 @@ import org.testcontainers.containers.MongoDBContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.time.Instant
 
 @Testcontainers
 class MongoInitializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -21,9 +22,12 @@ class MongoInitializer : ApplicationContextInitializer<ConfigurableApplicationCo
     }
 
     override fun initialize(context: ConfigurableApplicationContext) {
+        val mongoUrl = container.replicaSetUrl
+        //  Logging is not initialized at this stage
+        println("${Instant.now()} -- Initializing MongoDB test container with url: $mongoUrl")
         TestPropertySourceUtils.addInlinedPropertiesToEnvironment(
             context,
-            "spring.data.mongodb.uri=" + container.replicaSetUrl
+            "spring.data.mongodb.uri=$mongoUrl"
         )
         context.addApplicationListener {
             if (it is ContextClosedEvent || it is ContextStoppedEvent) {

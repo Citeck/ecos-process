@@ -27,6 +27,9 @@
 
         <mongodb.driver.version>5.4.0</mongodb.driver.version>
 
+        <maven.compiler.release>25</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
+
         <surefire-plugin.spring-context-cache.maxSize>16</surefire-plugin.spring-context-cache.maxSize>
         <failsafe-plugin.spring-context-cache.maxSize>16</failsafe-plugin.spring-context-cache.maxSize>
 
