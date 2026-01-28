@@ -7,6 +7,7 @@
   "description": {},
   "customModule": "",
   "typeRef": "",
+  "workspace": "",
   "width": "lg",
   "system": true,
   "i18n": {
@@ -161,7 +162,7 @@
             "wysiwyg": {
               "mode": "ace/mode/javascript"
             },
-            "defaultValue": " ",
+            "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
             "logic": [
@@ -185,9 +186,17 @@
                 ]
               }
             ],
+            "aiEnabled": true,
             "as": "string",
             "type": "textarea",
-            "input": true
+            "input": true,
+            "scriptContextType": "gateway_condition",
+            "uploadStorage": "",
+            "uploadUrl": "",
+            "uploadOptions": "",
+            "uploadDir": "",
+            "reorder": false,
+            "textAreaAIContextType": ""
           },
           {
             "label": {

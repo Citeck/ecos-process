@@ -6,8 +6,9 @@
     "en": "BPMN Script Task Form"
   },
   "description": {},
-  "customModule": null,
+  "customModule": "",
   "typeRef": "",
+  "workspace": "",
   "width": "lg",
   "i18n": {},
   "definition": {
@@ -39,13 +40,21 @@
         "wysiwyg": {
           "mode": "ace/mode/javascript"
         },
-        "defaultValue": " ",
+        "defaultValue": "",
         "refreshOn": [],
         "optionalWhenDisabled": false,
+        "aiEnabled": true,
         "rows": 30,
         "as": "string",
+        "scriptContextType": "bpmn_script_task",
         "type": "textarea",
-        "input": true
+        "input": true,
+        "uploadStorage": "",
+        "uploadUrl": "",
+        "uploadOptions": "",
+        "uploadDir": "",
+        "reorder": false,
+        "textAreaAIContextType": ""
       },
       {
         "label": {
@@ -76,10 +85,11 @@
         "input": true,
         "key": "includeForm4",
         "label": "Форма: BPMN base form Multi Instance",
-        "addAnother": "ecos.forms.btn.add-another",
         "type": "includeForm"
       }
-    ]
+    ],
+    "formId": "bpmn-type-bpmn:ScriptTask"
   },
-  "attributes": {}
+  "attributes": {},
+  "notExists": false
 }
