@@ -35,9 +35,19 @@ class CamundaEventProcessor(
 
         val time = measureTimeMillis {
             val incomingEventData = incomingEvent.toIncomingEventData()
+
+            log.trace {
+                "Processing incoming event: type=${incomingEventData.eventName}, " +
+                    "record=${incomingEventData.record}, recordType=${incomingEventData.recordType}"
+            }
+
             val foundSubscriptions = eventSubscriptionFinder.getActualCamundaSubscriptions(incomingEventData)
 
             if (foundSubscriptions.isEmpty()) {
+                log.trace {
+                    "No subscriptions found for event: type=${incomingEventData.eventName}, " +
+                        "record=${incomingEventData.record}"
+                }
                 return
             }
 

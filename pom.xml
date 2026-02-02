@@ -11,7 +11,7 @@
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>3.20.1</version>
+        <version>3.20.3</version>
     </parent>
 
     <properties>
@@ -23,18 +23,20 @@
         <ecos.ecos-lazy-approval.version>1.2.0</ecos.ecos-lazy-approval.version>
 
         <querydsl.version>5.1.0</querydsl.version>
-        <jaxb-impl.version>4.0.5</jaxb-impl.version>
 
         <mongodb.driver.version>5.4.0</mongodb.driver.version>
-
-        <maven.compiler.release>25</maven.compiler.release>
-        <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
 
         <surefire-plugin.spring-context-cache.maxSize>16</surefire-plugin.spring-context-cache.maxSize>
         <failsafe-plugin.spring-context-cache.maxSize>16</failsafe-plugin.spring-context-cache.maxSize>
 
         <surefire-plugin.xmx>1500m</surefire-plugin.xmx>
         <failsafe-plugin.xmx>1500m</failsafe-plugin.xmx>
+
+        <!--
+        Remove after fix:
+        https://youtrack.jetbrains.com/issue/KT-71048/KotlinCompileDaemon-compatibility-not-discriminated-by-JVM-version
+        -->
+        <kotlin.compiler.daemon>false</kotlin.compiler.daemon>
 
     </properties>
 

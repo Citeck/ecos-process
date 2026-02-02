@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension">
+
+    <update id="updateDocumentRefVariables" parameterType="map">
+        UPDATE ${prefix}ACT_RU_VARIABLE
+        SET TEXT_ = #{newRef}
+        WHERE TEXT_ = #{oldRef}
+    </update>
+
+    <update id="updateDocumentRefInBusinessKey" parameterType="map">
+        UPDATE ${prefix}ACT_RU_EXECUTION
+        SET BUSINESS_KEY_ = #{newRef}
+        WHERE BUSINESS_KEY_ = #{oldRef}
+    </update>
+
+    <update id="updateDocumentRefInEventSubscriptions" parameterType="map">
+        UPDATE ${prefix}ACT_RU_EVENT_SUBSCR
+        SET EVENT_NAME_ = REPLACE(EVENT_NAME_, CONCAT(';', #{oldRef}, ';'), CONCAT(';', #{newRef}, ';'))
+        WHERE EVENT_NAME_ LIKE CONCAT('%;', #{oldRef}, ';%')
+    </update>
+
+</mapper>

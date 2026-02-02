@@ -7,6 +7,7 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.events2.type.RecordDeletedEvent
+import ru.citeck.ecos.events2.type.RecordRefChangedEvent
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -53,6 +54,14 @@ class BpmnEventHelper(
         }
     )
 
+    private val recordRefChangedEmitter = eventsService.getEmitter(
+        EmitterConfig.create<RecordRefChangedEventDto> {
+            source = appName
+            eventType = RecordRefChangedEvent.TYPE
+            eventClass = RecordRefChangedEventDto::class.java
+        }
+    )
+
     fun sendManualEvent(eventName: String, eventData: Map<String, Any>) {
         AuthContext.runAs(TEST_USER) {
             eventsService.getEmitter(
@@ -87,6 +96,10 @@ class BpmnEventHelper(
 
     fun sendRecordDeletedEvent(event: RecordDeletedEventDto) {
         recordDeletedEmitter.emit(event)
+    }
+
+    fun sendRecordRefChangedEvent(event: RecordRefChangedEventDto) {
+        recordRefChangedEmitter.emit(event)
     }
 }
 
@@ -144,4 +157,10 @@ data class ChangedValue(
 
 data class RecordDeletedEventDto(
     val record: EntityRef
+)
+
+data class RecordRefChangedEventDto(
+    val record: EntityRef,
+    val before: EntityRef,
+    val after: EntityRef
 )

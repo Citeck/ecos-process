@@ -126,3 +126,7 @@ model:
         en: Document type
       type: ASSOC
 
+aspects:
+  - ref: emodel/aspect@history-config
+    config:
+      disableHistory: true
