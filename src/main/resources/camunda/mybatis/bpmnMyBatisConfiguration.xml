@@ -11,5 +11,6 @@
         <mapper resource="camunda/mybatis/bpmnEventSubscriptionMapper.xml"/>
         <mapper resource="camunda/mybatis/dmnDecisionDefinitionMapper.xml"/>
         <mapper resource="camunda/mybatis/bpmnProcessDefinitionMapper.xml"/>
+        <mapper resource="camunda/mybatis/bpmnVariableUpdateMapper.xml"/>
     </mappers>
 </configuration>

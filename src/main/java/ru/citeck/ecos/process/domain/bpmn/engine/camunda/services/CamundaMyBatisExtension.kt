@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.events.CustomEventSubscriptionManager
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis.BpmnMyBatisExtendedSessionFactory
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private const val SELECT_TASKS_BY_IDS = "selectHistoricTaskInstanceByIds"
 private const val SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES = "selectEventSubscriptionsByEventNames"
@@ -34,6 +35,9 @@ private const val SELECT_COUNT_OF_LATEST_DMN_DEFS_BY_WS_SYS_ID = "selectCountOfL
 private const val SELECT_LATEST_PROCESS_DEFINITIONS_BY_KEYS = "selectLatestProcessDefinitionsByKeys"
 private const val SELECT_LATEST_BPMN_DEFS_BY_WS_SYS_ID = "selectLatestBpmnDefsByWsSysId"
 private const val SELECT_COUNT_OF_LATEST_BPMN_DEFS_BY_WS_SYS_ID = "selectCountOfLatestBpmnDefsByWsSysId"
+private const val UPDATE_DOCUMENT_REF_VARIABLE = "updateDocumentRefVariables"
+private const val UPDATE_DOCUMENT_REF_IN_BUSINESS_KEY = "updateDocumentRefInBusinessKey"
+private const val UPDATE_DOCUMENT_REF_IN_EVENT_SUBSCRIPTIONS = "updateDocumentRefInEventSubscriptions"
 
 @Component
 class CamundaMyBatisExtension(
@@ -233,6 +237,59 @@ class CamundaMyBatisExtension(
                 "maxItems" to maxItems
             )
         )
+    }
+
+    /**
+     * Updates all runtime variables in all active process instances
+     * by replacing [oldRef] with [newRef] via direct SQL UPDATE on `ACT_RU_VARIABLE`.
+     *
+     * @return number of updated variable rows
+     */
+    fun updateDocumentRefVariables(oldRef: EntityRef, newRef: EntityRef): Int {
+        val params = mapOf("oldRef" to oldRef.toString(), "newRef" to newRef.toString())
+        val command = Command {
+            val session = it.dbSqlSession.sqlSession
+            session.update(UPDATE_DOCUMENT_REF_VARIABLE, params)
+            val batchResults = session.flushStatements()
+            batchResults.sumOf { result -> result.updateCounts.sum() }
+        }
+        return factory.commandExecutorTxRequired.execute(command)
+    }
+
+    /**
+     * Updates the business key in `ACT_RU_EXECUTION` for all active process instances
+     * where the current business key matches [oldRef], replacing it with [newRef].
+     *
+     * @return number of updated execution rows
+     */
+    fun updateDocumentRefInBusinessKey(oldRef: EntityRef, newRef: EntityRef): Int {
+        val params = mapOf("oldRef" to oldRef.toString(), "newRef" to newRef.toString())
+        val command = Command {
+            val session = it.dbSqlSession.sqlSession
+            session.update(UPDATE_DOCUMENT_REF_IN_BUSINESS_KEY, params)
+            val batchResults = session.flushStatements()
+            batchResults.sumOf { result -> result.updateCounts.sum() }
+        }
+        return factory.commandExecutorTxRequired.execute(command)
+    }
+
+    /**
+     * Updates signal event subscription names in `ACT_RU_EVENT_SUBSCR` by replacing [oldRef]
+     * with [newRef] via direct SQL UPDATE. Signal names follow the pattern
+     * `TYPE;documentRef;ANY;hash`, so the replacement is scoped to occurrences
+     * delimited by semicolons to avoid partial matches.
+     *
+     * @return number of updated event subscription rows
+     */
+    fun updateDocumentRefInEventSubscriptions(oldRef: EntityRef, newRef: EntityRef): Int {
+        val params = mapOf("oldRef" to oldRef.toString(), "newRef" to newRef.toString())
+        val command = Command {
+            val session = it.dbSqlSession.sqlSession
+            session.update(UPDATE_DOCUMENT_REF_IN_EVENT_SUBSCRIPTIONS, params)
+            val batchResults = session.flushStatements()
+            batchResults.sumOf { result -> result.updateCounts.sum() }
+        }
+        return factory.commandExecutorTxRequired.execute(command)
     }
 
     fun getLatestProcessDefinitionsByKeys(keys: List<String>): List<ProcessDefinitionEntity> {
