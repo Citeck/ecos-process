@@ -3,7 +3,9 @@ package ru.citeck.ecos.process.domain.proctask.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.impl.TaskQueryProperty
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.task.NativeTaskQuery
+import org.springframework.jdbc.datasource.DataSourceUtils
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.AuthGroup
@@ -38,7 +40,8 @@ const val ATT_CURRENT_USER = "\$CURRENT_USER"
 class ProcTaskSqlQueryBuilder(
     private val authoritiesApi: EcosAuthoritiesApi,
     private val taskService: TaskService,
-    private val procTaskAttsSyncService: ProcTaskAttsSyncService
+    private val procTaskAttsSyncService: ProcTaskAttsSyncService,
+    private val processEngineConfiguration: ProcessEngineConfigurationImpl
 ) {
 
     companion object {
@@ -548,10 +551,10 @@ class ProcTaskSqlQueryBuilder(
         return "${VARIABLE_ALIAS_PREFIX}_${variableName.replace("[^a-zA-Z0-9_]".toRegex(), "_")}"
     }
 
-    private fun createTaskQuery(
+    private fun buildTaskSql(
         selectFields: String,
         withLimitAndSort: Boolean
-    ): NativeTaskQuery {
+    ): String {
         val sqlSelectQuery = StringBuilder("SELECT $selectFields")
         if (withLimitAndSort) {
             for (sortBy in sorting) {
@@ -685,23 +688,80 @@ class ProcTaskSqlQueryBuilder(
             sqlSelectQuery.append(" OFFSET $skipCount")
         }
 
-        var nativeTaskQuery = taskService.createNativeTaskQuery().sql(sqlSelectQuery.toString())
+        return sqlSelectQuery.toString()
+    }
+
+    private fun createTaskQuery(
+        selectFields: String,
+        withLimitAndSort: Boolean
+    ): NativeTaskQuery {
+        val sql = buildTaskSql(selectFields, withLimitAndSort)
+
+        var nativeTaskQuery = taskService.createNativeTaskQuery().sql(sql)
         for ((key, value) in params) {
             nativeTaskQuery = nativeTaskQuery.parameter(key, value)
         }
 
-        log.trace { "Build proc task query:\n $sqlSelectQuery \n with params: \n$params" }
+        log.trace { "Build proc task query:\n $sql \n with params: \n$params" }
 
         return nativeTaskQuery
+    }
+
+    /**
+     * Execute SQL query and return list of task IDs directly via JDBC.
+     * This avoids creating TaskEntity objects which would pollute DbEntityCache
+     * with incomplete entities (revision=0, executionId=null).
+     *
+     * Uses DataSourceUtils to participate in the existing transaction context if one exists.
+     *
+     * Note: SQL injection is not a concern here because:
+     * 1. SQL is built internally by buildTaskSql() using only internal column names
+     * 2. All user-provided values go through parameterized queries (? placeholders)
+     *
+     */
+    @Suppress("SqlSourceToSinkFlow")
+    private fun executeTaskIdsQuery(sql: String): List<String> {
+        // Convert MyBatis #{paramName} to JDBC ? placeholders
+        val paramValues = mutableListOf<Any?>()
+        val jdbcSql = sql.replace(Regex("#\\{(\\w+)}")) { match ->
+            val paramName = match.groupValues[1]
+            require(params.containsKey(paramName)) {
+                "SQL parameter '$paramName' not found in params map"
+            }
+            paramValues.add(params[paramName])
+            "?"
+        }
+
+        log.trace { "Execute task IDs query:\n $jdbcSql \n with params: \n$paramValues" }
+
+        val dataSource = processEngineConfiguration.dataSource
+        val connection = DataSourceUtils.getConnection(dataSource)
+        try {
+            connection.prepareStatement(jdbcSql).use { stmt ->
+                paramValues.forEachIndexed { index, value ->
+                    stmt.setObject(index + 1, value)
+                }
+                stmt.executeQuery().use { rs ->
+                    val result = mutableListOf<String>()
+                    while (rs.next()) {
+                        result.add(rs.getString(1))
+                    }
+                    return result
+                }
+            }
+        } finally {
+            DataSourceUtils.releaseConnection(connection, dataSource)
+        }
     }
 
     fun selectTasks(): DbFindRes<String> {
         val tasks: List<String>
         val tasksFromCamundaTime = measureTimeMillis {
-            tasks = createTaskQuery(
+            val sql = buildTaskSql(
                 "DISTINCT $TASK_ALIAS.${TaskQueryProperty.TASK_ID.name}",
                 withLimitAndSort = true
-            ).list().map { it.id }
+            )
+            tasks = executeTaskIdsQuery(sql)
         }
 
         val totalCount: Long
@@ -733,7 +793,7 @@ class ProcTaskSqlQueryBuilder(
         }
     }
 
-    private fun AttributeType.getTaskAttColumn(predicateType: ValuePredicate.Type? = null): String {
+    private fun AttributeType.getTaskAttColumn(): String {
         return when (this) {
             AttributeType.TEXT -> "text_"
             AttributeType.NUMBER -> "double_"

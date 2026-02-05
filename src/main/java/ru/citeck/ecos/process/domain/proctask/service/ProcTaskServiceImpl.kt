@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.proctask.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.data.sql.records.utils.DbDateUtils
@@ -47,7 +48,8 @@ class ProcTaskServiceImpl(
     private val recordsService: RecordsService,
     private val procTaskAttsSyncService: ProcTaskAttsSyncService,
     private val taskConverter: TaskConverter,
-    private val taskActorsUtils: TaskActorsUtils
+    private val taskActorsUtils: TaskActorsUtils,
+    private val processEngineConfiguration: ProcessEngineConfigurationImpl
 ) : ProcTaskService {
 
     companion object {
@@ -162,7 +164,12 @@ class ProcTaskServiceImpl(
             return DbFindRes.empty()
         }
 
-        return ProcTaskSqlQueryBuilder(authoritiesApi, camundaTaskService, procTaskAttsSyncService)
+        return ProcTaskSqlQueryBuilder(
+            authoritiesApi,
+            camundaTaskService,
+            procTaskAttsSyncService,
+            processEngineConfiguration
+        )
             .addConditions(preparedPredicate)
             .setPage(page.skipCount, page.maxItems)
             .setSorting(sortBy)
