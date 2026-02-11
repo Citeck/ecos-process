@@ -6,6 +6,7 @@ import ru.citeck.ecos.wkgsch.lib.calendar.WorkingCalendarImpl
 import ru.citeck.ecos.wkgsch.lib.schedule.dto.WorkingDayTime
 import ru.citeck.ecos.wkgsch.lib.schedule.type.weekly.WeeklyWorkingSchedule
 import ru.citeck.ecos.wkgsch.lib.schedule.type.weekly.WeeklyWorkingScheduleConfig
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 @Configuration
@@ -14,7 +15,11 @@ class TestWorkingScheduleConfiguration {
     @Bean
     fun testWeaklyWorkingSchedule(): WeeklyWorkingSchedule {
         return WeeklyWorkingSchedule(
-            WorkingCalendarImpl(emptyMap()),
+            WorkingCalendarImpl(
+                emptyMap(),
+                LocalDate.EPOCH,
+                LocalDate.parse("3000-01-01")
+            ),
             WeeklyWorkingScheduleConfig(
                 workingDayStart = WorkingDayTime.valueOf("09:00"),
                 workingDayEnd = WorkingDayTime.valueOf("17:00"),
