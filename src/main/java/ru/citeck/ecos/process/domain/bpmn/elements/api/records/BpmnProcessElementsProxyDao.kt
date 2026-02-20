@@ -51,7 +51,7 @@ class BpmnProcessElementsProxyDao :
             )
         } else {
             Predicates.and(
-                Predicates.eq("procDefId", value.getLocalId()),
+                Predicates.eq("procDefRef", value),
                 Predicates.eq("engine", BPMN_CAMUNDA_ENGINE)
             )
         }

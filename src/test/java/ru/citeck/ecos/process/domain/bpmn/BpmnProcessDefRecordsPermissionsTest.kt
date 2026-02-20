@@ -16,7 +16,6 @@ import ru.citeck.ecos.model.lib.permissions.dto.PermissionLevel
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionRule
 import ru.citeck.ecos.model.lib.permissions.dto.PermissionsDef
 import ru.citeck.ecos.model.lib.role.dto.RoleDef
-import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.dto.TypePermsDef
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.process.EprocApp
@@ -70,7 +69,7 @@ class BpmnProcessDefRecordsPermissionsTest {
     @SpyBean
     private lateinit var bpmnSectionPermissionsProvider: BpmnSectionPermissionsProvider
 
-    private var bpmnTypeBefore: TypeDef? = null
+    private lateinit var bpmnTypeBefore: TypeDef
     private var permsDefBefore: TypePermsDef? = null
     private var permsDefId: String = UUID.randomUUID().toString()
 
@@ -96,16 +95,15 @@ class BpmnProcessDefRecordsPermissionsTest {
 
     @BeforeAll
     fun setUp() {
-        bpmnTypeBefore = typesRegistry.getValue(BPMN_PROC_DEF_TYPE_ID)
+        bpmnTypeBefore = typesRegistry.getValue(BPMN_PROC_DEF_TYPE_ID)!!
         permsDefBefore = permsRegistry.getPermissionsForType(ModelUtils.getTypeRef(BPMN_PROC_DEF_TYPE_ID))
         permsDefBefore?.let { permsDefId = it.id }
 
         typesRegistry.setValue(
             BPMN_PROC_DEF_TYPE_ID,
-            TypeDef.create {
-                withId(BPMN_PROC_DEF_TYPE_ID)
-                withModel(
-                    TypeModelDef.create()
+            bpmnTypeBefore.copy()
+                .withModel(
+                    bpmnTypeBefore.model.copy()
                         .withRoles(
                             listOf(
                                 RoleDef.create()
@@ -129,8 +127,7 @@ class BpmnProcessDefRecordsPermissionsTest {
                             )
                         )
                         .build()
-                )
-            }
+                ).build()
         )
 
         permsRegistry.setValue(
@@ -470,12 +467,8 @@ class BpmnProcessDefRecordsPermissionsTest {
         helper.cleanDeployments()
         helper.cleanDefinitions()
 
-        val bpmnTypeBefore = bpmnTypeBefore
-        if (bpmnTypeBefore == null) {
-            typesRegistry.setValue(BPMN_PROC_DEF_TYPE_ID, null)
-        } else {
-            typesRegistry.setValue(BPMN_PROC_DEF_TYPE_ID, bpmnTypeBefore)
-        }
+        typesRegistry.setValue(BPMN_PROC_DEF_TYPE_ID, bpmnTypeBefore)
+
         val permsDefBefore = permsDefBefore
         if (permsDefBefore == null) {
             permsRegistry.setValue(permsDefId, null)

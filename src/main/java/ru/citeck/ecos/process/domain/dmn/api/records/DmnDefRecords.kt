@@ -10,11 +10,14 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.common.section.SectionType
+import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
+import ru.citeck.ecos.process.common.section.perms.SectionFallbackPermsComponent
+import ru.citeck.ecos.process.common.section.perms.WorkspacePermsComponent
 import ru.citeck.ecos.process.common.section.records.SectionsProxyDao
-import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.dmn.DMN_FORMAT
 import ru.citeck.ecos.process.domain.dmn.DMN_PROC_TYPE
@@ -37,6 +40,7 @@ import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.records3.record.atts.value.impl.EmptyAttValue
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordAttsDao
@@ -49,6 +53,11 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.ifEmpty
+import ru.citeck.ecos.webapp.lib.model.perms.ModelRecordPermsComponent
+import ru.citeck.ecos.webapp.lib.perms.EcosPermissionsService
+import ru.citeck.ecos.webapp.lib.perms.RecordPerms
+import ru.citeck.ecos.webapp.lib.perms.calculator.RecordPermsCalculator
+import ru.citeck.ecos.webapp.lib.perms.component.custom.CustomRecordPermsComponent
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
@@ -62,10 +71,12 @@ class DmnDefRecords(
     private val procDefEventEmitter: ProcDefEventEmitter,
     private val camundaRepoService: RepositoryService,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
-    private val bpmnProcessDefRecords: BpmnProcessDefRecords,
     private val workspaceService: WorkspaceService,
     private val dmnIO: DmnIO,
-    private val procUtils: ProcUtils
+    private val procUtils: ProcUtils,
+    ecosPermissionsService: EcosPermissionsService,
+    customRecordPermsComponent: CustomRecordPermsComponent,
+    modelRecordPermsComponent: ModelRecordPermsComponent
 ) : AbstractRecordsDao(),
     RecordsQueryDao,
     RecordAttsDao,
@@ -80,6 +91,27 @@ class DmnDefRecords(
         private val DEFAULT_SECTION_REF = SectionType.DMN.getRef("DEFAULT")
 
         private val log = KotlinLogging.logger {}
+    }
+
+    private val sectionPermsCalculator: RecordPermsCalculator by lazy {
+        ecosPermissionsService.createCalculator()
+            .withoutDefaultComponents()
+            .allowAllForAdmins()
+            .addComponent(RootSectionPermsComponent())
+            .addComponent(modelRecordPermsComponent)
+            .addComponent(customRecordPermsComponent)
+            .build()
+    }
+
+    private val permsCalculator: RecordPermsCalculator by lazy {
+        ecosPermissionsService.createCalculator()
+            .withoutDefaultComponents()
+            .allowAllForAdmins()
+            .addComponent(WorkspacePermsComponent(workspaceService, SectionType.DMN))
+            .addComponent(modelRecordPermsComponent)
+            .addComponent(customRecordPermsComponent)
+            .addComponent(SectionFallbackPermsComponent(SectionType.DMN, sectionPermsCalculator))
+            .build()
     }
 
     override fun getId(): String {
@@ -172,7 +204,11 @@ class DmnDefRecords(
     override fun saveMutatedRec(record: DmnMutateRecord): String {
 
         val procDefRef = record.id.toProcDefRef()
-        val perms = procDefRef.getPerms()
+        val perms = if (record.isNewRecord) {
+            DmnPermsValue(record)
+        } else {
+            procDefRef.getPerms()
+        }
 
         val sectionRef = record.sectionRef.ifEmpty { DEFAULT_SECTION_REF }
         record.sectionRef = sectionRef
@@ -392,9 +428,14 @@ class DmnDefRecords(
         private val procDef: ProcDefDto
     ) {
 
-        private val permsValue by lazy { bpmnProcessDefRecords.ProcDefPermsValue(this, SectionType.DMN) }
+        private val permsValue by lazy { DmnPermsValue(getRef()) }
 
-        fun getPermissions(): BpmnProcessDefRecords.ProcDefPermsValue {
+        @AttName("_permissions")
+        fun getPermissionsSysAtt(): DmnPermsValue {
+            return permsValue
+        }
+
+        fun getPermissions(): DmnPermsValue {
             return permsValue
         }
 
@@ -503,6 +544,10 @@ class DmnDefRecords(
         val sectionRefBefore = sectionRef.ifEmpty { DEFAULT_SECTION_REF }
         val isNewRecord = id.isBlank()
 
+        fun getEcosType(): EntityRef {
+            return ModelUtils.getTypeRef("dmn-def")
+        }
+
         fun setImage(imageUrl: String) {
             imageBytes = DataUriUtil.parseData(imageUrl).data
         }
@@ -546,7 +591,21 @@ class DmnDefRecords(
         return EntityRef.create(AppName.EPROC, DMN_DEF_RECORDS_SOURCE_ID, this)
     }
 
-    private fun EntityRef.getPerms(): BpmnProcessDefRecords.ProcDefPermsValue {
-        return bpmnProcessDefRecords.ProcDefPermsValue(this, SectionType.DMN)
+    private fun EntityRef.getPerms(): DmnPermsValue {
+        return DmnPermsValue(this)
+    }
+
+    inner class DmnPermsValue(private val record: Any) : AttValue {
+        private val perms: RecordPerms by lazy { permsCalculator.getPermissions(record) }
+
+        override fun has(name: String): Boolean {
+            return perms.hasPermission(name)
+        }
+
+        fun hasReadPerms(): Boolean = perms.hasReadPerms()
+
+        fun hasWritePerms(): Boolean = perms.hasWritePerms()
+
+        fun hasDeployPerms(): Boolean = has(SectionType.DMN.deployPermissionId)
     }
 }

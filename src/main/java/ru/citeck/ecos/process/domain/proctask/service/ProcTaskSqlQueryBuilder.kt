@@ -434,8 +434,6 @@ class ProcTaskSqlQueryBuilder(
                     }
                 }
             }
-
-            else -> return false
         }
         condition.append("$alias.id_ IS NOT NULL")
         return true

@@ -16,7 +16,7 @@ class CustomWorkspaceApi(
         const val WS_SYS_ID_POSTFIX = "-sys-id"
     }
 
-    private val userWorkspaces = ConcurrentHashMap<String, Set<String>>()
+    private val userMemberships = ConcurrentHashMap<String, List<WsMembership>>()
 
     @PostConstruct
     fun init() {
@@ -28,11 +28,11 @@ class CustomWorkspaceApi(
     }
 
     override fun getUserWorkspaces(user: String, membershipType: WsMembershipType): Set<String> {
-        return userWorkspaces[user] ?: emptySet()
+        return userMemberships[user]?.mapTo(LinkedHashSet()) { it.workspace } ?: emptySet()
     }
 
     override fun isUserManagerOf(user: String, workspace: String): Boolean {
-        return false
+        return userMemberships[user]?.any { it.workspace == workspace && it.isManager } == true
     }
 
     override fun mapIdentifiers(identifiers: List<String>, mappingType: WorkspaceApi.IdMappingType): List<String> {
@@ -56,10 +56,19 @@ class CustomWorkspaceApi(
     }
 
     fun setUserWorkspaces(user: String, workspaces: Set<String>) {
-        this.userWorkspaces[user] = workspaces
+        this.userMemberships[user] = workspaces.map { WsMembership(it) }
+    }
+
+    fun setUserMemberships(user: String, memberships: List<WsMembership>) {
+        this.userMemberships[user] = memberships
     }
 
     fun cleanUp() {
-        userWorkspaces.clear()
+        userMemberships.clear()
     }
+
+    data class WsMembership(
+        val workspace: String,
+        val isManager: Boolean = false
+    )
 }

@@ -11,12 +11,13 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json.mapper
 import ru.citeck.ecos.commons.utils.DataUriUtil
 import ru.citeck.ecos.context.lib.auth.AuthContext
-import ru.citeck.ecos.model.lib.permissions.dto.PermissionType
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.common.section.SectionType
 import ru.citeck.ecos.process.common.section.perms.RootSectionPermsComponent
+import ru.citeck.ecos.process.common.section.perms.SectionFallbackPermsComponent
+import ru.citeck.ecos.process.common.section.perms.WorkspacePermsComponent
 import ru.citeck.ecos.process.common.section.records.SectionsProxyDao
 import ru.citeck.ecos.process.domain.bpmn.BPMN_FORMAT
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
@@ -67,16 +68,13 @@ import ru.citeck.ecos.webapp.api.entity.toEntityRef
 import ru.citeck.ecos.webapp.lib.model.perms.ModelRecordPermsComponent
 import ru.citeck.ecos.webapp.lib.perms.EcosPermissionsService
 import ru.citeck.ecos.webapp.lib.perms.RecordPerms
+import ru.citeck.ecos.webapp.lib.perms.calculator.RecordPermsCalculator
 import ru.citeck.ecos.webapp.lib.perms.component.custom.CustomRecordPermsComponent
 import ru.citeck.ecos.webapp.lib.spring.context.content.EcosContentService
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
 import javax.xml.namespace.QName
-
-private const val PERMS_READ = "read"
-private const val PERMS_WRITE = "write"
-private const val ATT_SECTION_REF_ID = "sectionRef?id"
 
 @Component
 class BpmnProcessDefRecords(
@@ -121,13 +119,26 @@ class BpmnProcessDefRecords(
     @Volatile
     private var allProcDefsFromAlfrescoNextUpdateTime = Instant.EPOCH
 
-    private val permsCalculator = ecosPermissionsService.createCalculator()
-        .withoutDefaultComponents()
-        .addComponent(RootSectionPermsComponent())
-        .addComponent(modelRecordPermsComponent)
-        .addComponent(customRecordPermsComponent)
-        .allowAllForAdmins()
-        .build()
+    private val sectionPermsCalculator: RecordPermsCalculator by lazy {
+        ecosPermissionsService.createCalculator()
+            .withoutDefaultComponents()
+            .allowAllForAdmins()
+            .addComponent(RootSectionPermsComponent())
+            .addComponent(modelRecordPermsComponent)
+            .addComponent(customRecordPermsComponent)
+            .build()
+    }
+
+    private val permsCalculator: RecordPermsCalculator by lazy {
+        ecosPermissionsService.createCalculator()
+            .withoutDefaultComponents()
+            .allowAllForAdmins()
+            .addComponent(WorkspacePermsComponent(workspaceService, SectionType.BPMN))
+            .addComponent(modelRecordPermsComponent)
+            .addComponent(customRecordPermsComponent)
+            .addComponent(SectionFallbackPermsComponent(SectionType.BPMN, sectionPermsCalculator))
+            .build()
+    }
 
     override fun getId() = ID
 
@@ -591,7 +602,7 @@ class BpmnProcessDefRecords(
         }
     }
 
-    inner class AlfProcDefRecord(
+    class AlfProcDefRecord(
         private val alfAtts: ProcDefAlfAtts
     ) {
 
@@ -864,72 +875,17 @@ class BpmnProcessDefRecords(
         private val sectionType: SectionType
     ) : AttValue {
 
-        private val currentUser = AuthContext.getCurrentUser()
-        private val recordPerms: RecordPerms by lazy {
-            permsCalculator.getPermissions(record)
-        }
-        private val workspace: String by lazy {
-            AuthContext.runAsSystem {
-                recordsService.getAtt(record, "workspace").asText()
-            }
-        }
-        private val isCurrentUserManagerOfWs: Boolean by lazy {
-            workspace.isNotBlank() &&
-                AuthContext.runAsSystem {
-                    workspaceService.isUserManagerOf(currentUser, workspace)
-                }
-        }
-
-        private val sectionPerms: RecordPerms by lazy {
-            var sectionRef = recordsService.getAtt(record, ATT_SECTION_REF_ID).asText().toEntityRef()
-            if (EntityRef.isEmpty(sectionRef)) {
-                sectionRef = EntityRef.create(AppName.EPROC, sectionType.sourceId, "DEFAULT")
-            }
-            permsCalculator.getPermissions(sectionRef)
-        }
+        private val perms: RecordPerms by lazy { permsCalculator.getPermissions(record) }
 
         override fun has(name: String): Boolean {
-            if (AuthContext.isRunAsSystem()) {
-                return true
-            }
-            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace) && isCurrentUserManagerOfWs) {
-                return true
-            }
-            var hasPermission = recordPerms.hasPermission(name)
-            if (!hasPermission) {
-                hasPermission = sectionPerms.hasPermission(name)
-            }
-            if (!hasPermission && name.equals(PermissionType.WRITE.name, true)) {
-                hasPermission = sectionPerms.hasPermission(sectionType.editInSectionPermissionId)
-            }
-            return hasPermission
+            return perms.hasPermission(name)
         }
 
-        fun hasReadPerms(): Boolean {
-            if (AuthContext.isRunAsSystem()) {
-                return true
-            }
-            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
-                return AuthContext.runAsSystem {
-                    workspaceService.isUserMemberOf(currentUser, workspace)
-                }
-            }
-            return has(PERMS_READ)
-        }
+        fun hasReadPerms(): Boolean = perms.hasReadPerms()
 
-        fun hasWritePerms(): Boolean {
-            if (AuthContext.isRunAsSystem()) {
-                return true
-            }
-            if (!workspaceService.isWorkspaceWithGlobalEntities(workspace)) {
-                return isCurrentUserManagerOfWs
-            }
-            return has(PERMS_WRITE)
-        }
+        fun hasWritePerms(): Boolean = perms.hasWritePerms()
 
-        fun hasDeployPerms(): Boolean {
-            return has(sectionType.deployPermissionId)
-        }
+        fun hasDeployPerms(): Boolean = has(sectionType.deployPermissionId)
     }
 
     class EprocBpmnPreviewValue(val id: String?, private val cacheBust: Any?) {

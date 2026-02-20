@@ -32,10 +32,6 @@ class RootSectionPermsComponent :
         return context.getRecord().getRef().getLocalId() == "ROOT"
     }
 
-    override fun getOrder(): Float {
-        return -10_000f
-    }
-
     private object RootReaders : RecordReadersPermsData {
 
         override fun getAuthoritiesWithReadPermission(): Set<String> {
