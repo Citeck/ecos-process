@@ -59,13 +59,8 @@ class BpmnIncidentRecords(
         check(incident != null) {
             "Incident with id ${record.id} not found"
         }
-        check(
-            bpmnPermissionResolver.isAllowForProcessInstanceId(
-                BpmnPermission.PROC_INSTANCE_EDIT,
-                incident.processInstanceId
-            )
-        ) {
-            "User has no permission to edit process instance ${incident.processInstanceId}"
+        check(isAllowForIncident(BpmnPermission.PROC_INSTANCE_EDIT, incident)) {
+            "User has no permission to edit incident ${record.id}"
         }
 
         if (record.hasAtt(ATT_NOTE)) {
@@ -174,20 +169,33 @@ class BpmnIncidentRecords(
         }
     }
 
+    private fun isAllowForIncident(permission: BpmnPermission, incident: Incident): Boolean {
+        val processInstanceId = incident.processInstanceId
+        if (!processInstanceId.isNullOrBlank()) {
+            return bpmnPermissionResolver.isAllowForProcessInstanceId(permission, processInstanceId)
+        }
+        val processDefinitionId = incident.processDefinitionId
+        if (!processDefinitionId.isNullOrBlank()) {
+            val bpmnDefEngine = EntityRef.create(
+                AppName.EPROC,
+                BpmnProcessDefEngineRecords.ID,
+                processDefinitionId
+            )
+            return bpmnPermissionResolver.isAllowForBpmnDefEngine(permission, bpmnDefEngine)
+        }
+        return AuthContext.isRunAsSystemOrAdmin()
+    }
+
     override fun getRecordAtts(recordId: String): Any? {
         val incident = camundaRuntimeService.createIncidentQuery()
             .incidentId(recordId)
-            .singleResult()
+            .singleResult() ?: return null
 
-        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(
-                BpmnPermission.PROC_INSTANCE_READ,
-                incident.processInstanceId
-            )
-        ) {
+        if (!isAllowForIncident(BpmnPermission.PROC_INSTANCE_READ, incident)) {
             return null
         }
 
-        return incident?.let { IncidentRecord(it) }
+        return IncidentRecord(incident)
     }
 
     private inner class IncidentRecord(
@@ -215,7 +223,11 @@ class BpmnIncidentRecords(
 
         @AttName(ATT_PROCESS_INSTANCE)
         fun getProcessInstance(): EntityRef {
-            return EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, incident.processInstanceId)
+            val processInstanceId = incident.processInstanceId
+            if (processInstanceId.isNullOrBlank()) {
+                return EntityRef.EMPTY
+            }
+            return EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, processInstanceId)
         }
 
         @AttName(".disp")
