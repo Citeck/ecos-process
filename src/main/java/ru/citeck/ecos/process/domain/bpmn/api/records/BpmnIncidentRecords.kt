@@ -179,7 +179,7 @@ class BpmnIncidentRecords(
             .incidentId(recordId)
             .singleResult()
 
-        if (incident != null && !bpmnPermissionResolver.isAllowForProcessInstanceId(
+        if (!bpmnPermissionResolver.isAllowForProcessInstanceId(
                 BpmnPermission.PROC_INSTANCE_READ,
                 incident.processInstanceId
             )
