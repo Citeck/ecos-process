@@ -36,8 +36,7 @@
           "en": "write script here",
           "ru": "напишите здесь скрипт"
         },
-        "editor": "monaco",
-        "codeAs": "javascript",
+        "editor": "ace",
         "wysiwyg": {
           "mode": "ace/mode/javascript"
         },
