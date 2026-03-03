@@ -13,7 +13,7 @@
             <bpmn:incoming >Flow_1przxj1</bpmn:incoming>
         </bpmn:endEvent>
         <bpmn:sequenceFlow sourceRef="approverTask" targetRef="endEvent" name="" id="Flow_1przxj1" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
-        <bpmn:boundaryEvent  cancelActivity="false" attachedToRef="approverTask" name="daily" id="Event_0g496z5" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;daily&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:timeConfig="{&quot;type&quot;:&quot;CYCLE&quot;,&quot;value&quot;:&quot;R/P1D&quot;}">
+        <bpmn:boundaryEvent  cancelActivity="false" attachedToRef="approverTask" name="daily" id="Event_0g496z5" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;daily&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:&quot;R3/PT1S&quot;}" ecos:timeConfig="{&quot;type&quot;:&quot;CYCLE&quot;,&quot;value&quot;:&quot;R/P1D&quot;}">
             <bpmn:outgoing>Flow_18doagl</bpmn:outgoing>
             <bpmn:timerEventDefinition id="TimerEventDefinition_14hv08s">
                 <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/P1D</bpmn:timeCycle>
