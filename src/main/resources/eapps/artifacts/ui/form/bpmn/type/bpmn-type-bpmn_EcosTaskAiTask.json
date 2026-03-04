@@ -7,6 +7,7 @@
   "description": {},
   "customModule": "",
   "typeRef": "",
+  "workspace": "",
   "width": "lg",
   "system": true,
   "i18n": {
@@ -111,15 +112,19 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "aiEnabled": true,
             "rows": 15,
             "as": "string",
+            "scriptContextType": "bpmn_script_task",
             "type": "textarea",
             "input": true,
+            "codeAs": "",
             "uploadStorage": "",
             "uploadUrl": "",
             "uploadOptions": "",
             "uploadDir": "",
-            "reorder": false
+            "reorder": false,
+            "textAreaAIContextType": ""
           }
         ],
         "collapsed": false,
@@ -239,15 +244,19 @@
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
+            "aiEnabled": true,
             "rows": 15,
-            "as": "string",
             "type": "textarea",
             "input": true,
+            "codeAs": "javascript",
+            "as": "",
+            "scriptContextType": "bpmn_script_task",
             "uploadStorage": "",
             "uploadUrl": "",
             "uploadOptions": "",
             "uploadDir": "",
-            "reorder": false
+            "reorder": false,
+            "textAreaAIContextType": ""
           }
         ]
       },
