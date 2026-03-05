@@ -158,7 +158,8 @@
             "validate": {
               "required": true
             },
-            "editor": "ace",
+            "editor": "monaco",
+            "codeAs": "javascript",
             "wysiwyg": {
               "mode": "ace/mode/javascript"
             },
