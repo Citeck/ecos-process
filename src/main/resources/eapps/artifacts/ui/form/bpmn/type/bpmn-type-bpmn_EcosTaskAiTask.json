@@ -105,10 +105,8 @@
               "ru": "JavaScript, выполняемый до запроса к AI.\nИспользуется для подготовки данных или включения дополнительных документов в контекст.\n\nДля добавления в контекст:\nlet contracts = [\"emodel/ecos-contract@contract1\", \"emodel/ecos-contract@contract2\"];\nexecution.setVariable(\"aiRecordsContext\", DataValue.of(contracts));\n\naiRecordsContext  — массив ссылок на документы, доступных AI. Должен быть обернут в DataValue.",
               "en": "JavaScript executed before the AI request.\nUsed to prepare data or include additional documents in the context.\n\nTo add to the context:\nlet contracts = [\"emodel/ecos-contract@contract1\", \"emodel/ecos-contract@contract2\"];\nexecution.setVariable(\"aiRecordsContext\", DataValue.of(contracts));\n\naiRecordsContext is an array of document references available to AI. Should be wrapped in DataValue."
             },
-            "editor": "ace",
-            "wysiwyg": {
-              "mode": "ace/mode/javascript"
-            },
+            "editor": "monaco",
+            "codeAs": "javascript",
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
@@ -118,7 +116,6 @@
             "scriptContextType": "bpmn_script_task",
             "type": "textarea",
             "input": true,
-            "codeAs": "",
             "uploadStorage": "",
             "uploadUrl": "",
             "uploadOptions": "",
@@ -237,10 +234,8 @@
               "ru": "JavaScript, выполняемый после получения ответа от AI.\nРезультат запроса доступен в переменной aiResponse.",
               "en": "JavaScript executed after receiving a response from AI.\nThe result of the request is available in the aiResponse variable."
             },
-            "editor": "ace",
-            "wysiwyg": {
-              "mode": "ace/mode/javascript"
-            },
+            "editor": "monaco",
+            "codeAs": "javascript",
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,
@@ -248,7 +243,6 @@
             "rows": 15,
             "type": "textarea",
             "input": true,
-            "codeAs": "javascript",
             "as": "",
             "scriptContextType": "bpmn_script_task",
             "uploadStorage": "",
