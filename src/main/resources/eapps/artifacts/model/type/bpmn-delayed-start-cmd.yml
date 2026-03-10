@@ -1,0 +1,73 @@
+---
+id: bpmn-delayed-start-cmd
+name:
+  en: BPMN Delayed Start Command
+  ru: Отложенная команда запуска BPMN
+sourceId: eproc/bpmn-delayed-start-cmd
+system: true
+defaultCreateVariant: false
+
+aspects:
+  - ref: emodel/aspect@history-config
+    config:
+      disableHistory: true
+
+model:
+  attributes:
+    - id: processId
+      name:
+        ru: Идентификатор процесса
+        en: Process ID
+      index:
+        enabled: true
+    - id: workspace
+      name:
+        ru: Рабочее пространство
+        en: Workspace
+    - id: businessKey
+      name:
+        ru: Бизнес-ключ
+        en: Business Key
+    - id: variables
+      name:
+        ru: Переменные
+        en: Variables
+      type: JSON
+    - id: retryCount
+      name:
+        ru: Число повторов
+        en: Retry Count
+      type: NUMBER
+      index:
+        enabled: true
+    - id: nextRetryTime
+      name:
+        ru: Время следующей попытки
+        en: Next Retry Time
+      type: DATETIME
+      index:
+        enabled: true
+    - id: lastProcRunTime
+      name:
+        ru: Время последнего цикла обработки
+        en: Last Processing Run Time
+      type: DATETIME
+      index:
+        enabled: true
+    - id: completedAt
+      name:
+        ru: Время завершения
+        en: Completed At
+      type: DATETIME
+      index:
+        enabled: true
+    - id: lastAttemptTime
+      name:
+        ru: Время последней попытки
+        en: Last Attempt Time
+      type: DATETIME
+    - id: lastError
+      name:
+        ru: Последняя ошибка
+        en: Last Error
+      type: TEXT

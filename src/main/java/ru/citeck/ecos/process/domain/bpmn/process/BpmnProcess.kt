@@ -4,6 +4,11 @@ import org.camunda.bpm.engine.history.HistoricProcessInstance
 import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.runtime.Incident
 import org.camunda.bpm.engine.runtime.ProcessInstance
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_STATUS
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKSPACE
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -69,7 +74,25 @@ data class StartProcessRequest(
     val processId: String,
     val businessKey: String? = null,
     val variables: Map<String, Any?> = emptyMap()
-)
+) {
+    companion object {
+        private val NON_SENSITIVE_VARIABLE_KEYS = setOf(
+            BPMN_WORKFLOW_INITIATOR,
+            BPMN_DOCUMENT_REF,
+            BPMN_DOCUMENT_TYPE,
+            BPMN_DOCUMENT_STATUS,
+            BPMN_WORKSPACE
+        )
+    }
+
+    override fun toString(): String {
+        val maskedVars = variables.entries.associate { (k, v) ->
+            k to if (k in NON_SENSITIVE_VARIABLE_KEYS) v else "?"
+        }
+        return "StartProcessRequest(workspace='$workspace', processId='$processId', " +
+            "businessKey=$businessKey, variables=$maskedVars)"
+    }
+}
 
 data class ProcessInstanceQuery(
     val businessKey: String = "",
