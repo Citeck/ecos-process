@@ -70,7 +70,7 @@ class BpmnProcessAsyncStarter(
                         if (disposed) break
                         Thread.sleep(1_000)
                     }
-                    throw e
+                    msg.nack()
                 }
             }
         }
