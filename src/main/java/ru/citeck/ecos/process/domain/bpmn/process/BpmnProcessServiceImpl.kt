@@ -307,8 +307,9 @@ class BpmnProcessServiceImpl(
     }
 
     override fun getProcessDefinitionByProcessInstanceId(processInstanceId: String): ProcessDefinition? {
-        val processInstance = getProcessInstance(processInstanceId) ?: return null
-        return getProcessDefinition(processInstance.processDefinitionId)
+        val processDefId = getProcessInstance(processInstanceId)?.processDefinitionId
+            ?: getProcessInstanceHistoricInstance(processInstanceId)?.processDefinitionId ?: return null
+        return getProcessDefinition(processDefId)
     }
 
     override fun getProcessDefinition(processDefinitionId: String): ProcessDefinition? {
