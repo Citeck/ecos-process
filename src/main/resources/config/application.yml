@@ -59,7 +59,10 @@ ecos-process:
         count: 4
         prefetch: 250
         retry:
-          max-attempts: 1200
+          max-attempts: 5
+      delayed-retry:
+        delay: 10s 30s 1m 5m 10m 30m 1h 6h 12h 24h
+        job-rate-ms: 10000
     kpi:
       mutation-processor:
         consumer:

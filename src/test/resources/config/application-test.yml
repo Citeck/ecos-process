@@ -37,6 +37,9 @@ ecos-process:
         prefetch: 1
         retry:
           max-attempts: 3
+      delayed-retry:
+        delay: 1s 2s 5s
+        job-rate-ms: 30000
 
 context:
   initializer:

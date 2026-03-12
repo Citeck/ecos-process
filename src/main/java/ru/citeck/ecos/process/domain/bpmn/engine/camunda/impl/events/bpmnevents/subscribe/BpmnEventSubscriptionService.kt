@@ -40,6 +40,11 @@ class BpmnEventSubscriptionService(
         private val log = KotlinLogging.logger {}
     }
 
+    @Volatile
+    private var initialized: Boolean = false
+
+    fun isInitialized(): Boolean = initialized
+
     private val eventListeners =
         Collections.synchronizedMap(mutableMapOf<String, Pair<CombinedEventSubscription, List<ListenerHandle>>>())
     private val conditionalEventListener = Collections.synchronizedMap(mutableMapOf<ListenerHandle, Set<String>>())
@@ -65,6 +70,8 @@ class BpmnEventSubscriptionService(
                     }
 
                     registerConditionalEventsListeners(deployedData.conditionalEventsEcosTypes)
+
+                    initialized = true
 
                     log.info {
                         buildString {
