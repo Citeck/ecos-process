@@ -54,25 +54,41 @@ class BpmnDelayedStartService(
 
     private val delays: List<Duration> = parseDelays(delayConfig)
 
-    fun saveForDelayedRetry(request: StartProcessRequest) {
-        val firstDelay = getDelay(0)
-        val nextRetryTime = Instant.now().plus(firstDelay)
+    fun saveForDelayedRetry(request: StartProcessRequest, completed: Boolean = false) {
+
+        val atts = RecordAtts(EntityRef.create(BPMN_DELAYED_START_CMD_SOURCE_ID, ""))
+
+        atts["processId"] = request.processId
+        atts["workspace"] = request.workspace
+        atts["businessKey"] = request.businessKey ?: ""
+        atts["variables"] = request.variables
+        atts["retryCount"] = 0
+        atts["lastError"] = ""
+
+        val nextRetryTime: Instant
+        if (completed) {
+            nextRetryTime = Instant.EPOCH
+            atts["completedAt"] = Instant.now()
+        } else {
+            val firstDelay = getDelay(0)
+            nextRetryTime = Instant.now().plus(firstDelay)
+        }
+        atts["nextRetryTime"] = nextRetryTime
 
         AuthContext.runAsSystem {
-            val atts = RecordAtts(EntityRef.create(BPMN_DELAYED_START_CMD_SOURCE_ID, ""))
-            atts["processId"] = request.processId
-            atts["workspace"] = request.workspace
-            atts["businessKey"] = request.businessKey ?: ""
-            atts["variables"] = request.variables
-            atts["retryCount"] = 0
-            atts["nextRetryTime"] = nextRetryTime
-            atts["lastError"] = ""
             recordsService.mutate(atts)
         }
 
-        log.info {
-            "Saved delayed start command for process '${request.processId}', " +
-                "businessKey='${request.businessKey}', next retry at $nextRetryTime"
+        if (completed) {
+            log.info {
+                "Saved completed start command for process '${request.processId}', " +
+                    "businessKey='${request.businessKey}'"
+            }
+        } else {
+            log.info {
+                "Saved delayed start command for process '${request.processId}', " +
+                    "businessKey='${request.businessKey}', next retry at $nextRetryTime"
+            }
         }
     }
 
