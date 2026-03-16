@@ -9,16 +9,13 @@ import ru.citeck.ecos.data.sql.records.DbRecordsDaoConfig
 import ru.citeck.ecos.data.sql.records.perms.DbPermsComponent
 import ru.citeck.ecos.data.sql.records.perms.DbRecordPerms
 import ru.citeck.ecos.data.sql.service.DbDataServiceConfig
-import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.RecordsDao
-
-const val BPMN_DELAYED_START_CMD_TYPE = "bpmn-delayed-start-cmd"
-const val BPMN_DELAYED_START_CMD_SOURCE_ID = BPMN_DELAYED_START_CMD_TYPE
-val BPMN_DELAYED_START_CMD_TYPE_REF = ModelUtils.getTypeRef(BPMN_DELAYED_START_CMD_TYPE)
 
 @Configuration
 class BpmnDelayedStartConfig(
-    private val dbDomainFactory: DbDomainFactory
+    private val dbDomainFactory: DbDomainFactory,
+    private val recordsService: RecordsService
 ) {
 
     @Bean
@@ -26,13 +23,14 @@ class BpmnDelayedStartConfig(
         val permsComponent = object : DbPermsComponent {
             override fun getRecordPerms(user: String, authorities: Set<String>, record: Any): DbRecordPerms {
                 val isAdmin = authorities.contains(AuthRole.ADMIN)
+                val isCompleted = !recordsService.getAtt(record, BpmnDelayedStartCmdDesc.ATT_COMPLETED_AT).isEmpty()
                 return object : DbRecordPerms {
                     override fun getAdditionalPerms(): Set<String> = emptySet()
                     override fun getAuthoritiesWithReadPermission(): Set<String> = setOf(AuthRole.ADMIN)
                     override fun hasAttReadPerms(name: String): Boolean = isAdmin
-                    override fun hasAttWritePerms(name: String): Boolean = isAdmin
+                    override fun hasAttWritePerms(name: String): Boolean = isAdmin && !isCompleted
                     override fun hasReadPerms(): Boolean = isAdmin
-                    override fun hasWritePerms(): Boolean = isAdmin
+                    override fun hasWritePerms(): Boolean = isAdmin && !isCompleted
                 }
             }
         }
@@ -41,8 +39,8 @@ class BpmnDelayedStartConfig(
             DbDomainConfig.create()
                 .withRecordsDao(
                     DbRecordsDaoConfig.create {
-                        withId(BPMN_DELAYED_START_CMD_SOURCE_ID)
-                        withTypeRef(BPMN_DELAYED_START_CMD_TYPE_REF)
+                        withId(BpmnDelayedStartCmdDesc.BPMN_DELAYED_START_CMD_SOURCE_ID)
+                        withTypeRef(BpmnDelayedStartCmdDesc.BPMN_DELAYED_START_CMD_TYPE_REF)
                     }
                 )
                 .withDataService(
