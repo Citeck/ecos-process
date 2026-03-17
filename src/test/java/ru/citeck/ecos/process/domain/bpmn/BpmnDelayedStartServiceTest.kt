@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.camunda.bpm.engine.RuntimeService
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -51,6 +52,9 @@ class BpmnDelayedStartServiceTest {
 
     @Autowired
     private lateinit var recordsService: RecordsService
+
+    @Autowired
+    private lateinit var runtimeService: RuntimeService
 
     @Autowired
     private lateinit var helper: BpmnProcHelper
@@ -589,6 +593,8 @@ class BpmnDelayedStartServiceTest {
 
     @AfterAll
     fun tearDown() {
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
         AuthContext.runAsSystem {
             val all = recordsService.query(
                 RecordsQuery.create {
@@ -600,8 +606,6 @@ class BpmnDelayedStartServiceTest {
             ).getRecords()
             all.forEach { recordsService.delete(it) }
         }
-        helper.cleanDeployments()
-        helper.cleanDefinitions()
     }
 
     data class DelayedCmdRecord(
