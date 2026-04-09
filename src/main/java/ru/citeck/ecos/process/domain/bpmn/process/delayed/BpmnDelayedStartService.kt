@@ -10,6 +10,7 @@ import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
+import ru.citeck.ecos.records2.predicate.PredicateService
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -31,7 +32,10 @@ class BpmnDelayedStartService(
     private val workspaceService: WorkspaceService,
 
     @Value("\${ecos-process.bpmn.async-start-process.delayed-retry.delay}")
-    private val delayConfig: String
+    private val delayConfig: String,
+
+    @Value("\${ecos-process.bpmn.async-start-process.delayed-retry.last-delay-doubling:false}")
+    private val lastDelayDoubling: Boolean
 ) {
 
     companion object {
@@ -50,29 +54,55 @@ class BpmnDelayedStartService(
                 }
             }
         }
+
+        fun getDelay(retryCount: Int, delays: List<Duration>, lastDelayDoubling: Boolean): Duration {
+            if (delays.isEmpty()) return Duration.ofMinutes(1)
+            if (retryCount < delays.size) return delays[retryCount]
+            var delay = delays.last()
+            if (!lastDelayDoubling) return delay
+            val doublings = (retryCount - delays.size + 1).coerceAtMost(20)
+            repeat(doublings) { delay = delay.multipliedBy(2) }
+            return delay
+        }
     }
 
     private val delays: List<Duration> = parseDelays(delayConfig)
 
-    fun saveForDelayedRetry(request: StartProcessRequest) {
-        val firstDelay = getDelay(0)
-        val nextRetryTime = Instant.now().plus(firstDelay)
+    fun saveForDelayedRetry(request: StartProcessRequest, completed: Boolean = false) {
+
+        val atts = RecordAtts(BpmnDelayedStartCmdDesc.getRef(""))
+
+        atts[BpmnDelayedStartCmdDesc.ATT_PROCESS_ID] = request.processId
+        atts[BpmnDelayedStartCmdDesc.ATT_WORKSPACE] = request.workspace
+        atts[BpmnDelayedStartCmdDesc.ATT_BUSINESS_KEY] = request.businessKey ?: ""
+        atts[BpmnDelayedStartCmdDesc.ATT_VARIABLES] = request.variables
+        atts[BpmnDelayedStartCmdDesc.ATT_RETRY_COUNT] = 0
+        atts[BpmnDelayedStartCmdDesc.ATT_LAST_ERROR] = ""
+
+        val nextRetryTime: Instant
+        if (completed) {
+            nextRetryTime = Instant.EPOCH
+            atts[BpmnDelayedStartCmdDesc.ATT_COMPLETED_AT] = Instant.now()
+        } else {
+            val firstDelay = getDelay(0)
+            nextRetryTime = Instant.now().plus(firstDelay)
+        }
+        atts[BpmnDelayedStartCmdDesc.ATT_NEXT_RETRY_TIME] = nextRetryTime
 
         AuthContext.runAsSystem {
-            val atts = RecordAtts(EntityRef.create(BPMN_DELAYED_START_CMD_SOURCE_ID, ""))
-            atts["processId"] = request.processId
-            atts["workspace"] = request.workspace
-            atts["businessKey"] = request.businessKey ?: ""
-            atts["variables"] = request.variables
-            atts["retryCount"] = 0
-            atts["nextRetryTime"] = nextRetryTime
-            atts["lastError"] = ""
             recordsService.mutate(atts)
         }
 
-        log.info {
-            "Saved delayed start command for process '${request.processId}', " +
-                "businessKey='${request.businessKey}', next retry at $nextRetryTime"
+        if (completed) {
+            log.info {
+                "Saved completed start command for process '${request.processId}', " +
+                    "businessKey='${request.businessKey}'"
+            }
+        } else {
+            log.info {
+                "Saved delayed start command for process '${request.processId}', " +
+                    "businessKey='${request.businessKey}', next retry at $nextRetryTime"
+            }
         }
     }
 
@@ -85,15 +115,15 @@ class BpmnDelayedStartService(
             val records = AuthContext.runAsSystem {
                 recordsService.query(
                     RecordsQuery.create {
-                        withSourceId(BPMN_DELAYED_START_CMD_SOURCE_ID)
-                        withLanguage("predicate")
+                        withSourceId(BpmnDelayedStartCmdDesc.BPMN_DELAYED_START_CMD_SOURCE_ID)
+                        withLanguage(PredicateService.LANGUAGE_PREDICATE)
                         withQuery(
                             Predicates.and(
-                                Predicates.le("nextRetryTime", now),
-                                Predicates.empty("completedAt"),
+                                Predicates.le(BpmnDelayedStartCmdDesc.ATT_NEXT_RETRY_TIME, now),
+                                Predicates.empty(BpmnDelayedStartCmdDesc.ATT_COMPLETED_AT),
                                 Predicates.or(
-                                    Predicates.empty("lastProcRunTime"),
-                                    Predicates.notEq("lastProcRunTime", now)
+                                    Predicates.empty(BpmnDelayedStartCmdDesc.ATT_LAST_PROC_RUN_TIME),
+                                    Predicates.notEq(BpmnDelayedStartCmdDesc.ATT_LAST_PROC_RUN_TIME, now)
                                 )
                             )
                         )
@@ -135,7 +165,7 @@ class BpmnDelayedStartService(
 
             AuthContext.runAsSystem {
                 val atts = RecordAtts(cmd.ref)
-                atts["completedAt"] = Instant.now()
+                atts[BpmnDelayedStartCmdDesc.ATT_COMPLETED_AT] = Instant.now()
                 recordsService.mutate(atts)
             }
 
@@ -157,11 +187,11 @@ class BpmnDelayedStartService(
             try {
                 AuthContext.runAsSystem {
                     val atts = RecordAtts(cmd.ref)
-                    atts["retryCount"] = nextRetryCount
-                    atts["nextRetryTime"] = nextRetryTime
-                    atts["lastProcRunTime"] = runStartTime
-                    atts["lastAttemptTime"] = Instant.now()
-                    atts["lastError"] = getRootCauseStackTrace(e)
+                    atts[BpmnDelayedStartCmdDesc.ATT_RETRY_COUNT] = nextRetryCount
+                    atts[BpmnDelayedStartCmdDesc.ATT_NEXT_RETRY_TIME] = nextRetryTime
+                    atts[BpmnDelayedStartCmdDesc.ATT_LAST_PROC_RUN_TIME] = runStartTime
+                    atts[BpmnDelayedStartCmdDesc.ATT_LAST_ATTEMPT_TIME] = Instant.now()
+                    atts[BpmnDelayedStartCmdDesc.ATT_LAST_ERROR] = getRootCauseStackTrace(e)
                     recordsService.mutate(atts)
                 }
             } catch (updateEx: Exception) {
@@ -207,8 +237,7 @@ class BpmnDelayedStartService(
     }
 
     private fun getDelay(retryCount: Int): Duration {
-        if (delays.isEmpty()) return Duration.ofMinutes(1)
-        return if (retryCount < delays.size) delays[retryCount] else delays.last()
+        return getDelay(retryCount, delays, lastDelayDoubling)
     }
 
     data class DelayedStartCommandAtts(

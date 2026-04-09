@@ -12,7 +12,7 @@ class BpmnDelayedStartRetryJob(
     private val eventSubscriptionService: BpmnEventSubscriptionService
 ) {
 
-    @Scheduled(fixedRateString = "\${ecos-process.bpmn.async-start-process.delayed-retry.job-rate-ms}")
+    @Scheduled(fixedDelayString = "\${ecos-process.bpmn.async-start-process.delayed-retry.job-rate-ms}")
     fun execute() {
         if (!eventSubscriptionService.isInitialized()) {
             return

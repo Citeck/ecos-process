@@ -1,0 +1,61 @@
+---
+id: bpmn-delayed-start-cmd
+name:
+  ru: Отложенные запуски BPMN
+  en: BPMN Delayed Starts
+typeRef: emodel/type@bpmn-delayed-start-cmd
+system: true
+
+sortBy:
+  - attribute: _created
+    ascending: false
+
+editable: false
+
+actions:
+  - eproc/action@retry-delayed-start-cmd
+
+columns:
+  - id: processId
+    name:
+      ru: Идентификатор процесса
+      en: Process ID
+  - id: businessKey
+    name:
+      ru: Бизнес-ключ
+      en: Business Key
+  - id: workspace
+    name:
+      ru: Рабочее пространство
+      en: Workspace
+    visible: false
+  - id: retryCount
+    name:
+      ru: Число повторов
+      en: Retry Count
+    type: NUMBER
+  - id: nextRetryTime
+    name:
+      ru: Следующая попытка
+      en: Next Retry Time
+    type: DATETIME
+  - id: completedAt
+    name:
+      ru: Завершено
+      en: Completed At
+    type: DATETIME
+  - id: lastAttemptTime
+    name:
+      ru: Последняя попытка
+      en: Last Attempt Time
+    type: DATETIME
+  - id: lastError
+    name:
+      ru: Последняя ошибка
+      en: Last Error
+    visible: false
+  - id: _created
+    name:
+      ru: Создано
+      en: Created
+    type: DATETIME

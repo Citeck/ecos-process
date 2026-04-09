@@ -39,6 +39,7 @@ ecos-process:
           max-attempts: 3
       delayed-retry:
         delay: 1s 2s 5s
+        last-delay-doubling: false
         job-rate-ms: 30000
 
 context:

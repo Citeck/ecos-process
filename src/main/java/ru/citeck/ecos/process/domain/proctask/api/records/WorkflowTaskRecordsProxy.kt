@@ -39,21 +39,21 @@ class WorkflowTaskRecordsProxy(
             return queryTasksForAnyProcessEngine(recsQuery, document)
         }
 
-        val documentTasksFromAlf = queryFromAlf(recsQuery)
-
-        /*
-        Do not request Camunda tasks with Alfresco enabled due to complexities with filtering, sorting, and merging
-        search results. Expect that requests without a "document" with Alfresco enabled will only come from the mobile application
-         */
-        val documentTasksFromEProc: RecsQueryRes<*> = if (webAppsApi.isAppAvailable(AppName.ALFRESCO) && document.isEmpty()) {
-            RecsQueryRes<Any>()
+        val documentTasksFromAlf = if (document.isNotEmpty()) {
+            queryFromAlf(recsQuery)
         } else {
-            queryTasksForDocumentFromEcosProcess(query, sortBy, page)
+            /*
+            Do not request Alfresco tasks when document is not specified due to complexities with filtering, sorting, and merging
+            search results. Expect that requests without a "document" will only come from the mobile application
+             */
+            RecsQueryRes<Any>()
         }
+        val tasksFromEProc = queryTasksFromEcosProcess(query, sortBy, page)
+
         val result = RecsQueryRes<Any>()
-        result.setRecords(documentTasksFromAlf.getRecords() + documentTasksFromEProc.getRecords())
-        result.setTotalCount(documentTasksFromAlf.getTotalCount() + documentTasksFromEProc.getTotalCount())
-        result.setHasMore(documentTasksFromAlf.getHasMore() || documentTasksFromEProc.getHasMore())
+        result.setRecords(documentTasksFromAlf.getRecords() + tasksFromEProc.getRecords())
+        result.setTotalCount(documentTasksFromAlf.getTotalCount() + tasksFromEProc.getTotalCount())
+        result.setHasMore(documentTasksFromAlf.getHasMore() || tasksFromEProc.getHasMore())
 
         return result
     }
@@ -89,7 +89,7 @@ class WorkflowTaskRecordsProxy(
         return recordsService.mutate(toMutate).map { it.getLocalId() }
     }
 
-    private fun queryTasksForDocumentFromEcosProcess(query: TaskQuery, sortBy: List<SortBy>, page: QueryPage): RecsQueryRes<*> {
+    private fun queryTasksFromEcosProcess(query: TaskQuery, sortBy: List<SortBy>, page: QueryPage): RecsQueryRes<*> {
         val result = RecsQueryRes<EntityRef>()
         if (!query.active) {
             return result
