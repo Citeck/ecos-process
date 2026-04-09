@@ -65,7 +65,7 @@
     <dependencies>
 
         <dependency>
-            <groupId>ru.citeck.ecos.ent.groupactions</groupId>
+            <groupId>ru.citeck.ecos.groupactions</groupId>
             <artifactId>ecos-group-actions</artifactId>
         </dependency>
 
