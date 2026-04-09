@@ -160,9 +160,7 @@
             },
             "editor": "monaco",
             "codeAs": "javascript",
-            "wysiwyg": {
-              "mode": "ace/mode/javascript"
-            },
+            "rows": 15,
             "defaultValue": "",
             "refreshOn": [],
             "optionalWhenDisabled": false,

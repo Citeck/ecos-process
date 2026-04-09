@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.camunda.bpm.engine.RuntimeService
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -18,8 +19,9 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_WORKFLOW_INITIATOR
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
-import ru.citeck.ecos.process.domain.bpmn.process.delayed.BPMN_DELAYED_START_CMD_SOURCE_ID
+import ru.citeck.ecos.process.domain.bpmn.process.delayed.BpmnDelayedStartCmdDesc.BPMN_DELAYED_START_CMD_SOURCE_ID
 import ru.citeck.ecos.process.domain.bpmn.process.delayed.BpmnDelayedStartService
+import ru.citeck.ecos.process.domain.bpmn.process.delayed.BpmnDelayedStartService.Companion.getDelay
 import ru.citeck.ecos.process.domain.bpmn.process.delayed.BpmnDelayedStartService.Companion.parseDelays
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
@@ -52,6 +54,9 @@ class BpmnDelayedStartServiceTest {
     private lateinit var recordsService: RecordsService
 
     @Autowired
+    private lateinit var runtimeService: RuntimeService
+
+    @Autowired
     private lateinit var helper: BpmnProcHelper
 
     @BeforeAll
@@ -62,6 +67,8 @@ class BpmnDelayedStartServiceTest {
             BpmnProcessDefActions.DEPLOY
         )
     }
+
+    // region parseDelays
 
     @Test
     fun `parseDelays should parse various duration units`() {
@@ -93,11 +100,69 @@ class BpmnDelayedStartServiceTest {
     }
 
     @Test
+    fun `parseDelays should return empty list for blank string`() {
+        assertThat(parseDelays("")).isEmpty()
+        assertThat(parseDelays("   ")).isEmpty()
+    }
+
+    @Test
     fun `parseDelays should throw on unknown unit`() {
         assertThatThrownBy { parseDelays("5x") }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Unknown duration unit")
     }
+
+    // endregion
+
+    // region getDelay
+
+    @Test
+    fun `getDelay should return delay by index when retryCount is within configured delays`() {
+        val delays = listOf(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(5))
+        assertThat(getDelay(0, delays, false)).isEqualTo(Duration.ofSeconds(1))
+        assertThat(getDelay(1, delays, false)).isEqualTo(Duration.ofSeconds(2))
+        assertThat(getDelay(2, delays, false)).isEqualTo(Duration.ofSeconds(5))
+    }
+
+    @Test
+    fun `getDelay should return last delay when retryCount exceeds list and doubling is off`() {
+        val delays = listOf(Duration.ofSeconds(1), Duration.ofSeconds(5))
+        assertThat(getDelay(2, delays, false)).isEqualTo(Duration.ofSeconds(5))
+        assertThat(getDelay(10, delays, false)).isEqualTo(Duration.ofSeconds(5))
+        assertThat(getDelay(100, delays, false)).isEqualTo(Duration.ofSeconds(5))
+    }
+
+    @Test
+    fun `getDelay should double last delay when doubling is on and retryCount exceeds list`() {
+        val delays = listOf(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(5))
+        // retryCount=3 → 1 doubling: 5*2 = 10s
+        assertThat(getDelay(3, delays, true)).isEqualTo(Duration.ofSeconds(10))
+        // retryCount=4 → 2 doublings: 5*2*2 = 20s
+        assertThat(getDelay(4, delays, true)).isEqualTo(Duration.ofSeconds(20))
+        // retryCount=5 → 3 doublings: 5*2*2*2 = 40s
+        assertThat(getDelay(5, delays, true)).isEqualTo(Duration.ofSeconds(40))
+    }
+
+    @Test
+    fun `getDelay should return 1 minute fallback when delays list is empty`() {
+        assertThat(getDelay(0, emptyList(), false)).isEqualTo(Duration.ofMinutes(1))
+        assertThat(getDelay(5, emptyList(), true)).isEqualTo(Duration.ofMinutes(1))
+    }
+
+    @Test
+    fun `getDelay should cap doublings at 20`() {
+        val delays = listOf(Duration.ofSeconds(1))
+        // retryCount=21 → 21 doublings, but capped at 20 → 1 * 2^20 = 1048576s
+        val expected = Duration.ofSeconds(1_048_576)
+
+        assertThat(getDelay(21, delays, true)).isEqualTo(expected)
+        // retryCount=100 → still capped at 20
+        assertThat(getDelay(100, delays, true)).isEqualTo(expected)
+    }
+
+    // endregion
+
+    // region saveForDelayedRetry
 
     @Test
     fun `saveForDelayedRetry should persist command to DB`() {
@@ -124,6 +189,84 @@ class BpmnDelayedStartServiceTest {
     }
 
     @Test
+    fun `saveForDelayedRetry with completed=true should set completedAt and epoch nextRetryTime`() {
+        val request = StartProcessRequest(
+            workspace = "",
+            processId = "test-proc-completed",
+            businessKey = "bk-completed-test",
+            variables = mapOf(BPMN_WORKFLOW_INITIATOR to "admin")
+        )
+
+        val beforeSave = Instant.now()
+        delayedStartService.saveForDelayedRetry(request, completed = true)
+
+        val cmds = queryDelayedCommands("test-proc-completed")
+        assertThat(cmds).hasSize(1)
+
+        val cmd = cmds.first()
+        assertThat(cmd.completedAt).isNotNull()
+        assertThat(cmd.completedAt).isAfterOrEqualTo(beforeSave)
+        assertThat(cmd.nextRetryTime).isEqualTo(Instant.EPOCH)
+        assertThat(cmd.retryCount).isEqualTo(0)
+
+        deleteDelayedCommand(cmd.ref)
+    }
+
+    @Test
+    fun `saveForDelayedRetry should preserve variables including workflow initiator`() {
+        val variables = mapOf<String, Any?>(
+            BPMN_WORKFLOW_INITIATOR to "testuser",
+            "documentRef" to "doc@123",
+            "amount" to 42
+        )
+
+        val request = StartProcessRequest(
+            workspace = "test-ws",
+            processId = "test-proc-vars",
+            businessKey = "bk-vars-test",
+            variables = variables
+        )
+
+        delayedStartService.saveForDelayedRetry(request)
+
+        val cmds = queryDelayedCommands("test-proc-vars")
+        assertThat(cmds).hasSize(1)
+
+        val savedVars = cmds.first().variables
+        assertThat(savedVars.get(BPMN_WORKFLOW_INITIATOR).asText()).isEqualTo("testuser")
+        assertThat(savedVars.get("documentRef").asText()).isEqualTo("doc@123")
+        assertThat(savedVars.get("amount").asInt()).isEqualTo(42)
+
+        deleteDelayedCommand(cmds.first().ref)
+    }
+
+    // endregion
+
+    // region startProcessWithAuth
+
+    @Test
+    fun `startProcessWithAuth should start process as system when no initiator`() {
+        val businessKey = "auth-system-test-${System.currentTimeMillis()}"
+        val request = StartProcessRequest(
+            workspace = "",
+            processId = PROC_ID,
+            businessKey = businessKey,
+            variables = emptyMap()
+        )
+
+        delayedStartService.startProcessWithAuth(request)
+
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted {
+            val processes = bpmnProcessService.getProcessInstancesForBusinessKey(businessKey)
+            assertThat(processes).hasSize(1)
+        }
+    }
+
+    // endregion
+
+    // region processDelayedCommands
+
+    @Test
     fun `processDelayedCommands should start process and mark record as completed on success`() {
         val businessKey = "delayed-start-success-${System.currentTimeMillis()}"
 
@@ -144,6 +287,27 @@ class BpmnDelayedStartServiceTest {
         }
 
         val cmds = queryDelayedCommands(PROC_ID, businessKey)
+        assertThat(cmds).hasSize(1)
+        assertThat(cmds.first().completedAt).isNotNull()
+
+        deleteDelayedCommand(cmds.first().ref)
+    }
+
+    @Test
+    fun `processDelayedCommands should handle command with null businessKey`() {
+        val request = StartProcessRequest(
+            workspace = "",
+            processId = PROC_ID,
+            businessKey = null,
+            variables = mapOf(BPMN_WORKFLOW_INITIATOR to "admin")
+        )
+
+        // businessKey=null is saved as "" in DB
+        saveDelayedCommand(request)
+
+        delayedStartService.processDelayedCommands()
+
+        val cmds = queryDelayedCommands(PROC_ID, "")
         assertThat(cmds).hasSize(1)
         assertThat(cmds.first().completedAt).isNotNull()
 
@@ -180,6 +344,48 @@ class BpmnDelayedStartServiceTest {
     }
 
     @Test
+    fun `processDelayedCommands should follow delay schedule on sequential failures`() {
+        // Test config has "1s 2s 5s"
+        // First failure: retryCount 0->1, delay = delays[1] = 2s
+        // Second failure: retryCount 1->2, delay = delays[2] = 5s
+        val request = StartProcessRequest(
+            workspace = "",
+            processId = NON_EXISTENT_PROC_ID,
+            businessKey = "bk-delay-schedule",
+            variables = emptyMap()
+        )
+
+        saveDelayedCommand(request)
+
+        // First failure
+        val before1 = Instant.now()
+        delayedStartService.processDelayedCommands()
+
+        var cmds = queryDelayedCommands(NON_EXISTENT_PROC_ID, "bk-delay-schedule")
+        assertThat(cmds).hasSize(1)
+        assertThat(cmds.first().retryCount).isEqualTo(1)
+        // Next delay = delays[1] = 2s
+        assertThat(cmds.first().nextRetryTime).isAfter(before1.plusSeconds(1))
+        assertThat(cmds.first().nextRetryTime).isBefore(before1.plusSeconds(5))
+
+        // Set nextRetryTime to past so it gets picked up again
+        updateNextRetryTime(cmds.first().ref, Instant.now().minusSeconds(1))
+
+        // Second failure
+        val before2 = Instant.now()
+        delayedStartService.processDelayedCommands()
+
+        cmds = queryDelayedCommands(NON_EXISTENT_PROC_ID, "bk-delay-schedule")
+        assertThat(cmds).hasSize(1)
+        assertThat(cmds.first().retryCount).isEqualTo(2)
+        // Next delay = delays[2] = 5s
+        assertThat(cmds.first().nextRetryTime).isAfter(before2.plusSeconds(4))
+        assertThat(cmds.first().nextRetryTime).isBefore(before2.plusSeconds(10))
+
+        deleteDelayedCommand(cmds.first().ref)
+    }
+
+    @Test
     fun `processDelayedCommands should not process commands with future nextRetryTime`() {
         val request = StartProcessRequest(
             workspace = "",
@@ -195,6 +401,29 @@ class BpmnDelayedStartServiceTest {
         val cmds = queryDelayedCommands(NON_EXISTENT_PROC_ID, "bk-future-test")
         assertThat(cmds).hasSize(1)
         assertThat(cmds.first().retryCount).isEqualTo(0)
+
+        deleteDelayedCommand(cmds.first().ref)
+    }
+
+    @Test
+    fun `processDelayedCommands should skip commands with completedAt set`() {
+        val request = StartProcessRequest(
+            workspace = "",
+            processId = NON_EXISTENT_PROC_ID,
+            businessKey = "bk-skip-completed",
+            variables = emptyMap()
+        )
+
+        delayedStartService.saveForDelayedRetry(request, completed = true)
+
+        delayedStartService.processDelayedCommands()
+
+        // Should remain untouched — retryCount still 0, no lastError
+        val cmds = queryDelayedCommands(NON_EXISTENT_PROC_ID, "bk-skip-completed")
+        assertThat(cmds).hasSize(1)
+        assertThat(cmds.first().retryCount).isEqualTo(0)
+        assertThat(cmds.first().lastError).isEmpty()
+        assertThat(cmds.first().completedAt).isNotNull()
 
         deleteDelayedCommand(cmds.first().ref)
     }
@@ -230,36 +459,7 @@ class BpmnDelayedStartServiceTest {
     }
 
     @Test
-    fun `saveForDelayedRetry should preserve variables including workflow initiator`() {
-        val variables = mapOf<String, Any?>(
-            BPMN_WORKFLOW_INITIATOR to "testuser",
-            "documentRef" to "doc@123",
-            "amount" to 42
-        )
-
-        val request = StartProcessRequest(
-            workspace = "test-ws",
-            processId = "test-proc-vars",
-            businessKey = "bk-vars-test",
-            variables = variables
-        )
-
-        delayedStartService.saveForDelayedRetry(request)
-
-        val cmds = queryDelayedCommands("test-proc-vars")
-        assertThat(cmds).hasSize(1)
-
-        val savedVars = cmds.first().variables
-        assertThat(savedVars.get(BPMN_WORKFLOW_INITIATOR).asText()).isEqualTo("testuser")
-        assertThat(savedVars.get("documentRef").asText()).isEqualTo("doc@123")
-        assertThat(savedVars.get("amount").asInt()).isEqualTo(42)
-
-        deleteDelayedCommand(cmds.first().ref)
-    }
-
-    @Test
     fun `processDelayedCommands should not process same command twice in one invocation`() {
-        // Create multiple failing commands
         for (i in 1..3) {
             saveDelayedCommand(
                 StartProcessRequest(
@@ -273,7 +473,6 @@ class BpmnDelayedStartServiceTest {
 
         delayedStartService.processDelayedCommands()
 
-        // All 3 should be processed exactly once (retryCount = 1)
         for (i in 1..3) {
             val cmds = queryDelayedCommands(NON_EXISTENT_PROC_ID, "bk-dedup-test-$i")
             assertThat(cmds).hasSize(1)
@@ -284,8 +483,6 @@ class BpmnDelayedStartServiceTest {
 
     @Test
     fun `processDelayedCommands should process all records across multiple batches`() {
-        // batch size is 1000, so with a smaller number we can at least verify
-        // that the loop terminates correctly with mixed success/failure
         val successBusinessKeys = mutableListOf<String>()
         for (i in 1..3) {
             val bk = "bk-batch-success-$i-${System.currentTimeMillis()}"
@@ -312,7 +509,6 @@ class BpmnDelayedStartServiceTest {
 
         delayedStartService.processDelayedCommands()
 
-        // Successful ones should be started and marked as completed
         for (bk in successBusinessKeys) {
             Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted {
                 val processes = bpmnProcessService.getProcessInstancesForBusinessKey(bk)
@@ -324,7 +520,6 @@ class BpmnDelayedStartServiceTest {
             deleteDelayedCommand(cmds.first().ref)
         }
 
-        // Failed ones should still exist with retryCount = 1
         for (i in 1..2) {
             val cmds = queryDelayedCommands(NON_EXISTENT_PROC_ID, "bk-batch-fail-$i")
             assertThat(cmds).hasSize(1)
@@ -333,6 +528,10 @@ class BpmnDelayedStartServiceTest {
             deleteDelayedCommand(cmds.first().ref)
         }
     }
+
+    // endregion
+
+    // region helpers
 
     private fun saveDelayedCommand(
         request: StartProcessRequest,
@@ -376,14 +575,26 @@ class BpmnDelayedStartServiceTest {
         }
     }
 
+    private fun updateNextRetryTime(ref: EntityRef, nextRetryTime: Instant) {
+        AuthContext.runAsSystem {
+            val atts = RecordAtts(ref)
+            atts["nextRetryTime"] = nextRetryTime
+            recordsService.mutate(atts)
+        }
+    }
+
     private fun deleteDelayedCommand(ref: EntityRef) {
         AuthContext.runAsSystem {
             recordsService.delete(ref)
         }
     }
 
+    // endregion
+
     @AfterAll
     fun tearDown() {
+        helper.cleanDeployments()
+        helper.cleanDefinitions()
         AuthContext.runAsSystem {
             val all = recordsService.query(
                 RecordsQuery.create {
@@ -395,8 +606,6 @@ class BpmnDelayedStartServiceTest {
             ).getRecords()
             all.forEach { recordsService.delete(it) }
         }
-        helper.cleanDeployments()
-        helper.cleanDefinitions()
     }
 
     data class DelayedCmdRecord(

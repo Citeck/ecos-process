@@ -1,0 +1,26 @@
+---
+id: retry-delayed-start-cmd
+name:
+  ru: Повторить сейчас
+  en: Retry now
+confirm:
+  title:
+    ru: Повторить запуск процесса
+    en: Retry process start
+  message:
+    ru: Сбросить время следующей попытки? Запуск будет повторён при ближайшем выполнении задания.
+    en: Reset next retry time? The start will be retried on the next job execution.
+type: mutate
+config:
+  record:
+    id: '${recordRef}'
+    attributes:
+      nextRetryTime: "1970-01-01T00:00:00Z"
+predicate:
+  t: and
+  val:
+    - t: empty
+      att: completedAt
+    - t: eq
+      att: $user.authorities._has.ROLE_ADMIN?bool
+      val: true

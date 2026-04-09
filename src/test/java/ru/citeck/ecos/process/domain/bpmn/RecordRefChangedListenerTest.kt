@@ -3,6 +3,8 @@ package ru.citeck.ecos.process.domain.bpmn
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.runtime.ProcessInstance
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -64,6 +66,8 @@ class RecordRefChangedListenerTest {
     @Autowired
     private lateinit var typesRegistry: EcosTypesRegistry
 
+    private val processIdsToCleanup = mutableListOf<String>()
+
     @BeforeAll
     fun setUp() {
         typesRegistry.setValue(
@@ -88,20 +92,37 @@ class RecordRefChangedListenerTest {
         )
     }
 
+    @AfterAll
+    fun tearDown() {
+        processIdsToCleanup.forEach { processId ->
+            try {
+                runtimeService.deleteProcessInstance(processId, "test cleanup")
+            } catch (_: Exception) {
+                // Process may have already completed
+            }
+        }
+    }
+
+    private fun startProcess(businessKey: EntityRef): ProcessInstance {
+        val result = bpmnProcessService.startProcess(
+            StartProcessRequest(
+                workspace = "",
+                processId = PROC_ID,
+                businessKey = businessKey.toString(),
+                variables = mapOf(BPMN_DOCUMENT_REF to businessKey.toString())
+            )
+        )
+        processIdsToCleanup.add(result.id)
+        return result
+    }
+
     @Test
     fun `update documentRef variable via direct SQL when ref changes`() {
 
         val oldRef = EntityRef.valueOf("emodel/$TYPE_ID@old-local-id")
         val newRef = EntityRef.valueOf("emodel/$TYPE_ID@new-local-id")
 
-        val process = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                "",
-                PROC_ID,
-                oldRef.toString(),
-                mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
+        val process = startProcess(oldRef)
 
         val varBefore = runtimeService.getVariable(process.id, BPMN_DOCUMENT_REF)
         assertThat(varBefore).isEqualTo(oldRef.toString())
@@ -139,22 +160,8 @@ class RecordRefChangedListenerTest {
         val oldRef = EntityRef.valueOf("emodel/$TYPE_ID@multi-old")
         val newRef = EntityRef.valueOf("emodel/$TYPE_ID@multi-new")
 
-        val process1 = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                workspace = "",
-                processId = PROC_ID,
-                businessKey = oldRef.toString(),
-                variables = mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
-        val process2 = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                workspace = "",
-                processId = PROC_ID,
-                businessKey = oldRef.toString(),
-                variables = mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
+        val process1 = startProcess(oldRef)
+        val process2 = startProcess(oldRef)
 
         val updatedCount = camundaMyBatisExtension.updateDocumentRefVariables(oldRef, newRef)
         assertThat(updatedCount).isEqualTo(2)
@@ -179,14 +186,7 @@ class RecordRefChangedListenerTest {
         val oldRef = EntityRef.valueOf("emodel/$TYPE_ID@event-old")
         val newRef = EntityRef.valueOf("emodel/$TYPE_ID@event-new")
 
-        val process = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                workspace = "",
-                processId = PROC_ID,
-                businessKey = oldRef.toString(),
-                variables = mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
+        val process = startProcess(oldRef)
 
         assertThat(runtimeService.getVariable(process.id, BPMN_DOCUMENT_REF)).isEqualTo(oldRef.toString())
 
@@ -220,22 +220,8 @@ class RecordRefChangedListenerTest {
         val oldRef = EntityRef.valueOf("emodel/$TYPE_ID@event-multi-old")
         val newRef = EntityRef.valueOf("emodel/$TYPE_ID@event-multi-new")
 
-        val process1 = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                workspace = "",
-                processId = PROC_ID,
-                businessKey = oldRef.toString(),
-                variables = mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
-        val process2 = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                workspace = "",
-                processId = PROC_ID,
-                businessKey = oldRef.toString(),
-                variables = mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
+        val process1 = startProcess(oldRef)
+        val process2 = startProcess(oldRef)
 
         bpmnEventHelper.sendRecordRefChangedEvent(
             RecordRefChangedEventDto(
@@ -271,14 +257,7 @@ class RecordRefChangedListenerTest {
                 .build()
         )
 
-        val process = bpmnProcessService.startProcess(
-            StartProcessRequest(
-                workspace = "",
-                processId = PROC_ID,
-                businessKey = oldRef.toString(),
-                variables = mapOf(BPMN_DOCUMENT_REF to oldRef.toString())
-            )
-        )
+        val process = startProcess(oldRef)
 
         val camundaTask = camundaTaskService.createTaskQuery()
             .processInstanceId(process.id)

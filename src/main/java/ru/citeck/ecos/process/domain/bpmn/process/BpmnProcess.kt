@@ -69,8 +69,12 @@ interface BpmnProcessService {
     fun getProcessDefinitionsByKey(processKey: String): List<ProcessDefinition>
 }
 
+/**
+ * This class is used to serialize/deserialize data in MQ.
+ * All changes should be backward compatible.
+ */
 data class StartProcessRequest(
-    val workspace: String,
+    val workspace: String = "",
     val processId: String,
     val businessKey: String? = null,
     val variables: Map<String, Any?> = emptyMap()

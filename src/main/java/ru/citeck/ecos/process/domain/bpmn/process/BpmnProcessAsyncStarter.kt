@@ -5,6 +5,7 @@ import jakarta.annotation.PreDestroy
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.BpmnEventSubscriptionService
 import ru.citeck.ecos.process.domain.bpmn.process.delayed.BpmnDelayedStartService
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
@@ -58,22 +59,31 @@ class BpmnProcessAsyncStarter(
         bpmnRabbitmqConnection.doWithNewChannel { channel ->
             channel.addAckedConsumer(
                 DLQ_NAME,
-                StartProcessRequest::class.java,
+                ObjectData::class.java,
             ) { msg, _ ->
                 try {
-                    val content = msg.getContent()
+                    val (version, content) = parseStartRequest(msg.getContent())
                     log.info { "Received DLQ message, saving for delayed retry: $content" }
-                    delayedStartService.saveForDelayedRetry(content)
+                    delayedStartService.saveForDelayedRetry(content, completed = version == 0)
                 } catch (e: Throwable) {
                     log.error(e) { "Failed to save DLQ message for delayed retry" }
                     for (i in 1..10) {
                         if (disposed) break
                         Thread.sleep(1_000)
                     }
-                    throw e
+                    msg.nack()
                 }
             }
         }
+    }
+
+    private fun parseStartRequest(data: ObjectData): Pair<Int, StartProcessRequest> {
+        var version = 1
+        if (!data.has("processId")) {
+            data["processId"] = data["processKey"]
+            version = 0
+        }
+        return version to data.getAsNotNull(StartProcessRequest::class.java)
     }
 
     fun onMessageReceived(msg: StartProcessRequest, tag: String? = null) {
