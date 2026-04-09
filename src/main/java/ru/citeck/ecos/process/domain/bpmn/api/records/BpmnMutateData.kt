@@ -95,7 +95,35 @@ class BpmnMutateDataProcessor(
                 name =
                     Json.mapper.convert(draftDefinition.otherAttributes[BPMN_PROP_NAME_ML], MLText::class.java)
                         ?: MLText()
-                processDefId = draftDefinition.otherAttributes[BPMN_PROP_PROCESS_DEF_ID]!!
+
+                val ecosProcessDefId = draftDefinition.otherAttributes[BPMN_PROP_PROCESS_DEF_ID]
+                if (!ecosProcessDefId.isNullOrBlank()) {
+                    processDefId = ecosProcessDefId
+                } else {
+                    // Standard BPMN 2.0 without ECOS attributes - extract from process element
+                    val firstProcessId = draftDefinition.rootElement
+                        ?.map { it.value }
+                        ?.filterIsInstance<TProcess>()
+                        ?.firstOrNull()
+                        ?.id
+
+                    processDefId = firstProcessId ?: error(
+                        "Cannot determine processDefId: " +
+                            "no ecos:processDefId attribute and no bpmn:process element found in definition"
+                    )
+
+                    if (name == MLText()) {
+                        val processName = draftDefinition.rootElement
+                            ?.map { it.value }
+                            ?.filterIsInstance<TProcess>()
+                            ?.firstOrNull()
+                            ?.name
+                        if (!processName.isNullOrBlank()) {
+                            name = MLText(processName)
+                        }
+                    }
+                }
+
                 enabled = draftDefinition.otherAttributes[BPMN_PROP_ENABLED].toBoolean()
                 autoStartEnabled = draftDefinition.otherAttributes[BPMN_PROP_AUTO_START_ENABLED].toBoolean()
                 autoDeleteEnabled = draftDefinition.otherAttributes[BPMN_PROP_AUTO_DELETE_ENABLED].toBoolean()
@@ -207,8 +235,11 @@ class BpmnMutateDataProcessor(
                 ProcDefRevDataState.valueOf(defStateAtt)
             }
 
+            val isEcosFormat = !bpmnDef.otherAttributes[BPMN_PROP_PROCESS_DEF_ID].isNullOrBlank()
+
             val isRaw = action == BpmnProcessDefActions.DRAFT.name ||
-                (action.isBlank() && initialDefState == ProcDefRevDataState.RAW)
+                (action.isBlank() && initialDefState == ProcDefRevDataState.RAW) ||
+                !isEcosFormat
 
             val state = if (isRaw) {
                 ProcDefRevDataState.RAW
