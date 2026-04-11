@@ -191,6 +191,10 @@
       "AI Task",
       "AI Task"
     ],
+    "bpmn_Task_EcosTaskAiAgentTask": [
+      "AI Agent Task",
+      "Задача AI Агента"
+    ],
     "bpmn_Association": [
       "Association",
       "Association"

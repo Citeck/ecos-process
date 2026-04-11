@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.task.SetStatusDelegate
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_AGENT_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_POSTPROCESSING_SCRIPT
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_PREPROCESSING_SCRIPT
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT
@@ -16,10 +17,12 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaProperties
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaProperty
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiAgentTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnSetStatusTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI_AGENT
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TServiceTask
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TTask
@@ -33,6 +36,7 @@ class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
     companion object {
         private const val CAMUNDA_EXTERNAL_TASK_TYPE = "external"
         private const val CITECK_AI_TASK_TOPIC = "citeck-bpmn-ai-task"
+        private const val CITECK_AI_AGENT_TASK_TOPIC = "citeck-bpmn-ai-agent-task"
     }
 
     private val delegateClassFor = fun(taskDef: BpmnTaskDef): String? {
@@ -71,6 +75,29 @@ class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
 
         when (element.ecosTaskDefinition) {
             is BpmnAiTaskDef -> {
+                properties.addIfNotBlank(
+                    CamundaPropertyCreator.string(
+                        BPMN_PROP_AI_USER_INPUT.localPart,
+                        element.ecosTaskDefinition.userInput
+                    )
+                )
+
+                properties.addIfNotBlank(
+                    CamundaPropertyCreator.string(
+                        BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT.localPart,
+                        element.ecosTaskDefinition.addDocumentToContext.toString()
+                    )
+                )
+            }
+
+            is BpmnAiAgentTaskDef -> {
+                properties.addIfNotBlank(
+                    CamundaPropertyCreator.string(
+                        BPMN_PROP_AI_AGENT_REF.localPart,
+                        element.ecosTaskDefinition.agentRef
+                    )
+                )
+
                 properties.addIfNotBlank(
                     CamundaPropertyCreator.string(
                         BPMN_PROP_AI_USER_INPUT.localPart,
@@ -141,6 +168,18 @@ class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
                 otherAttributes[CAMUNDA_TOPIC] = CITECK_AI_TASK_TOPIC
 
                 otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_AI
+                otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] = element.ecosTaskDefinition.preProcessedScript
+                otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = element.ecosTaskDefinition.postProcessedScript
+                otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] =
+                    element.ecosTaskDefinition.saveResultToDocumentAtt
+            }
+
+            if (element.ecosTaskDefinition is BpmnAiAgentTaskDef) {
+                otherAttributes[CAMUNDA_TYPE] = CAMUNDA_EXTERNAL_TASK_TYPE
+                otherAttributes[CAMUNDA_TOPIC] = CITECK_AI_AGENT_TASK_TOPIC
+
+                otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_AI_AGENT
+                otherAttributes[BPMN_PROP_AI_AGENT_REF] = element.ecosTaskDefinition.agentRef
                 otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] = element.ecosTaskDefinition.preProcessedScript
                 otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = element.ecosTaskDefinition.postProcessedScript
                 otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] =
