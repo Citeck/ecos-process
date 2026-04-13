@@ -196,7 +196,7 @@ class BpmnLazyApprovalService(
         val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
         val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
         recordAtt.setAtt(outcomeForTask, true)
-        recordAtt.setAtt(BPMN_COMMENT, comment)
+        recordAtt.setAtt(BPMN_COMMENT, clearNbsp( comment))
 
         return try {
             TxnContext.doInNewTxn {
@@ -248,5 +248,11 @@ class BpmnLazyApprovalService(
         val regex = Regex("^\\$\\{(.*)}$")
         val matchResult = regex.find(input)
         return matchResult?.groupValues?.get(1)
+    }
+
+    private fun clearNbsp(input: String): String {
+        return input.replace("\u00a0", " ") //Unicode non-breaking space
+            .replace("&nbsp;", " ")
+            .trim()
     }
 }
