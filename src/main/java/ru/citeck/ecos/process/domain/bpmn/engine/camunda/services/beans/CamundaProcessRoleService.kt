@@ -138,7 +138,7 @@ class MailUtils(
             allUsers.addAll(usersFromGroup)
 
             val emails = recordsService.getAtts(allUsers, UserInfo::class.java)
-                .filter { it.email?.isNotBlank() ?: false }
+                .filter { it.disabled != true && it.email?.isNotBlank() ?: false }
                 .map { it.email!! }
 
             (incomeEmails + emails).toSet()
@@ -193,5 +193,7 @@ private data class GroupInfo(
 
 private data class UserInfo(
     @AttName("email")
-    var email: String? = ""
+    var email: String? = "",
+    @AttName("personDisabled")
+    var disabled: Boolean? = false
 )
