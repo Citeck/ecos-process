@@ -103,7 +103,11 @@ class ProcTaskRecords(
         val predicate = if (recsQuery.language == PredicateService.LANGUAGE_PREDICATE) {
             recsQuery.getQuery(Predicate::class.java)
         } else if (recsQuery.language.isEmpty()) {
-            Predicates.alwaysTrue()
+            if (recsQuery.query.isObject() && recsQuery.query.has("t")) {
+                recsQuery.getQuery(Predicate::class.java)
+            } else {
+                Predicates.alwaysTrue()
+            }
         } else {
             error("Unsupported language: ${recsQuery.language}")
         }
