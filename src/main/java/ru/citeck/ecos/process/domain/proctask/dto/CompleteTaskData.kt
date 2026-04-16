@@ -1,6 +1,7 @@
 package ru.citeck.ecos.process.domain.proctask.dto
 
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_LA_COMPLETE_KEY
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 
 data class CompleteTaskData(
@@ -15,4 +16,8 @@ fun CompleteTaskData.getComment(): String? {
     return comment.ifBlank {
         null
     }
+}
+
+fun CompleteTaskData.getLaCompleted(): Boolean {
+    return variables[BPMN_LA_COMPLETE_KEY] as? Boolean ?: return false
 }

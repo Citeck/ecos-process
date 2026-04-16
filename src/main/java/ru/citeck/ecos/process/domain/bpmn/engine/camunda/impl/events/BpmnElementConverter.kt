@@ -19,6 +19,8 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTas
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
+import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
+import ru.citeck.ecos.process.domain.proctask.dto.getLaCompleted
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
@@ -150,12 +152,93 @@ class BpmnElementConverter(
                     laNotificationAdditionalMeta = userTaskLaInfo.laNotificationAdditionalMeta,
                     laReportEnabled = userTaskLaInfo.laReportEnabled,
                     laSuccessReportNotificationTemplate = userTaskLaInfo.laSuccessReportNotificationTemplate,
-                    laErrorReportNotificationTemplate = userTaskLaInfo.laErrorReportNotificationTemplate
+                    laErrorReportNotificationTemplate = userTaskLaInfo.laErrorReportNotificationTemplate,
+                    isCompletedViaMail = getVariableLocal(BPMN_LA_COMPLETE_KEY) as? Boolean ?: false
                 )
             }
 
             log.trace {
                 "Convert task to user task event in $time ms"
+            }
+
+            return userTaskEvent
+        }
+    }
+
+    fun toUserTaskEvent(completeData: CompleteTaskData, localVariables: Map<String, Any?>): UserTaskEvent {
+        with(completeData) {
+            val userTaskEvent: UserTaskEvent
+            if (task.processDefinitionId.isNullOrBlank()) {
+                error(
+                    "Process definition is not defined for taskId: ${task.id}, name: ${task.name}, " +
+                        "procInstanceId: ${task.processInstanceId}, procDefId: ${task.processDefinitionId}"
+                )
+            }
+            val time = measureTimeMillis {
+                val processDefinition = bpmnProcessService.getProcessDefinition(task.processDefinitionId) ?: error(
+                    "Process definition was not found. TaskId: ${task.id}, name: ${task.name}, " +
+                        "procInstanceId: ${task.processInstanceId}, procDefId: ${task.processDefinitionId}"
+                )
+                val rev = procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
+                val userTaskLaInfo = task.definitionKey?.let {
+                    taskDefinitionUtils.getUserTaskLaInfo(task.processDefinitionId, task.definitionKey)
+                }
+                userTaskEvent = UserTaskEvent(
+                    record = task.documentRef,
+                    taskId = EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id),
+                    engine = BPMN_CAMUNDA_ENGINE,
+                    form = task.formRef,
+                    assignee = task.assignee.getLocalId(),
+                    assigneeRef = task.assignee,
+                    candidateUsers = task.candidateUsersOriginal,
+                    candidateUsersRef = task.candidateUsers,
+                    candidateGroups = task.candidateGroupsOriginal,
+                    candidateGroupsRef = task.candidateGroups,
+                    roles = if (task.definitionKey != null) {
+                        taskDefinitionUtils.getTaskRoles(task.documentRef, task.processDefinitionId, task.definitionKey)
+                    } else emptyList(),
+                    procDefId = task.processDefinitionId,
+                    procDefRef = if (task.processDefinitionId.isNotBlank()) {
+                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, task.processDefinitionId)
+                    } else {
+                        EntityRef.EMPTY
+                    },
+                    procDeploymentVersion = rev?.version?.inc(),
+                    procInstanceId = task.processInstanceId,
+                    processId = processDefinition.key,
+                    processRef = if (processDefinition.key.isNotBlank()) {
+                        EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
+                    } else {
+                        EntityRef.EMPTY
+                    },
+                    elementDefId = task.definitionKey,
+                    created = task.created,
+                    dueDate = task.dueDate,
+                    description = null, // description,
+                    priority = task.priority,
+                    executionId = null, // executionId,
+                    name = task.name,
+                    comment = localVariables[BPMN_TASK_COMMENT_LOCAL] as? String,
+                    completedBy = localVariables[BPMN_TASK_COMPLETED_BY] as? String,
+                    outcome = outcome.value,
+                    outcomeName = outcome.name,
+                    completedOnBehalfOf = localVariables[BPMN_TASK_COMPLETED_ON_BEHALF_OF] as? String,
+                    document = task.documentRef,
+                    laEnabled = userTaskLaInfo?.laEnabled ?: false,
+                    laNotificationType = userTaskLaInfo?.laNotificationType,
+                    laNotificationTemplate = userTaskLaInfo?.laNotificationTemplate,
+                    laManualNotificationTemplateEnabled = userTaskLaInfo?.laManualNotificationTemplateEnabled ?: false,
+                    laManualNotificationTemplate = userTaskLaInfo?.laManualNotificationTemplate,
+                    laNotificationAdditionalMeta = userTaskLaInfo?.laNotificationAdditionalMeta ?: emptyMap(),
+                    laReportEnabled = userTaskLaInfo?.laReportEnabled ?: false,
+                    laSuccessReportNotificationTemplate = userTaskLaInfo?.laSuccessReportNotificationTemplate,
+                    laErrorReportNotificationTemplate = userTaskLaInfo?.laErrorReportNotificationTemplate,
+                    isCompletedViaMail = getLaCompleted()
+                )
+            }
+
+            log.trace {
+                "Convert complete task data to user task event in $time ms"
             }
 
             return userTaskEvent
