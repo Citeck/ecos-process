@@ -5,13 +5,13 @@
 
     <groupId>ru.citeck.ecos.process</groupId>
     <artifactId>ecos-process</artifactId>
-    <version>2.30.8</version>
+    <version>2.31.0</version>
     <name>ecos-process</name>
 
     <parent>
         <groupId>ru.citeck.ecos.webapp</groupId>
         <artifactId>ecos-webapp-spring-base-parent</artifactId>
-        <version>3.22.6</version>
+        <version>3.23.5</version>
     </parent>
 
     <properties>
@@ -65,7 +65,7 @@
     <dependencies>
 
         <dependency>
-            <groupId>ru.citeck.ecos.ent.groupactions</groupId>
+            <groupId>ru.citeck.ecos.groupactions</groupId>
             <artifactId>ecos-group-actions</artifactId>
         </dependency>
 

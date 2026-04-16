@@ -11,7 +11,6 @@ import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelper
@@ -29,7 +28,6 @@ import java.text.SimpleDateFormat
 @SpringBootTest(classes = [EprocApp::class])
 class ProcTaskAggregatorTest {
 
-    @Autowired
     private lateinit var aggregator: ProcTaskAggregator
 
     @Autowired
@@ -38,7 +36,6 @@ class ProcTaskAggregatorTest {
     @Autowired
     private lateinit var helper: BpmnProcHelper
 
-    @MockBean
     private lateinit var alfWorkflowTaskProvider: AlfWorkflowTaskProvider
 
     companion object {
@@ -64,6 +61,9 @@ class ProcTaskAggregatorTest {
      */
     @BeforeEach
     fun setUp() {
+        alfWorkflowTaskProvider = Mockito.mock(AlfWorkflowTaskProvider::class.java)
+        aggregator = ProcTaskAggregator(taskService, alfWorkflowTaskProvider)
+
         createTestTask("taskAgr1", "01/01/2001 13:00:00.000")
         createTestTask("taskAgr2", "01/01/2001 13:24:00.000")
         createTestTask("taskAgr3", "02/01/2001 13:00:00.000")

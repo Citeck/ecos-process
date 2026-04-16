@@ -1,12 +1,14 @@
 package ru.citeck.ecos.process.domain
 
 import jakarta.annotation.PostConstruct
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.model.lib.workspace.api.WorkspaceApi
 import ru.citeck.ecos.model.lib.workspace.api.WsMembershipType
 import java.util.concurrent.ConcurrentHashMap
 
+@Primary
 @Component
 class CustomWorkspaceApi(
     val modelServiceFactory: ModelServiceFactory

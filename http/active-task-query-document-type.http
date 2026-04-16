@@ -1,4 +1,4 @@
-POST http://enterprise.ecos24.ru/gateway/api/records/query
+POST https://enterprise.ecos24.ru/gateway/api/records/query
 Authorization: Bearer {{$auth.token("eis-qa")}}
 Content-Type: application/json
 
