@@ -5,12 +5,13 @@ import ru.citeck.ecos.apps.app.domain.handler.WsAwareArtifactHandler
 import ru.citeck.ecos.apps.artifact.controller.type.binary.BinArtifact
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefActions
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessDefRecords
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DEF_STATE
-import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_WORKSPACE
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
+import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnRefsNormalizer
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataState
@@ -28,7 +29,8 @@ class BpmnProcessArtifactHandler(
     private val procDefService: ProcDefService,
     private val bpmnProcessDefRecords: BpmnProcessDefRecords,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
-    private val bpmnIO: BpmnIO
+    private val bpmnIO: BpmnIO,
+    private val workspaceService: WorkspaceService
 ) : WsAwareArtifactHandler<BinArtifact> {
 
     override fun deleteArtifact(artifactId: String, workspace: String) {
@@ -62,7 +64,8 @@ class BpmnProcessArtifactHandler(
 
     private fun stripWorkspace(xml: String): String {
         val definitions = BpmnXmlUtils.readFromString(xml)
-        definitions.otherAttributes.remove(BPMN_PROP_WORKSPACE)
+        BpmnRefsNormalizer.removeWorkspaceAttr(definitions)
+        BpmnRefsNormalizer.stripRefs(definitions, workspaceService)
         return BpmnXmlUtils.writeToString(definitions)
     }
 
@@ -75,6 +78,10 @@ class BpmnProcessArtifactHandler(
 
     override fun deployArtifact(artifact: BinArtifact, workspace: String) {
 
+        // CURRENT_WS placeholders inside XML ref attributes (ecosType, formRef, notificationTemplate, etc.)
+        // are rebound to the target workspace by `BpmnRefsNormalizer.bindRefs`, invoked from
+        // `BpmnMutateDataProcessor.prepareDefinitionForMutateData` during the records-service mutate —
+        // no need to duplicate that logic here.
         val stringDef = String(artifact.data)
         val definition = BpmnXmlUtils.readFromString(stringDef)
         val isRAW = definition.otherAttributes[BPMN_PROP_DEF_STATE] == ProcDefRevDataState.RAW.name
