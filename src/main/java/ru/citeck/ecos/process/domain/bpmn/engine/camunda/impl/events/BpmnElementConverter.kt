@@ -196,8 +196,10 @@ class BpmnElementConverter(
                     candidateGroupsRef = task.candidateGroups,
                     roles = if (task.definitionKey != null) {
                         taskDefinitionUtils.getTaskRoles(task.documentRef, task.processDefinitionId, task.definitionKey)
-                    } else emptyList(),
-                    procDefId = task.processDefinitionId,
+                    } else {
+                        emptyList()
+                    },
+                    procDefId = rev?.procDefId,
                     procDefRef = if (task.processDefinitionId.isNotBlank()) {
                         EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, task.processDefinitionId)
                     } else {

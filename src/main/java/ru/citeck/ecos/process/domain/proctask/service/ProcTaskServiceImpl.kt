@@ -298,6 +298,7 @@ class ProcTaskServiceImpl(
             completionVariables[BPMN_COMMENT] = taskComment
             taskLocalVariables[BPMN_TASK_COMMENT_LOCAL] = taskComment
             taskLocalVariables[BPMN_LA_COMPLETE_KEY] = variables[BPMN_LA_COMPLETE_KEY]
+            completionVariables.remove(BPMN_LA_COMPLETE_KEY)
 
             log.debug {
                 "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables, " +
@@ -306,21 +307,25 @@ class ProcTaskServiceImpl(
 
             cacheableTaskConverter.removeFromActualTaskCache(taskId)
 
-            camundaTaskService.setVariablesLocal(taskId, taskLocalVariables)
             try {
+                camundaTaskService.setVariablesLocal(taskId, taskLocalVariables)
                 camundaTaskFormService.submitTaskForm(taskId, completionVariables)
             } catch (e: Exception) {
-                val taskEvent = bpmnElementConverter.toUserTaskEvent(
-                    completeData,
-                    taskLocalVariables
-                )
-                taskEvent.errorMessage = e.message
-                taskEvent.errorStackTrace = e.stackTraceToString()
+                try {
+                    val taskEvent = bpmnElementConverter.toUserTaskEvent(
+                        completeData,
+                        taskLocalVariables
+                    )
+                    taskEvent.errorMessage = e.message
+                    taskEvent.errorStackTrace = e.stackTraceToString()
 
-                AuthContext.runAsSystem {
-                    TxnContext.doInNewTxn {
-                        bpmnEventEmitter.emitUserTaskCompleteErrorEvent(taskEvent)
+                    AuthContext.runAsSystem {
+                        TxnContext.doInNewTxn {
+                            bpmnEventEmitter.emitUserTaskCompleteErrorEvent(taskEvent)
+                        }
                     }
+                } catch (ex: Exception) {
+                    e.addSuppressed(ex)
                 }
                 throw e
             }
