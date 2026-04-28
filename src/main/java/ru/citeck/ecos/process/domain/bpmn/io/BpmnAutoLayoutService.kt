@@ -55,6 +55,58 @@ class BpmnAutoLayoutService {
     }
 
     /**
+     * High-level entry point used by transport adapters (REST controller and EcosWebExecutor).
+     * Validates input and wraps the transformation result and any failure into a response envelope
+     * with success flag, so callers can treat layout as a non-throwing operation.
+     */
+    fun applyAutoLayout(request: BpmnAutoLayoutRequest): BpmnAutoLayoutResponse {
+        log.debug { "Received request to apply auto-layout to BPMN definition" }
+
+        if (request.definition.isBlank()) {
+            return BpmnAutoLayoutResponse(
+                success = false,
+                definition = "",
+                message = "BPMN definition cannot be empty"
+            )
+        }
+
+        if (!isValidBpmnXml(request.definition)) {
+            return BpmnAutoLayoutResponse(
+                success = false,
+                definition = "",
+                message = "Invalid BPMN XML format. Definition must be valid BPMN XML"
+            )
+        }
+
+        return try {
+            val transformedDefinition = applyAutoLayout(request.definition)
+
+            log.debug { "Successfully applied auto-layout to BPMN definition" }
+
+            BpmnAutoLayoutResponse(
+                success = true,
+                definition = transformedDefinition,
+                message = "Layout applied successfully"
+            )
+        } catch (e: Exception) {
+            log.error(e) { "Failed to apply auto-layout to BPMN definition" }
+
+            BpmnAutoLayoutResponse(
+                success = false,
+                definition = "",
+                message = "Failed to apply auto-layout: ${e.message}"
+            )
+        }
+    }
+
+    private fun isValidBpmnXml(definition: String): Boolean {
+        val trimmed = definition.trim()
+        return trimmed.startsWith("<?xml") ||
+            trimmed.contains("<definitions") ||
+            trimmed.contains("<bpmn:definitions")
+    }
+
+    /**
      * Applies automatic layout to a BPMN XML string.
      *
      * @param bpmnXml The BPMN XML string to apply layout to
@@ -110,3 +162,13 @@ class BpmnAutoLayoutService {
         return ::context.isInitialized && ::layoutFunction.isInitialized
     }
 }
+
+data class BpmnAutoLayoutRequest(
+    val definition: String
+)
+
+data class BpmnAutoLayoutResponse(
+    val success: Boolean,
+    val definition: String,
+    val message: String
+)
