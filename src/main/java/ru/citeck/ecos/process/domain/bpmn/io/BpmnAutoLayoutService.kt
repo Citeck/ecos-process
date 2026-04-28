@@ -140,7 +140,7 @@ class BpmnAutoLayoutService {
             // Poll for result (with timeout)
             var result: String? = null
             val startTime = System.currentTimeMillis()
-            val timeout = 30000L // 30 seconds timeout
+            val timeout = 60000L // 60 seconds timeout
 
             while (result == null && (System.currentTimeMillis() - startTime) < timeout) {
                 val res = getResult.execute()
