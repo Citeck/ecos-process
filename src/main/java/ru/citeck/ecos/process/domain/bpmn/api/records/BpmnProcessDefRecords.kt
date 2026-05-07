@@ -472,7 +472,7 @@ class BpmnProcessDefRecords(
         val procDefResult: ProcDefDto
 
         if (record.processDefId.isBlank()) {
-            record.processDefId = mutData.recordId
+            record.processDefId = mutData.processDefId
         }
 
         val recordIdInWs = workspaceService.convertToIdInWs(mutData.recordId)
