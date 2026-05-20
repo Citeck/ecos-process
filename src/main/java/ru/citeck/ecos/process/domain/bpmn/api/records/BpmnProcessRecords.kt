@@ -16,6 +16,7 @@ import ru.citeck.ecos.process.domain.bpmn.SYS_VAR_PREFIX
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.bpmn.process.ActivityInstanceNode
 import ru.citeck.ecos.process.domain.bpmn.process.ActivityStatistics
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.ProcessInstanceQuery
@@ -433,6 +434,11 @@ class BpmnProcessRecords(
         @AttName("activityStatistics")
         fun getActivityStatistics(): List<ActivityStatistics> {
             return bpmnProcessService.getProcessInstanceActivityStatistics(id)
+        }
+
+        @AttName("activityInstanceTree")
+        fun getActivityInstanceTree(): ActivityInstanceNode? {
+            return bpmnProcessService.getProcessInstanceActivityTree(id)
         }
     }
 
