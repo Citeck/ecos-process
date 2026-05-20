@@ -15,6 +15,7 @@ import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.runtime.ActivityInstance
 import org.camunda.bpm.engine.runtime.Incident
 import org.camunda.bpm.engine.runtime.ProcessInstance
+import org.camunda.bpm.engine.runtime.TransitionInstance
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
@@ -262,6 +263,38 @@ class BpmnProcessServiceImpl(
 
         return activitiesStats.values.toList()
     }
+
+    override fun getProcessInstanceActivityTree(processInstanceId: String): ActivityInstanceNode? {
+        val root = camundaRuntimeService.getActivityInstance(processInstanceId) ?: return null
+        return root.toNode()
+    }
+
+    private fun ActivityInstance.toNode(): ActivityInstanceNode = ActivityInstanceNode(
+        id = id ?: "",
+        parentActivityInstanceId = parentActivityInstanceId ?: "",
+        activityId = activityId ?: "",
+        activityType = activityType ?: "",
+        activityName = activityName ?: "",
+        processInstanceId = processInstanceId ?: "",
+        processDefinitionId = processDefinitionId ?: "",
+        childActivityInstances = childActivityInstances?.map { it.toNode() } ?: emptyList(),
+        childTransitionInstances = childTransitionInstances?.map { it.toNode() } ?: emptyList(),
+        executionIds = executionIds?.toList() ?: emptyList(),
+        incidentIds = incidentIds?.toList() ?: emptyList()
+    )
+
+    private fun TransitionInstance.toNode(): TransitionInstanceNode = TransitionInstanceNode(
+        id = id ?: "",
+        parentActivityInstanceId = parentActivityInstanceId ?: "",
+        targetActivityId = targetActivityId ?: "",
+        activityId = activityId ?: "",
+        activityName = activityName ?: "",
+        activityType = activityType ?: "",
+        processInstanceId = processInstanceId ?: "",
+        processDefinitionId = processDefinitionId ?: "",
+        executionId = executionId ?: "",
+        incidentIds = incidentIds?.toList() ?: emptyList()
+    )
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {
         return camundaRuntimeService.createProcessInstanceQuery()

@@ -50,6 +50,14 @@ interface BpmnProcessService {
 
     fun getProcessInstanceActivityStatistics(processInstanceId: String): List<ActivityStatistics>
 
+    /**
+     * Returns the activity-instance tree for the given process instance, rooted at
+     * the process definition. Returns `null` if the process instance is not active.
+     *
+     * Backed by Camunda's [org.camunda.bpm.engine.RuntimeService.getActivityInstance].
+     */
+    fun getProcessInstanceActivityTree(processInstanceId: String): ActivityInstanceNode?
+
     fun getProcessInstance(processInstanceId: String): ProcessInstance?
 
     fun getProcessInstancesForBusinessKey(businessKey: String): List<ProcessInstance>
@@ -145,4 +153,36 @@ data class ActivityStatistics(
     val activityId: String,
     var instances: Long,
     var incidentStatistics: List<IncidentStatistics> = emptyList()
+)
+
+/**
+ * Activity-instance tree node. Field names mirror Camunda's
+ * [org.camunda.bpm.engine.runtime.ActivityInstance] so the JSON shape is
+ * directly compatible with Camunda REST `GET /process-instance/{id}/activity-instances`.
+ */
+data class ActivityInstanceNode(
+    val id: String,
+    val parentActivityInstanceId: String,
+    val activityId: String,
+    val activityType: String,
+    val activityName: String,
+    val processInstanceId: String,
+    val processDefinitionId: String,
+    val childActivityInstances: List<ActivityInstanceNode> = emptyList(),
+    val childTransitionInstances: List<TransitionInstanceNode> = emptyList(),
+    val executionIds: List<String> = emptyList(),
+    val incidentIds: List<String> = emptyList()
+)
+
+data class TransitionInstanceNode(
+    val id: String,
+    val parentActivityInstanceId: String,
+    val targetActivityId: String,
+    val activityId: String,
+    val activityName: String,
+    val activityType: String,
+    val processInstanceId: String,
+    val processDefinitionId: String,
+    val executionId: String,
+    val incidentIds: List<String> = emptyList()
 )
