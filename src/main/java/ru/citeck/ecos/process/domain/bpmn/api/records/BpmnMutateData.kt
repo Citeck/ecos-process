@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.apps.app.domain.handler.ArtifactDeployMeta
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.workspace.IdInWs
@@ -263,8 +264,13 @@ class BpmnMutateDataProcessor(
     }
 
     private fun prepareDefinitionForMutateData(definition: String, workspace: String): String {
+        // Co-deployed artifacts are siblings in the same ecos-app + workspace (populated by
+        // ecos-apps `EcosArtifactsService.deployArtifacts`). Used by `bindRefs` to promote
+        // unprefixed refs in the BPMN XML to ws-scoped form when the target travels along —
+        // empty for non-ecos-app mutates (records UI, scripts), which keep the original behavior.
+        val coDeployedRefs = ArtifactDeployMeta.getThreadMeta().coDeployedArtifacts.toSet()
         val procDef = BpmnXmlUtils.readFromString(definition)
-        BpmnRefsNormalizer.bindRefs(procDef, workspace, workspaceService)
+        BpmnRefsNormalizer.bindRefs(procDef, workspace, workspaceService, coDeployedRefs)
         return BpmnXmlUtils.writeToString(procDef)
     }
 }

@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.io.xml
 
 import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.model.lib.workspace.bindRefToWorkspace
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_FORM_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE
@@ -24,7 +25,10 @@ import javax.xml.namespace.QName
  * on UserTask/SendTask/SubProcess trees).
  *
  * `stripRefs` — artifact leaves the source service: workspace sysId prefix → `CURRENT_WS:`.
- * `bindRefs` — artifact lands in a target workspace: `CURRENT_WS:` → target sysId prefix.
+ * `bindRefs` — artifact lands in a target workspace: `CURRENT_WS:` → target sysId prefix; also
+ * promotes unprefixed refs whose target is co-deployed in the same workspace (e.g. when a
+ * global ecos-app is imported into a workspace, types that travel with it become ws-scoped
+ * and intra-XML references to them need to be rebound too).
  * `removeWorkspaceAttr` — drops the `ecos:workspace` root attribute (used by artifact export only;
  * records DAO `getData` keeps it since callers may need the full definition metadata).
  *
@@ -37,17 +41,22 @@ object BpmnRefsNormalizer {
 
     fun stripRefs(definitions: TDefinitions, workspaceService: WorkspaceService) {
         applyToRefAttributes(definitions) { attributes, attr ->
-            transform(attributes, attr) { localId ->
+            transform(attributes, attr) { _, localId ->
                 workspaceService.replaceWsPrefixToCurrentWsPlaceholder(localId)
             }
         }
     }
 
-    fun bindRefs(definitions: TDefinitions, workspace: String, workspaceService: WorkspaceService) {
+    fun bindRefs(
+        definitions: TDefinitions,
+        workspace: String,
+        workspaceService: WorkspaceService,
+        coDeployedRefs: Set<EntityRef> = emptySet()
+    ) {
         if (workspace.isBlank()) return
         applyToRefAttributes(definitions) { attributes, attr ->
-            transform(attributes, attr) { localId ->
-                workspaceService.replaceCurrentWsPlaceholderToWsPrefix(localId, workspace)
+            transform(attributes, attr) { ref, _ ->
+                workspaceService.bindRefToWorkspace(ref, workspace, coDeployedRefs).getLocalId()
             }
         }
     }
@@ -96,11 +105,11 @@ object BpmnRefsNormalizer {
     private fun transform(
         attributes: MutableMap<QName, String>,
         attributeName: QName,
-        transformLocalId: (String) -> String
+        transformLocalId: (ref: EntityRef, localId: String) -> String
     ) {
         val value = attributes[attributeName]
         if (value.isNullOrBlank()) return
         val ref = EntityRef.valueOf(value)
-        attributes[attributeName] = ref.withLocalId(transformLocalId(ref.getLocalId())).toString()
+        attributes[attributeName] = ref.withLocalId(transformLocalId(ref, ref.getLocalId())).toString()
     }
 }
