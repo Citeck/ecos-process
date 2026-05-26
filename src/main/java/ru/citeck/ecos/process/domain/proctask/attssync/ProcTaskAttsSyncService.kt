@@ -56,6 +56,12 @@ class ProcTaskAttsSyncService(
         return procTaskSyncCache.getTaskSyncAttribute(attWithoutPrefix)?.type ?: AttributeType.TEXT
     }
 
+    fun getTaskSyncAttribute(attName: String): TaskSyncAttribute? {
+        val attWithoutPrefix =
+            attName.removePrefix(TASK_DOCUMENT_TYPE_ATT_PREFIX).removePrefix(TASK_DOCUMENT_ATT_PREFIX)
+        return procTaskSyncCache.getTaskSyncAttribute(attWithoutPrefix)
+    }
+
     fun findMappedByType(documentType: EntityRef): TaskAttsSyncSettingsTyped? {
         val onRecordSettings = findEnabledSyncSettingsForSource(TaskAttsSyncSource.RECORD)
         val onTypeSettings = findEnabledSyncSettingsForSource(TaskAttsSyncSource.TYPE)
@@ -190,6 +196,7 @@ enum class TaskAttsSyncSource {
 data class TaskSyncAttribute(
     val id: String,
     val type: AttributeType,
+    val multiple: Boolean = false,
 
     @AttName("ecosTypes?json")
     val ecosTypes: List<TaskSyncAttributeType> = emptyList(),

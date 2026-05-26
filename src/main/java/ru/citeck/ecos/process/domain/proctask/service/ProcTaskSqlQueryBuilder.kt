@@ -50,6 +50,9 @@ class ProcTaskSqlQueryBuilder(
         private const val CANDIDATE_ALIAS = "candidate"
         private const val VARIABLE_ALIAS_PREFIX = "var"
 
+        // SQL fragment that never matches — used to make a predicate yield no rows.
+        private const val ALWAYS_FALSE = "1 = 0"
+
         const val ATT_ACTORS = "actors"
         const val ATT_ACTOR = "actor"
         const val ATT_ASSIGNEE = "assignee"
@@ -94,7 +97,8 @@ class ProcTaskSqlQueryBuilder(
         val attType: AttributeType,
         val isEmptyCondition: Boolean = false,
         val eqValues: MutableList<Any?> = mutableListOf(),
-        val otherConditions: MutableList<String> = mutableListOf()
+        val otherConditions: MutableList<String> = mutableListOf(),
+        val isList: Boolean = false
     )
 
     private val joins = StringBuilder()
@@ -338,9 +342,11 @@ class ProcTaskSqlQueryBuilder(
             return false
         }
 
-        val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
+        val attDef = procTaskAttsSyncService.getTaskSyncAttribute(name)
+        val attType = attDef?.type ?: AttributeType.TEXT
+        val isList = attDef?.multiple ?: false
         variableConditions.getOrPut(name) {
-            VariableCondition(name, isProcessVar, attType, isEmptyCondition = true)
+            VariableCondition(name, isProcessVar, attType, isEmptyCondition = true, isList = isList)
         }
 
         val alias = getVariableAlias(name)
@@ -361,9 +367,11 @@ class ProcTaskSqlQueryBuilder(
             return false
         }
 
-        val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
+        val attDef = procTaskAttsSyncService.getTaskSyncAttribute(name)
+        val attType = attDef?.type ?: AttributeType.TEXT
+        val isList = attDef?.multiple ?: false
         val variableCondition = variableConditions.getOrPut(name) {
-            VariableCondition(name, isProcessVar, attType)
+            VariableCondition(name, isProcessVar, attType, isList = isList)
         }
 
         val alias = getVariableAlias(name)
@@ -373,80 +381,165 @@ class ProcTaskSqlQueryBuilder(
 
         when (predicateType) {
             ValuePredicate.Type.EQ -> {
-                // Collect EQ values to group them into IN later
-                variableCondition.eqValues.addAll(values)
+                if (isList) {
+                    if (isStringLikeAttType(attType)) {
+                        addLikeToOtherCondition(
+                            alias,
+                            taskColumn,
+                            attType,
+                            isList,
+                            values,
+                            variableCondition,
+                            quotedListMatch = true
+                        )
+                    } else {
+                        condition.append(ALWAYS_FALSE)
+                        return true
+                    }
+                } else {
+                    // Collect EQ values to group them into IN later - doesn't consider predicate level and leads to the selection error result
+                    variableCondition.eqValues.addAll(values)
+                }
             }
 
             ValuePredicate.Type.GT -> {
+                if (isList) {
+                    condition.append(ALWAYS_FALSE)
+                    return true
+                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn > #{$paramName}")
             }
 
             ValuePredicate.Type.LT -> {
+                if (isList) {
+                    condition.append(ALWAYS_FALSE)
+                    return true
+                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn < #{$paramName}")
             }
 
             ValuePredicate.Type.GE -> {
+                if (isList) {
+                    condition.append(ALWAYS_FALSE)
+                    return true
+                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn >= #{$paramName}")
             }
 
             ValuePredicate.Type.LE -> {
+                if (isList) {
+                    condition.append(ALWAYS_FALSE)
+                    return true
+                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn <= #{$paramName}")
             }
 
             ValuePredicate.Type.IN -> {
-                val paramNames = mutableListOf<String>()
-                values.forEach {
-                    val paramName = "p${params.size}"
-                    params[paramName] = it
-                    paramNames.add("#{$paramName}")
+                if (isList) {
+                    if (isStringLikeAttType(attType)) {
+                        addLikeToOtherCondition(
+                            alias,
+                            taskColumn,
+                            attType,
+                            isList,
+                            values,
+                            variableCondition,
+                            quotedListMatch = true
+                        )
+                    } else {
+                        condition.append(ALWAYS_FALSE)
+                        return true
+                    }
+                } else {
+                    val paramNames = mutableListOf<String>()
+                    values.forEach {
+                        val paramName = "p${params.size}"
+                        params[paramName] = it
+                        paramNames.add("#{$paramName}")
+                    }
+                    variableCondition.otherConditions.add("$alias.$taskColumn IN (${paramNames.joinToString(",")})")
                 }
-                variableCondition.otherConditions.add("$alias.$taskColumn IN (${paramNames.joinToString(",")})")
             }
 
             ValuePredicate.Type.CONTAINS,
             ValuePredicate.Type.LIKE -> {
-                if (attType == AttributeType.TEXT) {
-                    val likeValues = values.map { "%$it%".lowercase() }
-                    val paramNames = mutableListOf<String>()
-                    likeValues.forEach {
-                        val paramName = "p${params.size}"
-                        params[paramName] = it
-                        paramNames.add("#{$paramName}")
-                    }
-                    val columnExpression = "LOWER($alias.$taskColumn)"
-                    if (paramNames.size == 1) {
-                        variableCondition.otherConditions.add("$columnExpression LIKE ${paramNames[0]}")
-                    } else {
-                        variableCondition.otherConditions.add("(${paramNames.map { "$columnExpression LIKE $it" }.joinToString(" OR ")})")
-                    }
-                } else {
-                    val likeValues = values.map { "%$it%" }
-                    val paramNames = mutableListOf<String>()
-                    likeValues.forEach {
-                        val paramName = "p${params.size}"
-                        params[paramName] = it
-                        paramNames.add("#{$paramName}")
-                    }
-                    if (paramNames.size == 1) {
-                        variableCondition.otherConditions.add("$alias.$taskColumn LIKE ${paramNames[0]}")
-                    } else {
-                        variableCondition.otherConditions.add("(${paramNames.map { "$alias.$taskColumn LIKE $it" }.joinToString(" OR ")})")
-                    }
-                }
+                addLikeToOtherCondition(alias, taskColumn, attType, isList, values, variableCondition)
             }
 
             else -> return false
         }
         condition.append("$alias.id_ IS NOT NULL")
         return true
+    }
+
+    private fun addLikeToOtherCondition(
+        alias: String,
+        taskColumn: String,
+        attType: AttributeType,
+        isList: Boolean,
+        values: List<Any?>,
+        variableCondition: VariableCondition,
+        quotedListMatch: Boolean = false
+    ) {
+        val likeExpression = if (isList) "convert_from($alias.bytes_, 'UTF8')" else "$alias.$taskColumn"
+        // For EQ/IN on list attributes the JSON-serialized list looks like ["foo","bar"];
+        // wrap the value with quotes (%"foo"%) so 'foo' does not falsely match 'foobar'.
+        val wrap: (Any?) -> String = if (isList && quotedListMatch) {
+            { v -> "%\"$v\"%" }
+        } else {
+            { v -> "%$v%" }
+        }
+        if (attType == AttributeType.TEXT) {
+            val likeValues = values.map { wrap(it).lowercase() }
+            val paramNames = mutableListOf<String>()
+            likeValues.forEach {
+                val paramName = "p${params.size}"
+                params[paramName] = it
+                paramNames.add("#{$paramName}")
+            }
+            val columnExpression = "LOWER($likeExpression)"
+            if (paramNames.size == 1) {
+                variableCondition.otherConditions.add("$columnExpression LIKE ${paramNames[0]}")
+            } else {
+                variableCondition.otherConditions.add(
+                    "(${paramNames.map { "$columnExpression LIKE $it" }.joinToString(" OR ")})"
+                )
+            }
+        } else {
+            val likeValues = values.map { wrap(it) }
+            val paramNames = mutableListOf<String>()
+            likeValues.forEach {
+                val paramName = "p${params.size}"
+                params[paramName] = it
+                paramNames.add("#{$paramName}")
+            }
+            if (paramNames.size == 1) {
+                variableCondition.otherConditions.add("$likeExpression LIKE ${paramNames[0]}")
+            } else {
+                variableCondition.otherConditions.add(
+                    "(${
+                        paramNames.map { "$likeExpression LIKE $it" }.joinToString(" OR ")
+                    })"
+                )
+            }
+        }
+    }
+
+    private fun isStringLikeAttType(attType: AttributeType): Boolean = when (attType) {
+        AttributeType.TEXT,
+        AttributeType.ASSOC,
+        AttributeType.PERSON,
+        AttributeType.AUTHORITY,
+        AttributeType.AUTHORITY_GROUP -> true
+        else -> false
     }
 
     private fun castSqlParamValueToListOf(
@@ -579,19 +672,25 @@ class ProcTaskSqlQueryBuilder(
         // Add optimized variable joins with conditions
         for ((variableName, variableCondition) in variableConditions) {
             val alias = getVariableAlias(variableName)
+
             val taskAttType = variableCondition.attType.getTaskAttType()
 
-            sqlSelectQuery.append(" LEFT JOIN act_ru_variable $alias ON ")
-            sqlSelectQuery.append("$alias.name_ = '$variableName' AND ")
-            sqlSelectQuery.append("$alias.type_ = '$taskAttType' AND ")
-            sqlSelectQuery.append("$alias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
-
-            if (variableCondition.isProcessVar) {
-                sqlSelectQuery.append("$alias.task_id_ IS NULL")
+            if (variableCondition.isList) {
+                sqlSelectQuery.append(" LEFT JOIN act_ge_bytearray $alias ON ")
+                sqlSelectQuery.append("$alias.name_ = '$variableName' AND ")
+                sqlSelectQuery.append("$alias.root_proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ ")
             } else {
-                sqlSelectQuery.append("$alias.task_id_ = $TASK_ALIAS.id_")
-            }
+                sqlSelectQuery.append(" LEFT JOIN act_ru_variable $alias ON ")
+                sqlSelectQuery.append("$alias.name_ = '$variableName' AND ")
+                sqlSelectQuery.append("$alias.type_ = '$taskAttType' AND ")
+                sqlSelectQuery.append("$alias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
 
+                if (variableCondition.isProcessVar) {
+                    sqlSelectQuery.append("$alias.task_id_ IS NULL")
+                } else {
+                    sqlSelectQuery.append("$alias.task_id_ = $TASK_ALIAS.id_")
+                }
+            }
             // Add filter conditions directly to JOIN for better performance
             if (!variableCondition.isEmptyCondition) {
                 // EQ values should be combined with OR, other conditions with AND
@@ -806,6 +905,7 @@ class ProcTaskSqlQueryBuilder(
             AttributeType.DATE,
             AttributeType.DATETIME,
             AttributeType.BOOLEAN -> "long_"
+
             else -> "text_"
         }
     }
