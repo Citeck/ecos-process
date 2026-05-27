@@ -172,9 +172,9 @@ class BpmnUserTaskCompleteErrorEventTest {
         AuthContext.runAsSystem {
             bpmnProcessService.startProcess(
                 StartProcessRequest(
-                    PROC_ID,
-                    null,
-                    mapOf(
+                    processId = PROC_ID,
+                    businessKey = null,
+                    variables = mapOf(
                         BPMN_DOCUMENT_REF to docRef.toString(),
                         BPMN_DOCUMENT_TYPE to "test"
                     )
