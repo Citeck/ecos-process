@@ -1,14 +1,10 @@
 {
   "id": "bpmn-task-atts-sync",
-  "formKey": "",
   "title": {
     "en": "BPMN task atts sync"
   },
-  "description": {},
-  "customModule": "",
   "typeRef": "emodel/type@bpmn-task-document-atts-sync",
   "width": "lg",
-  "system": false,
   "i18n": {
     "ru": {},
     "en": {}
@@ -170,8 +166,7 @@
                         "type": "column",
                         "input": false,
                         "key": "column",
-                        "index": 0,
-                        "md": 8
+                        "index": 0
                       },
                       {
                         "index": 1,
@@ -267,11 +262,36 @@
                           }
                         ],
                         "md": 4
+                      },
+                      {
+                        "md": 2,
+                        "type": "column",
+                        "input": false,
+                        "key": "column",
+                        "index": 2,
+                        "components": [
+                          {
+                            "label": {
+                              "ru": "Множественный",
+                              "en": "Multiple"
+                            },
+                            "key": "multiple",
+                            "refreshOn": [],
+                            "optionalWhenDisabled": false,
+                            "labelWidth": 20,
+                            "labelMargin": 2,
+                            "type": "checkbox",
+                            "input": true,
+                            "reorder": false,
+                            "dataGridLabel": false
+                          }
+                        ]
                       }
                     ],
                     "oneColumnInViewMode": false,
                     "type": "columns",
-                    "input": false
+                    "input": false,
+                    "reorder": false
                   },
                   {
                     "label": {
@@ -359,6 +379,9 @@
                                     {}
                                   ]
                                 },
+                                "refreshOn": [
+                                  "attributesSync.ecosTypes.typeData"
+                                ],
                                 "optionalWhenDisabled": false,
                                 "customConditional": "show = data.source === 'RECORD';",
                                 "type": "ecosSelect",
@@ -524,6 +547,5 @@
     ],
     "formId": "bpmn-task-atts-sync"
   },
-  "attributes": {},
   "notExists": false
 }

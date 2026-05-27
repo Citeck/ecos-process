@@ -15,6 +15,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_LA_COMPLETE_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
@@ -196,7 +197,8 @@ class BpmnLazyApprovalService(
         val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
         val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
         recordAtt.setAtt(outcomeForTask, true)
-        recordAtt.setAtt(BPMN_COMMENT, comment)
+        recordAtt.setAtt(BPMN_COMMENT, clearNbsp(comment))
+        recordAtt.setAtt(BPMN_LA_COMPLETE_KEY, true)
 
         return try {
             TxnContext.doInNewTxn {
@@ -248,5 +250,11 @@ class BpmnLazyApprovalService(
         val regex = Regex("^\\$\\{(.*)}$")
         val matchResult = regex.find(input)
         return matchResult?.groupValues?.get(1)
+    }
+
+    private fun clearNbsp(input: String): String {
+        return input.replace("\u00a0", " ") // Unicode non-breaking space
+            .replace("&nbsp;", " ")
+            .trim()
     }
 }
