@@ -253,7 +253,7 @@ class BpmnLazyApprovalService(
     }
 
     private fun clearNbsp(input: String): String {
-        return input.replace("\u00a0", " ") //Unicode non-breaking space
+        return input.replace("\u00a0", " ") // Unicode non-breaking space
             .replace("&nbsp;", " ")
             .trim()
     }
