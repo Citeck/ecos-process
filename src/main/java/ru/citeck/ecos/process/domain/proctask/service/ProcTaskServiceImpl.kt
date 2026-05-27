@@ -16,6 +16,8 @@ import ru.citeck.ecos.model.lib.comments.service.CommentsService
 import ru.citeck.ecos.model.lib.delegation.dto.AuthDelegation
 import ru.citeck.ecos.model.lib.delegation.service.DelegationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSyncService
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.converter.TaskConverter
@@ -31,6 +33,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.dao.query.dto.query.QueryPage
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
+import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.system.measureTimeMillis
@@ -49,7 +52,9 @@ class ProcTaskServiceImpl(
     private val procTaskAttsSyncService: ProcTaskAttsSyncService,
     private val taskConverter: TaskConverter,
     private val taskActorsUtils: TaskActorsUtils,
-    private val processEngineConfiguration: ProcessEngineConfigurationImpl
+    private val processEngineConfiguration: ProcessEngineConfigurationImpl,
+    private val bpmnElementConverter: BpmnElementConverter,
+    private val bpmnEventEmitter: BpmnEventEmitter
 ) : ProcTaskService {
 
     companion object {
@@ -270,6 +275,7 @@ class ProcTaskServiceImpl(
     }
 
     override fun completeTask(completeData: CompleteTaskData) {
+        val taskLocalVariables = mutableMapOf<String, Any?>()
         with(completeData) {
             val taskId = task.id
             val currentUser = AuthContext.getCurrentUser()
@@ -277,7 +283,6 @@ class ProcTaskServiceImpl(
 
             val completedOnBehalfOf = getCompletedOnBehalfOfValue(completeData.task, currentUser, currentAuthorities)
 
-            val taskLocalVariables = mutableMapOf<String, Any?>()
             taskLocalVariables[BPMN_TASK_COMPLETED_BY] = currentUser
 
             if (completedOnBehalfOf.isNotEmpty()) {
@@ -292,6 +297,8 @@ class ProcTaskServiceImpl(
             val taskComment = getComment()
             completionVariables[BPMN_COMMENT] = taskComment
             taskLocalVariables[BPMN_TASK_COMMENT_LOCAL] = taskComment
+            taskLocalVariables[BPMN_LA_COMPLETE_KEY] = variables[BPMN_LA_COMPLETE_KEY]
+            completionVariables.remove(BPMN_LA_COMPLETE_KEY)
 
             log.debug {
                 "Complete task: taskId=$taskId, outcome=$outcome, variables=$completionVariables, " +
@@ -300,8 +307,28 @@ class ProcTaskServiceImpl(
 
             cacheableTaskConverter.removeFromActualTaskCache(taskId)
 
-            camundaTaskService.setVariablesLocal(taskId, taskLocalVariables)
-            camundaTaskFormService.submitTaskForm(taskId, completionVariables)
+            try {
+                camundaTaskService.setVariablesLocal(taskId, taskLocalVariables)
+                camundaTaskFormService.submitTaskForm(taskId, completionVariables)
+            } catch (e: Exception) {
+                try {
+                    val taskEvent = bpmnElementConverter.toUserTaskEvent(
+                        completeData,
+                        taskLocalVariables
+                    )
+                    taskEvent.errorMessage = e.message
+                    taskEvent.errorStackTrace = e.stackTraceToString()
+
+                    AuthContext.runAsSystem {
+                        TxnContext.doInNewTxn {
+                            bpmnEventEmitter.emitUserTaskCompleteErrorEvent(taskEvent)
+                        }
+                    }
+                } catch (ex: Exception) {
+                    e.addSuppressed(ex)
+                }
+                throw e
+            }
 
             taskComment?.let {
                 createTaskCommentIfRequired(it, task)
