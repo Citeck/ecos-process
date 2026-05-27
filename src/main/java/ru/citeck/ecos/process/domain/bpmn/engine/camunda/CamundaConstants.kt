@@ -11,6 +11,7 @@ const val BPMN_NAME_ML = "nameMl"
 const val BPMN_POSSIBLE_OUTCOMES = "possibleOutcomes"
 
 const val BPMN_COMMENT = "comment"
+const val BPMN_LA_COMPLETE_KEY = "isCompletedViaMail"
 
 const val BPMN_TASK_COMMENT_LOCAL = "taskComment"
 const val BPMN_LAST_COMMENT_LOCAL = "lastComment"

@@ -1,5 +1,7 @@
 include:
   - component: gitlab.citeck.ru/infrastructure/gitlab-ci/maven-microservice@2
+    inputs:
+      jdk_version: "25"
 variables:
   KUBERNETES_MEMORY_REQUEST: "5Gi"
   KUBERNETES_MEMORY_LIMIT: "6Gi"
