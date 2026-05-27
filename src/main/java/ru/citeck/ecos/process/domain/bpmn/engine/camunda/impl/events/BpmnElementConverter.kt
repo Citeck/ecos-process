@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.DelegateTask
+import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.data.DataValue
@@ -17,6 +18,8 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.FullFul
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.RawFlowElementEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
+import ru.citeck.ecos.process.domain.bpmnla.dto.UserTaskLaInfo
+import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDto
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.process.domain.proctask.api.records.ProcTaskRecords
 import ru.citeck.ecos.process.domain.proctask.dto.CompleteTaskData
@@ -89,16 +92,8 @@ class BpmnElementConverter(
                         "procInstanceId: $processInstanceId, procDefId: $processDefinitionId"
                 )
                 val rev = procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
-                // TODO: fix
-//    log.warn {
-//        "Process definition revision is null. TaskId: $id, name: $name, executionId: $executionId, " +
-//            "procInstanceId: $processInstanceId, procDefId: $processDefinitionId " +
-//            " procDefId, procDefRef, procDeploymentVersion will be null"
-//    }
                 val documentRef = getDocumentRef()
                 val outcome = getOutcome()
-                val userTaskLaInfo = taskDefinitionUtils.getUserTaskLaInfo(delegateTask)
-
                 val (candidateUsers, candidateGroups) = candidates.splitToUserGroupCandidates()
 
                 userTaskEvent = UserTaskEvent(
@@ -112,25 +107,10 @@ class BpmnElementConverter(
                     candidateUsersRef = candidateUsers.map { AuthorityType.PERSON.getRef(it) },
                     candidateGroups = candidateGroups.toList(),
                     candidateGroupsRef = candidateGroups.map {
-                        AuthorityType.GROUP.getRef(
-                            it.removePrefix(AuthGroup.PREFIX)
-                        )
+                        AuthorityType.GROUP.getRef(it.removePrefix(AuthGroup.PREFIX))
                     },
                     roles = taskDefinitionUtils.getTaskRoles(delegateTask),
-                    procDefId = rev?.procDefId,
-                    procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
-                    } else {
-                        EntityRef.EMPTY
-                    },
-                    procDeploymentVersion = rev?.version?.inc(),
                     procInstanceId = getProcessInstanceRef(),
-                    processId = processDefinition.key,
-                    processRef = if (processDefinition.key.isNotBlank()) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
-                    } else {
-                        EntityRef.EMPTY
-                    },
                     elementDefId = taskDefinitionKey,
                     created = createTime?.toInstant(),
                     dueDate = dueDate?.toInstant(),
@@ -144,22 +124,13 @@ class BpmnElementConverter(
                     outcomeName = outcome.name,
                     completedOnBehalfOf = getVariableLocal(BPMN_TASK_COMPLETED_ON_BEHALF_OF) as? String,
                     document = documentRef,
-                    laEnabled = userTaskLaInfo.laEnabled,
-                    laNotificationType = userTaskLaInfo.laNotificationType,
-                    laNotificationTemplate = userTaskLaInfo.laNotificationTemplate,
-                    laManualNotificationTemplateEnabled = userTaskLaInfo.laManualNotificationTemplateEnabled,
-                    laManualNotificationTemplate = userTaskLaInfo.laManualNotificationTemplate,
-                    laNotificationAdditionalMeta = userTaskLaInfo.laNotificationAdditionalMeta,
-                    laReportEnabled = userTaskLaInfo.laReportEnabled,
-                    laSuccessReportNotificationTemplate = userTaskLaInfo.laSuccessReportNotificationTemplate,
-                    laErrorReportNotificationTemplate = userTaskLaInfo.laErrorReportNotificationTemplate,
                     isCompletedViaMail = getVariableLocal(BPMN_LA_COMPLETE_KEY) as? Boolean ?: false
                 )
+                fillProcDefAndProcessRefs(userTaskEvent, rev, processDefinition)
+                fillLaInfo(userTaskEvent, taskDefinitionUtils.getUserTaskLaInfo(delegateTask))
             }
 
-            log.trace {
-                "Convert task to user task event in $time ms"
-            }
+            log.trace { "Convert task to user task event in $time ms" }
 
             return userTaskEvent
         }
@@ -167,13 +138,13 @@ class BpmnElementConverter(
 
     fun toUserTaskEvent(completeData: CompleteTaskData, localVariables: Map<String, Any?>): UserTaskEvent {
         with(completeData) {
-            val userTaskEvent: UserTaskEvent
             if (task.processDefinitionId.isNullOrBlank()) {
                 error(
                     "Process definition is not defined for taskId: ${task.id}, name: ${task.name}, " +
                         "procInstanceId: ${task.processInstanceId}, procDefId: ${task.processDefinitionId}"
                 )
             }
+            val userTaskEvent: UserTaskEvent
             val time = measureTimeMillis {
                 val processDefinition = bpmnProcessService.getProcessDefinition(task.processDefinitionId) ?: error(
                     "Process definition was not found. TaskId: ${task.id}, name: ${task.name}, " +
@@ -181,8 +152,9 @@ class BpmnElementConverter(
                 )
                 val rev = procDefService.getProcessDefRevByDeploymentId(processDefinition.deploymentId)
                 val userTaskLaInfo = task.definitionKey?.let {
-                    taskDefinitionUtils.getUserTaskLaInfo(task.processDefinitionId, task.definitionKey)
+                    taskDefinitionUtils.getUserTaskLaInfo(task.processDefinitionId, it)
                 }
+
                 userTaskEvent = UserTaskEvent(
                     record = task.documentRef,
                     taskId = EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, task.id),
@@ -194,31 +166,16 @@ class BpmnElementConverter(
                     candidateUsersRef = task.candidateUsers,
                     candidateGroups = task.candidateGroupsOriginal,
                     candidateGroupsRef = task.candidateGroups,
-                    roles = if (task.definitionKey != null) {
-                        taskDefinitionUtils.getTaskRoles(task.documentRef, task.processDefinitionId, task.definitionKey)
-                    } else {
-                        emptyList()
-                    },
-                    procDefId = rev?.procDefId,
-                    procDefRef = if (task.processDefinitionId.isNotBlank()) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, task.processDefinitionId)
-                    } else {
-                        EntityRef.EMPTY
-                    },
-                    procDeploymentVersion = rev?.version?.inc(),
+                    roles = task.definitionKey?.let {
+                        taskDefinitionUtils.getTaskRoles(task.documentRef, task.processDefinitionId, it)
+                    } ?: emptyList(),
                     procInstanceId = task.processInstanceId,
-                    processId = processDefinition.key,
-                    processRef = if (processDefinition.key.isNotBlank()) {
-                        EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
-                    } else {
-                        EntityRef.EMPTY
-                    },
                     elementDefId = task.definitionKey,
                     created = task.created,
                     dueDate = task.dueDate,
-                    description = null, // description,
+                    description = null,
                     priority = task.priority,
-                    executionId = null, // executionId,
+                    executionId = null,
                     name = task.name,
                     comment = localVariables[BPMN_TASK_COMMENT_LOCAL] as? String,
                     completedBy = localVariables[BPMN_TASK_COMPLETED_BY] as? String,
@@ -226,25 +183,48 @@ class BpmnElementConverter(
                     outcomeName = outcome.name,
                     completedOnBehalfOf = localVariables[BPMN_TASK_COMPLETED_ON_BEHALF_OF] as? String,
                     document = task.documentRef,
-                    laEnabled = userTaskLaInfo?.laEnabled ?: false,
-                    laNotificationType = userTaskLaInfo?.laNotificationType,
-                    laNotificationTemplate = userTaskLaInfo?.laNotificationTemplate,
-                    laManualNotificationTemplateEnabled = userTaskLaInfo?.laManualNotificationTemplateEnabled ?: false,
-                    laManualNotificationTemplate = userTaskLaInfo?.laManualNotificationTemplate,
-                    laNotificationAdditionalMeta = userTaskLaInfo?.laNotificationAdditionalMeta ?: emptyMap(),
-                    laReportEnabled = userTaskLaInfo?.laReportEnabled ?: false,
-                    laSuccessReportNotificationTemplate = userTaskLaInfo?.laSuccessReportNotificationTemplate,
-                    laErrorReportNotificationTemplate = userTaskLaInfo?.laErrorReportNotificationTemplate,
                     isCompletedViaMail = getLaCompleted()
                 )
+                fillProcDefAndProcessRefs(userTaskEvent, rev, processDefinition)
+                fillLaInfo(userTaskEvent, userTaskLaInfo)
             }
 
-            log.trace {
-                "Convert complete task data to user task event in $time ms"
-            }
+            log.trace { "Convert complete task data to user task event in $time ms" }
 
             return userTaskEvent
         }
+    }
+
+    private fun fillProcDefAndProcessRefs(
+        event: UserTaskEvent,
+        rev: ProcDefRevDto?,
+        processDefinition: ProcessDefinition
+    ) {
+        event.procDefId = rev?.procDefId
+        event.procDefRef = if (rev?.procDefId?.isNotBlank() == true) {
+            EntityRef.create(AppName.EPROC, BpmnProcessDefRecords.ID, rev.procDefId)
+        } else {
+            EntityRef.EMPTY
+        }
+        event.procDeploymentVersion = rev?.version?.inc()
+        event.processId = processDefinition.key
+        event.processRef = if (processDefinition.key.isNotBlank()) {
+            EntityRef.create(AppName.EPROC, BpmnProcessLatestRecords.ID, processDefinition.key)
+        } else {
+            EntityRef.EMPTY
+        }
+    }
+
+    private fun fillLaInfo(event: UserTaskEvent, userTaskLaInfo: UserTaskLaInfo?) {
+        event.laEnabled = userTaskLaInfo?.laEnabled ?: false
+        event.laNotificationType = userTaskLaInfo?.laNotificationType
+        event.laNotificationTemplate = userTaskLaInfo?.laNotificationTemplate
+        event.laManualNotificationTemplateEnabled = userTaskLaInfo?.laManualNotificationTemplateEnabled ?: false
+        event.laManualNotificationTemplate = userTaskLaInfo?.laManualNotificationTemplate
+        event.laNotificationAdditionalMeta = userTaskLaInfo?.laNotificationAdditionalMeta ?: emptyMap()
+        event.laReportEnabled = userTaskLaInfo?.laReportEnabled ?: false
+        event.laSuccessReportNotificationTemplate = userTaskLaInfo?.laSuccessReportNotificationTemplate
+        event.laErrorReportNotificationTemplate = userTaskLaInfo?.laErrorReportNotificationTemplate
     }
 
     fun toFullFulFlowElement(rawFlowElementEvent: RawFlowElementEvent): FullFulFlowElementEvent {

@@ -19,5 +19,5 @@ fun CompleteTaskData.getComment(): String? {
 }
 
 fun CompleteTaskData.getLaCompleted(): Boolean {
-    return variables[BPMN_LA_COMPLETE_KEY] as? Boolean ?: return false
+    return variables[BPMN_LA_COMPLETE_KEY] as? Boolean ?: false
 }
