@@ -15,6 +15,7 @@ import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_COMMENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_LA_COMPLETE_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnElementConverter
@@ -197,6 +198,7 @@ class BpmnLazyApprovalService(
         val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
         recordAtt.setAtt(outcomeForTask, true)
         recordAtt.setAtt(BPMN_COMMENT, comment)
+        recordAtt.setAtt(BPMN_LA_COMPLETE_KEY, true)
 
         return try {
             TxnContext.doInNewTxn {

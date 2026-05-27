@@ -108,14 +108,10 @@ class TaskDefinitionUtils(
         return Json.mapper.readList(outcomesValue, TaskOutcome::class.java)
     }
 
-    fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
-        val document = delegateTask.getDocumentRef()
-        if (document == EntityRef.EMPTY) {
-            return emptyList()
-        }
+    fun getTaskRoles(document: EntityRef, processDefinitionId: String, taskDefinitionKey: String): List<TaskRole> {
 
         val defData =
-            taskDeployedCamundaDefCache.get(delegateTask.processDefinitionId to delegateTask.taskDefinitionKey)
+            taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
         val taskDefinition = defData.task ?: return emptyList()
 
         val roleData = taskDefinition.otherAttributes[BPMN_PROP_ASSIGNEES]
@@ -136,6 +132,14 @@ class TaskDefinitionUtils(
                 roleService.getRoleDef(defData.docType, role).name
             )
         }
+    }
+
+    fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
+        val document = delegateTask.getDocumentRef()
+        if (document == EntityRef.EMPTY) {
+            return emptyList()
+        }
+        return getTaskRoles(document, delegateTask.processDefinitionId, delegateTask.taskDefinitionKey)
     }
 
     fun getTaskTitle(delegateTask: DelegateTask): MLText {
@@ -179,23 +183,27 @@ class TaskDefinitionUtils(
                 taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
             ),
             laManualNotificationTemplateEnabled =
-            taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
+                taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
             laManualNotificationTemplate = taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
             laNotificationAdditionalMeta = getLaNotificationAdditionalMeta(taskDefinition),
             laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
-            taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                EntityRef.valueOf(it)
-            },
+                taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                    EntityRef.valueOf(it)
+                },
             laErrorReportNotificationTemplate =
-            taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                EntityRef.valueOf(it)
-            }
+                taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                    EntityRef.valueOf(it)
+                }
         )
     }
 
     fun getUserTaskLaInfo(delegateTask: DelegateTask): UserTaskLaInfo {
         return getUserTaskLaInfo(delegateTask.processDefinitionId to delegateTask.taskDefinitionKey)
+    }
+
+    fun getUserTaskLaInfo(processDefinitionId: String, taskDefinitionKey: String): UserTaskLaInfo {
+        return getUserTaskLaInfo(processDefinitionId to taskDefinitionKey)
     }
 
     data class CachedTaskDefData(
