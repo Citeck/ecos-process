@@ -12,11 +12,15 @@
   "i18n": {
     "ru": {
       "notification_type_email": "Электронная почта",
-      "notification_type_firebase_push": "Мобильное push уведомление"
+      "notification_type_firebase_push": "Мобильное push уведомление",
+      "notification_recipients_strategy_combined": "Одно письмо всем получателям",
+      "notification_recipients_strategy_per_recipient": "Отдельное письмо каждому получателю"
     },
     "en": {
       "notification_type_email": "Email",
-      "notification_type_firebase_push": "Mobile push notification"
+      "notification_type_firebase_push": "Mobile push notification",
+      "notification_recipients_strategy_combined": "Single email to all recipients",
+      "notification_recipients_strategy_per_recipient": "Separate email per recipient"
     }
   },
   "definition": {
@@ -452,6 +456,67 @@
             "type": "panel",
             "input": false,
             "components": [
+              {
+                "label": {
+                  "ru": "Стратегия отправки получателям",
+                  "en": "Recipients send strategy"
+                },
+                "key": "notificationRecipientsStrategy",
+                "tooltip": {
+                  "ru": "«Одно письмо всем получателям» — все адреса в поле «Кому» в одном письме. «Отдельное письмо каждому получателю» — каждому приходит персональное письмо, получатели не видят друг друга; применяется только при пустых «Копия» и «Скрытая копия».",
+                  "en": "\"Single email to all recipients\" — all addresses from the To field in one message. \"Separate email per recipient\" — each recipient gets a personal message and they don't see each other; applies only when Cc and Bcc are empty."
+                },
+                "dataSrc": "values",
+                "data": {
+                  "values": [
+                    {
+                      "label": "notification_recipients_strategy_combined",
+                      "value": "COMBINED"
+                    },
+                    {
+                      "label": "notification_recipients_strategy_per_recipient",
+                      "value": "PER_RECIPIENT"
+                    }
+                  ],
+                  "headers": [
+                    {
+                      "key": "",
+                      "value": ""
+                    }
+                  ]
+                },
+                "defaultValue": "",
+                "customDefaultValue": "value = \"COMBINED\";",
+                "logic": [
+                  {
+                    "name": "force combined when cc or bcc is set",
+                    "trigger": {
+                      "type": "javascript",
+                      "javascript": "result = !!((data.notificationCc && data.notificationCc.length) || (data.notificationBcc && data.notificationBcc.length) || (data.notificationCcExpression && data.notificationCcExpression.filter(function (v) { return v && v.trim(); }).length) || (data.notificationBccExpression && data.notificationBccExpression.filter(function (v) { return v && v.trim(); }).length));"
+                    },
+                    "actions": [
+                      {
+                        "name": "reset to combined",
+                        "type": "value",
+                        "value": "value = \"COMBINED\";"
+                      },
+                      {
+                        "name": "disable",
+                        "type": "property",
+                        "property": {
+                          "label": "Disabled",
+                          "value": "disabled",
+                          "type": "boolean"
+                        },
+                        "state": "true"
+                      }
+                    ]
+                  }
+                ],
+                "optionalWhenDisabled": false,
+                "type": "ecosSelect",
+                "input": true
+              },
               {
                 "label": {
                   "ru": "recipients-tabs"

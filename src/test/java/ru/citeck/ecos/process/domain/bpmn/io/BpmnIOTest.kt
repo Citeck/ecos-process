@@ -4,10 +4,12 @@ import jakarta.xml.bind.JAXBElement
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import ru.citeck.ecos.commons.utils.resource.ResourceUtils
 import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.model.lib.workspace.api.WorkspaceApi
 import ru.citeck.ecos.model.lib.workspace.api.WsMembershipType
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
@@ -55,6 +57,48 @@ class BpmnIOTest {
             }
         }
         return null
+    }
+
+    @Test
+    fun `send task recipients send strategy round trip`() {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/sendtask/test-send-task-recipients-per-recipient.bpmn.xml"
+        ).readText()
+
+        val bpmnDef = bpmnIO.importEcosBpmn(testDef)
+
+        val sendTask = bpmnDef.process.first().flowElements.first { it.id == "sendTask" }
+        assertThat(sendTask.data["recipientsSendStrategy"].asText()).isEqualTo("PER_RECIPIENT")
+
+        val exportedXml = bpmnIO.exportEcosBpmnToString(bpmnDef)
+        assertThat(exportedXml).contains("notificationRecipientsStrategy=\"PER_RECIPIENT\"")
+    }
+
+    @Test
+    fun `send task without recipients send strategy defaults to combined`() {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/sendtask/test-send-task-configuration-check.bpmn.xml"
+        ).readText()
+
+        val bpmnDef = bpmnIO.importEcosBpmn(testDef)
+
+        val sendTask = bpmnDef.process.first().flowElements.first { it.id == "sendTask" }
+        assertThat(sendTask.data["recipientsSendStrategy"].asText()).isEqualTo("COMBINED")
+
+        // default strategy must not leak into the exported xml of existing processes
+        val exportedXml = bpmnIO.exportEcosBpmnToString(bpmnDef)
+        assertThat(exportedXml).doesNotContain("notificationRecipientsStrategy")
+    }
+
+    @Test
+    fun `per recipient strategy with non empty cc is rejected on import`() {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/sendtask/test-send-task-per-recipient-with-cc.bpmn.xml"
+        ).readText()
+
+        assertThrows<EcosBpmnElementDefinitionException> {
+            bpmnIO.importEcosBpmn(testDef)
+        }
     }
 
     @Test

@@ -5,7 +5,9 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.notifications.lib.RecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.io.convert.parseRecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
@@ -32,6 +34,8 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             number = element.otherAttributes[BPMN_PROP_NUMBER]?.takeIf { it.isNotEmpty() }?.toInt(),
             documentation = Json.mapper.convert(element.otherAttributes[BPMN_PROP_DOC], MLText::class.java) ?: MLText(),
             type = NotificationType.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_TYPE]!!),
+            recipientsSendStrategy = element.otherAttributes[BPMN_PROP_NOTIFICATION_RECIPIENTS_STRATEGY]
+                .parseRecipientsSendStrategy(),
             incoming = element.incoming.map { it.localPart },
             outgoing = element.outgoing.map { it.localPart },
             template = EntityRef.valueOf(element.otherAttributes[BPMN_PROP_NOTIFICATION_TEMPLATE]),
@@ -92,6 +96,13 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_DOC, Json.mapper.toString(element.documentation))
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TEMPLATE, element.template.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TYPE, element.type.toString())
+            // COMBINED is the default; omit it to keep existing process XML unchanged
+            if (element.recipientsSendStrategy != RecipientsSendStrategy.COMBINED) {
+                otherAttributes.putIfNotBlank(
+                    BPMN_PROP_NOTIFICATION_RECIPIENTS_STRATEGY,
+                    element.recipientsSendStrategy.toString()
+                )
+            }
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_RECORD, element.record)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TITLE, element.title)
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_BODY, element.body)
