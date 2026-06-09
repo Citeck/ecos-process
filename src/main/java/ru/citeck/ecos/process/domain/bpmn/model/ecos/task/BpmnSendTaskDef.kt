@@ -3,6 +3,7 @@ package ru.citeck.ecos.process.domain.bpmn.model.ecos.task
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.utils.StringUtils
 import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.notifications.lib.RecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
@@ -21,6 +22,7 @@ data class BpmnSendTaskDef(
     val record: String = "",
     val template: EntityRef = EntityRef.EMPTY,
     val type: NotificationType,
+    val recipientsSendStrategy: RecipientsSendStrategy = RecipientsSendStrategy.COMBINED,
 
     val from: String = "",
 
@@ -59,6 +61,13 @@ data class BpmnSendTaskDef(
 
         if (type != NotificationType.EMAIL_NOTIFICATION) {
             throw EcosBpmnElementDefinitionException(id, "In the current version, only the email type is supported")
+        }
+
+        if (recipientsSendStrategy == RecipientsSendStrategy.PER_RECIPIENT && (cc.isNotEmpty() || bcc.isNotEmpty())) {
+            throw EcosBpmnElementDefinitionException(
+                id,
+                "PER_RECIPIENT recipients send strategy is allowed only when cc and bcc are empty"
+            )
         }
 
         if (sendCalendarEvent) {

@@ -14,6 +14,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.MailUtils
+import ru.citeck.ecos.process.domain.bpmn.io.convert.parseRecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.CalendarEventOrganizer
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
@@ -40,6 +41,7 @@ class SendNotificationDelegate : JavaDelegate {
     var notificationBcc: Expression? = null
 
     var notificationType: Expression? = null
+    var notificationRecipientsStrategy: Expression? = null
 
     var notificationLang: Expression? = null
     var notificationAdditionalMeta: Expression? = null
@@ -89,6 +91,8 @@ class SendNotificationDelegate : JavaDelegate {
             lang = null
         }
 
+        val recipientsSendStrategy = notificationRecipientsStrategy?.expressionText.parseRecipientsSendStrategy()
+
         val recipients = getRecipientsEmailsFromExpression(notificationTo, execution)
         val notification = Notification.Builder()
             .record(document)
@@ -96,6 +100,7 @@ class SendNotificationDelegate : JavaDelegate {
                 notificationType?.let { NotificationType.valueOf(it.expressionText) }
                     ?: NotificationType.EMAIL_NOTIFICATION
             )
+            .recipientsSendStrategy(recipientsSendStrategy)
             .title(notificationTitle?.expressionText ?: "")
             .body(notificationBody?.expressionText ?: "")
             .templateRef(EntityRef.valueOf(notificationTemplate?.expressionText))

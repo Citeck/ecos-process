@@ -46,6 +46,7 @@ import ru.citeck.ecos.lazyapproval.model.MailProcessingCode
 import ru.citeck.ecos.license.EcosTestLicense
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
+import ru.citeck.ecos.notifications.lib.RecipientsSendStrategy
 import ru.citeck.ecos.notifications.lib.icalendar.CalendarEvent
 import ru.citeck.ecos.notifications.lib.service.NotificationService
 import ru.citeck.ecos.process.EprocApp
@@ -1826,6 +1827,95 @@ class BpmnMonsterTestWithRunProcessTest {
         verify(notificationService).send(
             org.mockito.kotlin.check {
                 assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task with per recipient strategy`() {
+        val procId = "test-send-task-recipients-per-recipient"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val notification = Notification.Builder()
+            .record(docExplicitRef)
+            .recipients(mockAuthorEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .recipientsSendStrategy(RecipientsSendStrategy.PER_RECIPIENT)
+            .lang("en")
+            .additionalMeta(
+                mapOf(
+                    "foo" to EntityRef.valueOf("bar"),
+                    "harry" to EntityRef.valueOf("potter"),
+                    "process" to mapOf(
+                        BPMN_DOCUMENT_REF to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.PER_RECIPIENT)
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task with per recipient strategy and multiple recipients`() {
+        val procId = "test-send-task-recipients-per-recipient-multiple"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(mockAuthorAccountantEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .recipientsSendStrategy(RecipientsSendStrategy.PER_RECIPIENT)
+            .lang("ru")
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        BPMN_DOCUMENT_REF to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.PER_RECIPIENT)
+                // PER_RECIPIENT is meaningful only with more than one recipient
+                assertThat(it.recipients).hasSize(2)
+                assertThat(it.recipients).containsExactlyInAnyOrderElementsOf(mockAuthorAccountantEmails)
             }
         )
 
@@ -5277,6 +5367,7 @@ private data class NotificationEqualsWrapper(
         if (!CollectionUtils.isEqualCollection(dto.bcc, other.dto.bcc)) return false
         if (dto.lang != other.dto.lang) return false
         if (dto.additionalMeta != other.dto.additionalMeta) return false
+        if (dto.recipientsSendStrategy != other.dto.recipientsSendStrategy) return false
 
         return true
     }
@@ -5293,6 +5384,7 @@ private data class NotificationEqualsWrapper(
         result = 31 * result + dto.bcc.hashCode()
         result = 31 * result + dto.lang.hashCode()
         result = 31 * result + dto.additionalMeta.hashCode()
+        result = 31 * result + dto.recipientsSendStrategy.hashCode()
         return result
     }
 }

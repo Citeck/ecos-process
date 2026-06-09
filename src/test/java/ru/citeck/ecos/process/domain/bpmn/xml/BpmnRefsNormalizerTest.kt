@@ -85,13 +85,25 @@ class BpmnRefsNormalizerTest {
     }
 
     @Test
-    fun `bindRefs - blank workspace is no-op`() {
-        val xml = bpmnXml(ecosType = "emodel/type@CURRENT_WS:my-type")
+    fun `bindRefs - blank (global) workspace strips CURRENT_WS to bare and keeps co-deployed refs global`() {
+        // Importing an ecos-app into the global admin deploys with a blank workspace. CURRENT_WS
+        // placeholders must still be resolved — stripped to a bare ref for a global deploy —
+        // otherwise the unresolved "CURRENT_WS:" prefix is persisted verbatim. An unprefixed
+        // co-deployed ref must stay global: there is no ws prefix to add. The ecosType assertion
+        // is what discriminates against a regression of the removed `if (workspace.isBlank()) return`
+        // guard — under the guard bindRefs exits early and CURRENT_WS:my-type survives.
+        val xml = bpmnXml(
+            ecosType = "emodel/type@CURRENT_WS:my-type",
+            formRef = "uiserv/eform@my-form"
+        )
         val def = BpmnXmlUtils.readFromString(xml)
 
-        BpmnRefsNormalizer.bindRefs(def, "", workspaceService, setOf(EntityRef.valueOf("emodel/type@my-type")))
+        BpmnRefsNormalizer.bindRefs(def, "", workspaceService, setOf(EntityRef.valueOf("uiserv/eform@my-form")))
 
-        assertThat(ecosType(def)).isEqualTo("emodel/type@CURRENT_WS:my-type")
+        // CURRENT_WS placeholder stripped to bare (fails if the blank-ws guard is restored)
+        assertThat(ecosType(def)).isEqualTo("emodel/type@my-type")
+        // co-deployed but unprefixed → stays global, not promoted (no prefix for a global ws)
+        assertThat(formRef(def)).isEqualTo("uiserv/eform@my-form")
     }
 
     @Test
@@ -147,7 +159,9 @@ class BpmnRefsNormalizerTest {
                 id
             } else {
                 val sysId = sysIdFor(targetWorkspace)
-                "$sysId${IdInWs.WS_DELIM}${id.substring("CURRENT_WS${IdInWs.WS_DELIM}".length)}"
+                // mirror real getPrefixForIdInWorkspace: empty prefix (no delimiter) for a global ws
+                val prefix = if (sysId.isEmpty()) "" else "$sysId${IdInWs.WS_DELIM}"
+                prefix + id.substring("CURRENT_WS${IdInWs.WS_DELIM}".length)
             }
         }
         whenever(ws.addWsPrefixToId(any(), any())).thenAnswer { inv ->

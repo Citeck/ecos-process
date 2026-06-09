@@ -53,7 +53,10 @@ object BpmnRefsNormalizer {
         workspaceService: WorkspaceService,
         coDeployedRefs: Set<EntityRef> = emptySet()
     ) {
-        if (workspace.isBlank()) return
+        // No blank-workspace short-circuit: a global deploy (blank workspace, e.g. import into the
+        // global admin) must still resolve `CURRENT_WS:` placeholders — they are stripped to bare
+        // refs since `getPrefixForIdInWorkspace("")` is empty. Skipping this left "CURRENT_WS:" in
+        // persisted refs (e.g. ecosType) until a redeploy through a non-blank admin workspace.
         applyToRefAttributes(definitions) { attributes, attr ->
             transform(attributes, attr) { ref, _ ->
                 workspaceService.bindRefToWorkspace(ref, workspace, coDeployedRefs).getLocalId()
