@@ -5,7 +5,6 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.notifications.lib.NotificationType
-import ru.citeck.ecos.notifications.lib.RecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.parseRecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
@@ -13,6 +12,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsFromJson
 import ru.citeck.ecos.process.domain.bpmn.io.convert.recipientsToJsonWithoutType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.AsyncConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.common.async.JobConfig
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnRecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnSendTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.CalendarEventOrganizer
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
@@ -97,7 +97,7 @@ class BpmnSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TEMPLATE, element.template.toString())
             otherAttributes.putIfNotBlank(BPMN_PROP_NOTIFICATION_TYPE, element.type.toString())
             // COMBINED is the default; omit it to keep existing process XML unchanged
-            if (element.recipientsSendStrategy != RecipientsSendStrategy.COMBINED) {
+            if (element.recipientsSendStrategy != BpmnRecipientsSendStrategy.COMBINED) {
                 otherAttributes.putIfNotBlank(
                     BPMN_PROP_NOTIFICATION_RECIPIENTS_STRATEGY,
                     element.recipientsSendStrategy.toString()

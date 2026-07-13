@@ -308,6 +308,28 @@ class BpmnMonsterTestWithRunProcessTest {
             mockAuthorAccountantEmails
         )
 
+        `when`(camundaRoleService.getEmailsByRole(docRef, listOf("author"))).thenReturn(
+            mapOf("author" to mockAuthorEmails)
+        )
+        `when`(camundaRoleService.getEmailsByRole(docExplicitRef, listOf("author"))).thenReturn(
+            mapOf("author" to mockAuthorEmails)
+        )
+        `when`(camundaRoleService.getEmailsByRole(docRef, listOf("author", "accountant"))).thenReturn(
+            mapOf("author" to listOf("author@mail.com"), "accountant" to listOf("accountant@mail.com"))
+        )
+        `when`(camundaRoleService.getEmailsByRole(docRef, listOf("emptyRole"))).thenReturn(
+            mapOf("emptyRole" to emptyList())
+        )
+        `when`(camundaRoleService.getRoleNames(docRef, listOf("author"))).thenReturn(
+            mapOf("author" to MLText("Author"))
+        )
+        `when`(camundaRoleService.getRoleNames(docExplicitRef, listOf("author"))).thenReturn(
+            mapOf("author" to MLText("Author"))
+        )
+        `when`(camundaRoleService.getRoleNames(docRef, listOf("author", "accountant"))).thenReturn(
+            mapOf("author" to MLText("Author"), "accountant" to MLText("Accountant"))
+        )
+
         `when`(camundaRoleService.getKey()).thenReturn(CamundaRoleService.KEY)
 
         `when`(workingScheduleService.getScheduleById(anyString())).thenReturn(testWeaklyWorkingSchedule)
@@ -1586,6 +1608,48 @@ class BpmnMonsterTestWithRunProcessTest {
     }
 
     @Test
+    fun `send task combined with empty to and non empty cc`() {
+        val procId = "test-send-task-cc-only"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val notification = Notification.Builder()
+            .record(docRef)
+            .recipients(emptyList())
+            .cc(mockInitiatorEmails)
+            .notificationType(NotificationType.EMAIL_NOTIFICATION)
+            .lang("ru")
+            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
+            .additionalMeta(
+                mapOf(
+                    "process" to mapOf(
+                        BPMN_DOCUMENT_REF to docRef.toString(),
+                        "currentRunAsUser" to EntityRef.EMPTY
+                    )
+                )
+            )
+            .build()
+
+        verify(notificationService).send(
+            org.mockito.kotlin.check {
+                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
+                assertThat(it.additionalMeta).doesNotContainKeys("recipientRoleId", "recipientRoleName")
+            }
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
     fun `send task role recipients roles with expression check`() {
         val procId = "test-send-task-recipients-roles-with-expressions-check"
         helper.saveAndDeployBpmn(SEND_TASK, procId)
@@ -1848,31 +1912,18 @@ class BpmnMonsterTestWithRunProcessTest {
             ).engine(processEngine).execute()
         }
 
-        val notification = Notification.Builder()
-            .record(docExplicitRef)
-            .recipients(mockAuthorEmails)
-            .notificationType(NotificationType.EMAIL_NOTIFICATION)
-            .recipientsSendStrategy(RecipientsSendStrategy.PER_RECIPIENT)
-            .lang("en")
-            .additionalMeta(
-                mapOf(
-                    "foo" to EntityRef.valueOf("bar"),
-                    "harry" to EntityRef.valueOf("potter"),
-                    "process" to mapOf(
-                        BPMN_DOCUMENT_REF to docRef.toString(),
-                        "currentRunAsUser" to EntityRef.EMPTY
-                    )
-                )
-            )
-            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
-            .build()
-
-        verify(notificationService).send(
+        val sentRecipients = mutableSetOf<String>()
+        verify(notificationService, times(mockAuthorEmails.size)).send(
             org.mockito.kotlin.check {
-                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
-                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.PER_RECIPIENT)
+                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.COMBINED)
+                assertThat(it.recipients).hasSize(1)
+                sentRecipients.addAll(it.recipients)
+
+                assertThat(it.additionalMeta["recipientRoleId"]).isEqualTo("author")
+                assertThat(it.additionalMeta["recipientRoleName"]).isEqualTo(MLText("Author"))
             }
         )
+        assertThat(sentRecipients).containsExactlyInAnyOrderElementsOf(mockAuthorEmails)
 
         verify(process, times(1)).hasCompleted("sendTask")
         verify(process).hasFinished("endEvent")
@@ -1892,30 +1943,124 @@ class BpmnMonsterTestWithRunProcessTest {
             ).engine(processEngine).execute()
         }
 
-        val notification = Notification.Builder()
-            .record(docRef)
-            .recipients(mockAuthorAccountantEmails)
-            .notificationType(NotificationType.EMAIL_NOTIFICATION)
-            .recipientsSendStrategy(RecipientsSendStrategy.PER_RECIPIENT)
-            .lang("ru")
-            .templateRef(EntityRef.valueOf("notifications/template@test-template"))
-            .additionalMeta(
-                mapOf(
-                    "process" to mapOf(
-                        BPMN_DOCUMENT_REF to docRef.toString(),
-                        "currentRunAsUser" to EntityRef.EMPTY
-                    )
-                )
-            )
-            .build()
-
-        verify(notificationService).send(
+        val byRecipient = mutableMapOf<String, String>()
+        verify(notificationService, times(2)).send(
             org.mockito.kotlin.check {
-                assertThat(NotificationEqualsWrapper(it)).isEqualTo(NotificationEqualsWrapper(notification))
-                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.PER_RECIPIENT)
-                // PER_RECIPIENT is meaningful only with more than one recipient
-                assertThat(it.recipients).hasSize(2)
-                assertThat(it.recipients).containsExactlyInAnyOrderElementsOf(mockAuthorAccountantEmails)
+                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.COMBINED)
+                assertThat(it.recipients).hasSize(1)
+
+                byRecipient[it.recipients.first()] = it.additionalMeta["recipientRoleId"] as String
+            }
+        )
+
+        assertThat(byRecipient).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+                "author@mail.com" to "author",
+                "accountant@mail.com" to "accountant"
+            )
+        )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task with per role strategy`() {
+        val procId = "test-send-task-recipients-per-role"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val byRole = mutableMapOf<String, Set<String>>()
+        val roleNames = mutableMapOf<String, MLText>()
+        verify(notificationService, times(2)).send(
+            org.mockito.kotlin.check {
+                assertThat(it.recipientsSendStrategy).isEqualTo(RecipientsSendStrategy.COMBINED)
+
+                val roleId = it.additionalMeta["recipientRoleId"] as String
+                byRole[roleId] = it.recipients
+                roleNames[roleId] = it.additionalMeta["recipientRoleName"] as MLText
+            }
+        )
+
+        assertThat(byRole).containsOnlyKeys("author", "accountant")
+        assertThat(byRole["author"]).containsExactly("author@mail.com")
+        assertThat(byRole["accountant"]).containsExactly("accountant@mail.com")
+        assertThat(roleNames["author"]).isEqualTo(MLText("Author"))
+        assertThat(roleNames["accountant"]).isEqualTo(MLText("Accountant"))
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task per role with mixed role and expression recipients`() {
+        val procId = "test-send-task-per-role-mixed"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val roleMessages = mutableMapOf<String, Set<String>>()
+        val rolelessRecipients = mutableSetOf<String>()
+
+        verify(notificationService, times(2)).send(
+            org.mockito.kotlin.check {
+                val roleId = it.additionalMeta["recipientRoleId"] as String?
+                if (roleId == null) {
+                    // expression recipients have no role -> the role keys must be absent
+                    assertThat(it.additionalMeta).doesNotContainKeys("recipientRoleId", "recipientRoleName")
+                    rolelessRecipients.addAll(it.recipients)
+                } else {
+                    assertThat(it.additionalMeta["recipientRoleName"]).isEqualTo(MLText("Author"))
+                    roleMessages[roleId] = it.recipients
+                }
+            }
+        )
+
+        assertThat(roleMessages).containsOnlyKeys("author")
+        assertThat(roleMessages["author"]).containsExactlyInAnyOrderElementsOf(mockAuthorEmails)
+        assertThat(rolelessRecipients).containsExactly("exp-recipient@mail.ru")
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task per role with no resolved emails still sends one empty notification`() {
+        val procId = "test-send-task-per-role-empty"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        // Pre-feature behaviour: exactly one notification command was always produced, so the
+        // notifications app reports RECIPIENTS_NOT_FOUND instead of a silent no-op.
+        verify(notificationService, times(1)).send(
+            org.mockito.kotlin.check {
+                assertThat(it.recipients).isEmpty()
+                assertThat(it.cc).isEmpty()
+                assertThat(it.bcc).isEmpty()
+                assertThat(it.additionalMeta).doesNotContainKeys("recipientRoleId", "recipientRoleName")
             }
         )
 
@@ -1998,6 +2143,106 @@ class BpmnMonsterTestWithRunProcessTest {
                 )
             }
         )
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task per role with calendar produces distinct uids and a shared sequence`() {
+        // Covers the calendar semantics that changed once calendar context resolution was hoisted
+        // to run once per execute (see SendNotificationDelegate.resolveCalendarEventContext): with
+        // PER_ROLE, every split message gets its own calendar UID derived from the same base uid,
+        // but all of them share the sequence resolved for this single activation.
+        val procId = "test-send-task-per-role-with-calendar"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val baseUid = "4d71f68e-22eb-59cf-c5de-8c0b317b7599"
+
+        val recipientsByRole = mutableMapOf<String, Set<String>>()
+        val uidByRole = mutableMapOf<String, String>()
+        val sequenceByRole = mutableMapOf<String, String>()
+
+        verify(notificationService, times(2)).send(
+            org.mockito.kotlin.check {
+                val roleId = it.additionalMeta["recipientRoleId"] as String
+                recipientsByRole[roleId] = it.recipients
+
+                val event = it.additionalMeta["_attachments"] as CalendarEvent.CalendarEventAttachment
+                val eventFileText = Base64.getMimeDecoder().decode(event.bytes).decodeToString()
+
+                uidByRole[roleId] = "UID:(\\S+)".toRegex().find(eventFileText)?.groupValues?.get(1)
+                    ?: error("no UID in ics attachment for role $roleId")
+                sequenceByRole[roleId] = "SEQUENCE:(\\d+)".toRegex().find(eventFileText)?.groupValues?.get(1)
+                    ?: error("no SEQUENCE in ics attachment for role $roleId")
+            }
+        )
+
+        assertThat(recipientsByRole).containsOnlyKeys("author", "accountant")
+        assertThat(recipientsByRole["author"]).containsExactly("author@mail.com")
+        assertThat(recipientsByRole["accountant"]).containsExactly("accountant@mail.com")
+
+        // distinct UIDs, both derived from the same base uid
+        assertThat(uidByRole["author"]).isEqualTo("$baseUid-author")
+        assertThat(uidByRole["accountant"]).isEqualTo("$baseUid-accountant")
+        assertThat(uidByRole["author"]).isNotEqualTo(uidByRole["accountant"])
+
+        // one shared sequence for this activation (first activation -> 0)
+        assertThat(sequenceByRole["author"]).isEqualTo("0")
+        assertThat(sequenceByRole["accountant"]).isEqualTo("0")
+
+        verify(process, times(1)).hasCompleted("sendTask")
+        verify(process).hasFinished("endEvent")
+    }
+
+    @Test
+    fun `send task per recipient with calendar sanitizes special chars in the ics uid`() {
+        // With PER_RECIPIENT the per-message calendar key is "roleId:email", so without sanitizing
+        // the iCal UID would carry ':' and '@'. SendNotificationDelegate.sanitizeCalendarKey collapses
+        // everything outside [A-Za-z0-9._-] to '-', keeping the UID a clean, unique, opaque string.
+        val procId = "test-send-task-per-recipient-with-calendar"
+        helper.saveAndDeployBpmn(SEND_TASK, procId)
+
+        AuthContext.runAs(EmptyAuth) {
+            run(process).startByKey(
+                procId,
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString()
+                )
+            ).engine(processEngine).execute()
+        }
+
+        val baseUid = "4d71f68e-22eb-59cf-c5de-8c0b317b7599"
+
+        val uidByRole = mutableMapOf<String, String>()
+
+        verify(notificationService, times(2)).send(
+            org.mockito.kotlin.check {
+                val roleId = it.additionalMeta["recipientRoleId"] as String
+                val event = it.additionalMeta["_attachments"] as CalendarEvent.CalendarEventAttachment
+                val eventFileText = Base64.getMimeDecoder().decode(event.bytes).decodeToString()
+                uidByRole[roleId] = "UID:(\\S+)".toRegex().find(eventFileText)?.groupValues?.get(1)
+                    ?: error("no UID in ics attachment for role $roleId")
+            }
+        )
+
+        assertThat(uidByRole).containsOnlyKeys("author", "accountant")
+        // ':' (roleId/email separator) and '@' are collapsed to '-'; '.' is kept
+        assertThat(uidByRole["author"]).isEqualTo("$baseUid-author-author-mail.com")
+        assertThat(uidByRole["accountant"]).isEqualTo("$baseUid-accountant-accountant-mail.com")
+        // the whole point: no raw special chars leak into the UID
+        assertThat(uidByRole.values).allSatisfy {
+            assertThat(it).doesNotContain(":").doesNotContain("@")
+        }
 
         verify(process, times(1)).hasCompleted("sendTask")
         verify(process).hasFinished("endEvent")
