@@ -14,13 +14,15 @@
       "notification_type_email": "Электронная почта",
       "notification_type_firebase_push": "Мобильное push уведомление",
       "notification_recipients_strategy_combined": "Одно письмо всем получателям",
-      "notification_recipients_strategy_per_recipient": "Отдельное письмо каждому получателю"
+      "notification_recipients_strategy_per_recipient": "Отдельное письмо каждому получателю",
+      "notification_recipients_strategy_per_role": "Отдельное письмо на каждую роль"
     },
     "en": {
       "notification_type_email": "Email",
       "notification_type_firebase_push": "Mobile push notification",
       "notification_recipients_strategy_combined": "Single email to all recipients",
-      "notification_recipients_strategy_per_recipient": "Separate email per recipient"
+      "notification_recipients_strategy_per_recipient": "Separate email per recipient",
+      "notification_recipients_strategy_per_role": "Separate email per role"
     }
   },
   "definition": {
@@ -463,8 +465,8 @@
                 },
                 "key": "notificationRecipientsStrategy",
                 "tooltip": {
-                  "ru": "«Одно письмо всем получателям» — все адреса в поле «Кому» в одном письме. «Отдельное письмо каждому получателю» — каждому приходит персональное письмо, получатели не видят друг друга; применяется только при пустых «Копия» и «Скрытая копия».",
-                  "en": "\"Single email to all recipients\" — all addresses from the To field in one message. \"Separate email per recipient\" — each recipient gets a personal message and they don't see each other; applies only when Cc and Bcc are empty."
+                  "ru": "«Одно письмо всем получателям» — все адреса в поле «Кому» в одном письме. «Отдельное письмо каждому получателю» — каждому приходит персональное письмо, получатели не видят друг друга. «Отдельное письмо на каждую роль» — по одному письму на каждую роль со всеми её получателями. Для стратегий «по получателям» и «по ролям» роль передаётся в шаблон: чтобы использовать её, объявите в модели шаблона recipientRoleId: $recipientRoleId и recipientRoleName: $recipientRoleName. «Отдельное письмо каждому получателю» и «Отдельное письмо на каждую роль» применяются только при пустых «Копия» и «Скрытая копия».",
+                  "en": "\"Single email to all recipients\" — all addresses from the To field in one message. \"Separate email per recipient\" — each recipient gets a personal message and they don't see each other. \"Separate email per role\" — one message per role with all its recipients. For the per-recipient and per-role strategies the role is passed to the template: to use it, declare recipientRoleId: $recipientRoleId and recipientRoleName: $recipientRoleName in the template model. \"Separate email per recipient\" and \"Separate email per role\" apply only when Cc and Bcc are empty."
                 },
                 "dataSrc": "values",
                 "data": {
@@ -476,6 +478,10 @@
                     {
                       "label": "notification_recipients_strategy_per_recipient",
                       "value": "PER_RECIPIENT"
+                    },
+                    {
+                      "label": "notification_recipients_strategy_per_role",
+                      "value": "PER_ROLE"
                     }
                   ],
                   "headers": [

@@ -75,6 +75,21 @@ class BpmnIOTest {
     }
 
     @Test
+    fun `send task per role recipients send strategy round trip`() {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/sendtask/test-send-task-recipients-per-role.bpmn.xml"
+        ).readText()
+
+        val bpmnDef = bpmnIO.importEcosBpmn(testDef)
+
+        val sendTask = bpmnDef.process.first().flowElements.first { it.id == "sendTask" }
+        assertThat(sendTask.data["recipientsSendStrategy"].asText()).isEqualTo("PER_ROLE")
+
+        val exportedXml = bpmnIO.exportEcosBpmnToString(bpmnDef)
+        assertThat(exportedXml).contains("notificationRecipientsStrategy=\"PER_ROLE\"")
+    }
+
+    @Test
     fun `send task without recipients send strategy defaults to combined`() {
         val testDef = ResourceUtils.getFile(
             "classpath:test/bpmn/elements/sendtask/test-send-task-configuration-check.bpmn.xml"
@@ -94,6 +109,17 @@ class BpmnIOTest {
     fun `per recipient strategy with non empty cc is rejected on import`() {
         val testDef = ResourceUtils.getFile(
             "classpath:test/bpmn/elements/sendtask/test-send-task-per-recipient-with-cc.bpmn.xml"
+        ).readText()
+
+        assertThrows<EcosBpmnElementDefinitionException> {
+            bpmnIO.importEcosBpmn(testDef)
+        }
+    }
+
+    @Test
+    fun `per role strategy with non empty cc is rejected on import`() {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/sendtask/test-send-task-per-role-with-cc.bpmn.xml"
         ).readText()
 
         assertThrows<EcosBpmnElementDefinitionException> {
