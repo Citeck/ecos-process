@@ -129,11 +129,20 @@ class BpmnProcessServiceImpl(
 
                 val instance: ProcessInstance
                 val startProcessTime = measureTimeMillis {
-                    instance = camundaRuntimeService.startProcessInstanceByKey(
-                        processKey,
-                        businessKey,
-                        processVariables
-                    )
+                    instance = if (startInstructions.isEmpty()) {
+                        camundaRuntimeService.startProcessInstanceByKey(
+                            processKey,
+                            businessKey,
+                            processVariables
+                        )
+                    } else {
+                        startProcessInstanceWithInstructions(
+                            processKey,
+                            businessKey,
+                            processVariables,
+                            startInstructions
+                        )
+                    }
                 }
 
                 val emitProcessStartTime = measureTimeMillis {
@@ -169,6 +178,35 @@ class BpmnProcessServiceImpl(
 
             return processInstance
         }
+    }
+
+    private fun startProcessInstanceWithInstructions(
+        processKey: String,
+        businessKey: String?,
+        processVariables: Map<String, Any?>,
+        startInstructions: List<StartInstruction>
+    ): ProcessInstance {
+        var builder = camundaRuntimeService.createProcessInstanceByKey(processKey)
+            .businessKey(businessKey)
+            .setVariables(processVariables)
+
+        for (instruction in startInstructions) {
+            require(instruction.activityId.isNotBlank()) {
+                "Start instruction activityId must not be blank: $instruction"
+            }
+            builder = when (instruction.type) {
+                START_INSTRUCTION_START_BEFORE_ACTIVITY -> builder.startBeforeActivity(instruction.activityId)
+                START_INSTRUCTION_START_AFTER_ACTIVITY -> builder.startAfterActivity(instruction.activityId)
+                else -> throw IllegalArgumentException(
+                    "Unsupported start instruction type: '${instruction.type}'"
+                )
+            }
+            for ((name, value) in instruction.variables) {
+                builder = builder.setVariableLocal(name, value)
+            }
+        }
+
+        return builder.execute()
     }
 
     override fun deleteProcessInstance(

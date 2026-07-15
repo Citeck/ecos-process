@@ -77,6 +77,23 @@ interface BpmnProcessService {
     fun getProcessDefinitionsByKey(processKey: String): List<ProcessDefinition>
 }
 
+const val START_INSTRUCTION_START_BEFORE_ACTIVITY = "startBeforeActivity"
+const val START_INSTRUCTION_START_AFTER_ACTIVITY = "startAfterActivity"
+
+private val NON_SENSITIVE_VARIABLE_KEYS = setOf(
+    BPMN_WORKFLOW_INITIATOR,
+    BPMN_DOCUMENT_REF,
+    BPMN_DOCUMENT_TYPE,
+    BPMN_DOCUMENT_STATUS,
+    BPMN_WORKSPACE
+)
+
+private fun maskSensitiveVariables(variables: Map<String, Any?>): Map<String, Any?> {
+    return variables.entries.associate { (k, v) ->
+        k to if (k in NON_SENSITIVE_VARIABLE_KEYS) v else "?"
+    }
+}
+
 /**
  * This class is used to serialize/deserialize data in MQ.
  * All changes should be backward compatible.
@@ -85,24 +102,30 @@ data class StartProcessRequest(
     val workspace: String = "",
     val processId: String,
     val businessKey: String? = null,
+    val variables: Map<String, Any?> = emptyMap(),
+    val startInstructions: List<StartInstruction> = emptyList()
+) {
+    override fun toString(): String {
+        return "StartProcessRequest(workspace='$workspace', processId='$processId', " +
+            "businessKey=$businessKey, variables=${maskSensitiveVariables(variables)}, " +
+            "startInstructions=$startInstructions)"
+    }
+}
+
+/**
+ * Instructs process start to begin at the specified activity
+ * instead of the default start event.
+ *
+ * @see org.camunda.bpm.engine.runtime.ProcessInstantiationBuilder
+ */
+data class StartInstruction(
+    val type: String,
+    val activityId: String,
     val variables: Map<String, Any?> = emptyMap()
 ) {
-    companion object {
-        private val NON_SENSITIVE_VARIABLE_KEYS = setOf(
-            BPMN_WORKFLOW_INITIATOR,
-            BPMN_DOCUMENT_REF,
-            BPMN_DOCUMENT_TYPE,
-            BPMN_DOCUMENT_STATUS,
-            BPMN_WORKSPACE
-        )
-    }
-
     override fun toString(): String {
-        val maskedVars = variables.entries.associate { (k, v) ->
-            k to if (k in NON_SENSITIVE_VARIABLE_KEYS) v else "?"
-        }
-        return "StartProcessRequest(workspace='$workspace', processId='$processId', " +
-            "businessKey=$businessKey, variables=$maskedVars)"
+        return "StartInstruction(type='$type', activityId='$activityId', " +
+            "variables=${maskSensitiveVariables(variables)})"
     }
 }
 

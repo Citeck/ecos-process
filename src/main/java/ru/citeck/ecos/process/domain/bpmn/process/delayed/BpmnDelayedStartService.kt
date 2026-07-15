@@ -153,6 +153,8 @@ class BpmnDelayedStartService(
     }
 
     private fun processCommand(cmd: DelayedStartCommandAtts, runStartTime: Instant) {
+        // startInstructions are intentionally not persisted for delayed retry:
+        // positioned start is supported only for synchronous start via records API
         val request = StartProcessRequest(
             workspace = cmd.workspace,
             processId = cmd.processId,

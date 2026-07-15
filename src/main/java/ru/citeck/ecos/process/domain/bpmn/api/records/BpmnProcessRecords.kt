@@ -20,6 +20,7 @@ import ru.citeck.ecos.process.domain.bpmn.process.ActivityInstanceNode
 import ru.citeck.ecos.process.domain.bpmn.process.ActivityStatistics
 import ru.citeck.ecos.process.domain.bpmn.process.BpmnProcessService
 import ru.citeck.ecos.process.domain.bpmn.process.ProcessInstanceQuery
+import ru.citeck.ecos.process.domain.bpmn.process.StartInstruction
 import ru.citeck.ecos.process.domain.bpmn.process.StartProcessRequest
 import ru.citeck.ecos.process.domain.bpmn.service.*
 import ru.citeck.ecos.process.domain.bpmnsection.dto.BpmnPermission
@@ -61,6 +62,7 @@ class BpmnProcessRecords(
         private const val ATT_ON_DELETE_SKIP_CUSTOM_LISTENER = "skipCustomListener"
         private const val ATT_ON_DELETE_SKIP_IO_MAPPING = "skipIoMapping"
         private const val ATT_DATA = "data"
+        private const val ATT_START_INSTRUCTIONS = "startInstructions"
 
         // We can't use our Json.mapper for convert ProcessInstanceModificationDto
         private val standardMapper = ObjectMapper()
@@ -166,7 +168,20 @@ class BpmnProcessRecords(
                     "User ${AuthContext.getCurrentUser()} has no permission to start process instance: ${record.id}"
                 }
 
-                val processInstance = startProcess(record)
+                val startInstructions = record.getAtt(ATT_START_INSTRUCTIONS).asList(StartInstruction::class.java)
+                if (startInstructions.isNotEmpty()) {
+                    check(
+                        bpmnPermissionResolver.isAllowForProcessKey(
+                            BpmnPermission.PROC_INSTANCE_MIGRATE,
+                            record.id
+                        )
+                    ) {
+                        "User ${AuthContext.getCurrentUser()} has no permission to start process instance " +
+                            "with start instructions: ${record.id}"
+                    }
+                }
+
+                val processInstance = startProcess(record, startInstructions)
                 processInstance.id
             }
 
@@ -243,7 +258,7 @@ class BpmnProcessRecords(
         }
     }
 
-    private fun startProcess(record: LocalRecordAtts): ProcessInstance {
+    private fun startProcess(record: LocalRecordAtts, startInstructions: List<StartInstruction>): ProcessInstance {
         val processVariables = mutableMapOf<String, Any?>()
         var businessKey: String? = null
 
@@ -266,6 +281,9 @@ class BpmnProcessRecords(
                         businessKey = value.asJavaObj().toString()
                     }
 
+                    // start instructions are passed to the engine, not stored as process variables
+                    ATT_START_INSTRUCTIONS -> {}
+
                     else -> processVariables[key] = value.asJavaObj()
                 }
             }
@@ -280,7 +298,8 @@ class BpmnProcessRecords(
                 idInWs.workspace,
                 idInWs.id,
                 businessKey,
-                processVariables.toMap()
+                processVariables.toMap(),
+                startInstructions
             )
         )
     }
