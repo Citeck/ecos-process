@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+ru.citeck.ecos.process.config.mongo.MongoDisabledEnvironmentPostProcessor

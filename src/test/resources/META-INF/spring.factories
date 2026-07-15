@@ -1,2 +1,0 @@
-org.springframework.context.ApplicationContextInitializer=\
-ru.citeck.ecos.process.config.MongoInitializer

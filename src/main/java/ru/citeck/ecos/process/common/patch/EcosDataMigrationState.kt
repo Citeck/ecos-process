@@ -26,7 +26,7 @@ class EcosDataMigrationState(
     private var edataStoragePrimaryForProcDefs: Boolean? = null
     private var edataStoragePrimaryForProcInstances: Boolean? = null
 
-    @Value("\${ecos-process.repo.mongo.enabled}")
+    @Value("\${ecos-process.repo.mongo.enabled:false}")
     private var mongoRepoEnabledByProperty: Boolean = false
 
     private val lock = ReentrantLock()
