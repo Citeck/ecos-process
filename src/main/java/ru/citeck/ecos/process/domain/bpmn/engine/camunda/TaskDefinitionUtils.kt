@@ -183,18 +183,18 @@ class TaskDefinitionUtils(
                 taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
             ),
             laManualNotificationTemplateEnabled =
-                taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
+            taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
             laManualNotificationTemplate = taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
             laNotificationAdditionalMeta = getLaNotificationAdditionalMeta(taskDefinition),
             laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
-                taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                    EntityRef.valueOf(it)
-                },
+            taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                EntityRef.valueOf(it)
+            },
             laErrorReportNotificationTemplate =
-                taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                    EntityRef.valueOf(it)
-                }
+            taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                EntityRef.valueOf(it)
+            }
         )
     }
 

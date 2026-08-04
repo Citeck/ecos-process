@@ -47,7 +47,7 @@ class ProcTaskSqlQueryBuilder(
     companion object {
 
         private const val TASK_ALIAS = "task"
-        private const val CANDIDATE_ALIAS = "candidate"
+        private const val IDENTITY_LINK_ALIAS = "il"
         private const val VARIABLE_ALIAS_PREFIX = "var"
         private const val DEFAULT_MAX_ITEMS = 1000
 
@@ -225,16 +225,6 @@ class ProcTaskSqlQueryBuilder(
                 }
             }
 
-            val candidateAlias = CANDIDATE_ALIAS + "_" + attribute
-
-            if (!joins.contains("JOIN act_ru_identitylink $candidateAlias")) {
-                joins.append(
-                    " LEFT JOIN act_ru_identitylink $candidateAlias ON " +
-                        "$candidateAlias.task_id_ = $TASK_ALIAS.id_ " +
-                        "AND $candidateAlias.type_ = 'candidate'"
-                )
-            }
-
             val actors: List<Any?> = castSqlParamValueToListOf(value, AttributeType.AUTHORITY)
 
             val users = actors.filter {
@@ -247,8 +237,8 @@ class ProcTaskSqlQueryBuilder(
                 condition.append(
                     "(" +
                         "$TASK_ALIAS.assignee_ IS NULL AND " +
-                        "$candidateAlias.user_id_ IS NULL AND " +
-                        "$candidateAlias.group_id_ IS NULL" +
+                        "NOT EXISTS (SELECT 1 FROM act_ru_identitylink $IDENTITY_LINK_ALIAS " +
+                        "WHERE $IDENTITY_LINK_ALIAS.task_id_ = $TASK_ALIAS.id_ AND $IDENTITY_LINK_ALIAS.type_ = 'candidate')" +
                         ")"
                 )
                 return true
@@ -260,9 +250,11 @@ class ProcTaskSqlQueryBuilder(
                 addSqlQueryParams(condition, users)
                 condition.append(") OR ")
             }
-            condition.append("$TASK_ALIAS.assignee_ IS NULL AND (")
+            condition.append("($TASK_ALIAS.assignee_ IS NULL AND EXISTS (")
+            condition.append("SELECT 1 FROM act_ru_identitylink $IDENTITY_LINK_ALIAS ")
+            condition.append("WHERE $IDENTITY_LINK_ALIAS.task_id_ = $TASK_ALIAS.id_ AND $IDENTITY_LINK_ALIAS.type_ = 'candidate' AND (")
             if (users.isNotEmpty()) {
-                condition.append("$candidateAlias.user_id_ IN (")
+                condition.append("$IDENTITY_LINK_ALIAS.user_id_ IN (")
                 addSqlQueryParams(condition, users)
                 condition.append(")")
             }
@@ -270,11 +262,11 @@ class ProcTaskSqlQueryBuilder(
                 if (users.isNotEmpty()) {
                     condition.append(" OR ")
                 }
-                condition.append("$candidateAlias.group_id_ IN (")
+                condition.append("$IDENTITY_LINK_ALIAS.group_id_ IN (")
                 addSqlQueryParams(condition, groups)
                 condition.append(")")
             }
-            condition.append("))")
+            condition.append("))))")
             return true
         } else if (PROC_VARIABLES_MAPPING.containsKey(attribute)) {
 

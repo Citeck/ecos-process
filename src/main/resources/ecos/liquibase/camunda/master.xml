@@ -148,4 +148,22 @@
             INCLUDE (proc_inst_id_, task_id_, id_);</sql>
     </changeSet>
 
+    <changeSet id="20251030_ecos_candidate_task_user_index" author="Citeck">
+        <!--
+        Index to speed up candidate queries by user_id_
+        -->
+        <sql>CREATE INDEX IF NOT EXISTS idx_il_cand_task_user
+            ON act_ru_identitylink (task_id_, user_id_)
+            WHERE type_ = 'candidate';</sql>
+    </changeSet>
+
+    <changeSet id="20251030_ecos_candidate_task_group_index" author="Citeck">
+        <!--
+        Index to speed up candidate queries by group_id_
+        -->
+        <sql>CREATE INDEX IF NOT EXISTS idx_il_cand_task_group
+            ON act_ru_identitylink (task_id_, group_id_)
+            WHERE type_ = 'candidate';</sql>
+    </changeSet>
+
 </databaseChangeLog>
