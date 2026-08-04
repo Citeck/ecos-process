@@ -49,6 +49,7 @@ class ProcTaskSqlQueryBuilder(
         private const val TASK_ALIAS = "task"
         private const val CANDIDATE_ALIAS = "candidate"
         private const val VARIABLE_ALIAS_PREFIX = "var"
+        private const val DEFAULT_MAX_ITEMS = 1000
 
         // SQL fragment that never matches — used to make a predicate yield no rows.
         private const val ALWAYS_FALSE = "1 = 0"
@@ -90,6 +91,8 @@ class ProcTaskSqlQueryBuilder(
 
         private val log = KotlinLogging.logger {}
     }
+
+    private fun getEffectiveMaxItems(): Int = if (maxItems < 0) DEFAULT_MAX_ITEMS else maxItems
 
     private data class VariableCondition(
         val name: String,
@@ -782,12 +785,7 @@ class ProcTaskSqlQueryBuilder(
         }
 
         if (withLimitAndSort) {
-            val maxItems = if (this.maxItems < 0) {
-                1000
-            } else {
-                this.maxItems
-            }
-            sqlSelectQuery.append(" LIMIT $maxItems")
+            sqlSelectQuery.append(" LIMIT ${getEffectiveMaxItems()}")
         }
         if (withLimitAndSort && skipCount > 0) {
             sqlSelectQuery.append(" OFFSET $skipCount")
@@ -871,7 +869,7 @@ class ProcTaskSqlQueryBuilder(
 
         val totalCount: Long
         val camundaCountTime = measureTimeMillis {
-            totalCount = if (maxItems > tasks.size) {
+            totalCount = if (getEffectiveMaxItems() > tasks.size) {
                 skipCount + tasks.size.toLong()
             } else {
                 createTaskQuery(
