@@ -17,6 +17,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSyncService
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_ATT_PREFIX
 import ru.citeck.ecos.process.domain.proctask.attssync.ProcTaskAttsSynchronizer.Companion.TASK_DOCUMENT_TYPE_ATT_PREFIX
+import ru.citeck.ecos.process.domain.proctask.attssync.TaskSyncAttribute
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_ACTORS
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskSqlQueryBuilder.Companion.ATT_ASSIGNEE
 import ru.citeck.ecos.records2.RecordConstants
@@ -49,6 +50,7 @@ class ProcTaskSqlQueryBuilder(
         private const val TASK_ALIAS = "task"
         private const val IDENTITY_LINK_ALIAS = "il"
         private const val VARIABLE_ALIAS_PREFIX = "var"
+        private const val DEFAULT_MAX_ITEMS = 1000
 
         // SQL fragment that never matches — used to make a predicate yield no rows.
         private const val ALWAYS_FALSE = "1 = 0"
@@ -82,17 +84,36 @@ class ProcTaskSqlQueryBuilder(
         )
 
         private val PROC_VARIABLES_MAPPING = mapOf(
-            ATT_DOCUMENT to BPMN_DOCUMENT_REF,
-            ATT_DOCUMENT_TYPE to BPMN_DOCUMENT_TYPE,
-            ATT_DOCUMENT_TYPE_REF to "documentTypeRef",
-            ATT_MAIN_DOCUMENT_REF to ATT_MAIN_DOCUMENT_REF
+            ATT_DOCUMENT to listOf(BPMN_DOCUMENT_REF),
+            ATT_DOCUMENT_TYPE to listOf(BPMN_DOCUMENT_TYPE),
+            ATT_DOCUMENT_TYPE_REF to listOf("documentTypeRef"),
+            ATT_MAIN_DOCUMENT_REF to listOf(ATT_MAIN_DOCUMENT_REF)
         )
+
+        /**
+         * Textual "document" value is matched against both documentRef and mainDocumentRef
+         * process variables. Both names are checked within a single condition, so that
+         * PostgreSQL can turn it into a semi-join instead of "EXISTS(a) OR EXISTS(b)",
+         * which would be evaluated per task row.
+         */
+        private val DOCUMENT_VARIABLE_NAMES = listOf(BPMN_DOCUMENT_REF, ATT_MAIN_DOCUMENT_REF)
+
+        private const val VAR_COND_PLACEHOLDER_PREFIX = "@@VAR_COND_"
+        private const val VAR_COND_PLACEHOLDER_SUFFIX = "@@"
 
         private val log = KotlinLogging.logger {}
     }
 
+    private fun getEffectiveMaxItems(): Int = if (maxItems < 0) DEFAULT_MAX_ITEMS else maxItems
+
+    private data class VariableConditionKey(
+        val names: List<String>,
+        val isEmptyCondition: Boolean
+    )
+
     private data class VariableCondition(
-        val name: String,
+        val index: Int,
+        val names: List<String>,
         val isProcessVar: Boolean,
         val attType: AttributeType,
         val isEmptyCondition: Boolean = false,
@@ -101,10 +122,9 @@ class ProcTaskSqlQueryBuilder(
         val isList: Boolean = false
     )
 
-    private val joins = StringBuilder()
     private val condition = StringBuilder()
     private val params = LinkedHashMap<String, Any?>()
-    private val variableConditions = mutableMapOf<String, VariableCondition>()
+    private val variableConditions = mutableMapOf<VariableConditionKey, VariableCondition>()
 
     private var skipCount = 0
     private var maxItems = -1
@@ -123,7 +143,7 @@ class ProcTaskSqlQueryBuilder(
                 if (PROC_VARIABLES_MAPPING.containsKey(predicate.getAttribute())) {
                     addEmptyVariableCondition(PROC_VARIABLES_MAPPING[predicate.getAttribute()], true)
                 } else if (predicate.getAttribute().isAttFromSync()) {
-                    addEmptyVariableCondition(predicate.getAttribute(), false)
+                    addEmptyVariableCondition(listOf(predicate.getAttribute()), false)
                 } else if (TASK_ATTS_MAPPING.containsKey(predicate.getAttribute())) {
                     val field = TASK_ATTS_MAPPING[predicate.getAttribute()]
                     if (field.isNullOrBlank()) {
@@ -267,8 +287,15 @@ class ProcTaskSqlQueryBuilder(
             return true
         } else if (PROC_VARIABLES_MAPPING.containsKey(attribute)) {
 
+            // Textual document value should also match mainDocumentRef variable
+            val variableNames = if (attribute == ATT_DOCUMENT && value.isTextual()) {
+                DOCUMENT_VARIABLE_NAMES
+            } else {
+                PROC_VARIABLES_MAPPING[attribute]
+            }
+
             return addVariableCondition(
-                PROC_VARIABLES_MAPPING[attribute],
+                variableNames,
                 value,
                 type,
                 isProcessVar = true,
@@ -276,7 +303,7 @@ class ProcTaskSqlQueryBuilder(
             )
         } else if (attribute.isAttFromSync()) {
 
-            return addVariableCondition(attribute, value, type, isProcessVar = false, isRuVariable = true)
+            return addVariableCondition(listOf(attribute), value, type, isProcessVar = false, isRuVariable = true)
         } else if (TASK_ATTS_MAPPING.containsKey(attribute)) {
 
             val field = TASK_ATTS_MAPPING[attribute]
@@ -326,47 +353,72 @@ class ProcTaskSqlQueryBuilder(
         return false
     }
 
+    /**
+     * All names of a single condition are matched by one sub query, so they must share the type
+     * and the storage table. Names are resolved to the first defined sync attribute; a mismatch
+     * would mean a sync attribute is named after a process variable and is reported to the log,
+     * because the resulting condition would use one type for all names.
+     */
+    private fun resolveSyncAttribute(names: List<String>): TaskSyncAttribute? {
+        val attDefs = names.mapNotNull { procTaskAttsSyncService.getTaskSyncAttribute(it) }
+        val attDef = attDefs.firstOrNull() ?: return null
+        if (attDefs.any { it.type != attDef.type || it.multiple != attDef.multiple }) {
+            log.warn {
+                "Variables $names of the same condition have different sync attribute definitions. " +
+                    "Type '${attDef.type}' and multiple=${attDef.multiple} will be used for all of them"
+            }
+        }
+        return attDef
+    }
+
     private fun addEmptyVariableCondition(
-        name: String?,
+        names: List<String>?,
         isProcessVar: Boolean
     ): Boolean {
-        if (name.isNullOrBlank()) {
+        if (names.isNullOrEmpty() || names.any { it.isBlank() }) {
             return false
         }
 
-        val attDef = procTaskAttsSyncService.getTaskSyncAttribute(name)
+        val key = VariableConditionKey(names, isEmptyCondition = true)
+        val attDef = resolveSyncAttribute(names)
         val attType = attDef?.type ?: AttributeType.TEXT
         val isList = attDef?.multiple ?: false
-        variableConditions.getOrPut(name) {
-            VariableCondition(name, isProcessVar, attType, isEmptyCondition = true, isList = isList)
+        val variableCondition = variableConditions.getOrPut(key) {
+            VariableCondition(
+                variableConditions.size,
+                names,
+                isProcessVar,
+                attType,
+                isEmptyCondition = true,
+                isList = isList
+            )
         }
 
-        val alias = getVariableAlias(name)
-
-        condition.append("$alias.id_ IS NULL")
+        condition.append(varCondPlaceholder(variableCondition))
         return true
     }
 
     private fun addVariableCondition(
-        name: String?,
+        names: List<String>?,
         value: DataValue,
         predicateType: ValuePredicate.Type,
         isProcessVar: Boolean,
         isRuVariable: Boolean = false
     ): Boolean {
 
-        if (name.isNullOrBlank()) {
+        if (names.isNullOrEmpty() || names.any { it.isBlank() }) {
             return false
         }
 
-        val attDef = procTaskAttsSyncService.getTaskSyncAttribute(name)
+        val key = VariableConditionKey(names, isEmptyCondition = false)
+        val attDef = resolveSyncAttribute(names)
         val attType = attDef?.type ?: AttributeType.TEXT
         val isList = attDef?.multiple ?: false
-        val variableCondition = variableConditions.getOrPut(name) {
-            VariableCondition(name, isProcessVar, attType, isList = isList)
+        val variableCondition = variableConditions.getOrPut(key) {
+            VariableCondition(variableConditions.size, names, isProcessVar, attType, isList = isList)
         }
 
-        val alias = getVariableAlias(name)
+        val alias = getVariableAlias(variableCondition)
         val taskColumn = attType.getTaskAttColumn()
 
         val values = castSqlParamValueToListOf(value, attType, isRuVariable = isRuVariable)
@@ -466,7 +518,7 @@ class ProcTaskSqlQueryBuilder(
                 addLikeToOtherCondition(alias, taskColumn, attType, isList, values, variableCondition)
             }
         }
-        condition.append("$alias.id_ IS NOT NULL")
+        condition.append(varCondPlaceholder(variableCondition))
         return true
     }
 
@@ -638,11 +690,167 @@ class ProcTaskSqlQueryBuilder(
         query.setLength(query.length - 1)
     }
 
-    private fun getVariableAlias(variableName: String): String {
-        return "${VARIABLE_ALIAS_PREFIX}_${variableName.replace("[^a-zA-Z0-9_]".toRegex(), "_")}"
+    /**
+     * Aliases of different conditions may coincide - each of them lives in its own EXISTS
+     * sub query, so they never share a scope.
+     */
+    private fun getVariableAlias(variableCondition: VariableCondition): String {
+        val name = variableCondition.names.joinToString("_") +
+            if (variableCondition.isEmptyCondition) "_empty" else ""
+        return "${VARIABLE_ALIAS_PREFIX}_${name.replace("[^a-zA-Z0-9_]".toRegex(), "_")}"
     }
 
-    private fun buildTaskSql(
+    /**
+     * Variable conditions are rendered as EXISTS subqueries, but the subquery text can only be
+     * built after all predicates are visited (filters are collected into [VariableCondition]).
+     * So a placeholder is put into [condition] while walking the predicate and is replaced by
+     * the actual subquery in [buildTaskSql].
+     */
+    private fun varCondPlaceholder(variableCondition: VariableCondition): String {
+        val polarity = if (variableCondition.isEmptyCondition) "NOT_EXISTS" else "EXISTS"
+        // index is used instead of the key itself, because variable names come from the query
+        // and may contain characters which would break the placeholder
+        return "$VAR_COND_PLACEHOLDER_PREFIX${polarity}_${variableCondition.index}$VAR_COND_PLACEHOLDER_SUFFIX"
+    }
+
+    /**
+     * Replace variable condition placeholders with EXISTS/NOT EXISTS sub queries.
+     *
+     * Variable conditions used to be rendered as LEFT JOIN plus "alias.id_ IS [NOT] NULL" check
+     * in WHERE. When such checks end up under OR (e.g. document is matched against both
+     * documentRef and mainDocumentRef), PostgreSQL is not able to reduce outer joins to inner
+     * ones, so it has to read the whole act_ru_task and apply the selective filter last.
+     * A semi-join lets the planner start from act_ru_variable instead.
+     */
+    private fun renderVariableConditions(conditionSql: String): String {
+        var result = conditionSql
+        for (variableCondition in variableConditions.values) {
+            val placeholder = varCondPlaceholder(variableCondition)
+            if (!result.contains(placeholder)) {
+                continue
+            }
+            val subQuery = buildVariableSubQuery(variableCondition)
+            val operator = if (variableCondition.isEmptyCondition) "NOT EXISTS" else "EXISTS"
+            result = result.replace(placeholder, "$operator ($subQuery)")
+        }
+        return result
+    }
+
+    private fun buildVariableSubQuery(variableCondition: VariableCondition): String {
+
+        val alias = getVariableAlias(variableCondition)
+
+        // Variable name comes from the query predicate (only its prefix is validated),
+        // so it must be bound as a parameter and never inlined into the SQL text.
+        val nameParams = variableCondition.names.map {
+            val paramName = "p${params.size}"
+            params[paramName] = it
+            "#{$paramName}"
+        }
+        val nameCondition = if (nameParams.size == 1) {
+            "$alias.name_ = ${nameParams[0]}"
+        } else {
+            "$alias.name_ IN (${nameParams.joinToString(",")})"
+        }
+
+        val subQuery = StringBuilder("SELECT 1 FROM ")
+        if (variableCondition.isList) {
+            subQuery.append("act_ge_bytearray $alias WHERE ")
+            subQuery.append("$nameCondition AND ")
+            subQuery.append("$alias.root_proc_inst_id_ = $TASK_ALIAS.proc_inst_id_")
+        } else {
+            subQuery.append("act_ru_variable $alias WHERE ")
+            subQuery.append("$nameCondition AND ")
+            subQuery.append("$alias.type_ = '${variableCondition.attType.getTaskAttType()}' AND ")
+            subQuery.append("$alias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
+
+            if (variableCondition.isProcessVar) {
+                subQuery.append("$alias.task_id_ IS NULL")
+            } else {
+                subQuery.append("$alias.task_id_ = $TASK_ALIAS.id_")
+            }
+        }
+
+        if (!variableCondition.isEmptyCondition) {
+            buildVariableFilterCondition(alias, variableCondition)?.let {
+                subQuery.append(" AND (").append(it).append(")")
+            }
+        }
+
+        return subQuery.toString()
+    }
+
+    private fun buildVariableFilterCondition(alias: String, variableCondition: VariableCondition): String? {
+        // EQ values should be combined with OR, other conditions with AND
+        val eqConditions = mutableListOf<String>()
+        val otherConditions = mutableListOf<String>()
+
+        // Add EQ values as IN condition
+        if (variableCondition.eqValues.isNotEmpty()) {
+            val taskColumn = variableCondition.attType.getTaskAttColumn()
+            if (variableCondition.eqValues.size == 1) {
+                val paramName = "p${params.size}"
+                params[paramName] = variableCondition.eqValues[0]
+                eqConditions.add("$alias.$taskColumn = #{$paramName}")
+            } else {
+                val paramNames = mutableListOf<String>()
+                variableCondition.eqValues.forEach {
+                    val paramName = "p${params.size}"
+                    params[paramName] = it
+                    paramNames.add("#{$paramName}")
+                }
+                eqConditions.add("$alias.$taskColumn IN (${paramNames.joinToString(",")})")
+            }
+        }
+
+        // Add other conditions (GT, LT, GE, LE, etc.)
+        otherConditions.addAll(variableCondition.otherConditions)
+
+        val finalConditions = mutableListOf<String>()
+        if (eqConditions.isNotEmpty()) {
+            finalConditions.add(eqConditions.joinToString(" OR "))
+        }
+        if (otherConditions.isNotEmpty()) {
+            // Each condition in otherConditions is already complete and should be added as-is
+            // For range conditions (like GE and LT together), they should be combined with AND
+            // For CONTAINS with multiple values, the condition is already properly formed with OR inside
+            if (otherConditions.size == 1) {
+                finalConditions.add(otherConditions[0])
+            } else {
+                // Check if these are range conditions (GE/LE and LT/GT combinations)
+                val hasRangeConditions = otherConditions.any { cond ->
+                    cond.contains(" >= ") ||
+                        cond.contains(" <= ") ||
+                        cond.contains(" > ") ||
+                        cond.contains(" < ")
+                }
+                val hasLikeConditions = otherConditions.any { cond ->
+                    cond.contains(" LIKE ")
+                }
+
+                if (hasRangeConditions && !hasLikeConditions) {
+                    // Range conditions should be combined with AND
+                    finalConditions.add(otherConditions.joinToString(" AND "))
+                } else {
+                    // LIKE/CONTAINS conditions should be combined with OR
+                    finalConditions.add(otherConditions.joinToString(" OR "))
+                }
+            }
+        }
+
+        return when {
+            finalConditions.isEmpty() -> null
+            finalConditions.size == 1 -> finalConditions[0]
+            // If we have both EQ and other conditions, combine them with OR
+            else -> finalConditions.joinToString(" OR ")
+        }
+    }
+
+    /**
+     * Visible for testing: the shape of the generated SQL is the point of this builder,
+     * so it is asserted directly (see ProcTaskSqlQueryShapeTest).
+     */
+    internal fun buildTaskSql(
         selectFields: String,
         withLimitAndSort: Boolean
     ): String {
@@ -654,108 +862,9 @@ class ProcTaskSqlQueryBuilder(
         }
         sqlSelectQuery.append(" FROM act_ru_task $TASK_ALIAS ")
 
-        // Add existing joins
-        if (joins.isNotEmpty()) {
-            sqlSelectQuery.append(joins.toString()).append(" ")
-        }
-
-        // Add optimized variable joins with conditions
-        for ((variableName, variableCondition) in variableConditions) {
-            val alias = getVariableAlias(variableName)
-
-            val taskAttType = variableCondition.attType.getTaskAttType()
-
-            if (variableCondition.isList) {
-                sqlSelectQuery.append(" LEFT JOIN act_ge_bytearray $alias ON ")
-                sqlSelectQuery.append("$alias.name_ = '$variableName' AND ")
-                sqlSelectQuery.append("$alias.root_proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ ")
-            } else {
-                sqlSelectQuery.append(" LEFT JOIN act_ru_variable $alias ON ")
-                sqlSelectQuery.append("$alias.name_ = '$variableName' AND ")
-                sqlSelectQuery.append("$alias.type_ = '$taskAttType' AND ")
-                sqlSelectQuery.append("$alias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
-
-                if (variableCondition.isProcessVar) {
-                    sqlSelectQuery.append("$alias.task_id_ IS NULL")
-                } else {
-                    sqlSelectQuery.append("$alias.task_id_ = $TASK_ALIAS.id_")
-                }
-            }
-            // Add filter conditions directly to JOIN for better performance
-            if (!variableCondition.isEmptyCondition) {
-                // EQ values should be combined with OR, other conditions with AND
-                val eqConditions = mutableListOf<String>()
-                val otherConditions = mutableListOf<String>()
-
-                // Add EQ values as IN condition
-                if (variableCondition.eqValues.isNotEmpty()) {
-                    val taskColumn = variableCondition.attType.getTaskAttColumn()
-                    if (variableCondition.eqValues.size == 1) {
-                        val paramName = "p${params.size}"
-                        params[paramName] = variableCondition.eqValues[0]
-                        eqConditions.add("$alias.$taskColumn = #{$paramName}")
-                    } else {
-                        val paramNames = mutableListOf<String>()
-                        variableCondition.eqValues.forEach {
-                            val paramName = "p${params.size}"
-                            params[paramName] = it
-                            paramNames.add("#{$paramName}")
-                        }
-                        eqConditions.add("$alias.$taskColumn IN (${paramNames.joinToString(",")})")
-                    }
-                }
-
-                // Add other conditions (GT, LT, GE, LE, etc.)
-                otherConditions.addAll(variableCondition.otherConditions)
-
-                val finalConditions = mutableListOf<String>()
-                if (eqConditions.isNotEmpty()) {
-                    finalConditions.add(eqConditions.joinToString(" OR "))
-                }
-                if (otherConditions.isNotEmpty()) {
-                    // Each condition in otherConditions is already complete and should be added as-is
-                    // For range conditions (like GE and LT together), they should be combined with AND
-                    // For CONTAINS with multiple values, the condition is already properly formed with OR inside
-                    if (otherConditions.size == 1) {
-                        finalConditions.add(otherConditions[0])
-                    } else {
-                        // Check if these are range conditions (GE/LE and LT/GT combinations)
-                        val hasRangeConditions = otherConditions.any { condition ->
-                            condition.contains(" >= ") ||
-                                condition.contains(" <= ") ||
-                                condition.contains(" > ") ||
-                                condition.contains(" < ")
-                        }
-                        val hasLikeConditions = otherConditions.any { condition ->
-                            condition.contains(" LIKE ")
-                        }
-
-                        if (hasRangeConditions && !hasLikeConditions) {
-                            // Range conditions should be combined with AND
-                            finalConditions.add(otherConditions.joinToString(" AND "))
-                        } else {
-                            // LIKE/CONTAINS conditions should be combined with OR
-                            finalConditions.add(otherConditions.joinToString(" OR "))
-                        }
-                    }
-                }
-
-                if (finalConditions.isNotEmpty()) {
-                    sqlSelectQuery.append(" AND (")
-                    if (finalConditions.size == 1) {
-                        sqlSelectQuery.append(finalConditions[0])
-                    } else {
-                        // If we have both EQ and other conditions, combine them with OR
-                        sqlSelectQuery.append(finalConditions.joinToString(" OR "))
-                    }
-                    sqlSelectQuery.append(")")
-                }
-            }
-        }
-
         if (condition.isNotEmpty()) {
             sqlSelectQuery.append(" WHERE ")
-                .append(condition.toString())
+                .append(renderVariableConditions(condition.toString()))
         }
 
         if (withLimitAndSort && sorting.isNotEmpty()) {
@@ -774,12 +883,7 @@ class ProcTaskSqlQueryBuilder(
         }
 
         if (withLimitAndSort) {
-            val maxItems = if (this.maxItems < 0) {
-                1000
-            } else {
-                this.maxItems
-            }
-            sqlSelectQuery.append(" LIMIT $maxItems")
+            sqlSelectQuery.append(" LIMIT ${getEffectiveMaxItems()}")
         }
         if (withLimitAndSort && skipCount > 0) {
             sqlSelectQuery.append(" OFFSET $skipCount")
@@ -812,9 +916,9 @@ class ProcTaskSqlQueryBuilder(
      * Uses DataSourceUtils to participate in the existing transaction context if one exists.
      *
      * Note: SQL injection is not a concern here because:
-     * 1. SQL is built internally by buildTaskSql() using only internal column names
-     * 2. All user-provided values go through parameterized queries (? placeholders)
-     *
+     * 1. SQL structure is built internally by buildTaskSql() using only internal column names
+     * 2. Everything coming from the query - both values and variable names - goes through
+     *    parameterized queries (? placeholders)
      */
     @Suppress("SqlSourceToSinkFlow")
     private fun executeTaskIdsQuery(sql: String): List<String> {
@@ -863,7 +967,7 @@ class ProcTaskSqlQueryBuilder(
 
         val totalCount: Long
         val camundaCountTime = measureTimeMillis {
-            totalCount = if (maxItems > tasks.size) {
+            totalCount = if (getEffectiveMaxItems() > tasks.size) {
                 skipCount + tasks.size.toLong()
             } else {
                 createTaskQuery(
