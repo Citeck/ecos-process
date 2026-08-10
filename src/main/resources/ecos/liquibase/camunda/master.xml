@@ -202,4 +202,20 @@
         <tagDatabase tag="7.24.0"/>
     </changeSet>
 
+    <changeSet id="20260810_ecos_event_subscr_evt_name_pattern_index" author="Citeck">
+        <!--
+        Index to speed up the search of event subscriptions by a composed event name prefix
+        (selectEventSubscriptionsByEventNamesLikeStart, "EVENT_NAME_ LIKE 'prefix%'").
+
+        text_pattern_ops is required: the databases run with a non-C collation (en_US.utf8),
+        and a default btree cannot serve LIKE there, so ACT_IDX_EVENT_SUBSCR_EVT_NAME stays
+        unused and the query falls back to a sequential scan of the whole table.
+
+        Measured on 2026-08-10: stage 36-39 ms -> 0.033 ms (32181 -> 4 buffers),
+        prod 44-50 ms -> 0.028 ms (41615 -> 4 buffers).
+        -->
+        <sql>CREATE INDEX IF NOT EXISTS ecos_idx_event_subscr_evt_name_pattern
+            ON act_ru_event_subscr (event_name_ text_pattern_ops);</sql>
+    </changeSet>
+
 </databaseChangeLog>
