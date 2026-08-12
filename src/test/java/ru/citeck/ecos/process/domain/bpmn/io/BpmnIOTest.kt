@@ -9,10 +9,13 @@ import ru.citeck.ecos.commons.utils.resource.ResourceUtils
 import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.model.lib.workspace.api.WorkspaceApi
 import ru.citeck.ecos.model.lib.workspace.api.WsMembershipType
+import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaProperties
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TServiceTask
 
 class BpmnIOTest {
 
@@ -150,5 +153,51 @@ class BpmnIOTest {
 
         val calledElem = callActivity.calledElement.localPart
         assertThat(calledElem).isEqualTo("tws0-sys..non_main_process_1")
+    }
+
+    private fun exportAiTaskToCamunda(resourceName: String): TDefinitions {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/aitask/$resourceName.bpmn.xml"
+        ).readText()
+        return bpmnIO.exportCamundaBpmn(bpmnIO.importEcosBpmn(testDef))
+    }
+
+    private fun camundaPropertiesOfTask(camundaDef: TDefinitions, taskId: String): Map<String, String> {
+        val process = camundaDef.rootElement.map { it.value }.filterIsInstance<TProcess>().first()
+        val task: TServiceTask = findElementById(process.flowElement, taskId)!!
+        return task.extensionElements.any
+            .filterIsInstance<JAXBElement<*>>()
+            .map { it.value }
+            .filterIsInstance<CamundaProperties>()
+            .flatMap { it.properties }
+            .associate { it.name to it.value }
+    }
+
+    @Test
+    fun `ai task exports enabled add document to context as camunda property`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-add-document-enabled")
+
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
+            .containsEntry("aiAddDocumentToContext", "true")
+    }
+
+    @Test
+    fun `ai task exports disabled add document to context as camunda property`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-add-document-disabled")
+
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
+            .containsEntry("aiAddDocumentToContext", "false")
+    }
+
+    // The AI task handler in citeck-ai resolves aiAddDocumentToContext from camunda extension
+    // properties. The property has to reach the deployed definition even when the source schema
+    // omits the attribute, otherwise the handler applies its own default instead of the one
+    // declared in the task form.
+    @Test
+    fun `ai task without add document to context attribute still exports the camunda property`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-without-add-document-attribute")
+
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
+            .containsEntry("aiAddDocumentToContext", "true")
     }
 }
