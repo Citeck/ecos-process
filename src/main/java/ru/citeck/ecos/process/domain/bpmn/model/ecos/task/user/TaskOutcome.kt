@@ -14,6 +14,7 @@ data class TaskOutcome(
 
 data class TaskOutcomeConfig(
     val theme: TaskOutcomeTheme = TaskOutcomeTheme.PRIMARY,
+    val commentRequired: Boolean = false
 )
 
 @JsonDeserialize(using = TaskOutcomeThemeJsonDeserializer::class)

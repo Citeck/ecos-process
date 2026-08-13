@@ -663,7 +663,7 @@ class UserTaskAttsSyncTest {
 
         // check new attribute value
         Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
-            val updatedTypeUrgency = procTaskService.getVariableLocal(taskId, "urgency".withDocTypePrefix()) as Double
+            val updatedTypeUrgency = procTaskService.getVariableLocal(taskId, "urgency".withDocTypePrefix())
             assertThat(updatedTypeUrgency).isEqualTo(TYPE_URGENCY_UPDATED)
         }
     }
@@ -732,7 +732,7 @@ class UserTaskAttsSyncTest {
         recordsService.mutate(atts)
 
         Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
-            val nameAfter = procTaskService.getVariableLocal(taskId, "name".withDocPrefix()) as String
+            val nameAfter = procTaskService.getVariableLocal(taskId, "name".withDocPrefix())
             assertThat(nameAfter).isEqualTo(docRecordChild.name)
         }
     }

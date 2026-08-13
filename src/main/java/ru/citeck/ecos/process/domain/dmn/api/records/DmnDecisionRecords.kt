@@ -3,6 +3,8 @@ package ru.citeck.ecos.process.domain.dmn.api.records
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.repository.DecisionDefinition
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.model.lib.workspace.IdInWs
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.RecordsQueryDao
@@ -62,7 +64,8 @@ class DmnDecisionRecords(
         definition = EntityRef.create(
             AppName.EPROC,
             DMN_DEF_RECORDS_SOURCE_ID,
-            resourceName.substringBefore(DMN_RESOURCE_NAME_POSTFIX)
+            resourceName.removeSuffix(DMN_RESOURCE_NAME_POSTFIX)
+                .replace(ProcUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
         ),
         version = version,
         name = name

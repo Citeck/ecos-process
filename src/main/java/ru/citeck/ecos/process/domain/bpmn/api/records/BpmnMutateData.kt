@@ -1,14 +1,15 @@
 package ru.citeck.ecos.process.domain.bpmn.api.records
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import jakarta.xml.bind.JAXBElement
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.apps.app.domain.handler.ArtifactDeployMeta
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.*
+import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnRefsNormalizer
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.BpmnDefinitionDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.*
@@ -19,7 +20,6 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.ifEmpty
 import java.util.*
-import javax.xml.namespace.QName
 
 @Component
 class BpmnMutateDataProcessor(
@@ -264,48 +264,14 @@ class BpmnMutateDataProcessor(
     }
 
     private fun prepareDefinitionForMutateData(definition: String, workspace: String): String {
+        // Co-deployed artifacts are siblings in the same ecos-app + workspace (populated by
+        // ecos-apps `EcosArtifactsService.deployArtifacts`). Used by `bindRefs` to promote
+        // unprefixed refs in the BPMN XML to ws-scoped form when the target travels along —
+        // empty for non-ecos-app mutates (records UI, scripts), which keep the original behavior.
+        val coDeployedRefs = ArtifactDeployMeta.getThreadMeta().coDeployedArtifacts.toSet()
         val procDef = BpmnXmlUtils.readFromString(definition)
-
-        prepareExtRefAttribute(procDef.otherAttributes, BPMN_PROP_ECOS_TYPE, workspace)
-
-        procDef.rootElement?.forEach { rootElement ->
-            val rootElement = rootElement.value
-            if (rootElement is TProcess) {
-                processElements(rootElement.flowElement, workspace)
-            }
-        }
-
+        BpmnRefsNormalizer.bindRefs(procDef, workspace, workspaceService, coDeployedRefs)
         return BpmnXmlUtils.writeToString(procDef)
-    }
-
-    private fun processElements(elements: List<JAXBElement<out TFlowElement>>?, workspace: String) {
-        elements?.forEach { flowElementJaxb ->
-            when (val element = flowElementJaxb.value) {
-                is TSendTask -> {
-                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_NOTIFICATION_TEMPLATE, workspace)
-                }
-
-                is TUserTask -> {
-                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_FORM_REF, workspace)
-                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_NOTIFICATION_TEMPLATE, workspace)
-                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE, workspace)
-                    prepareExtRefAttribute(element.otherAttributes, BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE, workspace)
-                }
-
-                is TSubProcess -> {
-                    processElements(element.flowElement, workspace)
-                }
-            }
-        }
-    }
-
-    private fun prepareExtRefAttribute(attributes: MutableMap<QName, String>, attributeName: QName, workspace: String) {
-        val attributeValue = attributes[attributeName]
-        if (!attributeValue.isNullOrBlank()) {
-            val entityRef = EntityRef.valueOf(attributeValue)
-            val localId = workspaceService.replaceCurrentWsPlaceholderToWsPrefix(entityRef.getLocalId(), workspace)
-            attributes[attributeName] = entityRef.withLocalId(localId).toString()
-        }
     }
 }
 

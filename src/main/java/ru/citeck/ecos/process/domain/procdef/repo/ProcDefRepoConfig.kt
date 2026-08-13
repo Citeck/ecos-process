@@ -1,10 +1,11 @@
 package ru.citeck.ecos.process.domain.procdef.repo
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.process.config.mongo.MongoDisabledEnvironmentPostProcessor
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefAdapter
 import ru.citeck.ecos.process.domain.procdef.repo.edata.EcosDataProcDefRevAdapter
 import ru.citeck.ecos.process.domain.procdef.repo.mongo.MongoProcDefRepo
@@ -43,7 +44,7 @@ class ProcDefRepoConfig {
     }
 
     @Configuration
-    @ConditionalOnExpression("'\${spring.data.mongodb.uri}'.startsWith('mongodb:')")
+    @ConditionalOnProperty(value = [MongoDisabledEnvironmentPostProcessor.MONGO_ENABLED_PROP], havingValue = "true", matchIfMissing = true)
     class MongoConfig {
 
         init {

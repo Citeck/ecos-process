@@ -43,6 +43,10 @@ management:
 # application:
 
 ecos-process:
+  # Whether MongoDB support is enabled. Disable only after the
+  # mongo-to-ecos-data-migration2 patch has completed, otherwise data stored in MongoDB becomes invisible.
+  mongo:
+    enabled: true
   repo:
     mongo:
       enabled: false

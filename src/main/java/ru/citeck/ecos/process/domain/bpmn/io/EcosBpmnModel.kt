@@ -31,6 +31,7 @@ val BPMN_PROP_DOC = QName(NS_ECOS_BPMN, "documentation")
 
 val BPMN_PROP_NOTIFICATION_TEMPLATE = QName(NS_ECOS_BPMN, "notificationTemplate")
 val BPMN_PROP_NOTIFICATION_TYPE = QName(NS_ECOS_BPMN, "notificationType")
+val BPMN_PROP_NOTIFICATION_RECIPIENTS_STRATEGY = QName(NS_ECOS_BPMN, "notificationRecipientsStrategy")
 val BPMN_PROP_NOTIFICATION_RECORD = QName(NS_ECOS_BPMN, "notificationRecord")
 val BPMN_PROP_NOTIFICATION_TITLE = QName(NS_ECOS_BPMN, "notificationTitle")
 val BPMN_PROP_NOTIFICATION_BODY = QName(NS_ECOS_BPMN, "notificationBody")

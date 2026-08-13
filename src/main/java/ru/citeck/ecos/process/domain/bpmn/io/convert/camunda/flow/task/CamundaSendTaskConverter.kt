@@ -10,6 +10,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.*
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnRecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnSendTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
@@ -69,6 +70,15 @@ class CamundaSendTaskConverter : EcosOmgConverter<BpmnSendTaskDef, TSendTask> {
                 )
             )
             fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_TYPE.localPart, type.toString()))
+            // COMBINED is the default; omit the field so existing send tasks are not affected
+            if (recipientsSendStrategy != BpmnRecipientsSendStrategy.COMBINED) {
+                fields.addIfNotBlank(
+                    CamundaFieldCreator.string(
+                        BPMN_PROP_NOTIFICATION_RECIPIENTS_STRATEGY.localPart,
+                        recipientsSendStrategy.toString()
+                    )
+                )
+            }
             fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_TITLE.localPart, title))
             fields.addIfNotBlank(CamundaFieldCreator.string(BPMN_PROP_NOTIFICATION_BODY.localPart, body))
 

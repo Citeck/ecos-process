@@ -103,7 +103,11 @@ class ProcTaskRecords(
         val predicate = if (recsQuery.language == PredicateService.LANGUAGE_PREDICATE) {
             recsQuery.getQuery(Predicate::class.java)
         } else if (recsQuery.language.isEmpty()) {
-            Predicates.alwaysTrue()
+            if (recsQuery.query.isObject() && recsQuery.query.has("t")) {
+                recsQuery.getQuery(Predicate::class.java)
+            } else {
+                Predicates.alwaysTrue()
+            }
         } else {
             error("Unsupported language: ${recsQuery.language}")
         }
@@ -554,21 +558,28 @@ class ProcTaskRecords(
                 val value = procTaskService.getVariable(id, name)
                 val attType = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
 
-                if (value is String) {
-                    return when (attType) {
-                        AttributeType.ASSOC -> value.toEntityRef()
-                        AttributeType.AUTHORITY,
-                        AttributeType.PERSON,
-                        AttributeType.AUTHORITY_GROUP -> authoritiesApi.getAuthorityRef(value)
-
-                        else -> value
-                    }
+                return if (value is List<*>) {
+                    value.map { getAttValueByAttType(it, attType) }.toList()
+                } else {
+                    getAttValueByAttType(value, attType)
                 }
-
-                return value
             }
 
             return null
+        }
+
+        private fun getAttValueByAttType(value: Any?, attType: AttributeType): Any? {
+            if (value is String) {
+                return when (attType) {
+                    AttributeType.ASSOC -> value.toEntityRef()
+                    AttributeType.AUTHORITY,
+                    AttributeType.PERSON,
+                    AttributeType.AUTHORITY_GROUP -> authoritiesApi.getAuthorityRef(value)
+
+                    else -> value
+                }
+            }
+            return value
         }
     }
 }

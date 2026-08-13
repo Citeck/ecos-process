@@ -108,14 +108,10 @@ class TaskDefinitionUtils(
         return Json.mapper.readList(outcomesValue, TaskOutcome::class.java)
     }
 
-    fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
-        val document = delegateTask.getDocumentRef()
-        if (document == EntityRef.EMPTY) {
-            return emptyList()
-        }
+    fun getTaskRoles(document: EntityRef, processDefinitionId: String, taskDefinitionKey: String): List<TaskRole> {
 
         val defData =
-            taskDeployedCamundaDefCache.get(delegateTask.processDefinitionId to delegateTask.taskDefinitionKey)
+            taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
         val taskDefinition = defData.task ?: return emptyList()
 
         val roleData = taskDefinition.otherAttributes[BPMN_PROP_ASSIGNEES]
@@ -136,6 +132,14 @@ class TaskDefinitionUtils(
                 roleService.getRoleDef(defData.docType, role).name
             )
         }
+    }
+
+    fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
+        val document = delegateTask.getDocumentRef()
+        if (document == EntityRef.EMPTY) {
+            return emptyList()
+        }
+        return getTaskRoles(document, delegateTask.processDefinitionId, delegateTask.taskDefinitionKey)
     }
 
     fun getTaskTitle(delegateTask: DelegateTask): MLText {
@@ -196,6 +200,10 @@ class TaskDefinitionUtils(
 
     fun getUserTaskLaInfo(delegateTask: DelegateTask): UserTaskLaInfo {
         return getUserTaskLaInfo(delegateTask.processDefinitionId to delegateTask.taskDefinitionKey)
+    }
+
+    fun getUserTaskLaInfo(processDefinitionId: String, taskDefinitionKey: String): UserTaskLaInfo {
+        return getUserTaskLaInfo(processDefinitionId to taskDefinitionKey)
     }
 
     data class CachedTaskDefData(

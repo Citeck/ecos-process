@@ -78,10 +78,12 @@ class BpmnProcessPermissionsTest {
         private const val BPMN_PROC_DEF_TYPE_ID = "bpmn-process-def"
 
         private const val ROLE_READ = "roleRead"
+        private const val ROLE_RUN_ONLY = "roleRunOnly"
 
         private const val USER_IVAN = "userIvan"
         private const val USER_KATYA = "userKatya"
         private const val USER_WITHOUT_PERMS = "userWithoutPerms"
+        private const val USER_RUN_ONLY = "userRunOnly"
 
         private const val TEST_ATT_STR = "testStr"
 
@@ -119,6 +121,21 @@ class BpmnProcessPermissionsTest {
                                             )
                                         )
                                     )
+                                    .build(),
+                                RoleDef.create()
+                                    .withId(ROLE_RUN_ONLY)
+                                    .withComputed(
+                                        RoleComputedDef(
+                                            type = ComputedRoleType.SCRIPT,
+                                            ObjectData.create(
+                                                """
+                                           {
+                                              "fn": "return 'userRunOnly';"
+                                            }
+                                                """.trimIndent()
+                                            )
+                                        )
+                                    )
                                     .build()
                             )
                         )
@@ -137,6 +154,9 @@ class BpmnProcessPermissionsTest {
                             mapOf(
                                 ROLE_READ to mapOf(
                                     "ANY" to PermissionLevel.READ
+                                ),
+                                ROLE_RUN_ONLY to mapOf(
+                                    "ANY" to PermissionLevel.READ
                                 )
                             )
                         )
@@ -149,6 +169,12 @@ class BpmnProcessPermissionsTest {
                                         BpmnPermission.PROC_INSTANCE_EDIT.id,
                                         BpmnPermission.PROC_INSTANCE_READ.id,
                                         BpmnPermission.PROC_INSTANCE_MIGRATE.id
+                                    )
+                                ),
+                                PermissionRule(
+                                    roles = setOf(ROLE_RUN_ONLY),
+                                    permissions = setOf(
+                                        BpmnPermission.PROC_INSTANCE_RUN.id
                                     )
                                 )
                             )
@@ -311,6 +337,70 @@ class BpmnProcessPermissionsTest {
 
         assertThrows<IllegalStateException> {
             AuthContext.runAs(USER_WITHOUT_PERMS) {
+                recordsService.mutate(startProcessAtts)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = [USER_IVAN, "system"])
+    fun `user with migrate permission should allow start with start instructions`(user: String) {
+        val startProcessAtts = RecordAtts(
+            EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, IVAN_PROCESS_ID)
+        ).apply {
+            this["action"] = BpmnProcessRecords.MutateAction.START.name
+            this["startInstructions"] = DataValue.create(
+                listOf(
+                    mapOf(
+                        "type" to "startBeforeActivity",
+                        "activityId" to "Event_end"
+                    )
+                )
+            )
+        }
+
+        val startedProcess = AuthContext.runAs(user) {
+            recordsService.mutate(startProcessAtts)
+        }
+
+        // the token was placed directly on the end event, so the instance completes immediately
+        val findCompletedProcess = bpmnProcessService.getProcessInstance(startedProcess.getLocalId())
+        assertThat(findCompletedProcess).isNull()
+    }
+
+    @Test
+    fun `user without migrate permission should not allow start with start instructions`() {
+        val startProcessAtts = RecordAtts(
+            EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, IVAN_PROCESS_ID)
+        ).apply {
+            this["action"] = BpmnProcessRecords.MutateAction.START.name
+            this["startInstructions"] = DataValue.create(
+                listOf(
+                    mapOf(
+                        "type" to "startBeforeActivity",
+                        "activityId" to "Event_end"
+                    )
+                )
+            )
+        }
+
+        assertThrows<IllegalStateException> {
+            AuthContext.runAs(USER_RUN_ONLY) {
+                recordsService.mutate(startProcessAtts)
+            }
+        }
+    }
+
+    @Test
+    fun `user without migrate permission should allow start without start instructions`() {
+        val startProcessAtts = RecordAtts(
+            EntityRef.create(AppName.EPROC, BpmnProcessRecords.ID, IVAN_PROCESS_ID)
+        ).apply {
+            this["action"] = BpmnProcessRecords.MutateAction.START.name
+        }
+
+        assertDoesNotThrow {
+            AuthContext.runAs(USER_RUN_ONLY) {
                 recordsService.mutate(startProcessAtts)
             }
         }

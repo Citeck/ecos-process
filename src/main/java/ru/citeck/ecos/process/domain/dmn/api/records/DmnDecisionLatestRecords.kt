@@ -73,7 +73,7 @@ class DmnDecisionLatestRecords(
 
     private fun DecisionDefinition.toDecisionRecord(): DecisionLatestRecord {
 
-        val dmnDefLocalId = resourceName.substringBefore(DMN_RESOURCE_NAME_POSTFIX)
+        val dmnDefLocalId = resourceName.removeSuffix(DMN_RESOURCE_NAME_POSTFIX)
             .replace(ProcUtils.PROC_KEY_WS_DELIM, IdInWs.WS_DELIM)
 
         return DecisionLatestRecord(

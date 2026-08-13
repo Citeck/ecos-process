@@ -15,6 +15,7 @@ import org.camunda.bpm.engine.repository.ProcessDefinition
 import org.camunda.bpm.engine.runtime.ActivityInstance
 import org.camunda.bpm.engine.runtime.Incident
 import org.camunda.bpm.engine.runtime.ProcessInstance
+import org.camunda.bpm.engine.runtime.TransitionInstance
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
@@ -128,11 +129,20 @@ class BpmnProcessServiceImpl(
 
                 val instance: ProcessInstance
                 val startProcessTime = measureTimeMillis {
-                    instance = camundaRuntimeService.startProcessInstanceByKey(
-                        processKey,
-                        businessKey,
-                        processVariables
-                    )
+                    instance = if (startInstructions.isEmpty()) {
+                        camundaRuntimeService.startProcessInstanceByKey(
+                            processKey,
+                            businessKey,
+                            processVariables
+                        )
+                    } else {
+                        startProcessInstanceWithInstructions(
+                            processKey,
+                            businessKey,
+                            processVariables,
+                            startInstructions
+                        )
+                    }
                 }
 
                 val emitProcessStartTime = measureTimeMillis {
@@ -168,6 +178,35 @@ class BpmnProcessServiceImpl(
 
             return processInstance
         }
+    }
+
+    private fun startProcessInstanceWithInstructions(
+        processKey: String,
+        businessKey: String?,
+        processVariables: Map<String, Any?>,
+        startInstructions: List<StartInstruction>
+    ): ProcessInstance {
+        var builder = camundaRuntimeService.createProcessInstanceByKey(processKey)
+            .businessKey(businessKey)
+            .setVariables(processVariables)
+
+        for (instruction in startInstructions) {
+            require(instruction.activityId.isNotBlank()) {
+                "Start instruction activityId must not be blank: $instruction"
+            }
+            builder = when (instruction.type) {
+                START_INSTRUCTION_START_BEFORE_ACTIVITY -> builder.startBeforeActivity(instruction.activityId)
+                START_INSTRUCTION_START_AFTER_ACTIVITY -> builder.startAfterActivity(instruction.activityId)
+                else -> throw IllegalArgumentException(
+                    "Unsupported start instruction type: '${instruction.type}'"
+                )
+            }
+            for ((name, value) in instruction.variables) {
+                builder = builder.setVariableLocal(name, value)
+            }
+        }
+
+        return builder.execute()
     }
 
     override fun deleteProcessInstance(
@@ -262,6 +301,38 @@ class BpmnProcessServiceImpl(
 
         return activitiesStats.values.toList()
     }
+
+    override fun getProcessInstanceActivityTree(processInstanceId: String): ActivityInstanceNode? {
+        val root = camundaRuntimeService.getActivityInstance(processInstanceId) ?: return null
+        return root.toNode()
+    }
+
+    private fun ActivityInstance.toNode(): ActivityInstanceNode = ActivityInstanceNode(
+        id = id ?: "",
+        parentActivityInstanceId = parentActivityInstanceId ?: "",
+        activityId = activityId ?: "",
+        activityType = activityType ?: "",
+        activityName = activityName ?: "",
+        processInstanceId = processInstanceId ?: "",
+        processDefinitionId = processDefinitionId ?: "",
+        childActivityInstances = childActivityInstances?.map { it.toNode() } ?: emptyList(),
+        childTransitionInstances = childTransitionInstances?.map { it.toNode() } ?: emptyList(),
+        executionIds = executionIds?.toList() ?: emptyList(),
+        incidentIds = incidentIds?.toList() ?: emptyList()
+    )
+
+    private fun TransitionInstance.toNode(): TransitionInstanceNode = TransitionInstanceNode(
+        id = id ?: "",
+        parentActivityInstanceId = parentActivityInstanceId ?: "",
+        targetActivityId = targetActivityId ?: "",
+        activityId = activityId ?: "",
+        activityName = activityName ?: "",
+        activityType = activityType ?: "",
+        processInstanceId = processInstanceId ?: "",
+        processDefinitionId = processDefinitionId ?: "",
+        executionId = executionId ?: "",
+        incidentIds = incidentIds?.toList() ?: emptyList()
+    )
 
     override fun getProcessInstance(processInstanceId: String): ProcessInstance? {
         return camundaRuntimeService.createProcessInstanceQuery()

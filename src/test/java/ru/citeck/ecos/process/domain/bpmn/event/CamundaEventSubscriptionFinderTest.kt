@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.bpmn.event
 
 import com.hazelcast.core.HazelcastInstance
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +15,7 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_BUSINESS_KEY
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.util.concurrent.TimeUnit
 
 const val SUBSCRIPTION = "subscription"
 
@@ -50,9 +52,18 @@ class CamundaEventSubscriptionFinderTest {
 
         helper.saveAndDeployBpmn(SUBSCRIPTION, procId)
         helper.saveAndDeployBpmn(SUBSCRIPTION, procIdModified)
-        camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
 
-        assertThat(cache.size).isEqualTo(2)
+        // findDeployedSubscriptionsData() queries ProcDefRev via ecos-data search
+        // (queryAllByDeploymentIdIsNotNull → findAll(Predicates.notEmpty(ATT_DEPLOYMENT_ID))).
+        // Freshly committed records may take a short moment to become searchable, so the
+        // first call right after deploy occasionally sees 0 rows and the cache stays empty.
+        // The production caller invokes this on app startup / on schedule, never racing
+        // a deploy — the race only shows up in tests. Retry until the cache reflects the
+        // two deployments we just committed.
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
+            camundaEventSubscriptionFinder.findDeployedSubscriptionsData()
+            assertThat(cache.size).isEqualTo(2)
+        }
     }
 
     @Test

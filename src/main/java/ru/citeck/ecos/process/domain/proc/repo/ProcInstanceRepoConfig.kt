@@ -1,8 +1,10 @@
 package ru.citeck.ecos.process.domain.proc.repo
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import ru.citeck.ecos.process.config.mongo.MongoDisabledEnvironmentPostProcessor
 import ru.citeck.ecos.process.domain.proc.repo.edata.EcosDataProcInstanceAdapter
 import ru.citeck.ecos.process.domain.proc.repo.edata.EcosDataProcStateAdapter
 import ru.citeck.ecos.process.domain.proc.repo.mongo.MongoProcInstanceAdapter
@@ -44,6 +46,7 @@ class ProcInstanceRepoConfig {
     }
 
     @Configuration
+    @ConditionalOnProperty(value = [MongoDisabledEnvironmentPostProcessor.MONGO_ENABLED_PROP], havingValue = "true", matchIfMissing = true)
     class MongoConfig {
 
         init {

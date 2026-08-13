@@ -46,6 +46,9 @@ data class UserTaskEvent(
     var laReportEnabled: Boolean = false,
     var laSuccessReportNotificationTemplate: EntityRef? = null,
     var laErrorReportNotificationTemplate: EntityRef? = null,
+    var isCompletedViaMail: Boolean = false,
+    var errorMessage: String? = null,
+    var errorStackTrace: String? = null,
 
     @AttName("document._type?id")
     var documentTypeRef: EntityRef? = null,

@@ -16,7 +16,8 @@
       "outcome_button_theme_info": "Информация",
       "outcome_button_theme_success": "Успешно",
       "outcome_button_theme_warning": "Предупреждение",
-      "outcome_button_theme_danger": "Опасно"
+      "outcome_button_theme_danger": "Опасно",
+      "outcome_comment_required": "Комментарий обязателен"
     },
     "en": {
       "outcome_button_theme_default": "Default",
@@ -24,7 +25,8 @@
       "outcome_button_theme_info": "Info",
       "outcome_button_theme_success": "Success",
       "outcome_button_theme_warning": "Warning",
-      "outcome_button_theme_danger": "Danger"
+      "outcome_button_theme_danger": "Danger",
+      "outcome_comment_required": "Comment required"
     }
   },
   "definition": {
@@ -76,6 +78,17 @@
         "defaultValue": "PRIMARY",
         "optionalWhenDisabled": false,
         "type": "ecosSelect",
+        "input": true
+      },
+      {
+        "label": {
+          "ru": "outcome_comment_required",
+          "en": "outcome_comment_required"
+        },
+        "key": "commentRequired",
+        "defaultValue": false,
+        "optionalWhenDisabled": false,
+        "type": "checkbox",
         "input": true
       }
     ],

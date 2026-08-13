@@ -30,6 +30,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.error.BpmnErrorE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.BpmnSignalEventDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.signal.StatusChangeType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.flow.event.timer.BpmnTimerEventDef
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnRecipientsSendStrategy
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAbstractEcosTaskDef
@@ -141,6 +142,17 @@ fun CamundaIn.jaxb(context: ExportContext): JAXBElement<CamundaIn> {
 
 fun CamundaOut.jaxb(context: ExportContext): JAXBElement<CamundaOut> {
     return context.converters.convertToJaxb(this)
+}
+
+/**
+ * Parses a [BpmnRecipientsSendStrategy] from a raw string (BPMN attribute or camunda field value).
+ * Falls back to [BpmnRecipientsSendStrategy.COMBINED] for blank, "null" or unrecognized values, so an
+ * absent/garbled value keeps the default behaviour instead of failing process import/execution.
+ */
+fun String?.parseRecipientsSendStrategy(): BpmnRecipientsSendStrategy {
+    return this?.takeIf { it.isNotBlank() && it != "null" }
+        ?.let { runCatching { BpmnRecipientsSendStrategy.valueOf(it) }.getOrNull() }
+        ?: BpmnRecipientsSendStrategy.COMBINED
 }
 
 inline fun <K, reified V> MutableMap<in K, in V>.putIfNotBlank(key: K, value: V?) {

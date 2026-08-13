@@ -224,35 +224,32 @@ class ProcTaskAttsSynchronizer(
                 }
 
                 typeInfo.model.attributes.find { it.id == requestAtt }?.let { modelAtt ->
-                    val (attSchema, clazz) = when (modelAtt.type) {
-                        AttributeType.ASSOC -> "$requestAtt?id" to String::class.java
-
-                        AttributeType.PERSON,
-                        AttributeType.AUTHORITY,
-                        AttributeType.AUTHORITY_GROUP -> "$requestAtt.authorityName" to String::class.java
-
-                        AttributeType.TEXT -> requestAtt to String::class.java
-
-                        AttributeType.BOOLEAN -> "$requestAtt?bool!" to Boolean::class.java
-
-                        AttributeType.DATE,
-                        AttributeType.DATETIME -> requestAtt to Date::class.java
-
-                        AttributeType.NUMBER -> "$requestAtt?num" to Double::class.java
-                        else -> error(
+                    var isMultiple = false
+                    if (modelAtt.multiple) {
+                        isMultiple = procTaskAttsSyncService.getTaskSyncAttribute(taskAtt)?.multiple ?: false
+                    }
+                    try {
+                        var (attSchema, clazz) = getAttSchemaAndClass(modelAtt.type)
+                        if (isMultiple) {
+                            attSchema = "$requestAtt[]$attSchema"
+                            clazz = List::class.java
+                        } else {
+                            attSchema = "$requestAtt$attSchema"
+                        }
+                        attsToRequest.add(
+                            RequestAtt(
+                                taskAtt = taskAtt,
+                                requestAtt = requestAtt,
+                                requestAttSchema = attSchema,
+                                requestAttClass = clazz
+                            )
+                        )
+                    } catch (_: Exception) {
+                        error(
                             "Task atts sync on document: $document with type: ${syncSettingsTyped.typeRef} error, " +
                                 "because attribute <$requestAtt> have unsupported type ${modelAtt.type}"
                         )
                     }
-
-                    attsToRequest.add(
-                        RequestAtt(
-                            taskAtt = taskAtt,
-                            requestAtt = requestAtt,
-                            requestAttSchema = attSchema,
-                            requestAttClass = clazz
-                        )
-                    )
                 }
             }
 
@@ -317,6 +314,32 @@ class ProcTaskAttsSynchronizer(
         }
 
         return newTaskAtts.toMap()
+    }
+
+    private fun getAttSchemaAndClass(attType: AttributeType): Pair<String, Class<*>> {
+        return when (attType) {
+            AttributeType.ASSOC ->
+                "?id" to String::class.java
+
+            AttributeType.PERSON,
+            AttributeType.AUTHORITY,
+            AttributeType.AUTHORITY_GROUP ->
+                ".authorityName" to String::class.java
+
+            AttributeType.TEXT ->
+                "" to String::class.java
+
+            AttributeType.BOOLEAN -> "?bool!" to Boolean::class.java
+
+            AttributeType.DATE,
+            AttributeType.DATETIME -> "" to Date::class.java
+
+            AttributeType.NUMBER -> "?num" to Double::class.java
+
+            else -> error(
+                "Failed to find attribute scheme for type $attType"
+            )
+        }
     }
 
     private fun isDateAtt(att: String, typeInfo: TypeInfo): Boolean {

@@ -202,6 +202,28 @@ class ProcTaskQueryWithDocumentAttsTest {
         assertThat(docIds).containsExactlyInAnyOrder("doc2", "doc4")
     }
 
+    /**
+     * An EMPTY predicate and a value predicate on the same attribute must not interfere:
+     * they are separate conditions, so the value filter has to survive next to the emptiness
+     * check. Both are rendered over the same variable name, so a shared condition would drop
+     * the filter and silently widen the result.
+     */
+    @Test
+    fun `should keep value filter when combined with not empty on the same attribute`() {
+        val found = AuthContext.runAsFull(TEST_USER) {
+            helper.queryTasks(
+                Predicates.and(
+                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
+                    Predicates.notEmpty(CUSTOM_VAR),
+                    Predicates.eq(CUSTOM_VAR, "customValue")
+                )
+            )
+        }
+
+        val docIds = getDocIdsFromTasks(found)
+        assertThat(docIds).containsExactly("doc2")
+    }
+
     @Test
     fun `should handle like multiple like attribute`() {
         val found = AuthContext.runAsFull(TEST_USER) {

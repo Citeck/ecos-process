@@ -50,6 +50,14 @@ interface BpmnProcessService {
 
     fun getProcessInstanceActivityStatistics(processInstanceId: String): List<ActivityStatistics>
 
+    /**
+     * Returns the activity-instance tree for the given process instance, rooted at
+     * the process definition. Returns `null` if the process instance is not active.
+     *
+     * Backed by Camunda's [org.camunda.bpm.engine.RuntimeService.getActivityInstance].
+     */
+    fun getProcessInstanceActivityTree(processInstanceId: String): ActivityInstanceNode?
+
     fun getProcessInstance(processInstanceId: String): ProcessInstance?
 
     fun getProcessInstancesForBusinessKey(businessKey: String): List<ProcessInstance>
@@ -69,6 +77,23 @@ interface BpmnProcessService {
     fun getProcessDefinitionsByKey(processKey: String): List<ProcessDefinition>
 }
 
+const val START_INSTRUCTION_START_BEFORE_ACTIVITY = "startBeforeActivity"
+const val START_INSTRUCTION_START_AFTER_ACTIVITY = "startAfterActivity"
+
+private val NON_SENSITIVE_VARIABLE_KEYS = setOf(
+    BPMN_WORKFLOW_INITIATOR,
+    BPMN_DOCUMENT_REF,
+    BPMN_DOCUMENT_TYPE,
+    BPMN_DOCUMENT_STATUS,
+    BPMN_WORKSPACE
+)
+
+private fun maskSensitiveVariables(variables: Map<String, Any?>): Map<String, Any?> {
+    return variables.entries.associate { (k, v) ->
+        k to if (k in NON_SENSITIVE_VARIABLE_KEYS) v else "?"
+    }
+}
+
 /**
  * This class is used to serialize/deserialize data in MQ.
  * All changes should be backward compatible.
@@ -77,24 +102,30 @@ data class StartProcessRequest(
     val workspace: String = "",
     val processId: String,
     val businessKey: String? = null,
+    val variables: Map<String, Any?> = emptyMap(),
+    val startInstructions: List<StartInstruction> = emptyList()
+) {
+    override fun toString(): String {
+        return "StartProcessRequest(workspace='$workspace', processId='$processId', " +
+            "businessKey=$businessKey, variables=${maskSensitiveVariables(variables)}, " +
+            "startInstructions=$startInstructions)"
+    }
+}
+
+/**
+ * Instructs process start to begin at the specified activity
+ * instead of the default start event.
+ *
+ * @see org.camunda.bpm.engine.runtime.ProcessInstantiationBuilder
+ */
+data class StartInstruction(
+    val type: String,
+    val activityId: String,
     val variables: Map<String, Any?> = emptyMap()
 ) {
-    companion object {
-        private val NON_SENSITIVE_VARIABLE_KEYS = setOf(
-            BPMN_WORKFLOW_INITIATOR,
-            BPMN_DOCUMENT_REF,
-            BPMN_DOCUMENT_TYPE,
-            BPMN_DOCUMENT_STATUS,
-            BPMN_WORKSPACE
-        )
-    }
-
     override fun toString(): String {
-        val maskedVars = variables.entries.associate { (k, v) ->
-            k to if (k in NON_SENSITIVE_VARIABLE_KEYS) v else "?"
-        }
-        return "StartProcessRequest(workspace='$workspace', processId='$processId', " +
-            "businessKey=$businessKey, variables=$maskedVars)"
+        return "StartInstruction(type='$type', activityId='$activityId', " +
+            "variables=${maskSensitiveVariables(variables)})"
     }
 }
 
@@ -145,4 +176,36 @@ data class ActivityStatistics(
     val activityId: String,
     var instances: Long,
     var incidentStatistics: List<IncidentStatistics> = emptyList()
+)
+
+/**
+ * Activity-instance tree node. Field names mirror Camunda's
+ * [org.camunda.bpm.engine.runtime.ActivityInstance] so the JSON shape is
+ * directly compatible with Camunda REST `GET /process-instance/{id}/activity-instances`.
+ */
+data class ActivityInstanceNode(
+    val id: String,
+    val parentActivityInstanceId: String,
+    val activityId: String,
+    val activityType: String,
+    val activityName: String,
+    val processInstanceId: String,
+    val processDefinitionId: String,
+    val childActivityInstances: List<ActivityInstanceNode> = emptyList(),
+    val childTransitionInstances: List<TransitionInstanceNode> = emptyList(),
+    val executionIds: List<String> = emptyList(),
+    val incidentIds: List<String> = emptyList()
+)
+
+data class TransitionInstanceNode(
+    val id: String,
+    val parentActivityInstanceId: String,
+    val targetActivityId: String,
+    val activityId: String,
+    val activityName: String,
+    val activityType: String,
+    val processInstanceId: String,
+    val processDefinitionId: String,
+    val executionId: String,
+    val incidentIds: List<String> = emptyList()
 )

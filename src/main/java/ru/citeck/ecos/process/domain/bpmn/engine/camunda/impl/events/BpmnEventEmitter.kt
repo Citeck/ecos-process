@@ -11,6 +11,7 @@ const val BPMN_EVENT_USER_TASK_CREATE = "bpmn-user-task-create"
 const val BPMN_EVENT_USER_TASK_COMPLETE = "bpmn-user-task-complete"
 const val BPMN_EVENT_USER_TASK_ASSIGN = "bpmn-user-task-assign"
 const val BPMN_EVENT_USER_TASK_DELETE = "bpmn-user-task-delete"
+const val BPMN_EVENT_USER_TASK_COMPLETE_ERROR = "bpmn-user-task-complete-error"
 
 const val BPMN_EVENT_ACTIVITY_ELEMENT_START = "bpmn-activity-element-start"
 const val BPMN_EVENT_ACTIVITY_ELEMENT_END = "bpmn-activity-element-end"
@@ -54,6 +55,14 @@ class BpmnEventEmitter(
         }
     )
 
+    private val userTaskCompleteErrorEmitter = eventsService.getEmitter(
+        EmitterConfig.create<UserTaskEvent> {
+            source = appName
+            eventType = BPMN_EVENT_USER_TASK_COMPLETE_ERROR
+            eventClass = UserTaskEvent::class.java
+        }
+    )
+
     private val userTaskAssignEmitter = eventsService.getEmitter(
         EmitterConfig.create<UserTaskEvent> {
             source = appName
@@ -80,6 +89,10 @@ class BpmnEventEmitter(
 
     fun emitUserTaskCompleteEvent(event: UserTaskEvent) {
         userTaskCompleteEmitter.emit(event)
+    }
+
+    fun emitUserTaskCompleteErrorEvent(event: UserTaskEvent) {
+        userTaskCompleteErrorEmitter.emit(event)
     }
 
     fun emitUserTaskAssignEvent(event: UserTaskEvent) {

@@ -21,6 +21,7 @@ data class BpmnSendTaskDef(
     val record: String = "",
     val template: EntityRef = EntityRef.EMPTY,
     val type: NotificationType,
+    val recipientsSendStrategy: BpmnRecipientsSendStrategy = BpmnRecipientsSendStrategy.COMBINED,
 
     val from: String = "",
 
@@ -59,6 +60,13 @@ data class BpmnSendTaskDef(
 
         if (type != NotificationType.EMAIL_NOTIFICATION) {
             throw EcosBpmnElementDefinitionException(id, "In the current version, only the email type is supported")
+        }
+
+        if (recipientsSendStrategy != BpmnRecipientsSendStrategy.COMBINED && (cc.isNotEmpty() || bcc.isNotEmpty())) {
+            throw EcosBpmnElementDefinitionException(
+                id,
+                "$recipientsSendStrategy recipients send strategy is allowed only when cc and bcc are empty"
+            )
         }
 
         if (sendCalendarEvent) {
