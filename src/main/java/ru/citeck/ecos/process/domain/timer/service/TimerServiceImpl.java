@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.timer.service;
 
+import jakarta.annotation.PostConstruct;
 import kotlin.Unit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -176,9 +177,22 @@ public class TimerServiceImpl implements TimerService {
         return entity;
     }
 
+    @PostConstruct
+    public void init() {
+        if (timerRepository == null) {
+            log.warn("MongoDB is disabled - the timer subsystem is inactive: timer commands will be "
+                + "rejected and timers still stored in MongoDB will never fire. The mongo-to-ecos-data "
+                + "migration does not migrate timers, so a non-empty 'timers' collection requires "
+                + "manual attention before MongoDB is decommissioned.");
+        }
+    }
+
     private void checkRepo() {
         if (timerRepository == null) {
-            throw new IllegalStateException("Timer repository is null. Probably you run without mongo db?");
+            throw new IllegalStateException(
+                "Timer repository is not available: MongoDB is disabled (ecos-process.mongo.enabled=false), "
+                    + "so the timer subsystem is inactive and timer commands cannot be processed. "
+                    + "Enable MongoDB to work with timers.");
         }
     }
 

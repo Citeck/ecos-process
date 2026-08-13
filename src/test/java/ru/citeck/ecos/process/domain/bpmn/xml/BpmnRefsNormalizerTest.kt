@@ -6,11 +6,15 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DMN_DECISION_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_FORM_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NOTIFICATION_TEMPLATE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_REF
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnRefsNormalizer
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TBusinessRuleTask
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
@@ -31,7 +35,9 @@ class BpmnRefsNormalizerTest {
         val xml = bpmnXml(
             ecosType = "emodel/type@CURRENT_WS:my-type",
             formRef = "uiserv/eform@CURRENT_WS:my-form",
-            notificationTemplate = "notifications/template@CURRENT_WS:my-template"
+            notificationTemplate = "notifications/template@CURRENT_WS:my-template",
+            processRef = "eproc/bpmn-def@CURRENT_WS:my-process",
+            decisionRef = "eproc/dmn-def@CURRENT_WS:my-decision"
         )
         val def = BpmnXmlUtils.readFromString(xml)
 
@@ -40,6 +46,8 @@ class BpmnRefsNormalizerTest {
         assertThat(ecosType(def)).isEqualTo("emodel/type@$targetWsSysId:my-type")
         assertThat(formRef(def)).isEqualTo("uiserv/eform@$targetWsSysId:my-form")
         assertThat(notificationTemplate(def)).isEqualTo("notifications/template@$targetWsSysId:my-template")
+        assertThat(processRef(def)).isEqualTo("eproc/bpmn-def@$targetWsSysId:my-process")
+        assertThat(decisionRef(def)).isEqualTo("eproc/dmn-def@$targetWsSysId:my-decision")
     }
 
     @Test
@@ -123,7 +131,9 @@ class BpmnRefsNormalizerTest {
     private fun bpmnXml(
         ecosType: String = "",
         formRef: String = "",
-        notificationTemplate: String = ""
+        notificationTemplate: String = "",
+        processRef: String = "",
+        decisionRef: String = ""
     ): String = """
         <?xml version="1.0" encoding="UTF-8"?>
         <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -134,6 +144,8 @@ class BpmnRefsNormalizerTest {
           <bpmn:process id="proc-1" isExecutable="true">
             <bpmn:userTask id="UserTask_1" ecos:formRef="$formRef"/>
             <bpmn:sendTask id="SendTask_1" ecos:notificationTemplate="$notificationTemplate"/>
+            <bpmn:callActivity id="CallActivity_1" ecos:processRef="$processRef"/>
+            <bpmn:businessRuleTask id="BusinessRuleTask_1" ecos:decisionRef="$decisionRef"/>
           </bpmn:process>
         </bpmn:definitions>
     """.trimIndent()
@@ -149,6 +161,16 @@ class BpmnRefsNormalizerTest {
     private fun formRef(def: TDefinitions): String = userTask(def).otherAttributes[BPMN_PROP_FORM_REF] ?: ""
 
     private fun notificationTemplate(def: TDefinitions): String = sendTask(def).otherAttributes[BPMN_PROP_NOTIFICATION_TEMPLATE] ?: ""
+
+    private fun processRef(def: TDefinitions): String = (def.rootElement.first { it.value is TProcess }.value as TProcess)
+        .flowElement.first { it.value is TCallActivity }.value.let {
+            (it as TCallActivity).otherAttributes[BPMN_PROP_PROCESS_REF] ?: ""
+        }
+
+    private fun decisionRef(def: TDefinitions): String = (def.rootElement.first { it.value is TProcess }.value as TProcess)
+        .flowElement.first { it.value is TBusinessRuleTask }.value.let {
+            (it as TBusinessRuleTask).otherAttributes[BPMN_PROP_DMN_DECISION_REF] ?: ""
+        }
 
     private fun fakeWorkspaceService(): WorkspaceService {
         val ws = Mockito.mock(WorkspaceService::class.java)

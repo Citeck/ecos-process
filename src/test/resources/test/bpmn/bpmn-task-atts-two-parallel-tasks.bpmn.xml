@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_twoParTasks" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:workingCopySourceRef="" ecos:name_ml="{}" ecos:formRef="" ecos:autoDeleteEnabled="true" ecos:sectionRef="eproc/bpmn-section@DEFAULT" ecos:enabled="true" ecos:autoStartEnabled="false" ecos:defState="CONVERTED" ecos:processDefId="bpmn-task-atts-two-parallel-tasks" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="bpmn-task-atts-two-parallel-tasks">
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_2pt" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_startToFork</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_2pt" targetRef="Gateway_fork" name="" id="Flow_startToFork" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:parallelGateway name="" id="Gateway_fork" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_startToFork</bpmn:incoming>
+            <bpmn:outgoing >Flow_forkToTaskA</bpmn:outgoing>
+            <bpmn:outgoing >Flow_forkToTaskB</bpmn:outgoing>
+        </bpmn:parallelGateway>
+        <bpmn:sequenceFlow sourceRef="Gateway_fork" targetRef="UserTaskA" name="" id="Flow_forkToTaskA" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="Gateway_fork" targetRef="UserTaskB" name="" id="Flow_forkToTaskB" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:userTask name="User Task A" id="UserTaskA" ecos:documentation="{}" ecos:manualRecipients="[&quot;admin&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;done&quot;},&quot;config&quot;:{&quot;theme&quot;:&quot;PRIMARY&quot;}}]" ecos:laEnabled="false" ecos:name_ml="{&quot;ru&quot;:&quot;User Task A&quot;}" ecos:laNotificationType="EMAIL_NOTIFICATION" ecos:laReportEnabled="false" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">
+            <bpmn:incoming >Flow_forkToTaskA</bpmn:incoming>
+            <bpmn:outgoing >Flow_taskAToEnd</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:userTask name="User Task B" id="UserTaskB" ecos:documentation="{}" ecos:manualRecipients="[&quot;admin&quot;]" ecos:outcomes="[{&quot;id&quot;:&quot;done&quot;,&quot;name&quot;:{&quot;ru&quot;:&quot;done&quot;},&quot;config&quot;:{&quot;theme&quot;:&quot;PRIMARY&quot;}}]" ecos:laEnabled="false" ecos:name_ml="{&quot;ru&quot;:&quot;User Task B&quot;}" ecos:laNotificationType="EMAIL_NOTIFICATION" ecos:laReportEnabled="false" ecos:manualRecipientsMode="true" ecos:priority="MEDIUM" ecos:assignees="[]">
+            <bpmn:incoming >Flow_forkToTaskB</bpmn:incoming>
+            <bpmn:outgoing >Flow_taskBToEnd</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent name="" id="Event_endA" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_taskAToEnd</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:endEvent name="" id="Event_endB" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_taskBToEnd</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow sourceRef="UserTaskA" targetRef="Event_endA" name="" id="Flow_taskAToEnd" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:sequenceFlow sourceRef="UserTaskB" targetRef="Event_endB" name="" id="Flow_taskBToEnd" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+    </bpmn:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="bpmn-task-atts-two-parallel-tasks" id="BPMNPlane_1">
+            <bpmndi:BPMNShape bpmnElement="StartEvent_2pt" isExpanded="true" id="StartEvent_2pt_di">
+                <dc:Bounds x="156.0" y="181.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Gateway_fork" isExpanded="true" id="Gateway_fork_di">
+                <dc:Bounds x="240.0" y="174.0" width="50.0" height="50.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="UserTaskA" isExpanded="true" id="UserTaskA_di">
+                <dc:Bounds x="340.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="UserTaskB" isExpanded="true" id="UserTaskB_di">
+                <dc:Bounds x="340.0" y="259.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_endA" isExpanded="true" id="Event_endA_di">
+                <dc:Bounds x="502.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Event_endB" isExpanded="true" id="Event_endB_di">
+                <dc:Bounds x="502.0" y="281.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_startToFork" id="Flow_startToFork_di">
+                <di:waypoint x="192.0" y="199.0"/>
+                <di:waypoint x="240.0" y="199.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_forkToTaskA" id="Flow_forkToTaskA_di">
+                <di:waypoint x="265.0" y="174.0"/>
+                <di:waypoint x="265.0" y="99.0"/>
+                <di:waypoint x="340.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_forkToTaskB" id="Flow_forkToTaskB_di">
+                <di:waypoint x="265.0" y="224.0"/>
+                <di:waypoint x="265.0" y="299.0"/>
+                <di:waypoint x="340.0" y="299.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_taskAToEnd" id="Flow_taskAToEnd_di">
+                <di:waypoint x="440.0" y="99.0"/>
+                <di:waypoint x="502.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_taskBToEnd" id="Flow_taskBToEnd_di">
+                <di:waypoint x="440.0" y="299.0"/>
+                <di:waypoint x="502.0" y="299.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>

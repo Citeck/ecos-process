@@ -111,11 +111,12 @@ class ProcTaskQueryByDocumentTest {
     }
 
     /**
-     * Documents current behaviour: mainDocumentRef fallback is applied to textual values only,
-     * a list of documents is matched against documentRef alone.
+     * A list of documents (IN) must fall back to mainDocumentRef the same way a single
+     * textual value (EQ) does: MAIN_DOC is only the mainDocumentRef of the DOC_B process,
+     * so its task is found alongside the DOC_A one.
      */
     @Test
-    fun `query by document list should not fall back to mainDocumentRef`() {
+    fun `query by document list should fall back to mainDocumentRef`() {
         val found = AuthContext.runAsFull(TEST_USER) {
             helper.queryTasks(
                 Predicates.and(
@@ -128,8 +129,8 @@ class ProcTaskQueryByDocumentTest {
             )
         }
 
-        assertThat(found).hasSize(1)
-        assertThat(getDocRefsFromTasks(found)).containsExactly(DOC_A.toString())
+        assertThat(found).hasSize(2)
+        assertThat(getDocRefsFromTasks(found)).containsExactlyInAnyOrder(DOC_A.toString(), DOC_B.toString())
     }
 
     private fun queryByDocument(document: String): List<EntityRef> {
