@@ -126,7 +126,8 @@
         },
         "key": "panel_preprocessing",
         "title": {
-          "ru": "Предобработка"
+          "ru": "Предобработка",
+          "en": "Preprocessing"
         },
         "refreshOn": [],
         "optionalWhenDisabled": false,
@@ -171,7 +172,8 @@
         },
         "key": "panel_ai_request",
         "title": {
-          "ru": "Запрос к AI"
+          "ru": "Запрос к AI",
+          "en": "AI Request"
         },
         "refreshOn": [],
         "optionalWhenDisabled": false,
@@ -180,7 +182,8 @@
         "components": [
           {
             "label": {
-              "ru": "Включить документ в контекст"
+              "ru": "Включить документ в контекст",
+              "en": "Include document in context"
             },
             "key": "aiAddDocumentToContext",
             "tooltip": {
@@ -206,7 +209,7 @@
             "key": "aiUserInput",
             "tooltip": {
               "ru": "Промпт, отправляемый AI.\nМожно вставлять переменные процесса через ${someVariable}.\n\nПример:\n\nПодготовь черновик письма клиенту по поводу просроченного платежа. Контактное лицо: ${clientName}, сумма долга: ${debtAmount}, срок просрочки: ${daysOverdue} дней.",
-              "en": "Prompt sent by AI.\nYou can insert process variables via ${someVariable}.\n\nExample:\n\nPrepare a draft letter to a customer about a late payment. Contact person: ${clientName}, amount owed: ${debtAmount}, overdue period: ${daysOverdue} days."
+              "en": "Prompt sent to the AI.\nYou can insert process variables via ${someVariable}.\n\nExample:\n\nPrepare a draft letter to a customer about a late payment. Contact person: ${clientName}, amount owed: ${debtAmount}, overdue period: ${daysOverdue} days."
             },
             "defaultValue": "",
             "refreshOn": [],
@@ -229,7 +232,8 @@
         },
         "key": "panel_postprocessing",
         "title": {
-          "ru": "Постобработка"
+          "ru": "Постобработка",
+          "en": "Postprocessing"
         },
         "refreshOn": [],
         "optionalWhenDisabled": false,
@@ -246,7 +250,7 @@
             "key": "aiSaveResultToDocument",
             "tooltip": {
               "ru": "AI-ответ будет записан в указанный атрибут документа, по которому идет бизнес процесс.",
-              "en": "AI-ответ будет записан в указанный атрибут документа, по которому идет бизнес процесс."
+              "en": "The AI response will be written to the specified attribute of the document the business process runs on."
             },
             "validate": {
               "pattern": "^[\\w$/_:-]+\\w$"
