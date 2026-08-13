@@ -209,47 +209,58 @@ class BpmnIOTest {
             .containsEntry("aiAddDocumentToContext", "true")
     }
 
-    // The whole contract with the citeck-ai handler BpmnAgentExternalTask lives in these two places:
-    // the subscription topic, and the camunda extension properties it reads by name. The scripts and
-    // the result attribute stay ecos: attributes instead — those are consumed inside ecos-process by
-    // AiAgentTaskParseListener.
+    // One editor element, two handlers in citeck-ai. Which one runs the task is decided here, at
+    // export time, by whether an agent is chosen — and nowhere else. These cases pin both branches
+    // and the extension properties each handler reads by name.
     @Test
-    fun `ai agent task is exported as an external task on the agent topic`() {
-        val task = camundaTask(exportToCamunda("aiagenttask/test-ai-agent-task"), "aiAgentTask")
+    fun `ai task without an agent is exported on the plain ai topic`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-add-document-enabled")
+        val task = camundaTask(camundaDef, "aiTask")
+
+        assertThat(task.otherAttributes[CAMUNDA_TYPE]).isEqualTo("external")
+        assertThat(task.otherAttributes[CAMUNDA_TOPIC]).isEqualTo("citeck-bpmn-ai-task")
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask")).doesNotContainKey("aiAgentRef")
+    }
+
+    @Test
+    fun `ai task with an agent is exported on the agent topic`() {
+        val task = camundaTask(exportAiTaskToCamunda("test-ai-task-with-agent"), "aiTask")
 
         assertThat(task.otherAttributes[CAMUNDA_TYPE]).isEqualTo("external")
         assertThat(task.otherAttributes[CAMUNDA_TOPIC]).isEqualTo("citeck-bpmn-ai-agent-task")
     }
 
     @Test
-    fun `ai agent task exports the properties read by the citeck-ai handler`() {
-        val camundaDef = exportToCamunda("aiagenttask/test-ai-agent-task")
+    fun `ai task with an agent exports the properties read by the citeck-ai handler`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-with-agent")
 
-        assertThat(camundaPropertiesOfTask(camundaDef, "aiAgentTask"))
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
             .containsEntry("aiAgentRef", "emodel/ai-agent@tasks-documents-helper")
             .containsEntry("aiUserInput", "Summarize the document")
             .containsEntry("aiAddDocumentToContext", "true")
     }
 
+    // The scripts and the result attribute stay ecos: attributes — those are consumed inside
+    // ecos-process by AiTaskParseListener, which keys off the task type and ignores the agent.
     @Test
-    fun `ai agent task keeps the script attributes for the parse listener`() {
-        val task = camundaTask(exportToCamunda("aiagenttask/test-ai-agent-task"), "aiAgentTask")
+    fun `ai task with an agent keeps the script attributes for the parse listener`() {
+        val task = camundaTask(exportAiTaskToCamunda("test-ai-task-with-agent"), "aiTask")
 
-        assertThat(task.otherAttributes[BPMN_PROP_ECOS_TASK_TYPE]).isEqualTo("aiAgentTask")
+        assertThat(task.otherAttributes[BPMN_PROP_ECOS_TASK_TYPE]).isEqualTo("aiTask")
         assertThat(task.otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT]).isEqualTo("var before = 1;")
         assertThat(task.otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT]).isEqualTo("var after = 2;")
         assertThat(task.otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT]).isEqualTo("aiSummary")
     }
 
     @Test
-    fun `ai agent task survives the ecos format round trip`() {
+    fun `ai task agent ref survives the ecos format round trip`() {
         val testDef = ResourceUtils.getFile(
-            "classpath:test/bpmn/elements/aiagenttask/test-ai-agent-task.bpmn.xml"
+            "classpath:test/bpmn/elements/aitask/test-ai-task-with-agent.bpmn.xml"
         ).readText()
 
         val exportedXml = bpmnIO.exportEcosBpmnToString(bpmnIO.importEcosBpmn(testDef))
 
         assertThat(exportedXml).contains("aiAgentRef=\"emodel/ai-agent@tasks-documents-helper\"")
-        assertThat(exportedXml).contains("taskType=\"aiAgentTask\"")
+        assertThat(exportedXml).contains("taskType=\"aiTask\"")
     }
 }

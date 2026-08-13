@@ -86,6 +86,44 @@
         "label": {
           "ru": "Panel"
         },
+        "key": "panel_agent",
+        "title": {
+          "ru": "AI Агент",
+          "en": "AI Agent"
+        },
+        "refreshOn": [],
+        "optionalWhenDisabled": false,
+        "type": "panel",
+        "input": false,
+        "collapsed": false,
+        "reorder": false,
+        "components": [
+          {
+            "label": {
+              "ru": "AI Агент",
+              "en": "AI Agent"
+            },
+            "key": "aiAgentRef",
+            "tooltip": {
+              "ru": "Необязательное поле.\n\nПусто — задача выполняется обычным запросом к AI: модель отвечает текстом и ничего не меняет в системе.\n\nВыбран агент — задачу выполняет он: со своей моделью, своей инструкцией и своим набором инструментов.\n\nВНИМАНИЕ. Инструменты агента в бизнес-процессе вызываются от имени системного пользователя и без подтверждения человеком: права на записи не проверяются, остановить агента посреди работы некому. Выбирайте только тех агентов, которым разрешено работать без присмотра, и не давайте таким агентам инструменты, изменяющие или удаляющие данные.",
+              "en": "Optional.\n\nEmpty — the task runs as a plain AI request: the model answers with text and changes nothing in the system.\n\nWith an agent selected — the agent runs the task, with its own model, its own instruction and its own set of tools.\n\nWARNING. In a business process the agent's tools are called as the system user and without human confirmation: record permissions are not checked and nobody can stop the agent halfway. Pick only agents that are allowed to run unattended, and do not give such an agent tools that change or delete data."
+            },
+            "defaultValue": "",
+            "refreshOn": [],
+            "optionalWhenDisabled": false,
+            "type": "selectJournal",
+            "input": true,
+            "journalId": "ai-agents-journal",
+            "queryData": {},
+            "isCompact": true,
+            "reorder": false
+          }
+        ]
+      },
+      {
+        "label": {
+          "ru": "Panel"
+        },
         "key": "panel_preprocessing",
         "title": {
           "ru": "Предобработка"

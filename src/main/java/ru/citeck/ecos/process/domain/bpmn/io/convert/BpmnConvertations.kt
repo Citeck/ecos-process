@@ -34,11 +34,9 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.BpmnRecipientsSendStra
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.Recipient
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.RecipientType
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAbstractEcosTaskDef
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiAgentTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnSetStatusTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI_AGENT
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_SET_STATUS
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.script.BpmnScriptTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.*
@@ -493,18 +491,8 @@ fun TTask.convertToBpmnEcosTaskDef(): BpmnAbstractEcosTaskDef? {
                 preProcessedScript = otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] ?: "",
                 postProcessedScript = otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] ?: "",
                 addDocumentToContext = otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT]?.toBoolean() ?: true,
-                saveResultToDocumentAtt = otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] ?: ""
-            )
-        }
-
-        ECOS_TASK_AI_AGENT -> {
-            BpmnAiAgentTaskDef(
-                agentRef = otherAttributes[BPMN_PROP_AI_AGENT_REF] ?: "",
-                userInput = otherAttributes[BPMN_PROP_AI_USER_INPUT] ?: "",
-                preProcessedScript = otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] ?: "",
-                postProcessedScript = otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] ?: "",
-                addDocumentToContext = otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT]?.toBoolean() ?: true,
-                saveResultToDocumentAtt = otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] ?: ""
+                saveResultToDocumentAtt = otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] ?: "",
+                agentRef = otherAttributes[BPMN_PROP_AI_AGENT_REF] ?: ""
             )
         }
 
@@ -526,16 +514,7 @@ fun TTask.fillEcosTaskDefToOtherAttributes(ecosTaskDef: BpmnAbstractEcosTaskDef)
             otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = ecosTaskDef.postProcessedScript
             otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT] = ecosTaskDef.addDocumentToContext.toString()
             otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] = ecosTaskDef.saveResultToDocumentAtt
-        }
-
-        is BpmnAiAgentTaskDef -> {
-            otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_AI_AGENT
             otherAttributes[BPMN_PROP_AI_AGENT_REF] = ecosTaskDef.agentRef
-            otherAttributes[BPMN_PROP_AI_USER_INPUT] = ecosTaskDef.userInput
-            otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] = ecosTaskDef.preProcessedScript
-            otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = ecosTaskDef.postProcessedScript
-            otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT] = ecosTaskDef.addDocumentToContext.toString()
-            otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] = ecosTaskDef.saveResultToDocumentAtt
         }
 
         else -> error("Unsupported task type: $ecosTaskDef")

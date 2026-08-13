@@ -9,31 +9,29 @@ import org.camunda.bpm.engine.impl.scripting.SourceExecutableScript
 import org.camunda.bpm.engine.impl.util.xml.Element
 import org.junit.jupiter.api.Test
 import org.xml.sax.helpers.AttributesImpl
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.aiagent.AiAgentTaskParseListener
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_AGENT_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_POSTPROCESSING_SCRIPT
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_PREPROCESSING_SCRIPT
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TASK_TYPE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI_AGENT
+import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_SET_STATUS
 import javax.xml.namespace.QName
 
 /**
- * The listeners read the deployed Camunda schema, so the elements here are built the way the SAX
+ * The listener reads the deployed Camunda schema, so the elements here are built the way the SAX
  * parser builds them — namespaced attributes, not a stubbed lookup. That keeps the test honest
  * about the attribute key the listener asks for.
  */
 class AiTaskScriptsParseListenerTest {
 
-    private val aiTaskListener = AiTaskParseListener()
-    private val aiAgentTaskListener = AiAgentTaskParseListener()
+    private val listener = AiTaskParseListener()
 
     @Test
-    fun `ai agent task gets all three script listeners`() {
+    fun `ai task gets all three script listeners`() {
         val activity = parse(
-            aiAgentTaskListener,
             taskElement(
-                BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI_AGENT,
+                BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI,
                 BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;",
                 BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT to "aiSummary",
                 BPMN_PROP_AI_POSTPROCESSING_SCRIPT to "var after = 2;"
@@ -53,23 +51,14 @@ class AiTaskScriptsParseListenerTest {
             })
     }
 
+    // A chosen agent only changes which external task handler runs the request; the scripts are a
+    // property of the editor element and must keep working either way.
     @Test
-    fun `ai agent task without scripts gets no listeners`() {
+    fun `ai task with an agent gets the same script listeners`() {
         val activity = parse(
-            aiAgentTaskListener,
-            taskElement(BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI_AGENT)
-        )
-
-        assertThat(activity.scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
-        assertThat(activity.scriptSources(ExecutionListener.EVENTNAME_END)).isEmpty()
-    }
-
-    @Test
-    fun `ai task gets all three script listeners`() {
-        val activity = parse(
-            aiTaskListener,
             taskElement(
                 BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI,
+                BPMN_PROP_AI_AGENT_REF to "emodel/ai-agent@tasks-documents-helper",
                 BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;",
                 BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT to "aiSummary",
                 BPMN_PROP_AI_POSTPROCESSING_SCRIPT to "var after = 2;"
@@ -81,29 +70,33 @@ class AiTaskScriptsParseListenerTest {
     }
 
     @Test
-    fun `each ai listener ignores the other ai task type`() {
-        val aiTask = taskElement(
-            BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI,
-            BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;"
-        )
-        val aiAgentTask = taskElement(
-            BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI_AGENT,
-            BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;"
+    fun `ai task without scripts gets no listeners`() {
+        val activity = parse(taskElement(BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_AI))
+
+        assertThat(activity.scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
+        assertThat(activity.scriptSources(ExecutionListener.EVENTNAME_END)).isEmpty()
+    }
+
+    @Test
+    fun `another ecos task type is left alone`() {
+        val activity = parse(
+            taskElement(
+                BPMN_PROP_ECOS_TASK_TYPE to ECOS_TASK_SET_STATUS,
+                BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;"
+            )
         )
 
-        assertThat(parse(aiAgentTaskListener, aiTask).scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
-        assertThat(parse(aiTaskListener, aiAgentTask).scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
+        assertThat(activity.scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
     }
 
     @Test
     fun `task without ecos task type is left alone`() {
-        val plainTask = taskElement(BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;")
+        val activity = parse(taskElement(BPMN_PROP_AI_PREPROCESSING_SCRIPT to "var before = 1;"))
 
-        assertThat(parse(aiTaskListener, plainTask).scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
-        assertThat(parse(aiAgentTaskListener, plainTask).scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
+        assertThat(activity.scriptSources(ExecutionListener.EVENTNAME_START)).isEmpty()
     }
 
-    private fun parse(listener: AbstractAiTaskScriptsParseListener, taskElement: Element): ActivityImpl {
+    private fun parse(taskElement: Element): ActivityImpl {
         val processDefinition = ProcessDefinitionImpl("testProcess")
         val activity = ActivityImpl("testTask", processDefinition)
 

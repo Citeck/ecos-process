@@ -17,12 +17,10 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaField
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaProperties
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaProperty
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiAgentTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnAiTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnSetStatusTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.BpmnTaskDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
-import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI_AGENT
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TExtensionElements
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TServiceTask
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TTask
@@ -88,27 +86,13 @@ class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
                         element.ecosTaskDefinition.addDocumentToContext.toString()
                     )
                 )
-            }
 
-            is BpmnAiAgentTaskDef -> {
+                // Blank values are skipped, so a task without an agent carries no agent property
+                // at all and the plain AI handler sees exactly what it saw before agents existed.
                 properties.addIfNotBlank(
                     CamundaPropertyCreator.string(
                         BPMN_PROP_AI_AGENT_REF.localPart,
                         element.ecosTaskDefinition.agentRef
-                    )
-                )
-
-                properties.addIfNotBlank(
-                    CamundaPropertyCreator.string(
-                        BPMN_PROP_AI_USER_INPUT.localPart,
-                        element.ecosTaskDefinition.userInput
-                    )
-                )
-
-                properties.addIfNotBlank(
-                    CamundaPropertyCreator.string(
-                        BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT.localPart,
-                        element.ecosTaskDefinition.addDocumentToContext.toString()
                     )
                 )
             }
@@ -165,25 +149,21 @@ class CamundaTaskConverter : EcosOmgConverter<BpmnTaskDef, TTask> {
 
             if (element.ecosTaskDefinition is BpmnAiTaskDef) {
                 otherAttributes[CAMUNDA_TYPE] = CAMUNDA_EXTERNAL_TASK_TYPE
-                otherAttributes[CAMUNDA_TOPIC] = CITECK_AI_TASK_TOPIC
+                // One editor element, two handlers in citeck-ai: a chosen agent means the task is
+                // executed by that agent (own model, instruction and tools), an empty one means a
+                // plain AI request. The choice is a property of the task, not a separate task type.
+                otherAttributes[CAMUNDA_TOPIC] = if (element.ecosTaskDefinition.agentRef.isBlank()) {
+                    CITECK_AI_TASK_TOPIC
+                } else {
+                    CITECK_AI_AGENT_TASK_TOPIC
+                }
 
                 otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_AI
                 otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] = element.ecosTaskDefinition.preProcessedScript
                 otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = element.ecosTaskDefinition.postProcessedScript
                 otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] =
                     element.ecosTaskDefinition.saveResultToDocumentAtt
-            }
-
-            if (element.ecosTaskDefinition is BpmnAiAgentTaskDef) {
-                otherAttributes[CAMUNDA_TYPE] = CAMUNDA_EXTERNAL_TASK_TYPE
-                otherAttributes[CAMUNDA_TOPIC] = CITECK_AI_AGENT_TASK_TOPIC
-
-                otherAttributes[BPMN_PROP_ECOS_TASK_TYPE] = ECOS_TASK_AI_AGENT
                 otherAttributes[BPMN_PROP_AI_AGENT_REF] = element.ecosTaskDefinition.agentRef
-                otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] = element.ecosTaskDefinition.preProcessedScript
-                otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = element.ecosTaskDefinition.postProcessedScript
-                otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] =
-                    element.ecosTaskDefinition.saveResultToDocumentAtt
             }
 
             extensionElements.any.addAll(ecosTaskDefFields(element, context))
