@@ -36,7 +36,7 @@ class AiTaskParseListener : AbstractBpmnParseListener() {
         scope: ScopeImpl,
         activity: ActivityImpl
     ) {
-        if (taskElement.attribute(BPMN_PROP_ECOS_TASK_TYPE.toCamundaKey()) != ECOS_TASK_AI) {
+        if (taskElement.isAiTask().not()) {
             return
         }
 
@@ -73,5 +73,10 @@ class AiTaskParseListener : AbstractBpmnParseListener() {
 
             activity.addBuiltInListener(ExecutionListener.EVENTNAME_END, scriptListener, 1)
         }
+    }
+
+    private fun Element.isAiTask(): Boolean {
+        val taskType = this.attribute(BPMN_PROP_ECOS_TASK_TYPE.toCamundaKey())
+        return taskType == ECOS_TASK_AI
     }
 }
