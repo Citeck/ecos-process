@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ecos="http://www.citeck.ru/ecos/bpmn/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_copyArr" name="" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="8.2.0" ecos:workingCopySourceRef="" ecos:name_ml="{}" ecos:formRef="" ecos:autoDeleteEnabled="true" ecos:sectionRef="eproc/bpmn-section@DEFAULT" ecos:enabled="false" ecos:autoStartEnabled="false" ecos:defState="CONVERTED" ecos:processDefId="test-copy-js-array-script" ecos:ecosType="">
+    <bpmn:process isExecutable="true" id="test-copy-js-array-script">
+        <bpmn:startEvent isInterrupting="true" name="" id="StartEvent_res" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:outgoing >Flow_res_1</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:sequenceFlow sourceRef="StartEvent_res" targetRef="Activity_res_obj" name="" id="Flow_res_1" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:scriptTask scriptFormat="javascript" name="Set js array" id="Activity_res_obj" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Set js array&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="execution.setVariable('srcArr', [1, 2, 3]);">
+            <bpmn:incoming >Flow_res_1</bpmn:incoming>
+            <bpmn:outgoing >Flow_res_2</bpmn:outgoing>
+            <bpmn:script>execution.setVariable('srcArr', [1, 2, 3]);</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:sequenceFlow sourceRef="Activity_res_obj" targetRef="Activity_res_arr" name="" id="Flow_res_2" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:scriptTask scriptFormat="javascript" name="Copy js array" id="Activity_res_arr" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:true,&quot;exclusive&quot;:true}" camunda:asyncAfter="true" ecos:name_ml="{&quot;ru&quot;:&quot;Copy js array&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="execution.setVariable('copyArr', execution.getVariable('srcArr'));">
+            <bpmn:incoming >Flow_res_2</bpmn:incoming>
+            <bpmn:outgoing >Flow_res_3</bpmn:outgoing>
+            <bpmn:script>execution.setVariable('copyArr', execution.getVariable('srcArr'));</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:sequenceFlow sourceRef="Activity_res_arr" targetRef="Activity_res_date" name="" id="Flow_res_3" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:scriptTask scriptFormat="javascript" name="Noop" id="Activity_res_date" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{&quot;ru&quot;:&quot;Noop&quot;}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}" ecos:script="1">
+            <bpmn:incoming >Flow_res_3</bpmn:incoming>
+            <bpmn:outgoing >Flow_res_4</bpmn:outgoing>
+            <bpmn:script>1</bpmn:script>
+        </bpmn:scriptTask>
+        <bpmn:sequenceFlow sourceRef="Activity_res_date" targetRef="endEvent" name="" id="Flow_res_4" ecos:name_ml="{}" ecos:conditionConfig="{&quot;fn&quot;:&quot;&quot;,&quot;expression&quot;:&quot;&quot;,&quot;outcome&quot;:&quot;&quot;}" ecos:conditionType="NONE"/>
+        <bpmn:endEvent name="" id="endEvent" ecos:documentation="{}" ecos:asyncConfig="{&quot;asyncBefore&quot;:false,&quot;asyncAfter&quot;:false,&quot;exclusive&quot;:true}" ecos:name_ml="{}" ecos:jobConfig="{&quot;jobPriority&quot;:null,&quot;jobRetryTimeCycle&quot;:null}">
+            <bpmn:incoming >Flow_res_4</bpmn:incoming>
+        </bpmn:endEvent>
+    </bpmn:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane  bpmnElement="test-copy-js-array-script" id="BPMNPlane_1">
+            <bpmndi:BPMNShape bpmnElement="StartEvent_res" isExpanded="false" id="StartEvent_res_di">
+                <dc:Bounds x="156.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_res_obj" isExpanded="false" id="Activity_res_obj_di">
+                <dc:Bounds x="250.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_res_arr" isExpanded="false" id="Activity_res_arr_di">
+                <dc:Bounds x="400.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="Activity_res_date" isExpanded="false" id="Activity_res_date_di">
+                <dc:Bounds x="550.0" y="59.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" isExpanded="false" id="endEvent_di">
+                <dc:Bounds x="712.0" y="81.0" width="36.0" height="36.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="Flow_res_1" id="Flow_res_1_di">
+                <di:waypoint x="192.0" y="99.0"/>
+                <di:waypoint x="250.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_res_2" id="Flow_res_2_di">
+                <di:waypoint x="350.0" y="99.0"/>
+                <di:waypoint x="400.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_res_3" id="Flow_res_3_di">
+                <di:waypoint x="500.0" y="99.0"/>
+                <di:waypoint x="550.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="Flow_res_4" id="Flow_res_4_di">
+                <di:waypoint x="650.0" y="99.0"/>
+                <di:waypoint x="712.0" y="99.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn:definitions>
