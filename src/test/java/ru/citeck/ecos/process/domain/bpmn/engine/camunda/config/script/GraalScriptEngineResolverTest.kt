@@ -7,27 +7,29 @@ import ru.citeck.ecos.webapp.lib.spring.context.script.EcosGraalJsProps
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import javax.script.ScriptContext
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
 
 /**
- * The property this suite exists for is REUSE, and nothing in the platform asserted it before.
+ * The property under test is engine REUSE, which nothing asserted before.
  *
- * Camunda asks the resolver for a script engine on every single script evaluation and never caches a GraalJS one
- * (`isCachable` reads `getParameter("THREADING")`, which GraalJS answers `null`). Before the fix that meant a new
- * polyglot [Engine] per evaluation, each registered forever in the static `Engine.ENGINES` set — measured on a
- * production heap dump as 4,937 engines holding 88 % of a 4 GB heap, and reproduced here in a few hundred calls.
+ * Camunda asks the resolver on every script evaluation and never caches a GraalJS engine, so a per-call
+ * `Engine.newBuilder()` meant one leaked engine per evaluation. The first test counts engines and fails if anyone
+ * brings that back.
  *
- * So the first test counts engines, and it fails loudly if anyone reintroduces a per-call `Engine.newBuilder()`.
- *
- * Every test drives the PUBLIC entry point Camunda itself calls — `getScriptEngine(language, resolveFromCache)`
- * with caching ON — so the `isCachable` decision is part of what is under test, not bypassed.
+ * Every test goes through `getScriptEngine(language, resolveFromCache)` with caching on, so the `isCachable`
+ * decision is part of what is tested rather than bypassed.
  */
 class GraalScriptEngineResolverTest {
 
-    private fun resolver(nashornCompat: Boolean = false) = GraalScriptEngineResolver(ScriptEngineManager(), EcosGraalJsProps(nashornCompat))
+    private fun resolver(nashornCompat: Boolean = false): GraalScriptEngineResolver {
+        return GraalScriptEngineResolver(ScriptEngineManager(), EcosGraalJsProps(nashornCompat))
+    }
 
-    /** Live entries of the static `Engine.ENGINES` registry — the exact structure that leaked. */
+    /**
+     * Live entries of the static `Engine.ENGINES` registry, the structure that leaked.
+     */
     private fun liveEngines(): Int {
         val field = Engine::class.java.getDeclaredField("ENGINES")
         field.isAccessible = true
@@ -49,9 +51,10 @@ class GraalScriptEngineResolverTest {
             assertThat(engine.eval("x + 1", bindings)).isEqualTo(i + 1)
         }
 
+        // Engine.ENGINES is JVM-global and pruned asynchronously, so it may legitimately drop below the baseline
         assertThat(liveEngines())
             .`as`("200 resolutions must reuse ONE polyglot Engine; a per-call Engine.newBuilder() leaks them all")
-            .isEqualTo(before)
+            .isLessThanOrEqualTo(before)
     }
 
     @Test
@@ -62,7 +65,7 @@ class GraalScriptEngineResolverTest {
         val second = resolver.getScriptEngine("javascript", true)
 
         assertThat(second.eval("typeof leakedGlobal"))
-            .`as`("sharing the ENGINE must not share the CONTEXT — a script's globals stay in its own evaluation")
+            .`as`("sharing the ENGINE must not share the CONTEXT: globals stay in their own evaluation")
             .isEqualTo("undefined")
     }
 
@@ -98,11 +101,28 @@ class GraalScriptEngineResolverTest {
     }
 
     @Test
+    fun `a shared engine forces one host-access configuration on every context built from it`() {
+        // The price of sharing: a resolution wanting different host access used to get its own engine, now it
+        // fails, and it fails on first eval rather than on resolution. Here for the day camunda stops configuring
+        // every resolution identically.
+        val resolver = resolver()
+        resolver.getScriptEngine("javascript", true).eval("1 + 1", SimpleBindings())
+
+        val different = resolver.getScriptEngine("javascript", true)
+        different.context.setAttribute("polyglot.js.allowHostAccess", true, ScriptContext.ENGINE_SCOPE)
+
+        val failure = runCatching { different.eval("1 + 1", SimpleBindings()) }.exceptionOrNull()
+
+        assertThat(failure)
+            .`as`("a context whose host access differs from the shared engine's other contexts cannot be built")
+            .isInstanceOf(IllegalStateException::class.java)
+        assertThat(failure).hasMessageContaining("Found different host access configuration")
+    }
+
+    @Test
     fun `nashorn compatibility survives the engine being shared`() {
-        // `js.nashorn-compat` is an EXPERIMENTAL ENGINE option, so sharing the engine is exactly where it could
-        // be dropped. The marker is measured, not guessed: of the usual nashorn globals, `JSAdapter`, `__LINE__`
-        // and `quit` are the ones this graal version really gates on the flag (`print`/`load`/`trimLeft` exist
-        // either way, and `Java`/`importClass` need host access this context does not grant).
+        // js.nashorn-compat is an experimental ENGINE option, so sharing the engine is where it could get dropped.
+        // JSAdapter and __LINE__ are the globals this graal version actually gates on the flag.
         val plain = resolver().getScriptEngine("javascript", true)
         assertThat(plain.eval("typeof JSAdapter")).isEqualTo("undefined")
 

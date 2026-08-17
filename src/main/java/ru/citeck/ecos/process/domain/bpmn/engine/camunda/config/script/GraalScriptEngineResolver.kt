@@ -10,42 +10,32 @@ import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 
 /**
- * Resolves the GraalJS script engine Camunda uses for BPMN `javascript` scripts.
+ * Resolves the GraalJS script engine camunda uses for BPMN `javascript` scripts.
  *
- * **The polyglot [Engine] is SHARED and built once; only the [Context] is per-call.** That split is the whole
- * point of this class and it must not be undone — the previous shape built a brand-new `Engine` on every
- * resolution and leaked every one of them:
+ * The polyglot [Engine] is shared and built once; only the [Context] is per-call. That split is the point of this
+ * class. Camunda asks the resolver on every script evaluation and caches nothing for GraalJS, because
+ * [DefaultScriptEngineResolver.isCachable] reads `getFactory().getParameter("THREADING")` and
+ * `GraalJSEngineFactory` answers null for it. Building an `Engine` here per call therefore leaked one per
+ * evaluation: `Engine` registers every instance in a static `ENGINES` set that holds the implementation strongly,
+ * and entries leave only on close. A production heap dump had 4937 engines holding 88% of 4 GB.
  *
- *  - Camunda asks the resolver for an engine on EVERY script evaluation
- *    (`ScriptingEngines.getScriptEngineForLanguage` → `DefaultScriptEngineResolver.getScriptEngine(lang, true)`),
- *    and it caches the result only when [DefaultScriptEngineResolver.isCachable] holds — i.e. when
- *    `getFactory().getParameter("THREADING") != null`. `GraalJSEngineFactory.getParameter` answers `null` for
- *    every key it does not know, `THREADING` included, so **the result is never cached** and this method really
- *    is called once per evaluation.
- *  - `org.graalvm.polyglot.Engine` registers every instance in a static `ENGINES` set whose entry holds the
- *    engine IMPLEMENTATION strongly; entries leave only via `Engine.close()` or a reference-queue drain that
- *    runs from `contextClosed`. Nothing here closed either, so each engine — with its whole Truffle shape graph,
- *    language instances and instrumentation — stayed for the life of the JVM.
+ * Sharing is safe. A polyglot `Engine` is designed to be shared by many contexts and is thread-safe, and isolation
+ * is unchanged because the context is still per-call: a global defined in one is undefined in the next.
+ * `ScriptExecutorImpl` already does the same elsewhere in the platform.
  *
- * Measured on a production heap dump (`citeck_eproc`, 2026-08-16): **4,937 leaked engines held 88.33 % of a
- * 4 GB heap** (3.78 GB of `com.oracle.truffle`), against 1.45 % for Camunda's own state. The app OOM-restarted
- * after roughly 5,000 script evaluations, twice in one day, and raising `-Xmx` only moved the failure later.
- * Reproduced outside the stand: 200 evaluations → 201 live engines; with the engine shared → 1, constant.
+ * Two things not to do here:
+ *  - do not cache the ScriptEngine, that is the context, itself. A reused context carries top-level `var`
+ *    declarations from one script into the next, which silently changes the meaning of any script testing
+ *    `typeof x === 'undefined'`.
+ *  - do not close a context here or in a delegating `eval`. A context lives as long as the bindings, which this
+ *    class never sees: camunda evaluates the env scripts and the user's script against one bindings object, so
+ *    closing at an eval boundary makes the next eval fail. [EcosScriptingEnvironment] owns that boundary, and
+ *    something must, because a shared engine keeps every unclosed context alive for the life of the JVM.
  *
- * **Why sharing is safe** (measured against graal 24.2.2, the version this app runs):
- *  - A polyglot `Engine` is explicitly designed to be shared by many `Context`s and is thread-safe; 8 threads
- *    evaluating concurrently through their own contexts on one shared engine returned correct results with no
- *    error.
- *  - Isolation is unchanged, because the CONTEXT is still per-call: a global defined in one context
- *    (`var leaked = 42`) is `undefined` in another context of the same engine. Nothing is reused that a script
- *    can observe.
- *  - Sharing is also what the rest of the platform does — `ru.citeck.ecos.commons.utils.script.ScriptExecutorImpl`
- *    keeps one lazily-built `Engine` per (language, key) behind exactly this double-checked lock and builds a
- *    fresh `Context` per evaluation. This class was the outlier.
- *
- * ⚠ Do not "improve" this by caching the ScriptEngine (i.e. the Context) itself: a reused context carries
- * top-level `var` declarations from one script into the next — measured — which silently changes the meaning of
- * every BPMN script that tests `typeof x === 'undefined'`.
+ * One consequence of sharing: all contexts on the engine must agree on host access. A context whose
+ * `allowHostAccess` differs throws "Found different host access configuration for a context with a shared engine".
+ * That holds today because camunda's `configureGraalJsScriptEngine` applies the same attributes on every
+ * resolution from one process engine configuration.
  */
 class GraalScriptEngineResolver(
     scriptEngineManager: ScriptEngineManager,
@@ -56,19 +46,10 @@ class GraalScriptEngineResolver(
         private val log = KotlinLogging.logger {}
     }
 
-    @Volatile
-    private var sharedEngine: Engine? = null
-    private val engineLock = Any()
+    private val sharedEngine: Engine by lazy { buildEngine() }
 
     override fun getJavaScriptScriptEngine(language: String): ScriptEngine {
-        return GraalJSScriptEngine.create(getOrCreateEngine(), Context.newBuilder("js"))
-    }
-
-    /** The one shared engine, built on first use under a double-checked lock (the `ScriptExecutorImpl` shape). */
-    private fun getOrCreateEngine(): Engine {
-        return sharedEngine ?: synchronized(engineLock) {
-            sharedEngine ?: buildEngine().also { sharedEngine = it }
-        }
+        return GraalJSScriptEngine.create(sharedEngine, Context.newBuilder("js"))
     }
 
     private fun buildEngine(): Engine {
