@@ -246,12 +246,12 @@ class ProcTaskRecords(
             throw IllegalStateException("Task DefinitionKey is mandatory for task completion")
         }
 
-        var outcome = ""
+        val outcomes = LinkedHashSet<String>()
         var formInfo = FormInfo()
 
         record.forEach { k, v ->
             if (k.startsWith(OUTCOME_PREFIX) && v.asBoolean()) {
-                outcome = k.substringAfter(OUTCOME_PREFIX)
+                outcomes.add(k.substringAfter(OUTCOME_PREFIX))
             }
 
             if (k == FORM_INFO_ATT) {
@@ -259,11 +259,16 @@ class ProcTaskRecords(
             }
         }
 
-        if (outcome.isBlank()) {
+        if (outcomes.isEmpty()) {
             throw IllegalStateException("Task outcome is mandatory for task completion")
         }
+        if (outcomes.size > 1) {
+            throw IllegalStateException(
+                "Ambiguous task outcome for task ${task.id}: $outcomes. Exactly one outcome expected"
+            )
+        }
 
-        return Outcome(task.definitionKey, outcome, formInfo.submitName)
+        return Outcome(task.definitionKey, outcomes.first(), formInfo.submitName)
     }
 
     private fun mutateDocumentVariables(task: ProcTaskDto, documentAtts: RecordAtts) {

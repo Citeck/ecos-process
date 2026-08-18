@@ -18,12 +18,14 @@ import spinjar.com.fasterxml.jackson.databind.JsonDeserializer
 import spinjar.com.fasterxml.jackson.databind.JsonSerializer
 import spinjar.com.fasterxml.jackson.databind.SerializerProvider
 import spinjar.com.fasterxml.jackson.databind.module.SimpleModule
+import java.time.Instant
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue as BpmnDataValueDeprecated
 
 class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDataFormat> {
 
     companion object {
         private const val POLYGLOT_MAP_CLASS_NAME = "com.oracle.truffle.polyglot.PolyglotMap"
+        private const val POLYGLOT_LIST_CLASS_NAME = "com.oracle.truffle.polyglot.PolyglotList"
     }
 
     override fun getDataFormatClass(): Class<JacksonJsonDataFormat> {
@@ -62,11 +64,16 @@ class CamundaJsonDataFormatConfiguration : DataFormatConfigurator<JacksonJsonDat
         module.addSerializer(Class.forName(POLYGLOT_MAP_CLASS_NAME), PolyglotMapSerializer())
         module.addDeserializer(Class.forName(POLYGLOT_MAP_CLASS_NAME), PolyglotMapDeserializer())
 
+        module.addDeserializer(Class.forName(POLYGLOT_LIST_CLASS_NAME), PolyglotListDeserializer())
+
         module.addSerializer(Time::class.java, TimeJsonSerializer())
         module.addDeserializer(Time::class.java, TimeJsonDeserializer())
 
         module.addSerializer(Duration::class.java, DurationJsonSerializer())
         module.addDeserializer(Duration::class.java, DurationJsonDeserializer())
+
+        module.addSerializer(Instant::class.java, InstantJsonSerializer())
+        module.addDeserializer(Instant::class.java, InstantJsonDeserializer())
 
         mapper.registerModule(module)
     }
@@ -103,6 +110,20 @@ class PolyglotMapSerializer : JsonSerializer<Any>() {
 class PolyglotMapDeserializer<T> : JsonDeserializer<T>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): T? {
         return null
+    }
+}
+
+/**
+ * A js array reaches an execution variable as a PolyglotList and, unlike a PolyglotMap, serializes cleanly, so
+ * nothing ever rejected it. But spin takes the variable's objectTypeName from the value's class, so on read it
+ * asks jackson to rebuild a PolyglotList from `[1,2,3]` and yields null, losing the value silently. A PolyglotList
+ * cannot exist outside its polyglot context and nothing needs it to: read the stored json back as a plain list.
+ * Also repairs rows written before this existed.
+ */
+class PolyglotListDeserializer<T> : JsonDeserializer<T>() {
+    @Suppress("UNCHECKED_CAST")
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): T? {
+        return p.readValueAs(List::class.java) as T?
     }
 }
 
@@ -223,5 +244,25 @@ class DurationJsonDeserializer : JsonDeserializer<Duration>() {
 
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Duration {
         return Duration.of(p.valueAsString)
+    }
+}
+
+/**
+ * Spin's ObjectMapper has no JSR-310 module, so an [Instant] in a process variable fails to serialize. A js Date
+ * returned by a script is already converted upstream, but an Instant arriving by any other route (a host API
+ * result passed to `execution.setVariable`, or one nested in a serialized object) still lands here. ISO-8601, same
+ * as the Time and Duration serializers above.
+ */
+class InstantJsonSerializer : JsonSerializer<Instant>() {
+
+    override fun serialize(value: Instant, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeString(value.toString())
+    }
+}
+
+class InstantJsonDeserializer : JsonDeserializer<Instant>() {
+
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Instant {
+        return Instant.parse(p.valueAsString)
     }
 }

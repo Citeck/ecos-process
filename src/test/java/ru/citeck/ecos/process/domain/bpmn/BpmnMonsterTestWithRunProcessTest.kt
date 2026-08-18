@@ -7,8 +7,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.InstanceOfAssertFactories
 import org.awaitility.Awaitility
 import org.camunda.bpm.engine.*
+import org.camunda.bpm.engine.history.HistoricVariableInstance
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.assertThat
 import org.camunda.bpm.engine.test.assertions.ProcessEngineTests.init
+import org.camunda.bpm.engine.variable.value.ObjectValue
 import org.camunda.bpm.scenario.ProcessScenario
 import org.camunda.bpm.scenario.Scenario
 import org.camunda.bpm.scenario.Scenario.run
@@ -53,6 +55,7 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.PolyglotContexts
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
@@ -1077,6 +1080,130 @@ class BpmnMonsterTestWithRunProcessTest {
                 )
             ).engine(processEngine).execute()
         }
+    }
+
+    @Test
+    fun `script task should save js array to execution variable`() {
+        // A js array serializes fine, unlike a js object, so nothing ever rejected it. Camunda caches the guest
+        // value and re-serializes it later, which is where closing the context too early breaks a working process.
+        val procId = "test-save-js-array-script"
+        helper.saveAndDeployBpmn("scripttask", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                BPMN_DOCUMENT_REF to docRef.toString()
+            )
+        ).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+
+        assertThat(serializedHistoricVariable(scenario, "someArr"))
+            .`as`("the array must survive the polyglot context being closed at the end of the script execution")
+            .isEqualTo("[1,2,3]")
+
+        // spin records the variable's objectTypeName from the value's own class, so without
+        // PolyglotListDeserializer reading it back asks jackson for a PolyglotList and silently yields null
+        val readBack = camundaHistoryService.createHistoricVariableInstanceQuery()
+            .processInstanceId(scenario.instance(process).processInstanceId)
+            .variableName("someArr")
+            .singleResult()
+            .value
+        assertThat(readBack)
+            .`as`("a stored js array must read back as a plain list, not as null")
+            .isEqualTo(listOf(1, 2, 3))
+    }
+
+    @Test
+    fun `a js array copied into another variable later in the same command survives`() {
+        // Why the close is deferred to the transaction and not to the command context: script A's closer is
+        // registered when A ends, before the TypedValueField that script B creates for the copy. The copying task
+        // is asyncAfter so the command ends with both variables still live. Driven through runtimeService because
+        // the scenario runner would execute the async job itself and race the container's job executor.
+        val procId = "test-copy-js-array-script"
+        helper.saveAndDeployBpmn("scripttask", procId)
+
+        val instance = processEngine.runtimeService.startProcessInstanceByKey(
+            procId,
+            mapOf(BPMN_DOCUMENT_REF to docRef.toString())
+        )
+
+        Awaitility.await().atMost(30, TimeUnit.SECONDS).untilAsserted {
+            assertThat(
+                camundaHistoryService.createHistoricProcessInstanceQuery()
+                    .processInstanceId(instance.id)
+                    .finished()
+                    .count()
+            ).isEqualTo(1)
+        }
+
+        val copied = camundaHistoryService.createHistoricVariableInstanceQuery()
+            .processInstanceId(instance.id)
+            .variableName("copyArr")
+            .disableCustomObjectDeserialization()
+            .singleResult()
+            .typedValue as ObjectValue
+        assertThat(copied.valueSerialized)
+            .`as`("the copy must be serializable after its own command ended")
+            .isEqualTo("[1,2,3]")
+    }
+
+    @Test
+    fun `script task result variable survives the polyglot context being closed`() {
+        // camunda sets a resultVariable after the script returned, so it would lose the ordering race. The
+        // conversion is what keeps this safe, and this is where that is observable.
+        val procId = "test-script-task-result-variable"
+        helper.saveAndDeployBpmn("scripttask", procId)
+
+        val scenario = run(process).startByKey(
+            procId,
+            mapOf(
+                BPMN_DOCUMENT_REF to docRef.toString()
+            )
+        ).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+
+        assertThat(serializedHistoricVariable(scenario, "resObj")).isEqualTo("""{"a":1,"b":"x"}""")
+        assertThat(serializedHistoricVariable(scenario, "resArr")).isEqualTo("[1,2,3]")
+        assertThat(historicVariable(scenario, "resDate").value)
+            .`as`("a js Date must stay an ISO string, not a jackson dump of java.time.Instant internals")
+            .isEqualTo("1970-01-01T00:00:00Z")
+    }
+
+    @Test
+    fun `running scripts through the real engine must not leave polyglot contexts behind`() {
+        // the unit suite measures the same property, but only on the no-command-context path
+        val procId = "test-save-js-array-script"
+        helper.saveAndDeployBpmn("scripttask", procId)
+        val startArgs = mapOf(BPMN_DOCUMENT_REF to docRef.toString())
+
+        run(process).startByKey(procId, startArgs).engine(processEngine).execute()
+        val before = PolyglotContexts.liveCount(processEngine)
+
+        repeat(10) {
+            run(process).startByKey(procId, startArgs).engine(processEngine).execute()
+        }
+
+        // other threads of a full @SpringBootTest touch the same engine, so the property is "must not grow"
+        Awaitility.await().atMost(30, TimeUnit.SECONDS).untilAsserted {
+            assertThat(PolyglotContexts.liveCount(processEngine))
+                .`as`("10 process runs must close every polyglot context they create")
+                .isLessThanOrEqualTo(before)
+        }
+    }
+
+    // scoped to the instance: this suite shares one database, and several tests start the same process
+    private fun historicVariable(scenario: Scenario, name: String): HistoricVariableInstance {
+        return camundaHistoryService.createHistoricVariableInstanceQuery()
+            .processInstanceId(scenario.instance(process).processInstanceId)
+            .variableName(name)
+            .disableCustomObjectDeserialization()
+            .singleResult()
+    }
+
+    private fun serializedHistoricVariable(scenario: Scenario, name: String): String? {
+        return (historicVariable(scenario, name).typedValue as ObjectValue).valueSerialized
     }
 
     // ---BPMN GATEWAY TESTS ---
