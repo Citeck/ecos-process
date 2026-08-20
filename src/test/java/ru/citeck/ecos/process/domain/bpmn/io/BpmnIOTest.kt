@@ -200,4 +200,55 @@ class BpmnIOTest {
         assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
             .containsEntry("aiAddDocumentToContext", "true")
     }
+
+    private fun importInclusiveGatewayWithDefault() = bpmnIO.importEcosBpmn(
+        ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/gateway/test-inclusive-gateway-with-default.bpmn.xml"
+        ).readText()
+    )
+
+    @Test
+    fun `inclusive gateway default flow survives ecos export`() {
+        val bpmnDef = importInclusiveGatewayWithDefault()
+
+        val gateway = bpmnDef.process.first().flowElements.first { it.id == "inclusive_gateway" }
+        assertThat(gateway.data["default"].asText()).isEqualTo("Flow_0mcybpj")
+
+        val exportedXml = bpmnIO.exportEcosBpmnToString(bpmnDef)
+        assertThat(exportedXml).contains("default=\"Flow_0mcybpj\"")
+    }
+
+    @Test
+    fun `inclusive gateway default flow survives camunda export`() {
+        val bpmnDef = importInclusiveGatewayWithDefault()
+
+        val exportedXml = bpmnIO.exportCamundaBpmnToString(bpmnDef)
+        assertThat(exportedXml).contains("default=\"Flow_0mcybpj\"")
+    }
+
+    @Test
+    fun `unresolvable default flow fails export with gateway and flow ids in message`() {
+        val bpmnDef = importInclusiveGatewayWithDefault()
+        bpmnDef.process.first().flowElements.first { it.id == "inclusive_gateway" }
+            .data["default"] = "missing_flow"
+
+        val exception = assertThrows<IllegalStateException> {
+            bpmnIO.exportEcosBpmnToString(bpmnDef)
+        }
+        assertThat(exception.message).contains("inclusive_gateway")
+        assertThat(exception.message).contains("missing_flow")
+    }
+
+    @Test
+    fun `default flow referencing non sequence flow element fails export`() {
+        val bpmnDef = importInclusiveGatewayWithDefault()
+        bpmnDef.process.first().flowElements.first { it.id == "inclusive_gateway" }
+            .data["default"] = "end_all_event"
+
+        val exception = assertThrows<IllegalStateException> {
+            bpmnIO.exportEcosBpmnToString(bpmnDef)
+        }
+        assertThat(exception.message).contains("inclusive_gateway")
+        assertThat(exception.message).contains("end_all_event")
+    }
 }
