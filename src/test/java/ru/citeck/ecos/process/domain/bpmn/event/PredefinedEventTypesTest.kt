@@ -90,7 +90,13 @@ class PredefinedEventTypesTest {
             ComposedEventName(type.name),
             ComposedEventName(type.name, ComposedEventName.RECORD_ANY, docType.toString()),
             ComposedEventName(type.name, document.toString()),
-            ComposedEventName(type.name, document.toString(), docType.toString())
+            ComposedEventName(type.name, document.toString(), docType.toString()),
+
+            // manual mode subscribes by the platform event name, see ComposedEventNameGenerator
+            ComposedEventName(eventName),
+            ComposedEventName(eventName, ComposedEventName.RECORD_ANY, docType.toString()),
+            ComposedEventName(eventName, document.toString()),
+            ComposedEventName(eventName, document.toString(), docType.toString())
         )
     }
 

@@ -67,7 +67,13 @@ class UserTaskAssignEventTypeTest {
             ComposedEventName(eventName),
             ComposedEventName(eventName, ComposedEventName.RECORD_ANY, type.toString()),
             ComposedEventName(eventName, document.toString()),
-            ComposedEventName(eventName, document.toString(), type.toString())
+            ComposedEventName(eventName, document.toString(), type.toString()),
+
+            // manual mode subscribes by the platform event name, see ComposedEventNameGenerator
+            ComposedEventName(BPMN_EVENT_USER_TASK_ASSIGN),
+            ComposedEventName(BPMN_EVENT_USER_TASK_ASSIGN, ComposedEventName.RECORD_ANY, type.toString()),
+            ComposedEventName(BPMN_EVENT_USER_TASK_ASSIGN, document.toString()),
+            ComposedEventName(BPMN_EVENT_USER_TASK_ASSIGN, document.toString(), type.toString())
         )
     }
 

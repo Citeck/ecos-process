@@ -32,8 +32,8 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
@@ -162,7 +162,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Autowired
     private lateinit var helper: BpmnProcHelper
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var bpmnLazyApprovalService: BpmnLazyApprovalService
 
     @Mock
@@ -171,28 +171,28 @@ class BpmnMonsterTestWithRunProcessTest {
     @Mock
     private lateinit var childProcess: ProcessScenario
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var camundaRoleService: CamundaRoleService
 
-    @MockBean
+    @MockitoBean
     private lateinit var statusSetter: CamundaStatusSetter
 
-    @MockBean
+    @MockitoBean
     private lateinit var notificationService: NotificationService
 
-    @MockBean
+    @MockitoBean
     private lateinit var bpmnKpiService: BpmnKpiService
 
-    @MockBean
+    @MockitoBean
     private lateinit var ecosConfigService: EcosConfigService
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var bpmnEcosEventTestAction: BpmnEcosEventTestAction
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var timeNowProvider: TimeNowProvider
 
-    @MockBean
+    @MockitoBean
     private lateinit var workingScheduleService: WorkingScheduleService
 
     @Autowired
@@ -3290,11 +3290,8 @@ class BpmnMonsterTestWithRunProcessTest {
 
         verify(process).hasFinished("endEvent")
 
-        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
-            it as BpmnDataValue
-            it["assignee"].asText()
-        }.isEqualTo(USER_IVAN)
-
+        // the bare "assignee" login is in the payload, but not in the default model: a subscription
+        // gets it only by asking for it in its own event model
         assertThat(scenario.instance(process)).variables().extracting("event").extracting {
             it as BpmnDataValue
             it["assigneeRef"].asText()
