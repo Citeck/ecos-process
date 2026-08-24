@@ -9,6 +9,8 @@ import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.events2.type.RecordDeletedEvent
 import ru.citeck.ecos.events2.type.RecordRefChangedEvent
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
@@ -17,6 +19,7 @@ const val TEST_USER = "testUser"
 @Component
 class BpmnEventHelper(
     private val eventsService: EventsService,
+    private val bpmnEventEmitter: BpmnEventEmitter,
 
     @Value("\${spring.application.name}")
     private val appName: String
@@ -88,6 +91,16 @@ class BpmnEventHelper(
 
     fun sendUpdateCommentEvent(event: CommentUpdateEvent) {
         commentUpdateEmitter.emit(event)
+    }
+
+    /**
+     * Emitted through the production emitter on purpose: the point of the test is that the event
+     * the engine really publishes on task assignment resolves into a bpmn event subscription.
+     */
+    fun sendUserTaskAssignEvent(event: UserTaskEvent, asUser: String = TEST_USER) {
+        AuthContext.runAs(asUser) {
+            bpmnEventEmitter.emitUserTaskAssignEvent(event)
+        }
     }
 
     fun sendRecordChangedEvent(event: RecordChangedEventDto) {

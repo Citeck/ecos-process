@@ -57,6 +57,7 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.PolyglotContexts
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
@@ -3262,6 +3263,57 @@ class BpmnMonsterTestWithRunProcessTest {
             it as BpmnDataValue
             it[EVENT_META_ATT][EVENT_META_USER_ATT].asText()
         }.isEqualTo(TEST_USER)
+    }
+
+    @Test
+    fun `bpmn event user task assign`() {
+        val procId = "bpmn-events-user-task-assign-test"
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val taskRef = EntityRef.valueOf("${AppName.EPROC}/task@user-task-assign-1")
+        val assigneeRef = EntityRef.valueOf("${AppName.EMODEL}/person@$USER_IVAN")
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendUserTaskAssignEvent(
+                UserTaskEvent(
+                    record = docRef,
+                    document = docRef,
+                    taskId = taskRef,
+                    assignee = USER_IVAN,
+                    assigneeRef = assigneeRef,
+                    elementDefId = "approveTask"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["assignee"].asText()
+        }.isEqualTo(USER_IVAN)
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["assigneeRef"].asText()
+        }.isEqualTo(assigneeRef.toString())
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["taskId"].asText()
+        }.isEqualTo(taskRef.toString())
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["elementDefId"].asText()
+        }.isEqualTo("approveTask")
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["record"].asText()
+        }.isEqualTo(docRef.toString())
     }
 
     @Test

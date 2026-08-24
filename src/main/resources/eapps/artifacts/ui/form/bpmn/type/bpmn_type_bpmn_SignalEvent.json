@@ -21,6 +21,14 @@
       "event_record_changed": "Record изменен",
       "event_record_created": "Record создан",
       "event_record_deleted": "Record удален",
+      "event_user_task_assign": "Задача назначена",
+      "event_record_draft_status_changed": "Черновик изменен",
+      "event_record_content_changed": "Контент изменен",
+      "event_user_task_create": "Задача создана",
+      "event_user_task_complete": "Задача завершена",
+      "event_user_task_complete_error": "Ошибка завершения задачи",
+      "event_user_task_delete": "Задача удалена",
+      "event_process_start": "Процесс запущен",
       "event_user_event": "Пользовательское событие",
       "status_change_type_before": "Предыдущий",
       "status_change_type_after": "Новый"
@@ -36,6 +44,14 @@
       "event_record_changed": "Record changed",
       "event_record_created": "Record created",
       "event_record_deleted": "Record deleted",
+      "event_user_task_assign": "Task assigned",
+      "event_record_draft_status_changed": "Draft status changed",
+      "event_record_content_changed": "Content changed",
+      "event_user_task_create": "Task created",
+      "event_user_task_complete": "Task completed",
+      "event_user_task_complete_error": "Task complete error",
+      "event_user_task_delete": "Task deleted",
+      "event_process_start": "Process started",
       "event_user_event": "User event",
       "status_change_type_before": "Before",
       "status_change_type_after": "New"
@@ -157,6 +173,38 @@
                 {
                   "label": "event_record_status_changed",
                   "value": "RECORD_STATUS_CHANGED"
+                },
+                {
+                  "label": "event_user_task_assign",
+                  "value": "USER_TASK_ASSIGN"
+                },
+                {
+                  "label": "event_record_draft_status_changed",
+                  "value": "RECORD_DRAFT_STATUS_CHANGED"
+                },
+                {
+                  "label": "event_record_content_changed",
+                  "value": "RECORD_CONTENT_CHANGED"
+                },
+                {
+                  "label": "event_user_task_create",
+                  "value": "USER_TASK_CREATE"
+                },
+                {
+                  "label": "event_user_task_complete",
+                  "value": "USER_TASK_COMPLETE"
+                },
+                {
+                  "label": "event_user_task_complete_error",
+                  "value": "USER_TASK_COMPLETE_ERROR"
+                },
+                {
+                  "label": "event_user_task_delete",
+                  "value": "USER_TASK_DELETE"
+                },
+                {
+                  "label": "event_process_start",
+                  "value": "PROCESS_START"
                 },
                 {
                   "label": {

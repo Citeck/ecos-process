@@ -301,6 +301,54 @@ enum class EventType(val nameEvent: MLText) {
             LocaleUtils.toLocale("en") to "Record deleted"
         )
     ),
+    RECORD_DRAFT_STATUS_CHANGED(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Черновик изменен",
+            LocaleUtils.toLocale("en") to "Draft status changed"
+        )
+    ),
+    RECORD_CONTENT_CHANGED(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Контент изменен",
+            LocaleUtils.toLocale("en") to "Content changed"
+        )
+    ),
+    USER_TASK_ASSIGN(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Задача назначена",
+            LocaleUtils.toLocale("en") to "Task assigned"
+        )
+    ),
+    USER_TASK_CREATE(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Задача создана",
+            LocaleUtils.toLocale("en") to "Task created"
+        )
+    ),
+    USER_TASK_COMPLETE(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Задача завершена",
+            LocaleUtils.toLocale("en") to "Task completed"
+        )
+    ),
+    USER_TASK_COMPLETE_ERROR(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Ошибка завершения задачи",
+            LocaleUtils.toLocale("en") to "Task complete error"
+        )
+    ),
+    USER_TASK_DELETE(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Задача удалена",
+            LocaleUtils.toLocale("en") to "Task deleted"
+        )
+    ),
+    PROCESS_START(
+        MLText(
+            LocaleUtils.toLocale("ru") to "Процесс запущен",
+            LocaleUtils.toLocale("en") to "Process started"
+        )
+    ),
     USER_EVENT(
         MLText(
             LocaleUtils.toLocale("ru") to "Пользовательское событие",
