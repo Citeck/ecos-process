@@ -1,9 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.spin.impl.json.jackson.format.JacksonJsonDataFormat
 import org.junit.jupiter.api.Test
-import spinjar.com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
 
 /**
