@@ -5,7 +5,9 @@ import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.status.constants.StatusConstants
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
@@ -92,6 +94,8 @@ class ProcTaskAttsSynchronizer(
                 var afterValue = newAttributes[requestAtt]
                 if (isDateAtt(requestAtt, typeInfo) && afterValue is String) {
                     afterValue = Json.mapper.convert(afterValue, Date::class.java)
+                } else if (isTextAtt(requestAtt, typeInfo)) {
+                    afterValue = resolveMlTextValue(afterValue)
                 }
 
                 atts[TASK_DOCUMENT_ATT_PREFIX + taskAtt] = afterValue
@@ -327,7 +331,7 @@ class ProcTaskAttsSynchronizer(
                 ".authorityName" to String::class.java
 
             AttributeType.TEXT ->
-                "" to String::class.java
+                "?str" to String::class.java
 
             AttributeType.BOOLEAN -> "?bool!" to Boolean::class.java
 
@@ -345,6 +349,20 @@ class ProcTaskAttsSynchronizer(
     private fun isDateAtt(att: String, typeInfo: TypeInfo): Boolean {
         val modelType = typeInfo.model.attributes.find { it.id == att }?.type
         return modelType == AttributeType.DATE || modelType == AttributeType.DATETIME
+    }
+
+    private fun isTextAtt(att: String, typeInfo: TypeInfo): Boolean {
+        return typeInfo.model.attributes.find { it.id == att }?.type == AttributeType.TEXT
+    }
+
+    /**
+     * The event's raw "after" value for a TEXT attribute may actually be MLText (e.g. `_name`),
+     * already deserialized as an MLText-shaped object rather than a plain string. Resolve it to a
+     * single display string for the current locale; a plain (non-MLText) string round-trips unchanged.
+     */
+    private fun resolveMlTextValue(rawValue: Any?): Any? {
+        val mlText = Json.mapper.convert(rawValue, MLText::class.java) ?: return rawValue
+        return MLText.getClosestValue(mlText, I18nContext.getLocale())
     }
 
     private data class RequestAtt(

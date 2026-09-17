@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
+import ru.citeck.ecos.context.lib.i18n.I18nContext
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
@@ -181,6 +183,14 @@ class UserTaskAttsSyncTest {
                             AttributeDef.create {
                                 withId("attWithoutSync")
                                 withType(AttributeType.TEXT)
+                            },
+                            AttributeDef.create {
+                                withId("mlTitleSingle")
+                                withType(AttributeType.TEXT)
+                            },
+                            AttributeDef.create {
+                                withId("mlTitleMulti")
+                                withType(AttributeType.TEXT)
                             }
                         )
                     )
@@ -270,6 +280,20 @@ class UserTaskAttsSyncTest {
 
         val typeCode = procTaskService.getVariablesLocal(taskId)["code".withDocTypePrefix()]
         assertThat(typeCode).isNull()
+    }
+
+    @Test
+    fun `create task should resolve MLText-backed TEXT attribute to a plain string`() {
+        createSyncSettings()
+        startProcess()
+
+        val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
+
+        val single = procTaskService.getVariableLocal(taskId, "mlTitleSingle".withDocPrefix()) as String
+        assertThat(single).isEqualTo(docRecord.mlTitleSingle.getValues().values.first())
+
+        val multi = procTaskService.getVariableLocal(taskId, "mlTitleMulti".withDocPrefix()) as String
+        assertThat(multi).isEqualTo(MLText.getClosestValue(docRecord.mlTitleMulti, I18nContext.getLocale()))
     }
 
     @Test
@@ -370,7 +394,9 @@ class UserTaskAttsSyncTest {
                         ChangedValue("dateTime"),
                         ChangedValue("documentAssoc"),
                         ChangedValue("new"),
-                        ChangedValue("description")
+                        ChangedValue("description"),
+                        ChangedValue("mlTitleSingle"),
+                        ChangedValue("mlTitleMulti")
                     )
                 ),
                 after = mapOf(
@@ -380,7 +406,9 @@ class UserTaskAttsSyncTest {
                     "dateTime" to modifiedDocRecord.dateTime,
                     "documentAssoc" to modifiedDocRecord.documentAssoc,
                     "new" to modifiedDocRecord.new,
-                    "description" to modifiedDocRecord.description
+                    "description" to modifiedDocRecord.description,
+                    "mlTitleSingle" to modifiedDocRecord.mlTitleSingle,
+                    "mlTitleMulti" to modifiedDocRecord.mlTitleMulti
                 ),
                 typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
             )
@@ -389,6 +417,15 @@ class UserTaskAttsSyncTest {
         // check values after update
         val attWithoutSyncAfterUpdate = procTaskService.getVariableLocal(taskId, "attWithoutSync".withDocPrefix())
         assertThat(attWithoutSyncAfterUpdate).isNull()
+
+        // MLText-backed TEXT attributes must resolve to a plain string on re-sync too (not raw JSON),
+        // via a live re-fetch from the document rather than trusting the event's raw "after" value
+        val mlTitleSingleUpdated = procTaskService.getVariableLocal(taskId, "mlTitleSingle".withDocPrefix()) as String
+        assertThat(mlTitleSingleUpdated).isEqualTo(modifiedDocRecord.mlTitleSingle.getValues().values.first())
+
+        val mlTitleMultiUpdated = procTaskService.getVariableLocal(taskId, "mlTitleMulti".withDocPrefix()) as String
+        assertThat(mlTitleMultiUpdated)
+            .isEqualTo(MLText.getClosestValue(modifiedDocRecord.mlTitleMulti, I18nContext.getLocale()))
 
         val sumModified = procTaskService.getVariableLocal(taskId, "sum".withDocPrefix()) as Double
         assertThat(sumModified).isEqualTo(modifiedDocRecord.sum)
@@ -874,6 +911,26 @@ class UserTaskAttsSyncTest {
                                 attribute = "new"
                             )
                         )
+                    ),
+                    TaskSyncAttribute(
+                        id = "mlTitleSingle",
+                        type = AttributeType.TEXT,
+                        ecosTypes = listOf(
+                            TaskSyncAttributeType(
+                                typeRef = docRecord.type,
+                                attribute = "mlTitleSingle"
+                            )
+                        )
+                    ),
+                    TaskSyncAttribute(
+                        id = "mlTitleMulti",
+                        type = AttributeType.TEXT,
+                        ecosTypes = listOf(
+                            TaskSyncAttributeType(
+                                typeRef = docRecord.type,
+                                attribute = "mlTitleMulti"
+                            )
+                        )
                     )
                 )
             )
@@ -925,6 +982,17 @@ class UserTaskAttsSyncTest {
         @AttName("attToCheckUpdateOnChangeSettings")
         val attToCheckUpdateOnChangeSettings: String = "attToCheckUpdateOnChangeSettings",
 
+        @AttName("mlTitleSingle")
+        val mlTitleSingle: MLText = MLText(mapOf(Locale.forLanguageTag("ru") to "Единственный вариант")),
+
+        @AttName("mlTitleMulti")
+        val mlTitleMulti: MLText = MLText(
+            mapOf(
+                Locale.forLanguageTag("ru") to "Русский вариант",
+                Locale.forLanguageTag("en") to "English variant"
+            )
+        ),
+
         @AttName("sum")
         val sum: Double = 5_500.0,
 
@@ -965,6 +1033,17 @@ class UserTaskAttsSyncTest {
 
         @AttName("attWithoutSync")
         val attWithoutSync: String = "attWithoutSync",
+
+        @AttName("mlTitleSingle")
+        val mlTitleSingle: MLText = MLText(mapOf(Locale.forLanguageTag("ru") to "Единственный вариант обновлён")),
+
+        @AttName("mlTitleMulti")
+        val mlTitleMulti: MLText = MLText(
+            mapOf(
+                Locale.forLanguageTag("ru") to "Русский вариант обновлён",
+                Locale.forLanguageTag("en") to "English variant updated"
+            )
+        ),
 
         @AttName("sum")
         val sum: Double = 9_500.0,
