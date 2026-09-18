@@ -19,6 +19,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.lock.EcosAppLockService
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Duration
@@ -30,6 +31,7 @@ class BpmnDelayedStartService(
     private val bpmnProcessService: BpmnProcessService,
     private val authoritiesApi: EcosAuthoritiesApi,
     private val workspaceService: WorkspaceService,
+    private val appLockService: EcosAppLockService,
 
     @Value("\${ecos-process.bpmn.async-start-process.delayed-retry.delay}")
     private val delayConfig: String,
@@ -40,6 +42,8 @@ class BpmnDelayedStartService(
 
     companion object {
         private val log = KotlinLogging.logger {}
+
+        const val PROCESS_DELAYED_COMMANDS_LOCK_KEY = "bpmn-delayed-start-process-commands"
 
         fun parseDelays(delayStr: String): List<Duration> {
             if (delayStr.isBlank()) return emptyList()
@@ -107,6 +111,15 @@ class BpmnDelayedStartService(
     }
 
     fun processDelayedCommands() {
+        val executed = appLockService.doInSyncOrSkip(PROCESS_DELAYED_COMMANDS_LOCK_KEY) {
+            processDelayedCommandsInLock()
+        }
+        if (!executed) {
+            log.debug { "Delayed start commands are being processed by another instance. Skip." }
+        }
+    }
+
+    private fun processDelayedCommandsInLock() {
         val now = Instant.now()
         val processedRefs = mutableSetOf<EntityRef>()
         var totalProcessed = 0

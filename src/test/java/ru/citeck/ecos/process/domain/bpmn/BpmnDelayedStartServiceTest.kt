@@ -29,9 +29,13 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.lock.EcosAppLockService
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(EcosSpringExtension::class)
@@ -58,6 +62,9 @@ class BpmnDelayedStartServiceTest {
 
     @Autowired
     private lateinit var helper: BpmnProcHelper
+
+    @Autowired
+    private lateinit var appLockService: EcosAppLockService
 
     @BeforeAll
     fun setUp() {
@@ -527,6 +534,96 @@ class BpmnDelayedStartServiceTest {
             assertThat(cmds.first().completedAt).isNull()
             deleteDelayedCommand(cmds.first().ref)
         }
+    }
+
+    @Test
+    fun `processDelayedCommands should skip processing while lock is held by another instance`() {
+        val businessKey = "delayed-start-lock-held-${System.currentTimeMillis()}"
+
+        saveDelayedCommand(
+            StartProcessRequest(
+                workspace = "",
+                processId = PROC_ID,
+                businessKey = businessKey,
+                variables = mapOf(BPMN_WORKFLOW_INITIATOR to "admin")
+            )
+        )
+
+        val lockAcquired = CountDownLatch(1)
+        val releaseLock = CountDownLatch(1)
+        val lockHolder = Thread {
+            appLockService.doInSync(
+                BpmnDelayedStartService.PROCESS_DELAYED_COMMANDS_LOCK_KEY,
+                Duration.ofSeconds(5)
+            ) {
+                lockAcquired.countDown()
+                releaseLock.await(30, TimeUnit.SECONDS)
+            }
+        }
+        lockHolder.start()
+
+        try {
+            assertThat(lockAcquired.await(10, TimeUnit.SECONDS)).isTrue()
+
+            delayedStartService.processDelayedCommands()
+
+            assertThat(bpmnProcessService.getProcessInstancesForBusinessKey(businessKey)).isEmpty()
+            val cmds = queryDelayedCommands(PROC_ID, businessKey)
+            assertThat(cmds).hasSize(1)
+            assertThat(cmds.first().retryCount).isEqualTo(0)
+            assertThat(cmds.first().completedAt).isNull()
+        } finally {
+            releaseLock.countDown()
+            lockHolder.join(10_000)
+        }
+
+        delayedStartService.processDelayedCommands()
+
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted {
+            assertThat(bpmnProcessService.getProcessInstancesForBusinessKey(businessKey)).hasSize(1)
+        }
+        val cmds = queryDelayedCommands(PROC_ID, businessKey)
+        assertThat(cmds.first().completedAt).isNotNull()
+
+        deleteDelayedCommand(cmds.first().ref)
+    }
+
+    @Test
+    fun `processDelayedCommands should start process only once when invoked concurrently`() {
+        val businessKey = "delayed-start-concurrent-${System.currentTimeMillis()}"
+
+        saveDelayedCommand(
+            StartProcessRequest(
+                workspace = "",
+                processId = PROC_ID,
+                businessKey = businessKey,
+                variables = mapOf(BPMN_WORKFLOW_INITIATOR to "admin")
+            )
+        )
+
+        val instancesCount = 4
+        val barrier = CyclicBarrier(instancesCount)
+        val executor = Executors.newFixedThreadPool(instancesCount)
+        try {
+            val futures = (1..instancesCount).map {
+                executor.submit {
+                    barrier.await(10, TimeUnit.SECONDS)
+                    delayedStartService.processDelayedCommands()
+                }
+            }
+            futures.forEach { it.get(30, TimeUnit.SECONDS) }
+        } finally {
+            executor.shutdownNow()
+        }
+
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted {
+            assertThat(bpmnProcessService.getProcessInstancesForBusinessKey(businessKey)).hasSize(1)
+        }
+        val cmds = queryDelayedCommands(PROC_ID, businessKey)
+        assertThat(cmds).hasSize(1)
+        assertThat(cmds.first().completedAt).isNotNull()
+
+        deleteDelayedCommand(cmds.first().ref)
     }
 
     // endregion
