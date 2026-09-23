@@ -3,11 +3,12 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.aitask
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.delegate.ExecutionListener
 import org.camunda.bpm.engine.impl.bpmn.listener.ScriptExecutionListener
+import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl
-import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl
 import org.camunda.bpm.engine.impl.scripting.SourceExecutableScript
 import org.camunda.bpm.engine.impl.util.xml.Element
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
 import org.xml.sax.helpers.AttributesImpl
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_AGENT_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_POSTPROCESSING_SCRIPT
@@ -16,6 +17,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMEN
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TASK_TYPE
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_AI
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.ecos.ECOS_TASK_SET_STATUS
+import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import javax.xml.namespace.QName
 
 /**
@@ -25,7 +27,7 @@ import javax.xml.namespace.QName
  */
 class AiTaskScriptsParseListenerTest {
 
-    private val listener = AiTaskParseListener()
+    private val listener = AiTaskParseListener(Mockito.mock(ProcUtils::class.java))
 
     @Test
     fun `ai task gets all three script listeners`() {
@@ -97,7 +99,7 @@ class AiTaskScriptsParseListenerTest {
     }
 
     private fun parse(taskElement: Element): ActivityImpl {
-        val processDefinition = ProcessDefinitionImpl("testProcess")
+        val processDefinition = ProcessDefinitionEntity().apply { key = "testProcess" }
         val activity = ActivityImpl("testTask", processDefinition)
 
         listener.parseServiceTask(taskElement, processDefinition, activity)
@@ -107,7 +109,8 @@ class AiTaskScriptsParseListenerTest {
 
     private fun ActivityImpl.scriptSources(eventName: String): List<String> {
         return getBuiltInListeners(eventName).map {
-            (it as ScriptExecutionListener).script.let { script ->
+            // every script must go through the run-as wrapper, see AiTaskScriptsRunAsTest
+            ((it as AiTaskParseListener.RunAsWsSystemListener).impl as ScriptExecutionListener).script.let { script ->
                 (script as SourceExecutableScript).scriptSource
             }
         }

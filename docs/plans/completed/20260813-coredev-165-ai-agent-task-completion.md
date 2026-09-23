@@ -236,7 +236,21 @@ citeck-ai `feature/COREDEV-323-operational-config-agent-split` (`cef3e3d`).
    без ключей перевода. Это пункт 7.3.3 плана COREDEV-413.
 3. Правила генерации схем ИИ-ассистентом
    (`citeck-ai/src/main/resources/prompts/generate_bpmn_prompt.xml`) про выбор агента не знают.
-4. Вопрос с `runAs` у агентной задачи (обработчик работает под системным пользователем) остаётся
-   открытым, см. KDoc `BpmnAgentExternalTask`.
+4. `runAs` у ИИ-задачи (проверено 2026-09-23, COREDEV-159):
+   - **ecos-process — исправлено.** Скрипты ИИ-задачи (предобработка, сохранение результата в
+     документ, постобработка) раньше наследовали чужой контекст: стартовый — пользователя, который
+     довёл процесс до задачи, конечные — полного `system`, потому что citeck-ai завершает внешнюю
+     задачу системным JWT. Теперь `AiTaskParseListener` оборачивает их в
+     `ProcUtils.runAsWsSystemIfRequiredForProcDef` по ключу процесса — так же, как скрипт-задачи,
+     джобы и события задач: процесс воркспейса → `ws_system_<wsSysId>`, глобальный → `system`.
+     Покрыто `AiTaskScriptsRunAsTest` (реальный движок, завершение внешней задачи под `system`).
+   - **citeck-ai — открыто, вне этого репозитория.** `ExternalTaskRunAsSystemAspect` из
+     `ecos-bpmn-external-task-client-springboot-starter` оборачивает любой `ExternalTaskHandler` в
+     `AuthContext.runAsSystem`, поэтому и `BpmnAgentExternalTask` (агент и все его инструменты), и
+     `BpmnAiExternalTask` (чтение атрибутов документа для промпта) для процесса воркспейса работают
+     под полным `system`, в обход ws-system. Нужная правка — в обработчиках citeck-ai (или в
+     стартере) выполнять работу в `workspaceService.runAsWsSystemBySystemId(...)`, беря id
+     воркспейса из `externalTask.processDefinitionKey` до разделителя `..` (как `ProcUtils`).
+     Отдельных данных от ecos-process для этого не требуется.
 5. Линтер редактора отдельного правила под агента не имеет: поле необязательное, а правило
    «не заполнен текст запроса» действует для ИИ-задачи в любом случае.
