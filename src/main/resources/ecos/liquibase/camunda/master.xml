@@ -202,8 +202,7 @@
         <tagDatabase tag="7.24.0"/>
     </changeSet>
 
-    <changeSet id="20260810_ecos_event_subscr_evt_name_pattern_index" author="Citeck" runInTransaction="false">
-        <validCheckSum>ANY</validCheckSum>
+    <changeSet id="20260810_ecos_event_subscr_evt_name_pattern_index" author="Citeck">
         <!--
         Index to speed up the search of event subscriptions by a composed event name prefix
         (selectEventSubscriptionsByEventNamesLikeStart, "EVENT_NAME_ LIKE 'prefix%'").
@@ -214,16 +213,8 @@
 
         Measured on 2026-08-10: stage 36-39 ms -> 0.033 ms (32181 -> 4 buffers),
         prod 44-50 ms -> 0.028 ms (41615 -> 4 buffers).
-
-        CONCURRENTLY (and hence runInTransaction="false"): act_ru_event_subscr is a hot table
-        (~325MB on prod, written on every message/signal event), a plain CREATE INDEX would hold
-        a SHARE lock for the whole build and block process starts during a rolling upgrade.
-        If a concurrent build is interrupted it may leave an INVALID index which IF NOT EXISTS
-        will not rebuild - drop it manually and rerun in that case.
-        validCheckSum ANY: the changeset was initially shipped without CONCURRENTLY, the body
-        change must not fail validation on databases where it already ran.
         -->
-        <sql>CREATE INDEX CONCURRENTLY IF NOT EXISTS ecos_idx_event_subscr_evt_name_pattern
+        <sql>CREATE INDEX IF NOT EXISTS ecos_idx_event_subscr_evt_name_pattern
             ON act_ru_event_subscr (event_name_ text_pattern_ops);</sql>
     </changeSet>
 
