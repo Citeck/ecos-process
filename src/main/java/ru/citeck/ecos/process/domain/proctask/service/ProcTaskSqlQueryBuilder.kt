@@ -1,6 +1,5 @@
 package ru.citeck.ecos.process.domain.proctask.service
 
-import com.fasterxml.jackson.core.io.JsonStringEncoder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.impl.TaskQueryProperty
@@ -417,7 +416,7 @@ class ProcTaskSqlQueryBuilder(
         val attType = attDef?.type ?: AttributeType.TEXT
         val isList = attDef?.multiple ?: false
 
-        if (isList && !isListConditionSupported(predicateType, attType)) {
+        if (isList && !ProcTaskListAttConditions.isSupported(predicateType, attType)) {
             log.warn {
                 "Unsupported condition for multi-valued attribute(s) $names: " +
                     "predicate '$predicateType' with attribute type '$attType'. " +
@@ -509,24 +508,6 @@ class ProcTaskSqlQueryBuilder(
         return true
     }
 
-    /**
-     * Multi-valued attributes are stored as a JSON list in act_ge_bytearray, so only textual
-     * matching is possible: exact element match (EQ/IN on string-like types) and substring
-     * match (CONTAINS/LIKE). Range predicates and exact match on non-textual element types
-     * cannot be expressed over the serialized form.
-     */
-    private fun isListConditionSupported(predicateType: ValuePredicate.Type, attType: AttributeType): Boolean {
-        return when (predicateType) {
-            ValuePredicate.Type.EQ,
-            ValuePredicate.Type.IN -> isStringLikeAttType(attType)
-
-            ValuePredicate.Type.CONTAINS,
-            ValuePredicate.Type.LIKE -> true
-
-            else -> false
-        }
-    }
-
     private fun addLikeToOtherCondition(
         alias: String,
         taskColumn: String,
@@ -545,12 +526,9 @@ class ProcTaskSqlQueryBuilder(
         } else {
             "$alias.$taskColumn"
         }
-        // For EQ/IN on list attributes the JSON-serialized list looks like ["foo","bar"];
-        // match the whole JSON-encoded element (%"foo"%) so 'foo' does not falsely match
-        // 'foobar', values with quotes/backslashes are matched in their stored (escaped) form
-        // and LIKE wildcards inside the value are treated literally.
+        // EQ/IN on a list attribute matches a whole JSON element, see elementLikePattern
         val wrap: (Any?) -> String = if (isList && quotedListMatch) {
-            { v -> "%${escapeSqlLikeWildcards(toJsonStringToken(v))}%" }
+            { v -> ProcTaskListAttConditions.elementLikePattern(v) }
         } else {
             { v -> "%$v%" }
         }
@@ -588,33 +566,6 @@ class ProcTaskSqlQueryBuilder(
                 )
             }
         }
-    }
-
-    /**
-     * PostgreSQL treats a backslash as the default LIKE escape character, so it is doubled first
-     * and then the '%' and '_' wildcards are escaped to match literally.
-     */
-    private fun escapeSqlLikeWildcards(value: String): String = value
-        .replace("\\", "\\\\")
-        .replace("%", "\\%")
-        .replace("_", "\\_")
-
-    /**
-     * Encodes the value exactly like Jackson writes a JSON string element (Camunda Spin
-     * serializes list variables through Jackson), including the surrounding quotes.
-     */
-    private fun toJsonStringToken(value: Any?): String {
-        val str = value?.toString() ?: return "null"
-        return "\"${String(JsonStringEncoder.getInstance().quoteAsString(str))}\""
-    }
-
-    private fun isStringLikeAttType(attType: AttributeType): Boolean = when (attType) {
-        AttributeType.TEXT,
-        AttributeType.ASSOC,
-        AttributeType.PERSON,
-        AttributeType.AUTHORITY,
-        AttributeType.AUTHORITY_GROUP -> true
-        else -> false
     }
 
     private fun castSqlParamValueToListOf(
