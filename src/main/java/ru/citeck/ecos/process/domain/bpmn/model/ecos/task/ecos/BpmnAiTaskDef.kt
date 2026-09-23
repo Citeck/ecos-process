@@ -14,7 +14,15 @@ data class BpmnAiTaskDef(
     val postProcessedScript: String,
 
     val addDocumentToContext: Boolean,
-    val saveResultToDocumentAtt: String
+    val saveResultToDocumentAtt: String,
+
+    /**
+     * Optional. Empty means a plain AI request; a filled ref routes the task to the AI agent
+     * handler instead, which runs the agent's own model, instruction and tools.
+     * Defaults to empty because process definitions stored before this field existed do not
+     * carry it — see CamundaTaskConverter for how the ref picks the external task topic.
+     */
+    val agentRef: String = ""
 ) : BpmnAbstractEcosTaskDef(),
     Validated {
 

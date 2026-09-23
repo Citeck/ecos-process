@@ -3,18 +3,24 @@ package ru.citeck.ecos.process.domain.bpmn.io.xml
 import jakarta.xml.bind.JAXBElement
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.model.lib.workspace.bindRefToWorkspace
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_AGENT_REF
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DMN_DECISION_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_FORM_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_LA_NOTIFICATION_TEMPLATE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NOTIFICATION_TEMPLATE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_WORKSPACE
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TBusinessRuleTask
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSubProcess
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TTask
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import javax.xml.namespace.QName
@@ -22,7 +28,8 @@ import javax.xml.namespace.QName
 /**
  * Replaces workspace prefixes in all `ecos:*` attributes that carry workspace-scoped EntityRef
  * values (ecosType on root Definitions, formRef / notificationTemplate / la*NotificationTemplate
- * on UserTask/SendTask/SubProcess trees).
+ * on UserTask/SendTask/SubProcess trees, processRef on CallActivity, decisionRef on
+ * BusinessRuleTask, aiAgentRef on the ecos Task).
  *
  * `stripRefs` — artifact leaves the source service: workspace sysId prefix → `CURRENT_WS:`.
  * `bindRefs` — artifact lands in a target workspace: `CURRENT_WS:` → target sysId prefix; also
@@ -96,6 +103,22 @@ object BpmnRefsNormalizer {
                     action(element.otherAttributes, BPMN_PROP_LA_NOTIFICATION_TEMPLATE)
                     action(element.otherAttributes, BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE)
                     action(element.otherAttributes, BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE)
+                }
+
+                is TCallActivity -> {
+                    action(element.otherAttributes, BPMN_PROP_PROCESS_REF)
+                }
+
+                is TBusinessRuleTask -> {
+                    action(element.otherAttributes, BPMN_PROP_DMN_DECISION_REF)
+                }
+
+                // Must stay below the branches above: TSendTask, TUserTask and TBusinessRuleTask
+                // all extend TTask, so moving this up would swallow them and drop their refs.
+                // Ecos tasks (ai task, set status task) are plain `bpmn:task` elements, and JAXB
+                // instantiates the exact class per element name, so only they reach this branch.
+                is TTask -> {
+                    action(element.otherAttributes, BPMN_PROP_AI_AGENT_REF)
                 }
 
                 is TSubProcess -> {

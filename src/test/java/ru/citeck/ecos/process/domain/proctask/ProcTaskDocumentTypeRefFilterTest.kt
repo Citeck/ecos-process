@@ -23,15 +23,10 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 
-/**
- * Query tasks by "document" attribute — the predicate used by task-form.
- *
- * A textual document value should match both documentRef and mainDocumentRef process variables.
- */
 @ExtendWith(EcosSpringExtension::class)
 @SpringBootTest(classes = [EprocApp::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ProcTaskQueryByDocumentTest {
+class ProcTaskDocumentTypeRefFilterTest {
 
     @Autowired
     private lateinit var bpmnProcessService: BpmnProcessService
@@ -40,18 +35,14 @@ class ProcTaskQueryByDocumentTest {
     private lateinit var helper: BpmnProcHelper
 
     @Autowired
+    private lateinit var camundaTaskService: org.camunda.bpm.engine.TaskService
+
+    @Autowired
     private lateinit var recordsService: RecordsService
 
     companion object {
         private const val TEST_USER = "testUser"
         private const val PROC_ID = "bpmn-task-query-document-atts-simple-task-create"
-        private const val DOCUMENT_TYPE = "test-doc"
-
-        private const val MAIN_DOCUMENT_REF_VAR = "mainDocumentRef"
-
-        private val DOC_A = EntityRef.valueOf("eproc/$DOCUMENT_TYPE@doc-a")
-        private val DOC_B = EntityRef.valueOf("eproc/$DOCUMENT_TYPE@doc-b")
-        private val MAIN_DOC = EntityRef.valueOf("eproc/$DOCUMENT_TYPE@main-doc")
     }
 
     private val startedProcessIds = mutableListOf<String>()
@@ -66,10 +57,11 @@ class ProcTaskQueryByDocumentTest {
             BpmnProcessDefActions.DEPLOY
         )
 
-        // documentRef only
-        startProcess(DOC_A, mainDocumentRef = null)
-        // documentRef differs from mainDocumentRef
-        startProcess(DOC_B, mainDocumentRef = MAIN_DOC)
+        // Create processes with different document types
+        createProcess("doc-contract-1", "ecos-contract")
+        createProcess("doc-contract-2", "ecos-contract")
+        createProcess("doc-fin-request-1", "fin-request")
+        createProcess("doc-meeting-1", "meeting-activity")
     }
 
     @AfterAll
@@ -81,89 +73,74 @@ class ProcTaskQueryByDocumentTest {
     }
 
     @Test
-    fun `query by document should find tasks by documentRef variable`() {
-        val found = queryByDocument(DOC_A.toString())
-
-        assertThat(found).hasSize(1)
-        assertThat(getDocRefsFromTasks(found)).containsExactly(DOC_A.toString())
-    }
-
-    @Test
-    fun `query by document should find tasks by mainDocumentRef variable`() {
-        val found = queryByDocument(MAIN_DOC.toString())
-
-        assertThat(found).hasSize(1)
-        // the task belongs to the process started for DOC_B, MAIN_DOC is only its mainDocumentRef
-        assertThat(getDocRefsFromTasks(found)).containsExactly(DOC_B.toString())
-    }
-
-    @Test
-    fun `query by document should find tasks when documentRef and mainDocumentRef both exist`() {
-        val found = queryByDocument(DOC_B.toString())
-
-        assertThat(found).hasSize(1)
-        assertThat(getDocRefsFromTasks(found)).containsExactly(DOC_B.toString())
-    }
-
-    @Test
-    fun `query by unknown document should find nothing`() {
-        assertThat(queryByDocument("eproc/$DOCUMENT_TYPE@unknown")).isEmpty()
-    }
-
-    /**
-     * A list of documents (IN) must fall back to mainDocumentRef the same way a single
-     * textual value (EQ) does: MAIN_DOC is only the mainDocumentRef of the DOC_B process,
-     * so its task is found alongside the DOC_A one.
-     */
-    @Test
-    fun `query by document list should fall back to mainDocumentRef`() {
+    fun `filter by documentTypeRef should return only matching tasks`() {
         val found = AuthContext.runAsFull(TEST_USER) {
             helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
-                    Predicates.inVals(
-                        ProcTaskSqlQueryBuilder.ATT_DOCUMENT,
-                        listOf(DOC_A.toString(), MAIN_DOC.toString())
+                    Predicates.eq(
+                        ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE_REF,
+                        "emodel/type@ecos-contract"
                     )
                 )
             )
         }
 
         assertThat(found).hasSize(2)
-        assertThat(getDocRefsFromTasks(found)).containsExactlyInAnyOrder(DOC_A.toString(), DOC_B.toString())
+
+        val docIds = getDocIdsFromTasks(found)
+        assertThat(docIds).containsExactlyInAnyOrder("doc-contract-1", "doc-contract-2")
     }
 
-    private fun queryByDocument(document: String): List<EntityRef> {
-        return AuthContext.runAsFull(TEST_USER) {
+    @Test
+    fun `filter by documentType should return only matching tasks`() {
+        val found = AuthContext.runAsFull(TEST_USER) {
             helper.queryTasks(
                 Predicates.and(
                     Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH),
-                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_DOCUMENT, document)
+                    Predicates.eq(ProcTaskSqlQueryBuilder.ATT_DOCUMENT_TYPE, "fin-request")
                 )
             )
         }
+
+        assertThat(found).hasSize(1)
+
+        val docIds = getDocIdsFromTasks(found)
+        assertThat(docIds).containsExactly("doc-fin-request-1")
     }
 
-    private fun startProcess(docRef: EntityRef, mainDocumentRef: EntityRef?) {
-        val variables = mutableMapOf<String, Any?>(
-            BPMN_DOCUMENT_REF to docRef.toString(),
-            BPMN_DOCUMENT_TYPE to DOCUMENT_TYPE
-        )
-        mainDocumentRef?.let { variables[MAIN_DOCUMENT_REF_VAR] = it.toString() }
+    @Test
+    fun `without documentTypeRef filter should return all tasks`() {
+        val found = AuthContext.runAsFull(TEST_USER) {
+            helper.queryTasks(
+                Predicates.eq(ProcTaskSqlQueryBuilder.ATT_ACTOR, ATT_CURRENT_USER_WITH_AUTH)
+            )
+        }
+
+        assertThat(found).hasSize(4)
+    }
+
+    private fun createProcess(docId: String, documentType: String) {
+        val docRef = EntityRef.valueOf("eproc/$documentType@$docId")
 
         val processInstance = bpmnProcessService.startProcess(
             StartProcessRequest(
-                processId = PROC_ID,
-                businessKey = docRef.toString(),
-                variables = variables
+                "",
+                PROC_ID,
+                docRef.toString(),
+                mapOf(
+                    BPMN_DOCUMENT_REF to docRef.toString(),
+                    BPMN_DOCUMENT_TYPE to documentType
+                )
             )
         )
 
         startedProcessIds.add(processInstance.id)
     }
 
-    private fun getDocRefsFromTasks(taskRefs: List<EntityRef>): List<String> {
+    private fun getDocIdsFromTasks(taskRefs: List<EntityRef>): List<String> {
         return recordsService.getAtts(taskRefs, mapOf("documentRef" to "documentRef?id"))
             .map { it.getAtt("documentRef").asText() }
+            .map { EntityRef.valueOf(it).getLocalId() }
     }
 }

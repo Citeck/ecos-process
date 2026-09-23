@@ -91,7 +91,7 @@ class ProcTaskSqlQueryBuilder(
         )
 
         /**
-         * Textual "document" value is matched against both documentRef and mainDocumentRef
+         * A "document" value is matched against both documentRef and mainDocumentRef
          * process variables. Both names are checked within a single condition, so that
          * PostgreSQL can turn it into a semi-join instead of "EXISTS(a) OR EXISTS(b)",
          * which would be evaluated per task row.
@@ -287,8 +287,9 @@ class ProcTaskSqlQueryBuilder(
             return true
         } else if (PROC_VARIABLES_MAPPING.containsKey(attribute)) {
 
-            // Textual document value should also match mainDocumentRef variable
-            val variableNames = if (attribute == ATT_DOCUMENT && value.isTextual()) {
+            // Document value should also match mainDocumentRef variable - both for a single
+            // textual value (EQ) and for a list of values (IN)
+            val variableNames = if (attribute == ATT_DOCUMENT) {
                 DOCUMENT_VARIABLE_NAMES
             } else {
                 PROC_VARIABLES_MAPPING[attribute]
@@ -414,6 +415,17 @@ class ProcTaskSqlQueryBuilder(
         val attDef = resolveSyncAttribute(names)
         val attType = attDef?.type ?: AttributeType.TEXT
         val isList = attDef?.multiple ?: false
+
+        if (isList && !ProcTaskListAttConditions.isSupported(predicateType, attType)) {
+            log.warn {
+                "Unsupported condition for multi-valued attribute(s) $names: " +
+                    "predicate '$predicateType' with attribute type '$attType'. " +
+                    "The condition will never match any task"
+            }
+            condition.append(ALWAYS_FALSE)
+            return true
+        }
+
         val variableCondition = variableConditions.getOrPut(key) {
             VariableCondition(variableConditions.size, names, isProcessVar, attType, isList = isList)
         }
@@ -426,20 +438,15 @@ class ProcTaskSqlQueryBuilder(
         when (predicateType) {
             ValuePredicate.Type.EQ -> {
                 if (isList) {
-                    if (isStringLikeAttType(attType)) {
-                        addLikeToOtherCondition(
-                            alias,
-                            taskColumn,
-                            attType,
-                            isList,
-                            values,
-                            variableCondition,
-                            quotedListMatch = true
-                        )
-                    } else {
-                        condition.append(ALWAYS_FALSE)
-                        return true
-                    }
+                    addLikeToOtherCondition(
+                        alias,
+                        taskColumn,
+                        attType,
+                        isList,
+                        values,
+                        variableCondition,
+                        quotedListMatch = true
+                    )
                 } else {
                     // Collect EQ values to group them into IN later - doesn't consider predicate level and leads to the selection error result
                     variableCondition.eqValues.addAll(values)
@@ -447,40 +454,24 @@ class ProcTaskSqlQueryBuilder(
             }
 
             ValuePredicate.Type.GT -> {
-                if (isList) {
-                    condition.append(ALWAYS_FALSE)
-                    return true
-                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn > #{$paramName}")
             }
 
             ValuePredicate.Type.LT -> {
-                if (isList) {
-                    condition.append(ALWAYS_FALSE)
-                    return true
-                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn < #{$paramName}")
             }
 
             ValuePredicate.Type.GE -> {
-                if (isList) {
-                    condition.append(ALWAYS_FALSE)
-                    return true
-                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn >= #{$paramName}")
             }
 
             ValuePredicate.Type.LE -> {
-                if (isList) {
-                    condition.append(ALWAYS_FALSE)
-                    return true
-                }
                 val paramName = "p${params.size}"
                 params[paramName] = values[0]
                 variableCondition.otherConditions.add("$alias.$taskColumn <= #{$paramName}")
@@ -488,20 +479,15 @@ class ProcTaskSqlQueryBuilder(
 
             ValuePredicate.Type.IN -> {
                 if (isList) {
-                    if (isStringLikeAttType(attType)) {
-                        addLikeToOtherCondition(
-                            alias,
-                            taskColumn,
-                            attType,
-                            isList,
-                            values,
-                            variableCondition,
-                            quotedListMatch = true
-                        )
-                    } else {
-                        condition.append(ALWAYS_FALSE)
-                        return true
-                    }
+                    addLikeToOtherCondition(
+                        alias,
+                        taskColumn,
+                        attType,
+                        isList,
+                        values,
+                        variableCondition,
+                        quotedListMatch = true
+                    )
                 } else {
                     val paramNames = mutableListOf<String>()
                     values.forEach {
@@ -531,11 +517,18 @@ class ProcTaskSqlQueryBuilder(
         variableCondition: VariableCondition,
         quotedListMatch: Boolean = false
     ) {
-        val likeExpression = if (isList) "convert_from($alias.bytes_, 'UTF8')" else "$alias.$taskColumn"
-        // For EQ/IN on list attributes the JSON-serialized list looks like ["foo","bar"];
-        // wrap the value with quotes (%"foo"%) so 'foo' does not falsely match 'foobar'.
+        // The CASE guard references the act_ru_variable alias (see buildVariableSubQuery), so
+        // that PostgreSQL cannot push convert_from down to a standalone scan of act_ge_bytearray,
+        // where it would fail on non-UTF8 blobs (e.g. binary deployment resources or
+        // java-serialized variables). rev_ >= 0 always holds, but the planner cannot fold it.
+        val likeExpression = if (isList) {
+            "(CASE WHEN ${listVarAlias(alias)}.rev_ >= 0 THEN convert_from($alias.bytes_, 'UTF8') END)"
+        } else {
+            "$alias.$taskColumn"
+        }
+        // EQ/IN on a list attribute matches a whole JSON element, see elementLikePattern
         val wrap: (Any?) -> String = if (isList && quotedListMatch) {
-            { v -> "%\"$v\"%" }
+            { v -> ProcTaskListAttConditions.elementLikePattern(v) }
         } else {
             { v -> "%$v%" }
         }
@@ -573,15 +566,6 @@ class ProcTaskSqlQueryBuilder(
                 )
             }
         }
-    }
-
-    private fun isStringLikeAttType(attType: AttributeType): Boolean = when (attType) {
-        AttributeType.TEXT,
-        AttributeType.ASSOC,
-        AttributeType.PERSON,
-        AttributeType.AUTHORITY,
-        AttributeType.AUTHORITY_GROUP -> true
-        else -> false
     }
 
     private fun castSqlParamValueToListOf(
@@ -701,6 +685,13 @@ class ProcTaskSqlQueryBuilder(
     }
 
     /**
+     * For list conditions the main alias points at act_ge_bytearray (the filter conditions
+     * are built over its bytes_ column) and this one at the act_ru_variable row that scopes
+     * the byte array to its task/process instance.
+     */
+    private fun listVarAlias(alias: String): String = "${alias}_v"
+
+    /**
      * Variable conditions are rendered as EXISTS subqueries, but the subquery text can only be
      * built after all predicates are visited (filters are collected into [VariableCondition]).
      * So a placeholder is put into [condition] while walking the predicate and is replaced by
@@ -739,6 +730,12 @@ class ProcTaskSqlQueryBuilder(
     private fun buildVariableSubQuery(variableCondition: VariableCondition): String {
 
         val alias = getVariableAlias(variableCondition)
+        // List values live in act_ge_bytearray, but that table carries no task/process scoping
+        // columns, so the scoping is taken from the act_ru_variable row referencing the byte
+        // array. Matching by name and root_proc_inst_id_ directly on act_ge_bytearray is wrong:
+        // it ignores task-local scoping and misses call-activity child instances entirely
+        // (the byte array stores the root instance id, the task - its own instance id).
+        val scopeAlias = if (variableCondition.isList) listVarAlias(alias) else alias
 
         // Variable name comes from the query predicate (only its prefix is validated),
         // so it must be bound as a parameter and never inlined into the SQL text.
@@ -748,27 +745,28 @@ class ProcTaskSqlQueryBuilder(
             "#{$paramName}"
         }
         val nameCondition = if (nameParams.size == 1) {
-            "$alias.name_ = ${nameParams[0]}"
+            "$scopeAlias.name_ = ${nameParams[0]}"
         } else {
-            "$alias.name_ IN (${nameParams.joinToString(",")})"
+            "$scopeAlias.name_ IN (${nameParams.joinToString(",")})"
         }
 
         val subQuery = StringBuilder("SELECT 1 FROM ")
         if (variableCondition.isList) {
-            subQuery.append("act_ge_bytearray $alias WHERE ")
-            subQuery.append("$nameCondition AND ")
-            subQuery.append("$alias.root_proc_inst_id_ = $TASK_ALIAS.proc_inst_id_")
+            subQuery.append("act_ru_variable $scopeAlias ")
+            subQuery.append("JOIN act_ge_bytearray $alias ON $alias.id_ = $scopeAlias.bytearray_id_ WHERE ")
         } else {
-            subQuery.append("act_ru_variable $alias WHERE ")
-            subQuery.append("$nameCondition AND ")
-            subQuery.append("$alias.type_ = '${variableCondition.attType.getTaskAttType()}' AND ")
-            subQuery.append("$alias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
+            subQuery.append("act_ru_variable $scopeAlias WHERE ")
+        }
+        subQuery.append("$nameCondition AND ")
+        if (!variableCondition.isList) {
+            subQuery.append("$scopeAlias.type_ = '${variableCondition.attType.getTaskAttType()}' AND ")
+        }
+        subQuery.append("$scopeAlias.proc_inst_id_ = $TASK_ALIAS.proc_inst_id_ AND ")
 
-            if (variableCondition.isProcessVar) {
-                subQuery.append("$alias.task_id_ IS NULL")
-            } else {
-                subQuery.append("$alias.task_id_ = $TASK_ALIAS.id_")
-            }
+        if (variableCondition.isProcessVar) {
+            subQuery.append("$scopeAlias.task_id_ IS NULL")
+        } else {
+            subQuery.append("$scopeAlias.task_id_ = $TASK_ALIAS.id_")
         }
 
         if (!variableCondition.isEmptyCondition) {

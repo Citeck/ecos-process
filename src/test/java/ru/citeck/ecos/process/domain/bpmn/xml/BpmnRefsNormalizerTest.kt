@@ -6,14 +6,20 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_AI_AGENT_REF
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_DMN_DECISION_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_ECOS_TYPE
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_FORM_REF
 import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_NOTIFICATION_TEMPLATE
+import ru.citeck.ecos.process.domain.bpmn.io.BPMN_PROP_PROCESS_REF
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnRefsNormalizer
 import ru.citeck.ecos.process.domain.bpmn.io.xml.BpmnXmlUtils
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TBusinessRuleTask
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TCallActivity
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TDefinitions
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TProcess
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TSendTask
+import ru.citeck.ecos.process.domain.bpmn.model.omg.TTask
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TUserTask
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.test.Test
@@ -31,7 +37,10 @@ class BpmnRefsNormalizerTest {
         val xml = bpmnXml(
             ecosType = "emodel/type@CURRENT_WS:my-type",
             formRef = "uiserv/eform@CURRENT_WS:my-form",
-            notificationTemplate = "notifications/template@CURRENT_WS:my-template"
+            notificationTemplate = "notifications/template@CURRENT_WS:my-template",
+            processRef = "eproc/bpmn-def@CURRENT_WS:my-process",
+            decisionRef = "eproc/dmn-def@CURRENT_WS:my-decision",
+            aiAgentRef = "emodel/ai-agent@CURRENT_WS:my-agent"
         )
         val def = BpmnXmlUtils.readFromString(xml)
 
@@ -40,6 +49,43 @@ class BpmnRefsNormalizerTest {
         assertThat(ecosType(def)).isEqualTo("emodel/type@$targetWsSysId:my-type")
         assertThat(formRef(def)).isEqualTo("uiserv/eform@$targetWsSysId:my-form")
         assertThat(notificationTemplate(def)).isEqualTo("notifications/template@$targetWsSysId:my-template")
+        assertThat(processRef(def)).isEqualTo("eproc/bpmn-def@$targetWsSysId:my-process")
+        assertThat(decisionRef(def)).isEqualTo("eproc/dmn-def@$targetWsSysId:my-decision")
+        assertThat(aiAgentRef(def)).isEqualTo("emodel/ai-agent@$targetWsSysId:my-agent")
+    }
+
+    // The ecos task is a plain `bpmn:task`, so it is reached by an `is TTask` branch placed below
+    // the specific task types that extend TTask. The assertions on formRef, notificationTemplate
+    // and decisionRef here are the ordering guard: moving that branch up drops those three refs.
+    @Test
+    fun `stripRefs - ws prefix is replaced with the CURRENT_WS placeholder on every ref`() {
+        val xml = bpmnXml(
+            ecosType = "emodel/type@$targetWsSysId:my-type",
+            formRef = "uiserv/eform@$targetWsSysId:my-form",
+            notificationTemplate = "notifications/template@$targetWsSysId:my-template",
+            processRef = "eproc/bpmn-def@$targetWsSysId:my-process",
+            decisionRef = "eproc/dmn-def@$targetWsSysId:my-decision",
+            aiAgentRef = "emodel/ai-agent@$targetWsSysId:my-agent"
+        )
+        val def = BpmnXmlUtils.readFromString(xml)
+
+        BpmnRefsNormalizer.stripRefs(def, workspaceService)
+
+        assertThat(aiAgentRef(def)).isEqualTo("emodel/ai-agent@CURRENT_WS:my-agent")
+        assertThat(ecosType(def)).isEqualTo("emodel/type@CURRENT_WS:my-type")
+        assertThat(formRef(def)).isEqualTo("uiserv/eform@CURRENT_WS:my-form")
+        assertThat(notificationTemplate(def)).isEqualTo("notifications/template@CURRENT_WS:my-template")
+        assertThat(processRef(def)).isEqualTo("eproc/bpmn-def@CURRENT_WS:my-process")
+        assertThat(decisionRef(def)).isEqualTo("eproc/dmn-def@CURRENT_WS:my-decision")
+    }
+
+    @Test
+    fun `stripRefs - blank agent ref is left alone`() {
+        val def = BpmnXmlUtils.readFromString(bpmnXml())
+
+        BpmnRefsNormalizer.stripRefs(def, workspaceService)
+
+        assertThat(aiAgentRef(def)).isEmpty()
     }
 
     @Test
@@ -123,7 +169,10 @@ class BpmnRefsNormalizerTest {
     private fun bpmnXml(
         ecosType: String = "",
         formRef: String = "",
-        notificationTemplate: String = ""
+        notificationTemplate: String = "",
+        processRef: String = "",
+        decisionRef: String = "",
+        aiAgentRef: String = ""
     ): String = """
         <?xml version="1.0" encoding="UTF-8"?>
         <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -134,6 +183,9 @@ class BpmnRefsNormalizerTest {
           <bpmn:process id="proc-1" isExecutable="true">
             <bpmn:userTask id="UserTask_1" ecos:formRef="$formRef"/>
             <bpmn:sendTask id="SendTask_1" ecos:notificationTemplate="$notificationTemplate"/>
+            <bpmn:callActivity id="CallActivity_1" ecos:processRef="$processRef"/>
+            <bpmn:businessRuleTask id="BusinessRuleTask_1" ecos:decisionRef="$decisionRef"/>
+            <bpmn:task id="AiTask_1" ecos:taskType="aiTask" ecos:aiAgentRef="$aiAgentRef"/>
           </bpmn:process>
         </bpmn:definitions>
     """.trimIndent()
@@ -149,6 +201,22 @@ class BpmnRefsNormalizerTest {
     private fun formRef(def: TDefinitions): String = userTask(def).otherAttributes[BPMN_PROP_FORM_REF] ?: ""
 
     private fun notificationTemplate(def: TDefinitions): String = sendTask(def).otherAttributes[BPMN_PROP_NOTIFICATION_TEMPLATE] ?: ""
+
+    private fun processRef(def: TDefinitions): String = (def.rootElement.first { it.value is TProcess }.value as TProcess)
+        .flowElement.first { it.value is TCallActivity }.value.let {
+            (it as TCallActivity).otherAttributes[BPMN_PROP_PROCESS_REF] ?: ""
+        }
+
+    private fun decisionRef(def: TDefinitions): String = (def.rootElement.first { it.value is TProcess }.value as TProcess)
+        .flowElement.first { it.value is TBusinessRuleTask }.value.let {
+            (it as TBusinessRuleTask).otherAttributes[BPMN_PROP_DMN_DECISION_REF] ?: ""
+        }
+
+    // selected by id, not by type: TUserTask, TSendTask and TBusinessRuleTask all extend TTask
+    private fun aiAgentRef(def: TDefinitions): String = (def.rootElement.first { it.value is TProcess }.value as TProcess)
+        .flowElement.first { it.value.id == "AiTask_1" }.value.let {
+            (it as TTask).otherAttributes[BPMN_PROP_AI_AGENT_REF] ?: ""
+        }
 
     private fun fakeWorkspaceService(): WorkspaceService {
         val ws = Mockito.mock(WorkspaceService::class.java)
@@ -172,6 +240,14 @@ class BpmnRefsNormalizerTest {
                 localId
             } else {
                 "$sysId${IdInWs.WS_DELIM}$localId"
+            }
+        }
+        whenever(ws.replaceWsPrefixToCurrentWsPlaceholder(any())).thenAnswer { inv ->
+            val localId = inv.getArgument<String>(0)
+            if (!localId.contains(IdInWs.WS_DELIM)) {
+                localId
+            } else {
+                "CURRENT_WS${IdInWs.WS_DELIM}${localId.substringAfter(IdInWs.WS_DELIM)}"
             }
         }
         return ws

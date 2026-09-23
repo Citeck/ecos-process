@@ -110,6 +110,10 @@ class TaskDefinitionUtils(
 
     fun getTaskRoles(document: EntityRef, processDefinitionId: String, taskDefinitionKey: String): List<TaskRole> {
 
+        if (document.isEmpty()) {
+            return emptyList()
+        }
+
         val defData =
             taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
         val taskDefinition = defData.task ?: return emptyList()
@@ -135,11 +139,11 @@ class TaskDefinitionUtils(
     }
 
     fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
-        val document = delegateTask.getDocumentRef()
-        if (document == EntityRef.EMPTY) {
-            return emptyList()
-        }
-        return getTaskRoles(document, delegateTask.processDefinitionId, delegateTask.taskDefinitionKey)
+        return getTaskRoles(
+            delegateTask.getDocumentRef(),
+            delegateTask.processDefinitionId,
+            delegateTask.taskDefinitionKey
+        )
     }
 
     fun getTaskTitle(delegateTask: DelegateTask): MLText {

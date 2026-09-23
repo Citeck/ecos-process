@@ -55,6 +55,7 @@ class ProcTaskMultiValuedAttsQueryTest {
 
     companion object {
         private const val PROC_ID_SIMPLE_TASK = "bpmn-task-atts-document-simple-task-create"
+        private const val PROC_ID_TWO_PARALLEL_TASKS = "bpmn-task-atts-two-parallel-tasks"
         private const val DOCUMENT_TYPE = "doc-multi-sync-query"
 
         private const val TAGS_ATT = "tags"
@@ -99,6 +100,12 @@ class ProcTaskMultiValuedAttsQueryTest {
         helper.saveBpmnWithAction(
             "test/bpmn/$PROC_ID_SIMPLE_TASK.bpmn.xml",
             PROC_ID_SIMPLE_TASK,
+            BpmnProcessDefActions.DEPLOY
+        )
+
+        helper.saveBpmnWithAction(
+            "test/bpmn/$PROC_ID_TWO_PARALLEL_TASKS.bpmn.xml",
+            PROC_ID_TWO_PARALLEL_TASKS,
             BpmnProcessDefActions.DEPLOY
         )
 
@@ -187,6 +194,52 @@ class ProcTaskMultiValuedAttsQueryTest {
     }
 
     @Test
+    fun `query multi valued attribute by exact value should not treat underscore as a wildcard`() {
+        // '_' is a LIKE wildcard for any single character - unescaped it would match "alpha"
+        assertThat(queryTasks(Predicates.eq(TAGS_ATT.withDocPrefix(), "al_ha"))).isEmpty()
+    }
+
+    @Test
+    fun `query multi valued attribute by exact value should not treat percent as a wildcard`() {
+        // '%' is a LIKE wildcard for any substring - unescaped "al%" would match "alpha"
+        assertThat(queryTasks(Predicates.eq(TAGS_ATT.withDocPrefix(), "al%"))).isEmpty()
+    }
+
+    /**
+     * Task-local multi-valued attributes of one task must not be visible through another task
+     * of the same process instance: the byte array is matched through its act_ru_variable row
+     * (task_id_ = task.id_), not through the whole process instance tree.
+     */
+    @Test
+    fun `task local multi valued attribute must not leak to another task of the same process instance`() {
+        val instance = bpmnProcessService.startProcess(
+            StartProcessRequest(
+                processId = PROC_ID_TWO_PARALLEL_TASKS,
+                businessKey = docWithTags.docRef.toString(),
+                variables = mapOf(
+                    BPMN_DOCUMENT_REF to docWithTags.docRef.toString(),
+                    BPMN_DOCUMENT_TYPE to DOCUMENT_TYPE
+                )
+            )
+        )
+        try {
+            val tasks = camundaTaskService.createTaskQuery().processInstanceId(instance.id).list()
+            assertThat(tasks).hasSize(2)
+            val taskA = tasks.first { it.taskDefinitionKey == "UserTaskA" }
+            val taskB = tasks.first { it.taskDefinitionKey == "UserTaskB" }
+
+            camundaTaskService.setVariableLocal(taskA.id, TAGS_ATT.withDocPrefix(), arrayListOf("task-a-tag"))
+            camundaTaskService.setVariableLocal(taskB.id, TAGS_ATT.withDocPrefix(), arrayListOf("task-b-tag"))
+
+            val found = queryTasks(Predicates.eq(TAGS_ATT.withDocPrefix(), "task-a-tag"))
+
+            assertThat(found.map { EntityRef.valueOf(it.id).getLocalId() }).containsExactly(taskA.id)
+        } finally {
+            bpmnProcessService.deleteProcessInstance(instance.id)
+        }
+    }
+
+    @Test
     fun `query multi valued attribute by value of another document`() {
         val found = queryTasks(Predicates.eq(TAGS_ATT.withDocPrefix(), "gamma"))
 
@@ -234,7 +287,10 @@ class ProcTaskMultiValuedAttsQueryTest {
             .addConditions(Predicates.eq(TAGS_ATT.withDocPrefix(), "alpha"))
             .buildTaskSql("DISTINCT task.ID_", withLimitAndSort = false)
 
-        assertThat(sql).contains("EXISTS (SELECT 1 FROM act_ge_bytearray")
+        assertThat(sql).contains("EXISTS (SELECT 1 FROM act_ru_variable")
+        assertThat(sql).contains("JOIN act_ge_bytearray")
+        // byte array is scoped to the task through its act_ru_variable row
+        assertThat(sql).contains(".task_id_ = task.id_")
         assertThat(sql).doesNotContain("NOT EXISTS")
         assertThat(sql).doesNotContain("LEFT JOIN")
     }

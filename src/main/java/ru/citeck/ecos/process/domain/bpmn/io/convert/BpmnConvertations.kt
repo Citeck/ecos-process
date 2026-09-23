@@ -491,7 +491,8 @@ fun TTask.convertToBpmnEcosTaskDef(): BpmnAbstractEcosTaskDef? {
                 preProcessedScript = otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT] ?: "",
                 postProcessedScript = otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] ?: "",
                 addDocumentToContext = otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT]?.toBoolean() ?: true,
-                saveResultToDocumentAtt = otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] ?: ""
+                saveResultToDocumentAtt = otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] ?: "",
+                agentRef = otherAttributes[BPMN_PROP_AI_AGENT_REF] ?: ""
             )
         }
 
@@ -513,6 +514,7 @@ fun TTask.fillEcosTaskDefToOtherAttributes(ecosTaskDef: BpmnAbstractEcosTaskDef)
             otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT] = ecosTaskDef.postProcessedScript
             otherAttributes[BPMN_PROP_AI_ADD_DOCUMENT_TO_CONTEXT] = ecosTaskDef.addDocumentToContext.toString()
             otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT] = ecosTaskDef.saveResultToDocumentAtt
+            otherAttributes[BPMN_PROP_AI_AGENT_REF] = ecosTaskDef.agentRef
         }
 
         else -> error("Unsupported task type: $ecosTaskDef")

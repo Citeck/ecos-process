@@ -291,7 +291,7 @@ class ProcTaskServiceImpl(
             val taskComment = getComment()
             completionVariables[BPMN_COMMENT] = taskComment
             taskLocalVariables[BPMN_TASK_COMMENT_LOCAL] = taskComment
-            taskLocalVariables[BPMN_LA_COMPLETE_KEY] = variables[BPMN_LA_COMPLETE_KEY]
+            variables[BPMN_LA_COMPLETE_KEY]?.let { taskLocalVariables[BPMN_LA_COMPLETE_KEY] = it }
             completionVariables.remove(BPMN_LA_COMPLETE_KEY)
 
             log.debug {

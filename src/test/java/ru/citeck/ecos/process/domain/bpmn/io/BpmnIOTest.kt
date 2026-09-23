@@ -9,6 +9,8 @@ import ru.citeck.ecos.commons.utils.resource.ResourceUtils
 import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.model.lib.workspace.api.WorkspaceApi
 import ru.citeck.ecos.model.lib.workspace.api.WsMembershipType
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_TOPIC
+import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_TYPE
 import ru.citeck.ecos.process.domain.bpmn.model.camunda.CamundaProperties
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.EcosBpmnElementDefinitionException
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TBaseElement
@@ -155,17 +157,23 @@ class BpmnIOTest {
         assertThat(calledElem).isEqualTo("tws0-sys..non_main_process_1")
     }
 
-    private fun exportAiTaskToCamunda(resourceName: String): TDefinitions {
-        val testDef = ResourceUtils.getFile(
-            "classpath:test/bpmn/elements/aitask/$resourceName.bpmn.xml"
-        ).readText()
+    private fun exportToCamunda(resourcePath: String): TDefinitions {
+        val testDef = ResourceUtils.getFile("classpath:test/bpmn/elements/$resourcePath.bpmn.xml").readText()
         return bpmnIO.exportCamundaBpmn(bpmnIO.importEcosBpmn(testDef))
     }
 
-    private fun camundaPropertiesOfTask(camundaDef: TDefinitions, taskId: String): Map<String, String> {
+    private fun exportAiTaskToCamunda(resourceName: String): TDefinitions {
+        return exportToCamunda("aitask/$resourceName")
+    }
+
+    private fun camundaTask(camundaDef: TDefinitions, taskId: String): TServiceTask {
         val process = camundaDef.rootElement.map { it.value }.filterIsInstance<TProcess>().first()
-        val task: TServiceTask = findElementById(process.flowElement, taskId)!!
-        return task.extensionElements.any
+        return findElementById(process.flowElement, taskId)!!
+    }
+
+    private fun camundaPropertiesOfTask(camundaDef: TDefinitions, taskId: String): Map<String, String> {
+        return camundaTask(camundaDef, taskId)
+            .extensionElements.any
             .filterIsInstance<JAXBElement<*>>()
             .map { it.value }
             .filterIsInstance<CamundaProperties>()
@@ -199,6 +207,61 @@ class BpmnIOTest {
 
         assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
             .containsEntry("aiAddDocumentToContext", "true")
+    }
+
+    // One editor element, two handlers in citeck-ai. Which one runs the task is decided here, at
+    // export time, by whether an agent is chosen — and nowhere else. These cases pin both branches
+    // and the extension properties each handler reads by name.
+    @Test
+    fun `ai task without an agent is exported on the plain ai topic`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-add-document-enabled")
+        val task = camundaTask(camundaDef, "aiTask")
+
+        assertThat(task.otherAttributes[CAMUNDA_TYPE]).isEqualTo("external")
+        assertThat(task.otherAttributes[CAMUNDA_TOPIC]).isEqualTo("citeck-bpmn-ai-task")
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask")).doesNotContainKey("aiAgentRef")
+    }
+
+    @Test
+    fun `ai task with an agent is exported on the agent topic`() {
+        val task = camundaTask(exportAiTaskToCamunda("test-ai-task-with-agent"), "aiTask")
+
+        assertThat(task.otherAttributes[CAMUNDA_TYPE]).isEqualTo("external")
+        assertThat(task.otherAttributes[CAMUNDA_TOPIC]).isEqualTo("citeck-bpmn-ai-agent-task")
+    }
+
+    @Test
+    fun `ai task with an agent exports the properties read by the citeck-ai handler`() {
+        val camundaDef = exportAiTaskToCamunda("test-ai-task-with-agent")
+
+        assertThat(camundaPropertiesOfTask(camundaDef, "aiTask"))
+            .containsEntry("aiAgentRef", "emodel/ai-agent@tasks-documents-helper")
+            .containsEntry("aiUserInput", "Summarize the document")
+            .containsEntry("aiAddDocumentToContext", "true")
+    }
+
+    // The scripts and the result attribute stay ecos: attributes — those are consumed inside
+    // ecos-process by AiTaskParseListener, which keys off the task type and ignores the agent.
+    @Test
+    fun `ai task with an agent keeps the script attributes for the parse listener`() {
+        val task = camundaTask(exportAiTaskToCamunda("test-ai-task-with-agent"), "aiTask")
+
+        assertThat(task.otherAttributes[BPMN_PROP_ECOS_TASK_TYPE]).isEqualTo("aiTask")
+        assertThat(task.otherAttributes[BPMN_PROP_AI_PREPROCESSING_SCRIPT]).isEqualTo("var before = 1;")
+        assertThat(task.otherAttributes[BPMN_PROP_AI_POSTPROCESSING_SCRIPT]).isEqualTo("var after = 2;")
+        assertThat(task.otherAttributes[BPMN_PROP_AI_SAVE_RESULT_TO_DOCUMENT_ATT]).isEqualTo("aiSummary")
+    }
+
+    @Test
+    fun `ai task agent ref survives the ecos format round trip`() {
+        val testDef = ResourceUtils.getFile(
+            "classpath:test/bpmn/elements/aitask/test-ai-task-with-agent.bpmn.xml"
+        ).readText()
+
+        val exportedXml = bpmnIO.exportEcosBpmnToString(bpmnIO.importEcosBpmn(testDef))
+
+        assertThat(exportedXml).contains("aiAgentRef=\"emodel/ai-agent@tasks-documents-helper\"")
+        assertThat(exportedXml).contains("taskType=\"aiTask\"")
     }
 
     private fun importInclusiveGatewayWithDefault() = bpmnIO.importEcosBpmn(
