@@ -32,8 +32,8 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.context.junit.jupiter.EnabledIf
 import org.springframework.util.ResourceUtils
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
@@ -57,6 +57,7 @@ import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.PolyglotContexts
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaStatusSetter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
@@ -161,7 +162,7 @@ class BpmnMonsterTestWithRunProcessTest {
     @Autowired
     private lateinit var helper: BpmnProcHelper
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var bpmnLazyApprovalService: BpmnLazyApprovalService
 
     @Mock
@@ -170,28 +171,28 @@ class BpmnMonsterTestWithRunProcessTest {
     @Mock
     private lateinit var childProcess: ProcessScenario
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var camundaRoleService: CamundaRoleService
 
-    @MockBean
+    @MockitoBean
     private lateinit var statusSetter: CamundaStatusSetter
 
-    @MockBean
+    @MockitoBean
     private lateinit var notificationService: NotificationService
 
-    @MockBean
+    @MockitoBean
     private lateinit var bpmnKpiService: BpmnKpiService
 
-    @MockBean
+    @MockitoBean
     private lateinit var ecosConfigService: EcosConfigService
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var bpmnEcosEventTestAction: BpmnEcosEventTestAction
 
-    @SpyBean
+    @MockitoSpyBean
     private lateinit var timeNowProvider: TimeNowProvider
 
-    @MockBean
+    @MockitoBean
     private lateinit var workingScheduleService: WorkingScheduleService
 
     @Autowired
@@ -3262,6 +3263,54 @@ class BpmnMonsterTestWithRunProcessTest {
             it as BpmnDataValue
             it[EVENT_META_ATT][EVENT_META_USER_ATT].asText()
         }.isEqualTo(TEST_USER)
+    }
+
+    @Test
+    fun `bpmn event user task assign`() {
+        val procId = "bpmn-events-user-task-assign-test"
+        helper.saveAndDeployBpmn(BPMN_EVENTS, procId)
+
+        val taskRef = EntityRef.valueOf("${AppName.EPROC}/task@user-task-assign-1")
+        val assigneeRef = EntityRef.valueOf("${AppName.EMODEL}/person@$USER_IVAN")
+
+        `when`(process.waitsAtSignalIntermediateCatchEvent("signal_catch")).thenReturn {
+            bpmnEventHelper.sendUserTaskAssignEvent(
+                UserTaskEvent(
+                    record = docRef,
+                    document = docRef,
+                    taskId = taskRef,
+                    assignee = USER_IVAN,
+                    assigneeRef = assigneeRef,
+                    elementDefId = "approveTask"
+                )
+            )
+        }
+
+        val scenario = run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
+
+        verify(process).hasFinished("endEvent")
+
+        // the bare "assignee" login is in the payload, but not in the default model: a subscription
+        // gets it only by asking for it in its own event model
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["assigneeRef"].asText()
+        }.isEqualTo(assigneeRef.toString())
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["taskId"].asText()
+        }.isEqualTo(taskRef.toString())
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["elementDefId"].asText()
+        }.isEqualTo("approveTask")
+
+        assertThat(scenario.instance(process)).variables().extracting("event").extracting {
+            it as BpmnDataValue
+            it["record"].asText()
+        }.isEqualTo(docRef.toString())
     }
 
     @Test

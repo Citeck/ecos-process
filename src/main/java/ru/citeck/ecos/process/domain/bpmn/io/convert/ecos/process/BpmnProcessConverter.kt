@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.ecos.process
 
+import ru.citeck.ecos.process.domain.bpmn.io.convert.fillElementsRefsFromIdToRealObjects
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toBpmnArtifactDef
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toBpmnFlowElementDef
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.pool.BpmnLaneSetDef

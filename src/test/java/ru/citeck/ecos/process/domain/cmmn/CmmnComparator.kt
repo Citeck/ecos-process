@@ -2,7 +2,7 @@ package ru.citeck.ecos.process.domain.cmmn
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.xml.bind.JAXBElement
-import org.apache.commons.beanutils.PropertyUtils
+import ru.citeck.beans.BeanUtils
 import ru.citeck.ecos.process.domain.cmmn.io.xml.CmmnXmlUtils
 import ru.citeck.ecos.process.domain.cmmn.model.omg.DiagramElement
 import ru.citeck.ecos.process.domain.cmmn.model.omg.TCmmnElement
@@ -24,16 +24,13 @@ object CmmnComparator {
 
         value ?: return
 
-        val descriptors = PropertyUtils.getPropertyDescriptors(value)
+        val descriptors = BeanUtils.getProperties(value.javaClass)
 
         for (descriptor in descriptors) {
 
-            descriptor.readMethod ?: continue
-            if (descriptor.name == "class") {
-                continue
-            }
+            val readMethod = descriptor.getReadMethod() ?: continue
 
-            val propValue = descriptor.readMethod.invoke(value) ?: continue
+            val propValue = readMethod.invoke(value) ?: continue
 
             if (propValue is MutableList<*>) {
 
@@ -125,7 +122,7 @@ object CmmnComparator {
             }
         } else {
 
-            val descriptors = PropertyUtils.getPropertyDescriptors(expected)
+            val descriptors = BeanUtils.getProperties(expected.javaClass)
             if (descriptors.isEmpty()) {
                 logNotEq.invoke()
                 return false
@@ -133,34 +130,33 @@ object CmmnComparator {
             var notEqualsObjIsFound = false
             for (descriptor in descriptors) {
 
-                if (descriptor.name == "class") {
-                    continue
-                }
+                val readMethod = descriptor.getReadMethod() ?: continue
+                val propName = descriptor.getName()
 
-                val propClass = descriptor.readMethod.declaringClass
+                val propClass = readMethod.declaringClass
                 val exludedByClass = context.excludedProps[propClass] ?: emptySet()
                 val idRefsByClass = context.idRefsProps[propClass] ?: emptySet()
 
-                if (exludedByClass.contains(descriptor.name)) {
+                if (exludedByClass.contains(propName)) {
                     continue
                 }
                 try {
-                    val innerExpectedRaw = descriptor.readMethod.invoke(expected)
-                    val innerActualRaw = descriptor.readMethod.invoke(actual)
+                    val innerExpectedRaw = readMethod.invoke(expected)
+                    val innerActualRaw = readMethod.invoke(actual)
 
-                    val innerExpected = if (idRefsByClass.contains(descriptor.name)) {
+                    val innerExpected = if (idRefsByClass.contains(propName)) {
                         CmmnXmlUtils.idRefToId(innerExpectedRaw)
                     } else {
                         innerExpectedRaw
                     }
-                    val innerActual = if (idRefsByClass.contains(descriptor.name)) {
+                    val innerActual = if (idRefsByClass.contains(propName)) {
                         CmmnXmlUtils.idRefToId(innerActualRaw)
                     } else {
                         innerActualRaw
                     }
 
                     if (!compare(
-                            listOf(*path.toTypedArray(), descriptor.name),
+                            listOf(*path.toTypedArray(), propName),
                             innerExpected,
                             innerActual,
                             context
@@ -170,8 +166,8 @@ object CmmnComparator {
                     }
                 } catch (e: Exception) {
                     log.error {
-                        "Failed to read property ${descriptor.name} " +
-                            "by getter ${descriptor.readMethod.name}. Msg: ${e.message}"
+                        "Failed to read property $propName " +
+                            "by getter ${readMethod.name}. Msg: ${e.message}"
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.process
 
+import ru.citeck.ecos.process.domain.bpmn.io.convert.fillElementsRefsFromIdToRealObjects
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.process.BpmnProcessDef
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TArtifact
 import ru.citeck.ecos.process.domain.bpmn.model.omg.TFlowElement

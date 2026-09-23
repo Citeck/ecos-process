@@ -1,5 +1,12 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert
 
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonSerializer
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.module.SimpleModule
 import org.camunda.spin.impl.json.jackson.format.JacksonJsonDataFormat
 import org.camunda.spin.spi.DataFormatConfigurator
 import org.graalvm.polyglot.Value
@@ -11,13 +18,6 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcomeConfig
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcomeTheme
-import spinjar.com.fasterxml.jackson.core.JsonGenerator
-import spinjar.com.fasterxml.jackson.core.JsonParser
-import spinjar.com.fasterxml.jackson.databind.DeserializationContext
-import spinjar.com.fasterxml.jackson.databind.JsonDeserializer
-import spinjar.com.fasterxml.jackson.databind.JsonSerializer
-import spinjar.com.fasterxml.jackson.databind.SerializerProvider
-import spinjar.com.fasterxml.jackson.databind.module.SimpleModule
 import java.time.Instant
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.variables.convert.BpmnDataValue as BpmnDataValueDeprecated
 

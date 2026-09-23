@@ -6,6 +6,7 @@ import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_ASYNC_AFTER
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_ASYNC_BEFORE
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_EXCLUSIVE
 import ru.citeck.ecos.process.domain.bpmn.io.convert.camunda.CAMUNDA_JOB_PRIORITY
+import ru.citeck.ecos.process.domain.bpmn.io.convert.fillElementsRefsFromIdToRealObjects
 import ru.citeck.ecos.process.domain.bpmn.io.convert.getCamundaJobRetryTimeCycleFieldConfig
 import ru.citeck.ecos.process.domain.bpmn.io.convert.putIfNotBlank
 import ru.citeck.ecos.process.domain.bpmn.io.convert.toTLoopCharacteristics

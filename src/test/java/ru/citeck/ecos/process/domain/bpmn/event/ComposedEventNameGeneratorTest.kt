@@ -119,7 +119,8 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(EcosEventType.COMMENT_CREATE.name)
+            ComposedEventName(EcosEventType.COMMENT_CREATE.name),
+            ComposedEventName(ecosEventName)
         )
     }
 
@@ -133,7 +134,47 @@ class ComposedEventNameGeneratorTest {
         val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
 
         assertThat(composedEventNames).containsExactlyInAnyOrder(
-            ComposedEventName(EcosEventType.COMMENT_CREATE.name)
+            ComposedEventName(EcosEventType.COMMENT_CREATE.name),
+            ComposedEventName(ecosEventName)
+        )
+    }
+
+    /**
+     * A definition written in manual mode names its signal by the platform event name. Such definitions
+     * stay deployed after the event gets a predefined type, so the incoming event must keep resolving
+     * under the platform name as well.
+     */
+    @Test
+    fun `generate composed event name from existing event type should keep the platform event name`() {
+        val ecosEventName = EcosEventType.USER_TASK_CREATE.availableEventNames()[0]
+        val document = EntityRef.valueOf("store/doc@1")
+        val type = EntityRef.valueOf("emodel/type@doc")
+        val eventData = IncomingEventData(ecosEventName, document, type)
+
+        val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
+
+        assertThat(composedEventNames).containsExactlyInAnyOrder(
+            ComposedEventName(EcosEventType.USER_TASK_CREATE.name),
+            ComposedEventName(EcosEventType.USER_TASK_CREATE.name, ComposedEventName.RECORD_ANY, type.toString()),
+            ComposedEventName(EcosEventType.USER_TASK_CREATE.name, document.toString()),
+            ComposedEventName(EcosEventType.USER_TASK_CREATE.name, document.toString(), type.toString()),
+
+            ComposedEventName(ecosEventName),
+            ComposedEventName(ecosEventName, ComposedEventName.RECORD_ANY, type.toString()),
+            ComposedEventName(ecosEventName, document.toString()),
+            ComposedEventName(ecosEventName, document.toString(), type.toString())
+        )
+    }
+
+    @Test
+    fun `generate composed event name from the enum name generates it once`() {
+        val ecosEventName = EcosEventType.USER_TASK_CREATE.name
+        val eventData = IncomingEventData(ecosEventName, EntityRef.EMPTY, EntityRef.EMPTY)
+
+        val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
+
+        assertThat(composedEventNames).containsExactly(
+            ComposedEventName(EcosEventType.USER_TASK_CREATE.name)
         )
     }
 }
