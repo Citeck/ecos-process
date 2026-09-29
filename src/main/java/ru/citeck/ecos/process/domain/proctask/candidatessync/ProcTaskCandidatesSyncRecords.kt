@@ -2,6 +2,7 @@ package ru.citeck.ecos.process.domain.proctask.candidatessync
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
@@ -30,6 +31,9 @@ class ProcTaskCandidatesSyncRecords(
     }
 
     override fun mutate(record: LocalRecordAtts): String {
+        if (!AuthContext.isRunAsSystemOrAdmin()){
+            error("Permissions denied. Task sync is available for System or Admin roles only")
+        }
         val documentRef = EntityRef.valueOf(record.getAtt(ATT_DOCUMENT_REF).asText())
         require(documentRef != EntityRef.EMPTY) { "documentRef is mandatory for candidates sync" }
 
