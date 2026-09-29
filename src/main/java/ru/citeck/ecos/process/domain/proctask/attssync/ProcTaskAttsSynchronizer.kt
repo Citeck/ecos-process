@@ -356,11 +356,14 @@ class ProcTaskAttsSynchronizer(
     }
 
     /**
-     * The event's raw "after" value for a TEXT attribute may actually be MLText (e.g. `_name`),
-     * already deserialized as an MLText-shaped object rather than a plain string. Resolve it to a
-     * single display string for the current locale; a plain (non-MLText) string round-trips unchanged.
+     * The event's raw "after" value for an attribute declared as TEXT in the type model may actually
+     * hold MLText, already deserialized as an MLText-shaped object rather than a plain string. Resolve
+     * it to a single display string for the current locale; a plain string or null is returned as is.
      */
     private fun resolveMlTextValue(rawValue: Any?): Any? {
+        if (rawValue == null || rawValue is String) {
+            return rawValue
+        }
         val mlText = Json.mapper.convert(rawValue, MLText::class.java) ?: return rawValue
         return MLText.getClosestValue(mlText, I18nContext.getLocale())
     }

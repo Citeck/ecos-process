@@ -285,15 +285,17 @@ class UserTaskAttsSyncTest {
     @Test
     fun `create task should resolve MLText-backed TEXT attribute to a plain string`() {
         createSyncSettings()
-        startProcess()
+        I18nContext.doWithLocale(I18nContext.ENGLISH) {
+            startProcess()
+        }
 
         val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
 
         val single = procTaskService.getVariableLocal(taskId, "mlTitleSingle".withDocPrefix()) as String
-        assertThat(single).isEqualTo(docRecord.mlTitleSingle.getValues().values.first())
+        assertThat(single).isEqualTo("Единственный вариант")
 
         val multi = procTaskService.getVariableLocal(taskId, "mlTitleMulti".withDocPrefix()) as String
-        assertThat(multi).isEqualTo(MLText.getClosestValue(docRecord.mlTitleMulti, I18nContext.getLocale()))
+        assertThat(multi).isEqualTo("English variant")
     }
 
     @Test
@@ -349,11 +351,16 @@ class UserTaskAttsSyncTest {
     fun `changed synced document attributes should be updated on tasks`() {
         createSyncSettings()
         metaDataChangeTaskAttsSyncListener.updateListeners()
-        startProcess()
+        I18nContext.doWithLocale(I18nContext.ENGLISH) {
+            startProcess()
+        }
 
         val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
 
         // check initial value, that should be written on task create
+        val mlTitleMulti = procTaskService.getVariableLocal(taskId, "mlTitleMulti".withDocPrefix()) as String
+        assertThat(mlTitleMulti).isEqualTo("English variant")
+
         val sum = procTaskService.getVariableLocal(taskId, "sum".withDocPrefix()) as Double
         assertThat(sum).isEqualTo(docRecord.sum)
 
@@ -383,49 +390,50 @@ class UserTaskAttsSyncTest {
             docRef.getLocalId(),
             modifiedDocRecord
         )
-        bpmnEventHelper.sendRecordChangedEvent(
-            RecordChangedEventDto(
-                record = docRef,
-                diff = Diff(
-                    listOf(
-                        ChangedValue("attWithoutSync"),
-                        ChangedValue("sum"),
-                        ChangedValue("date"),
-                        ChangedValue("dateTime"),
-                        ChangedValue("documentAssoc"),
-                        ChangedValue("new"),
-                        ChangedValue("description"),
-                        ChangedValue("mlTitleSingle"),
-                        ChangedValue("mlTitleMulti")
-                    )
-                ),
-                after = mapOf(
-                    "attWithoutSync" to modifiedDocRecord.attWithoutSync,
-                    "sum" to modifiedDocRecord.sum,
-                    "date" to modifiedDocRecord.date,
-                    "dateTime" to modifiedDocRecord.dateTime,
-                    "documentAssoc" to modifiedDocRecord.documentAssoc,
-                    "new" to modifiedDocRecord.new,
-                    "description" to modifiedDocRecord.description,
-                    "mlTitleSingle" to modifiedDocRecord.mlTitleSingle,
-                    "mlTitleMulti" to modifiedDocRecord.mlTitleMulti
-                ),
-                typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
+        I18nContext.doWithLocale(I18nContext.ENGLISH) {
+            bpmnEventHelper.sendRecordChangedEvent(
+                RecordChangedEventDto(
+                    record = docRef,
+                    diff = Diff(
+                        listOf(
+                            ChangedValue("attWithoutSync"),
+                            ChangedValue("sum"),
+                            ChangedValue("date"),
+                            ChangedValue("dateTime"),
+                            ChangedValue("documentAssoc"),
+                            ChangedValue("new"),
+                            ChangedValue("description"),
+                            ChangedValue("mlTitleSingle"),
+                            ChangedValue("mlTitleMulti")
+                        )
+                    ),
+                    after = mapOf(
+                        "attWithoutSync" to modifiedDocRecord.attWithoutSync,
+                        "sum" to modifiedDocRecord.sum,
+                        "date" to modifiedDocRecord.date,
+                        "dateTime" to modifiedDocRecord.dateTime,
+                        "documentAssoc" to modifiedDocRecord.documentAssoc,
+                        "new" to modifiedDocRecord.new,
+                        "description" to modifiedDocRecord.description,
+                        "mlTitleSingle" to modifiedDocRecord.mlTitleSingle,
+                        "mlTitleMulti" to modifiedDocRecord.mlTitleMulti
+                    ),
+                    typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
+                )
             )
-        )
+        }
 
         // check values after update
         val attWithoutSyncAfterUpdate = procTaskService.getVariableLocal(taskId, "attWithoutSync".withDocPrefix())
         assertThat(attWithoutSyncAfterUpdate).isNull()
 
         // MLText-backed TEXT attributes must resolve to a plain string on re-sync too (not raw JSON),
-        // via a live re-fetch from the document rather than trusting the event's raw "after" value
+        // in the same locale as on task create
         val mlTitleSingleUpdated = procTaskService.getVariableLocal(taskId, "mlTitleSingle".withDocPrefix()) as String
-        assertThat(mlTitleSingleUpdated).isEqualTo(modifiedDocRecord.mlTitleSingle.getValues().values.first())
+        assertThat(mlTitleSingleUpdated).isEqualTo("Единственный вариант обновлён")
 
         val mlTitleMultiUpdated = procTaskService.getVariableLocal(taskId, "mlTitleMulti".withDocPrefix()) as String
-        assertThat(mlTitleMultiUpdated)
-            .isEqualTo(MLText.getClosestValue(modifiedDocRecord.mlTitleMulti, I18nContext.getLocale()))
+        assertThat(mlTitleMultiUpdated).isEqualTo("English variant updated")
 
         val sumModified = procTaskService.getVariableLocal(taskId, "sum".withDocPrefix()) as Double
         assertThat(sumModified).isEqualTo(modifiedDocRecord.sum)
