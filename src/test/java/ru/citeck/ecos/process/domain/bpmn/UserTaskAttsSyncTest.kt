@@ -191,6 +191,16 @@ class UserTaskAttsSyncTest {
                             AttributeDef.create {
                                 withId("mlTitleMulti")
                                 withType(AttributeType.TEXT)
+                            },
+                            AttributeDef.create {
+                                withId("mlTitles")
+                                withType(AttributeType.TEXT)
+                                withMultiple(true)
+                            },
+                            AttributeDef.create {
+                                withId("mlSubtitles")
+                                withType(AttributeType.TEXT)
+                                withMultiple(true)
                             }
                         )
                     )
@@ -285,7 +295,8 @@ class UserTaskAttsSyncTest {
     @Test
     fun `create task should resolve MLText-backed TEXT attribute to a plain string`() {
         createSyncSettings()
-        I18nContext.doWithLocale(I18nContext.ENGLISH) {
+        // the value must be stored in the default locale (en), not in the locale of the caller
+        I18nContext.doWithLocale(I18nContext.RUSSIAN) {
             startProcess()
         }
 
@@ -351,16 +362,13 @@ class UserTaskAttsSyncTest {
     fun `changed synced document attributes should be updated on tasks`() {
         createSyncSettings()
         metaDataChangeTaskAttsSyncListener.updateListeners()
-        I18nContext.doWithLocale(I18nContext.ENGLISH) {
+        I18nContext.doWithLocale(I18nContext.RUSSIAN) {
             startProcess()
         }
 
         val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
 
         // check initial value, that should be written on task create
-        val mlTitleMulti = procTaskService.getVariableLocal(taskId, "mlTitleMulti".withDocPrefix()) as String
-        assertThat(mlTitleMulti).isEqualTo("English variant")
-
         val sum = procTaskService.getVariableLocal(taskId, "sum".withDocPrefix()) as Double
         assertThat(sum).isEqualTo(docRecord.sum)
 
@@ -390,7 +398,7 @@ class UserTaskAttsSyncTest {
             docRef.getLocalId(),
             modifiedDocRecord
         )
-        I18nContext.doWithLocale(I18nContext.ENGLISH) {
+        I18nContext.doWithLocale(I18nContext.RUSSIAN) {
             bpmnEventHelper.sendRecordChangedEvent(
                 RecordChangedEventDto(
                     record = docRef,
@@ -428,7 +436,7 @@ class UserTaskAttsSyncTest {
         assertThat(attWithoutSyncAfterUpdate).isNull()
 
         // MLText-backed TEXT attributes must resolve to a plain string on re-sync too (not raw JSON),
-        // in the same locale as on task create
+        // in the default locale (en) as on task create, regardless of the locale of the event
         val mlTitleSingleUpdated = procTaskService.getVariableLocal(taskId, "mlTitleSingle".withDocPrefix()) as String
         assertThat(mlTitleSingleUpdated).isEqualTo("Единственный вариант обновлён")
 
@@ -461,6 +469,129 @@ class UserTaskAttsSyncTest {
             docRef.getLocalId(),
             docRecord
         )
+    }
+
+    @Test
+    fun `multiple MLText-backed TEXT attribute should be resolved to strings on create and on change`() {
+        createSyncSettings()
+        metaDataChangeTaskAttsSyncListener.updateListeners()
+        startProcess()
+
+        val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
+
+        val list = procTaskService.getVariableLocal(taskId, "mlTitlesList".withDocPrefix())
+        assertThat(list).isEqualTo(listOf("First", "Второй"))
+
+        // multiple in the model, but not in the sync settings: the first value only
+        val subtitle = procTaskService.getVariableLocal(taskId, "mlSubtitleFirst".withDocPrefix())
+        assertThat(subtitle).isEqualTo("Subtitle")
+
+        // update document
+        documentRecordsDao.setRecord(
+            docRef.getLocalId(),
+            modifiedDocRecord
+        )
+        bpmnEventHelper.sendRecordChangedEvent(
+            RecordChangedEventDto(
+                record = docRef,
+                diff = Diff(
+                    listOf(
+                        ChangedValue("mlTitles"),
+                        ChangedValue("mlSubtitles")
+                    )
+                ),
+                after = mapOf(
+                    "mlTitles" to modifiedDocRecord.mlTitles,
+                    "mlSubtitles" to modifiedDocRecord.mlSubtitles
+                ),
+                typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
+            )
+        )
+
+        // the same shape as on task create
+        val listUpdated = procTaskService.getVariableLocal(taskId, "mlTitlesList".withDocPrefix())
+        assertThat(listUpdated).isEqualTo(listOf("First updated", "Второй обновлён"))
+
+        val subtitleUpdated = procTaskService.getVariableLocal(taskId, "mlSubtitleFirst".withDocPrefix())
+        assertThat(subtitleUpdated).isEqualTo("Subtitle updated")
+
+        // revert document dao to initial state
+        documentRecordsDao.setRecord(
+            docRef.getLocalId(),
+            docRecord
+        )
+    }
+
+    @Test
+    fun `changed multiple TEXT attribute with MLText as Map or single value should be resolved to strings`() {
+        createSyncSettings()
+        metaDataChangeTaskAttsSyncListener.updateListeners()
+        startProcess()
+
+        val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
+
+        // in a real event MLText arrives as a plain Map, and a multiple attribute may hold a single value
+        bpmnEventHelper.sendRecordChangedEvent(
+            RecordChangedEventDto(
+                record = docRef,
+                diff = Diff(
+                    listOf(
+                        ChangedValue("mlTitles"),
+                        ChangedValue("mlSubtitles")
+                    )
+                ),
+                after = mapOf(
+                    "mlTitles" to mapOf("ru" to "Один", "en" to "Single"),
+                    "mlSubtitles" to listOf(
+                        mapOf("ru" to "Подзаголовок из Map", "en" to "Subtitle from Map"),
+                        mapOf("en" to "Ignored")
+                    )
+                ),
+                typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
+            )
+        )
+
+        // single value for a multiple sync is wrapped into a list
+        val list = procTaskService.getVariableLocal(taskId, "mlTitlesList".withDocPrefix())
+        assertThat(list).isEqualTo(listOf("Single"))
+
+        val subtitle = procTaskService.getVariableLocal(taskId, "mlSubtitleFirst".withDocPrefix())
+        assertThat(subtitle).isEqualTo("Subtitle from Map")
+    }
+
+    @Test
+    fun `changed plain TEXT attributes that look like JSON should be stored as is`() {
+        createSyncSettings()
+        metaDataChangeTaskAttsSyncListener.updateListeners()
+        startProcess()
+
+        val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
+
+        val jsonLikeName = "{\"key\":\"value\"}"
+        val quotedDescription = "\"в кавычках\""
+
+        bpmnEventHelper.sendRecordChangedEvent(
+            RecordChangedEventDto(
+                record = docRef,
+                diff = Diff(
+                    listOf(
+                        ChangedValue("name"),
+                        ChangedValue("description")
+                    )
+                ),
+                after = mapOf(
+                    "name" to jsonLikeName,
+                    "description" to quotedDescription
+                ),
+                typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
+            )
+        )
+
+        val name = procTaskService.getVariableLocal(taskId, "name".withDocPrefix())
+        assertThat(name).isEqualTo(jsonLikeName)
+
+        val description = procTaskService.getVariableLocal(taskId, "description".withDocPrefix())
+        assertThat(description).isEqualTo(quotedDescription)
     }
 
     @Test
@@ -939,6 +1070,27 @@ class UserTaskAttsSyncTest {
                                 attribute = "mlTitleMulti"
                             )
                         )
+                    ),
+                    TaskSyncAttribute(
+                        id = "mlTitlesList",
+                        type = AttributeType.TEXT,
+                        multiple = true,
+                        ecosTypes = listOf(
+                            TaskSyncAttributeType(
+                                typeRef = docRecord.type,
+                                attribute = "mlTitles"
+                            )
+                        )
+                    ),
+                    TaskSyncAttribute(
+                        id = "mlSubtitleFirst",
+                        type = AttributeType.TEXT,
+                        ecosTypes = listOf(
+                            TaskSyncAttributeType(
+                                typeRef = docRecord.type,
+                                attribute = "mlSubtitles"
+                            )
+                        )
                     )
                 )
             )
@@ -1001,6 +1153,18 @@ class UserTaskAttsSyncTest {
             )
         ),
 
+        @AttName("mlTitles")
+        val mlTitles: List<MLText> = listOf(
+            MLText(mapOf(Locale.forLanguageTag("ru") to "Первый", Locale.forLanguageTag("en") to "First")),
+            MLText(mapOf(Locale.forLanguageTag("ru") to "Второй"))
+        ),
+
+        @AttName("mlSubtitles")
+        val mlSubtitles: List<MLText> = listOf(
+            MLText(mapOf(Locale.forLanguageTag("ru") to "Подзаголовок", Locale.forLanguageTag("en") to "Subtitle")),
+            MLText(mapOf(Locale.forLanguageTag("en") to "Ignored"))
+        ),
+
         @AttName("sum")
         val sum: Double = 5_500.0,
 
@@ -1051,6 +1215,28 @@ class UserTaskAttsSyncTest {
                 Locale.forLanguageTag("ru") to "Русский вариант обновлён",
                 Locale.forLanguageTag("en") to "English variant updated"
             )
+        ),
+
+        @AttName("mlTitles")
+        val mlTitles: List<MLText> = listOf(
+            MLText(
+                mapOf(
+                    Locale.forLanguageTag("ru") to "Первый обновлён",
+                    Locale.forLanguageTag("en") to "First updated"
+                )
+            ),
+            MLText(mapOf(Locale.forLanguageTag("ru") to "Второй обновлён"))
+        ),
+
+        @AttName("mlSubtitles")
+        val mlSubtitles: List<MLText> = listOf(
+            MLText(
+                mapOf(
+                    Locale.forLanguageTag("ru") to "Подзаголовок обновлён",
+                    Locale.forLanguageTag("en") to "Subtitle updated"
+                )
+            ),
+            MLText(mapOf(Locale.forLanguageTag("en") to "Ignored"))
         ),
 
         @AttName("sum")
