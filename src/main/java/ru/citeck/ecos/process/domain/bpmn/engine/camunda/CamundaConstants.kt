@@ -25,6 +25,7 @@ const val BPMN_TASK_COMPLETED_ON_BEHALF_OF = "completedOnBehalfOf"
 const val BPMN_TASK_SENDER = "sender"
 const val BPMN_TASK_CANDIDATES_USER_ORIGINAL = "candidatesUserOriginal"
 const val BPMN_TASK_CANDIDATES_GROUP_ORIGINAL = "candidatesGroupOriginal"
+const val BPMN_TASK_ROLE_RECIPIENTS_SNAPSHOT = "roleRecipientsSnapshot"
 
 const val BPMN_CAMUNDA_COLLECTION_SEPARATOR = ","
 

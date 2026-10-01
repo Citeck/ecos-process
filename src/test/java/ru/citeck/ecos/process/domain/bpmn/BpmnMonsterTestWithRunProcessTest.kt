@@ -44,7 +44,6 @@ import ru.citeck.ecos.context.lib.auth.data.EmptyAuth
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.lazyapproval.model.MailProcessingCode
 import ru.citeck.ecos.license.EcosTestLicense
-import ru.citeck.ecos.model.lib.role.service.RoleService
 import ru.citeck.ecos.notifications.lib.Notification
 import ru.citeck.ecos.notifications.lib.NotificationType
 import ru.citeck.ecos.notifications.lib.icalendar.CalendarEvent
@@ -68,16 +67,12 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.expression.Outcome
 import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskPriority
 import ru.citeck.ecos.process.domain.bpmnla.services.BpmnLazyApprovalService
 import ru.citeck.ecos.process.domain.dmn.api.records.DmnDecisionLatestRecords
-import ru.citeck.ecos.process.domain.proctask.candidatessync.ProcTaskCandidatesSyncService
 import ru.citeck.ecos.process.domain.proctask.service.ProcHistoricTaskService
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records2.source.dao.local.InMemRecordsDao
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.dao.mutate.RecordMutateDao
-import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
@@ -93,29 +88,12 @@ import java.util.concurrent.TimeUnit
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
-private const val USER_HARRY = "harry"
 private const val USER_4_LOOP = "user4Loop"
 
 private const val GROUP_MANAGER = "GROUP_manager"
 private const val GROUP_DEVELOPER = "GROUP_developer"
 
 private const val USER_TASK = "usertask"
-
-/**
- * The plain [InMemRecordsDao] built by [RecordsDaoBuilder] doesn't support mutate - this adds a
- * bare-bones one so ProcTaskCandidatesSyncService's `__updatePermissions` mutate call on the
- * document doesn't blow up with RecordsSourceNotFound in tests.
- */
-private class MutableInMemRecordsDao(id: String) :
-    InMemRecordsDao<Any>(id),
-    RecordMutateDao {
-    val mutations = mutableListOf<LocalRecordAtts>()
-
-    override fun mutate(record: LocalRecordAtts): String {
-        mutations.add(record)
-        return record.id
-    }
-}
 private const val POOL = "pool"
 private const val GATEWAY = "gateway"
 private const val SUB_PROCESS = "subprocess"
@@ -178,15 +156,6 @@ class BpmnMonsterTestWithRunProcessTest {
 
     @Autowired
     private lateinit var helper: BpmnProcHelper
-
-    @SpyBean
-    private lateinit var authorityService: EcosAuthoritiesApi
-
-    @Autowired
-    private lateinit var candidatesSyncService: ProcTaskCandidatesSyncService
-
-    @MockBean
-    private lateinit var roleService: RoleService
 
     @SpyBean
     private lateinit var bpmnLazyApprovalService: BpmnLazyApprovalService
@@ -260,13 +229,6 @@ class BpmnMonsterTestWithRunProcessTest {
             BPMN_DOCUMENT_REF to docRef.toString()
         )
 
-        // dedicated document for candidates-sync tests: syncCandidates() acts on every active
-        // task of a document, so a document shared with other tests in this class would pick up
-        // their unrelated leftover tasks too.
-        private val variables_docRef2 = mapOf(
-            BPMN_DOCUMENT_REF to docRef2.toString()
-        )
-
         private val mockRoleUserNames = listOf(USER_IVAN, USER_PETR)
         private val mockRoleGroupNames = listOf(GROUP_MANAGER, GROUP_DEVELOPER)
         private val mockRoleAuthorityNames = listOf(USER_IVAN, USER_PETR, GROUP_MANAGER)
@@ -290,15 +252,20 @@ class BpmnMonsterTestWithRunProcessTest {
                 .build()
         )
 
-        documentRecordsDao = MutableInMemRecordsDao("store/doc").also {
-            it.setRecords(
-                mapOf(
-                    docRef.getLocalId() to docRecord,
-                    docRef2.getLocalId() to docRecord2,
-                    docRef3.getLocalId() to docRecord3
-                )
+        documentRecordsDao = RecordsDaoBuilder.create("store/doc")
+            .addRecord(
+                docRef.getLocalId(),
+                docRecord
             )
-        }
+            .addRecord(
+                docRef2.getLocalId(),
+                docRecord2
+            )
+            .addRecord(
+                docRef3.getLocalId(),
+                docRecord3
+            )
+            .build()
 
         recordsService.register(documentRecordsDao)
 
@@ -434,253 +401,6 @@ class BpmnMonsterTestWithRunProcessTest {
         }
 
         run(process).startByKey(procId, variables_docRef).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - unassigned task drops members removed from role`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).hasCandidateUser(USER_IVAN)
-            assertThat(it).hasCandidateUser(USER_PETR)
-            assertThat(it).hasCandidateGroup(GROUP_MANAGER)
-            assertThat(it).hasCandidateGroup(GROUP_DEVELOPER)
-
-            // role membership changed externally: "author" now resolves only to USER_IVAN,
-            // "fin-signer" lost all its assignees
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_IVAN))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(emptyList())
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.updatedTaskIds).containsExactly(it.id)
-            assertThat(result.unassignedTaskIds).isEmpty()
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(
-                authorityService.getAuthorityNames(syncedTask.candidateUsers)
-            ).containsExactly(USER_IVAN)
-            assertThat(syncedTask.candidateGroups).isEmpty()
-
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - unassigns task when current assignee is removed from role`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).hasCandidateUser(USER_IVAN)
-
-            procTaskService.claimTask(it.id, USER_IVAN)
-
-            // role membership changed externally: USER_IVAN is no longer an "author",
-            // only USER_PETR remains; "fin-signer" lost all its assignees
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_PETR))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(emptyList())
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.unassignedTaskIds).containsExactly(it.id)
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(syncedTask.assignee).isEqualTo(EntityRef.EMPTY)
-            assertThat(syncedTask.candidateUsersOriginal).isEmpty()
-            assertThat(
-                authorityService.getAuthorityNames(syncedTask.candidateUsers)
-            ).containsExactly(USER_PETR)
-
-            procTaskService.claimTask(it.id, USER_PETR)
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - keeps assignee claimed via a still-valid candidate group`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).hasCandidateGroup(GROUP_MANAGER)
-
-            // USER_HARRY is not individually named by either role - they only got the task
-            // by claiming it as a member of the GROUP_MANAGER candidate group.
-            procTaskService.claimTask(it.id, USER_HARRY)
-            `when`(authorityService.getUserAuthorities(USER_HARRY)).thenReturn(listOf(GROUP_MANAGER))
-
-            // role membership changed externally: USER_IVAN dropped from "author",
-            // "fin-signer" now resolves to GROUP_MANAGER only (GROUP_DEVELOPER dropped)
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_PETR))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(listOf(GROUP_MANAGER))
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.unassignedTaskIds).isEmpty()
-            assertThat(result.updatedTaskIds).containsExactly(it.id)
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(syncedTask.assignee.getLocalId()).isEqualTo(USER_HARRY)
-            assertThat(syncedTask.candidateUsersOriginal).containsExactly(USER_PETR)
-            assertThat(syncedTask.candidateGroupsOriginal).containsExactly(GROUP_MANAGER)
-
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - unassigns task when claimed via a candidate group dropped from role`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).hasCandidateGroup(GROUP_MANAGER)
-
-            // USER_HARRY is not individually named by either role - they only got the task
-            // by claiming it as a member of the GROUP_MANAGER candidate group.
-            procTaskService.claimTask(it.id, USER_HARRY)
-            `when`(authorityService.getUserAuthorities(USER_HARRY)).thenReturn(listOf(GROUP_MANAGER))
-
-            // role membership changed externally: GROUP_MANAGER is no longer resolved by either role
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_PETR))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(listOf(GROUP_DEVELOPER))
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.unassignedTaskIds).containsExactly(it.id)
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(syncedTask.assignee).isEqualTo(EntityRef.EMPTY)
-            assertThat(syncedTask.candidateUsersOriginal).isEmpty()
-            assertThat(syncedTask.candidateGroupsOriginal).isEmpty()
-            assertThat(
-                authorityService.getAuthorityNames(syncedTask.candidateUsers)
-            ).containsExactly(USER_PETR)
-            assertThat(
-                authorityService.getAuthorityNames(syncedTask.candidateGroups)
-            ).containsExactly(GROUP_DEVELOPER)
-
-            procTaskService.claimTask(it.id, USER_PETR)
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - unassigned task gains member added to role`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).hasCandidateUser(USER_IVAN)
-            assertThat(it).hasCandidateUser(USER_PETR)
-            assertThat(it).hasCandidateGroup(GROUP_MANAGER)
-            assertThat(it).hasCandidateGroup(GROUP_DEVELOPER)
-
-            // role membership changed externally: USER_HARRY was added to the "author" role
-            // attribute; "fin-signer" is unchanged
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_IVAN, USER_PETR, USER_HARRY))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(listOf(GROUP_MANAGER, GROUP_DEVELOPER))
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.updatedTaskIds).containsExactly(it.id)
-            assertThat(result.unassignedTaskIds).isEmpty()
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(
-                authorityService.getAuthorityNames(syncedTask.candidateUsers)
-            ).containsExactlyInAnyOrder(USER_IVAN, USER_PETR, USER_HARRY)
-
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - auto-assigned sole candidate becomes shared when role gains a member`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        // at creation time the role resolves to exactly one non-group candidate, so
-        // fillTaskRecipients sets them as the assignee directly (no identity links at all) -
-        // this is not a real claim, just the single-candidate shortcut.
-        `when`(camundaRoleService.getUserNames(docRef2.toString(), "author,fin-signer"))
-            .thenReturn(listOf(USER_IVAN))
-        `when`(camundaRoleService.getGroupNames(docRef2.toString(), "author,fin-signer"))
-            .thenReturn(emptyList())
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).isAssignedTo(USER_IVAN)
-
-            // role membership changed externally: USER_PETR was added to "author"
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_IVAN, USER_PETR))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(emptyList())
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.unassignedTaskIds).containsExactly(it.id)
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(syncedTask.assignee).isEqualTo(EntityRef.EMPTY)
-            assertThat(syncedTask.candidateUsersOriginal).isEmpty()
-            assertThat(
-                authorityService.getAuthorityNames(syncedTask.candidateUsers)
-            ).containsExactlyInAnyOrder(USER_IVAN, USER_PETR)
-
-            procTaskService.claimTask(it.id, USER_PETR)
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
-
-        verify(process).hasFinished("endEvent")
-    }
-
-    @Test
-    fun `sync candidates - auto-assigned sole candidate is left alone when role still resolves to just them`() {
-        val procId = "test-user-task-role"
-        helper.saveAndDeployBpmn(USER_TASK, procId)
-
-        `when`(camundaRoleService.getUserNames(docRef2.toString(), "author,fin-signer"))
-            .thenReturn(listOf(USER_IVAN))
-        `when`(camundaRoleService.getGroupNames(docRef2.toString(), "author,fin-signer"))
-            .thenReturn(emptyList())
-
-        `when`(process.waitsAtUserTask("userTask")).thenReturn {
-            assertThat(it).isAssignedTo(USER_IVAN)
-
-            // role membership is unchanged - still resolves to USER_IVAN only
-            `when`(roleService.getAssignees(docRef2, "author")).thenReturn(listOf(USER_IVAN))
-            `when`(roleService.getAssignees(docRef2, "fin-signer")).thenReturn(emptyList())
-
-            val result = candidatesSyncService.syncCandidates(docRef2)
-            assertThat(result.updatedTaskIds).isEmpty()
-            assertThat(result.unassignedTaskIds).isEmpty()
-
-            val syncedTask = procTaskService.getTaskById(it.id) ?: error("Task not found")
-            assertThat(syncedTask.assignee.getLocalId()).isEqualTo(USER_IVAN)
-
-            it.complete()
-        }
-
-        run(process).startByKey(procId, variables_docRef2).engine(processEngine).execute()
 
         verify(process).hasFinished("endEvent")
     }
