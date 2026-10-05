@@ -75,6 +75,8 @@ ecos-process:
           prefetch: 250
           retry:
             max-attempts: 1200
+    auto-layout:
+      max-contexts: 2
     elements:
       dao:
         total-count:

@@ -6,8 +6,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import ru.citeck.ecos.process.EprocApp
+import ru.citeck.ecos.process.domain.bpmn.io.BpmnAutoLayoutRequest
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnAutoLayoutService
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @SpringBootTest(classes = [EprocApp::class])
 @ExtendWith(EcosSpringExtension::class)
@@ -162,6 +166,66 @@ class BpmnAutoLayoutServiceTest {
     }
 
     @Test
+    fun `test rejected layout fails fast`() {
+        // Passes the cheap XML check, but the JS library rejects it while parsing
+        val brokenBpmn = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"><bpmn:process"
+
+        val startTime = System.currentTimeMillis()
+        val response = bpmnAutoLayoutService.applyAutoLayout(BpmnAutoLayoutRequest(brokenBpmn))
+        val elapsed = System.currentTimeMillis() - startTime
+
+        assertFalse(response.success, "Layout of broken BPMN should fail")
+        assertTrue(elapsed < 10_000, "Rejected layout should fail fast, but took $elapsed ms")
+    }
+
+    @Test
+    fun `test layout exceeding timeout is cancelled and pool recovers`() {
+        val bigBpmn = linearBpmn(300)
+
+        // A separate instance, so the shortened timeout does not affect the shared bean
+        val service = BpmnAutoLayoutService()
+        service.init()
+        try {
+            service.layoutTimeoutMs = 20
+
+            val error = assertThrows(IllegalStateException::class.java) {
+                service.applyAutoLayout(bigBpmn)
+            }
+            assertTrue(
+                generateSequence<Throwable>(error) { it.cause }.any { it.message?.contains("timed out") == true },
+                "Error should report the timeout, but was: $error"
+            )
+
+            service.layoutTimeoutMs = 60_000
+            val result = service.applyAutoLayout(bigBpmn)
+            assertTrue(result.contains("BPMNShape"), "Pool should recover with a fresh context after cancellation")
+        } finally {
+            service.destroy()
+        }
+    }
+
+    private fun linearBpmn(tasksCount: Int): String {
+        val elements = StringBuilder()
+        elements.append("""<bpmn:startEvent id="Start"><bpmn:outgoing>Flow_0</bpmn:outgoing></bpmn:startEvent>""")
+        for (i in 1..tasksCount) {
+            elements.append(
+                """<bpmn:task id="Task_$i"><bpmn:incoming>Flow_${i - 1}</bpmn:incoming>""" +
+                    """<bpmn:outgoing>Flow_$i</bpmn:outgoing></bpmn:task>"""
+            )
+        }
+        elements.append("""<bpmn:endEvent id="End"><bpmn:incoming>Flow_$tasksCount</bpmn:incoming></bpmn:endEvent>""")
+        elements.append("""<bpmn:sequenceFlow id="Flow_0" sourceRef="Start" targetRef="Task_1" />""")
+        for (i in 1 until tasksCount) {
+            elements.append("""<bpmn:sequenceFlow id="Flow_$i" sourceRef="Task_$i" targetRef="Task_${i + 1}" />""")
+        }
+        elements.append("""<bpmn:sequenceFlow id="Flow_$tasksCount" sourceRef="Task_$tasksCount" targetRef="End" />""")
+        return """<?xml version="1.0" encoding="UTF-8"?>""" +
+            """<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" """ +
+            """targetNamespace="http://bpmn.io/schema/bpmn">""" +
+            """<bpmn:process id="Process_1" isExecutable="true">$elements</bpmn:process></bpmn:definitions>"""
+    }
+
+    @Test
     fun `test subprocess layout`() {
         val bpmnWithSubprocess = """
             <?xml version="1.0" encoding="UTF-8"?>
@@ -205,5 +269,59 @@ class BpmnAutoLayoutServiceTest {
         assertTrue(result.contains("SubStart_1_di"), "Subprocess start event should have shape")
         assertTrue(result.contains("SubTask_1_di"), "Subprocess task should have shape")
         assertTrue(result.contains("SubEnd_1_di"), "Subprocess end event should have shape")
+    }
+
+    @Test
+    fun `test concurrent auto-layout calls`() {
+        val bpmn = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                    id="Definitions_1"
+                    targetNamespace="http://bpmn.io/schema/bpmn">
+              <bpmn:process id="Process_1" isExecutable="true">
+                <bpmn:startEvent id="StartEvent_1">
+                  <bpmn:outgoing>Flow_1</bpmn:outgoing>
+                </bpmn:startEvent>
+                <bpmn:task id="Task_1" name="Task A">
+                  <bpmn:incoming>Flow_1</bpmn:incoming>
+                  <bpmn:outgoing>Flow_2</bpmn:outgoing>
+                </bpmn:task>
+                <bpmn:task id="Task_2" name="Task B">
+                  <bpmn:incoming>Flow_2</bpmn:incoming>
+                  <bpmn:outgoing>Flow_3</bpmn:outgoing>
+                </bpmn:task>
+                <bpmn:endEvent id="EndEvent_1">
+                  <bpmn:incoming>Flow_3</bpmn:incoming>
+                </bpmn:endEvent>
+                <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_1" />
+                <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="Task_2" />
+                <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_2" targetRef="EndEvent_1" />
+              </bpmn:process>
+            </bpmn:definitions>
+        """.trimIndent()
+
+        val threads = 8
+        val iterations = 5
+        val executor = Executors.newFixedThreadPool(threads)
+        val startLatch = CountDownLatch(1)
+        try {
+            val futures = (1..threads).map {
+                executor.submit<List<String>> {
+                    startLatch.await()
+                    (1..iterations).map { bpmnAutoLayoutService.applyAutoLayout(bpmn) }
+                }
+            }
+            startLatch.countDown()
+
+            val results = futures.flatMap { it.get(2, TimeUnit.MINUTES) }
+
+            assertEquals(threads * iterations, results.size)
+            results.forEach {
+                assertTrue(it.contains("BPMNShape"), "Result should contain BPMNShape elements")
+                assertTrue(it.contains("BPMNEdge"), "Result should contain BPMNEdge elements")
+            }
+        } finally {
+            executor.shutdownNow()
+        }
     }
 }
