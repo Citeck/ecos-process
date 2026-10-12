@@ -2,6 +2,10 @@ package ru.citeck.ecos.process.domain.proctask.candidatessync
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.TaskService
+import org.camunda.bpm.engine.context.ProcessEngineContext
+import org.camunda.bpm.engine.impl.context.Context
+import org.camunda.bpm.engine.impl.interceptor.Command
+import org.camunda.bpm.engine.impl.interceptor.CommandExecutor
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
@@ -9,13 +13,13 @@ import org.springframework.transaction.support.TransactionTemplate
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.context.lib.auth.AuthGroup
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_CAMUNDA_COLLECTION_SEPARATOR
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_GROUP_ORIGINAL
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_CANDIDATES_USER_ORIGINAL
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_ROLE_RECIPIENTS_SNAPSHOT
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.usertask.getSingleUserAssignee
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
-import ru.citeck.ecos.process.domain.bpmn.engine.camunda.splitToUserGroupCandidates
 import ru.citeck.ecos.process.domain.proctask.converter.CacheableTaskConverter
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
@@ -36,7 +40,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
  * - recipients added to the task not from the role are left as is;
  * - as at task creation, a task left with a single user candidate is assigned to them directly.
  *
- * Tasks in manual recipients / multi-instance auto mode are not driven by roles and are skipped.
+ * Manual recipients and multi-instance auto tasks require different synchronization algorithms and are skipped.
  */
 @Service
 class ProcTaskCandidatesSyncService(
@@ -46,6 +50,7 @@ class ProcTaskCandidatesSyncService(
     private val authoritiesApi: EcosAuthoritiesApi,
     private val camundaTaskService: TaskService,
     private val cacheableTaskConverter: CacheableTaskConverter,
+    private val camundaCommandExecutor: CommandExecutor,
     transactionManager: PlatformTransactionManager
 ) {
 
@@ -70,25 +75,29 @@ class ProcTaskCandidatesSyncService(
         val resolvedRolesCache = mutableMapOf<String, Set<String>>()
 
         AuthContext.runAsSystem {
-            procTaskService.getTasksByDocument(documentRef.toString())
-                .forEach { task ->
-                    val syncedTask = try {
-                        taskTxnTemplate.execute {
-                            syncTaskCandidates(documentRef, task, resolvedRolesCache)
-                        } ?: TaskSyncOutcome.NONE
-                    } catch (e: Exception) {
-                        log.error(e) { "Failed to sync candidates of task ${task.id}, document $documentRef" }
-                        cacheableTaskConverter.removeFromActualTaskCache(task.id)
-                        failedTaskIds.add(task.id)
-                        return@forEach
-                    }
-                    if (syncedTask.changed) {
-                        updatedTaskIds.add(task.id)
-                    }
-                    if (syncedTask.unassigned) {
-                        unassignedTaskIds.add(task.id)
-                    }
+            val taskIds = getActiveTaskIds(documentRef)
+
+            taskIds.forEach { taskId ->
+                val syncedTask = try {
+                    syncTaskInTransaction(documentRef, taskId, resolvedRolesCache)
+                } catch (e: Exception) {
+                    log.error(e) { "Failed to sync candidates of task $taskId, document $documentRef" }
+                    cacheableTaskConverter.removeFromActualTaskCache(taskId)
+                    failedTaskIds.add(taskId)
+                    return@forEach
                 }
+
+                // Evict after commit so another reader cannot retain a DTO loaded before commit.
+                cacheableTaskConverter.removeFromActualTaskCache(taskId)
+
+                if (syncedTask.changed) {
+                    updatedTaskIds.add(taskId)
+                }
+
+                if (syncedTask.unassigned) {
+                    unassignedTaskIds.add(taskId)
+                }
+            }
         }
 
         log.debug {
@@ -99,6 +108,54 @@ class ProcTaskCandidatesSyncService(
         return ProcTaskCandidatesSyncResult(updatedTaskIds, unassignedTaskIds, failedTaskIds)
     }
 
+    private fun getActiveTaskIds(documentRef: EntityRef): List<String> {
+        return camundaTaskService.createTaskQuery()
+            .processVariableValueEquals(BPMN_DOCUMENT_REF, documentRef.toString())
+            .list()
+            .map { it.id }
+    }
+
+    private fun syncTaskInTransaction(
+        documentRef: EntityRef,
+        taskId: String,
+        resolvedRolesCache: MutableMap<String, Set<String>>
+    ): TaskSyncOutcome {
+        return taskTxnTemplate.execute {
+            syncTaskInNewEngineContext(documentRef, taskId, resolvedRolesCache)
+        } ?: TaskSyncOutcome.NONE
+    }
+
+    private fun syncTaskInNewEngineContext(
+        documentRef: EntityRef,
+        taskId: String,
+        resolvedRolesCache: MutableMap<String, Set<String>>
+    ): TaskSyncOutcome {
+        // A caller may already be running a Camunda command. The new transaction must also get
+        // its own entity cache, while the reads and writes of this task share that new context.
+        return ProcessEngineContext.withNewProcessEngineContext {
+            camundaCommandExecutor.execute(
+                Command {
+                    syncCurrentTaskCandidates(documentRef, taskId, resolvedRolesCache)
+                }
+            )
+        }
+    }
+
+    private fun syncCurrentTaskCandidates(
+        documentRef: EntityRef,
+        taskId: String,
+        resolvedRolesCache: MutableMap<String, Set<String>>
+    ): TaskSyncOutcome {
+        val currentTask = camundaTaskService.createTaskQuery()
+            .taskId(taskId)
+            .initializeFormKeys()
+            .singleResult() ?: return TaskSyncOutcome.NONE
+
+        val task = cacheableTaskConverter.convertTaskUncached(currentTask)
+
+        return syncTaskCandidates(documentRef, task, resolvedRolesCache)
+    }
+
     private fun syncTaskCandidates(
         documentRef: EntityRef,
         task: ProcTaskDto,
@@ -107,9 +164,14 @@ class ProcTaskCandidatesSyncService(
         val processDefinitionId = task.processDefinitionId ?: return TaskSyncOutcome.NONE
         val taskDefinitionKey = task.definitionKey ?: return TaskSyncOutcome.NONE
 
+        if (taskDefinitionUtils.isManualRecipientsMode(processDefinitionId, taskDefinitionKey) ||
+            taskDefinitionUtils.isMultiInstanceAutoMode(processDefinitionId, taskDefinitionKey)
+        ) {
+            return TaskSyncOutcome.NONE
+        }
+
         val roles = taskDefinitionUtils.getTaskRoleNames(processDefinitionId, taskDefinitionKey)
         if (roles.isEmpty()) {
-            // not driven by roles: no roles or manual recipients / multi-instance auto mode task
             return TaskSyncOutcome.NONE
         }
 
@@ -184,9 +246,8 @@ class ProcTaskCandidatesSyncService(
             }
             camundaTaskService.setAssignee(task.id, null)
             val current = getCurrentCandidates(task)
-            updateCandidates(task.id, add = diff.target - current, remove = current intersect diff.removed)
-            assignSingleUserCandidate(task.id)
-            cacheableTaskConverter.removeFromActualTaskCache(task.id)
+            val recipients = current - diff.removed + diff.target
+            updateTaskRecipients(task.id, current, recipients)
             return TaskSyncOutcome(changed = true, unassigned = true)
         }
 
@@ -211,13 +272,8 @@ class ProcTaskCandidatesSyncService(
         val unassigned = cameFromRole && !isMemberOf(assigneeName, diff.target)
         if (unassigned) {
             log.debug { "Task ${task.id}: assignee $assigneeName dropped out of the role - unassigning" }
-            procTaskService.unclaimTask(task.id)
-            assignSingleUserCandidate(task.id)
+            returnTaskToRecipients(task, newOriginals)
             changed = true
-        }
-
-        if (changed) {
-            cacheableTaskConverter.removeFromActualTaskCache(task.id)
         }
 
         return TaskSyncOutcome(changed, unassigned)
@@ -225,35 +281,53 @@ class ProcTaskCandidatesSyncService(
 
     private fun syncUnassignedTask(task: ProcTaskDto, diff: RoleRecipientsDiff): TaskSyncOutcome {
         val current = getCurrentCandidates(task)
-        val changed = updateCandidates(
-            task.id,
-            add = diff.added - current,
-            remove = diff.removed intersect current
-        )
+        val recipients = current - diff.removed + diff.added
 
-        if (changed) {
-            assignSingleUserCandidate(task.id)
-            cacheableTaskConverter.removeFromActualTaskCache(task.id)
+        if (recipients == current) {
+            return TaskSyncOutcome.NONE
         }
 
-        return TaskSyncOutcome(changed, unassigned = false)
+        updateTaskRecipients(task.id, current, recipients)
+
+        return TaskSyncOutcome(changed = true, unassigned = false)
     }
 
     /**
-     * Same rule as at task creation (see fillTaskRecipients): a task with a single user candidate
-     * is assigned to them directly instead of being shared.
+     * Apply the same single-user assignment rule as at task creation. Compute the final recipients
+     * before writing links: an added candidate may still be pending in this command context.
      */
-    private fun assignSingleUserCandidate(taskId: String) {
-        val (candidateUsers, candidateGroups) = camundaTaskService.getIdentityLinksForTask(taskId)
-            .splitToUserGroupCandidates()
-        val assignee = getSingleUserAssignee(candidateUsers + candidateGroups) ?: return
+    private fun updateTaskRecipients(taskId: String, current: Set<String>, recipients: Set<String>) {
+        val assignee = getSingleUserAssignee(recipients)
 
-        log.debug { "Task $taskId: $assignee is the only candidate - assigning the task to them" }
-        camundaTaskService.deleteCandidateUser(taskId, assignee)
-        camundaTaskService.setAssignee(taskId, assignee)
+        if (assignee == null) {
+            updateCandidates(taskId, add = recipients - current, remove = current - recipients)
+        } else {
+            updateCandidates(taskId, add = emptySet(), remove = current)
+            camundaTaskService.setAssignee(taskId, assignee)
+        }
     }
 
-    private fun updateCandidates(taskId: String, add: Set<String>, remove: Set<String>): Boolean {
+    private fun returnTaskToRecipients(task: ProcTaskDto, originals: Set<String>) {
+        val current = getCurrentCandidates(task)
+        val recipients = current + originals
+        val assignee = getSingleUserAssignee(recipients)
+
+        if (assignee == null) {
+            procTaskService.unclaimTask(task.id)
+            return
+        }
+
+        // Unclaim without creating a temporary candidate link for the sole user. The final
+        // assignment is applied directly, and the original-candidate variables are still cleared.
+        camundaTaskService.removeVariablesLocal(
+            task.id,
+            listOf(BPMN_TASK_CANDIDATES_USER_ORIGINAL, BPMN_TASK_CANDIDATES_GROUP_ORIGINAL)
+        )
+        procTaskService.unclaimTask(task.id)
+        updateTaskRecipients(task.id, current, recipients)
+    }
+
+    private fun updateCandidates(taskId: String, add: Set<String>, remove: Set<String>) {
         log.debug { "Task $taskId: add candidates $add, remove candidates $remove" }
 
         add.forEach {
@@ -263,6 +337,7 @@ class ProcTaskCandidatesSyncService(
                 camundaTaskService.addCandidateUser(taskId, it)
             }
         }
+
         remove.forEach {
             if (it.isGroup()) {
                 camundaTaskService.deleteCandidateGroup(taskId, it)
@@ -271,7 +346,16 @@ class ProcTaskCandidatesSyncService(
             }
         }
 
-        return add.isNotEmpty() || remove.isNotEmpty()
+        removeDeletedIdentityLinksFromTaskCache(taskId)
+    }
+
+    private fun removeDeletedIdentityLinksFromTaskCache(taskId: String) {
+        val commandContext = Context.getCommandContext()
+        val task = commandContext.taskManager.findTaskById(taskId)
+
+        // Assignment listeners read this list directly. Keep their event data consistent with the
+        // pending deletions without flushing the command context in the middle of the operation.
+        task.identityLinks.removeIf { commandContext.dbEntityManager.isDeleted(it) }
     }
 
     private fun isMemberOf(userName: String, recipients: Set<String>): Boolean {
@@ -304,6 +388,10 @@ class ProcTaskCandidatesSyncService(
         return authoritiesApi.getAuthorityNames(names).toSet()
     }
 
+    /**
+     * Camunda's local-variable setter force-updates the task row. Saving the snapshot therefore
+     * checks the revision read at the start of this command, even when the assignee is kept.
+     */
     private fun saveRoleRecipientsSnapshot(taskId: String, recipients: Set<String>) {
         camundaTaskService.setVariableLocal(taskId, BPMN_TASK_ROLE_RECIPIENTS_SNAPSHOT, ArrayList(recipients))
     }

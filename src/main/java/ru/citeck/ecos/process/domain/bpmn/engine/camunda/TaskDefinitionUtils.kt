@@ -127,24 +127,20 @@ class TaskDefinitionUtils(
     }
 
     /**
-     * Role names the user task recipients are resolved from (BPMN_PROP_ASSIGNEES in the deployed process
-     * definition), regardless of the current user. Used to re-resolve task candidates against actual role
-     * membership.
-     *
-     * Empty for tasks in manual recipients / multi-instance auto mode: BPMN_PROP_ASSIGNEES is written for
-     * them too, but their recipients are not driven by these roles.
+     * Role names from the deployed definition, regardless of the current user or assignment mode.
      */
     fun getTaskRoleNames(processDefinitionId: String, taskDefinitionKey: String): List<String> {
-        val defData = taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
-        val taskDefinition = defData.task ?: return emptyList()
+        return extractRoleNames(taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey))
+    }
 
-        val manualRecipientsMode = taskDefinition.otherAttributes[BPMN_PROP_MANUAL_RECIPIENTS_MODE].toBoolean()
-        val multiInstanceAutoMode = taskDefinition.otherAttributes[BPMN_PROP_MULTI_INSTANCE_AUTO_MODE].toBoolean()
-        if (manualRecipientsMode || multiInstanceAutoMode) {
-            return emptyList()
-        }
+    fun isManualRecipientsMode(processDefinitionId: String, taskDefinitionKey: String): Boolean {
+        return taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+            .task?.otherAttributes?.get(BPMN_PROP_MANUAL_RECIPIENTS_MODE).toBoolean()
+    }
 
-        return extractRoleNames(defData)
+    fun isMultiInstanceAutoMode(processDefinitionId: String, taskDefinitionKey: String): Boolean {
+        return taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+            .task?.otherAttributes?.get(BPMN_PROP_MULTI_INSTANCE_AUTO_MODE).toBoolean()
     }
 
     private fun extractRoleNames(defData: CachedTaskDefData): List<String> {

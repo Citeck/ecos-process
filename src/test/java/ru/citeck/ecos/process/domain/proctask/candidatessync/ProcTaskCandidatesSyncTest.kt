@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +21,10 @@ import ru.citeck.ecos.process.EprocApp
 import ru.citeck.ecos.process.domain.BpmnProcHelper
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_TASK_ROLE_RECIPIENTS_SNAPSHOT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.TaskDefinitionUtils
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.BpmnEventEmitter
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.dto.UserTaskEvent
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaRoleService
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
@@ -29,6 +34,8 @@ import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 private const val USER_IVAN = "ivan.petrov"
 private const val USER_PETR = "petr.ivanov"
@@ -79,7 +86,13 @@ class ProcTaskCandidatesSyncTest {
     private lateinit var recordsService: RecordsService
 
     @Autowired
+    private lateinit var taskDefinitionUtils: TaskDefinitionUtils
+
+    @Autowired
     private lateinit var syncService: ProcTaskCandidatesSyncService
+
+    @SpyBean
+    private lateinit var bpmnEventEmitter: BpmnEventEmitter
 
     @SpyBean
     private lateinit var camundaRoleService: CamundaRoleService
@@ -107,7 +120,66 @@ class ProcTaskCandidatesSyncTest {
             .forEach { runtimeService.deleteProcessInstance(it.id, "test cleanup") }
 
         helper.cleanDefinitions()
-        Mockito.reset(camundaRoleService, authorityService)
+        Mockito.reset(camundaRoleService, authorityService, bpmnEventEmitter)
+    }
+
+    @Test
+    fun `sync reads current assignee even when an old DTO is cached`() {
+        mockRoles(users = listOf(USER_IVAN), groups = emptyList())
+        val taskId = startProcess()
+        assertThat(getTask(taskId).assignee.getLocalId()).isEqualTo(USER_IVAN)
+
+        // Change through the engine directly, leaving the old ECOS DTO in the cache.
+        taskService.setAssignee(taskId, USER_HARRY)
+        mockUserGroups(USER_HARRY, emptyList())
+        mockRoles(users = listOf(USER_IVAN, USER_PETR), groups = emptyList())
+
+        val result = syncService.syncCandidates(docRef)
+        assertThat(result.failedTaskIds).isEmpty()
+        assertThat(result.unassignedTaskIds).isEmpty()
+        assertThat(getTask(taskId).assignee.getLocalId()).isEqualTo(USER_HARRY)
+        assertThat(getTask(taskId).candidateUsersOriginal).containsExactlyInAnyOrder(USER_IVAN, USER_PETR)
+    }
+
+    @Test
+    fun `concurrent reassignment rolls back sync and explicit retry reads the new assignee`() {
+        mockRoles(users = listOf(USER_IVAN), groups = emptyList())
+        val taskId = startProcess()
+        reassignDuringRoleResolution(taskId, users = listOf(USER_IVAN, USER_PETR))
+
+        val result = syncService.syncCandidates(docRef)
+        assertThat(result.failedTaskIds).containsExactly(taskId)
+        assertThat(result.updatedTaskIds).isEmpty()
+        assertThat(result.unassignedTaskIds).isEmpty()
+        assertThat(getTask(taskId).assignee.getLocalId()).isEqualTo(USER_HARRY)
+        assertThat(getTask(taskId).candidateUsers).isEmpty()
+        assertThat(taskService.getVariableLocal(taskId, BPMN_TASK_ROLE_RECIPIENTS_SNAPSHOT))
+            .isEqualTo(listOf(USER_IVAN))
+
+        mockUserGroups(USER_HARRY, emptyList())
+        mockRoles(users = listOf(USER_IVAN, USER_PETR), groups = emptyList())
+        val retry = syncService.syncCandidates(docRef)
+        assertThat(retry.failedTaskIds).isEmpty()
+        assertThat(retry.unassignedTaskIds).isEmpty()
+        assertThat(getTask(taskId).assignee.getLocalId()).isEqualTo(USER_HARRY)
+        assertThat(getTask(taskId).candidateUsersOriginal).containsExactlyInAnyOrder(USER_IVAN, USER_PETR)
+    }
+
+    @Test
+    fun `concurrent reassignment rolls back sync which only updates original candidates`() {
+        mockRoles(users = listOf(USER_IVAN, USER_PETR), groups = emptyList())
+        val taskId = startProcess()
+        procTaskService.claimTask(taskId, USER_IVAN)
+        reassignDuringRoleResolution(taskId, users = listOf(USER_IVAN, USER_PETR, USER_HARRY))
+
+        val result = syncService.syncCandidates(docRef)
+        assertThat(result.failedTaskIds).containsExactly(taskId)
+        assertThat(result.updatedTaskIds).isEmpty()
+        assertThat(getTask(taskId).assignee.getLocalId()).isEqualTo(USER_HARRY)
+        assertThat(getTask(taskId).candidateUsersOriginal).containsExactlyInAnyOrder(USER_IVAN, USER_PETR)
+        assertThat(taskService.getVariableLocal(taskId, BPMN_TASK_ROLE_RECIPIENTS_SNAPSHOT))
+            .asList()
+            .containsExactlyInAnyOrder(USER_IVAN, USER_PETR)
     }
 
     @Test
@@ -319,6 +391,7 @@ class ProcTaskCandidatesSyncTest {
     @Test
     fun `shared task is assigned to the only user left in role`() {
         val taskId = startProcess()
+        Mockito.clearInvocations(bpmnEventEmitter)
 
         // only USER_IVAN is left in the roles
         mockRoles(users = listOf(USER_IVAN), groups = emptyList())
@@ -332,6 +405,12 @@ class ProcTaskCandidatesSyncTest {
         assertThat(task.assignee.getLocalId()).isEqualTo(USER_IVAN)
         assertThat(task.candidateUsers).isEmpty()
         assertThat(task.candidateGroups).isEmpty()
+
+        val eventCaptor = argumentCaptor<UserTaskEvent>()
+        verify(bpmnEventEmitter).emitUserTaskAssignEvent(eventCaptor.capture())
+        assertThat(eventCaptor.firstValue.assignee).isEqualTo(USER_IVAN)
+        assertThat(eventCaptor.firstValue.candidateUsers).isEmpty()
+        assertThat(eventCaptor.firstValue.candidateGroups).isEmpty()
     }
 
     @Test
@@ -375,6 +454,10 @@ class ProcTaskCandidatesSyncTest {
         startProcess(PROC_MULTI_INSTANCE)
         val tasks = procTaskService.getTasksByDocument(docRef.toString())
         assertThat(tasks).hasSize(3)
+        tasks.forEach { task ->
+            assertThat(taskDefinitionUtils.getTaskRoleNames(task.processDefinitionId!!, task.definitionKey!!))
+                .containsExactly("author")
+        }
 
         // role membership changed - must not turn the instance tasks into shared ones
         mockRoles(users = listOf(USER_IVAN, USER_PETR, USER_HARRY), groups = emptyList(), roles = "author")
@@ -396,6 +479,10 @@ class ProcTaskCandidatesSyncTest {
     fun `manual recipients mode task is skipped`() {
         helper.saveAndDeployBpmn(USER_TASK_FOLDER, PROC_MANUAL_WITH_ROLES)
         val taskId = startProcess(PROC_MANUAL_WITH_ROLES)
+        val definitionTask = getTask(taskId)
+        assertThat(
+            taskDefinitionUtils.getTaskRoleNames(definitionTask.processDefinitionId!!, definitionTask.definitionKey!!)
+        ).containsExactly("author")
 
         mockRoles(users = listOf(USER_HARRY), groups = emptyList(), roles = "author")
 
@@ -517,6 +604,29 @@ class ProcTaskCandidatesSyncTest {
     private fun mockRoles(users: List<String>, groups: List<String>, roles: String = PROC_ROLE_ROLES) {
         Mockito.doReturn(users).`when`(camundaRoleService).getUserNames(docRef.toString(), roles)
         Mockito.doReturn(groups).`when`(camundaRoleService).getGroupNames(docRef.toString(), roles)
+    }
+
+    private fun reassignDuringRoleResolution(taskId: String, users: List<String>) {
+        Mockito.doReturn(emptyList<String>()).`when`(camundaRoleService)
+            .getGroupNames(docRef.toString(), PROC_ROLE_ROLES)
+        Mockito.doAnswer {
+            // Role resolution runs after the task was read in the sync transaction. Commit a real
+            // reassignment on another thread/connection before sync starts writing.
+            reassignOnOtherThread(taskId)
+            users
+        }.`when`(camundaRoleService).getUserNames(docRef.toString(), PROC_ROLE_ROLES)
+    }
+
+    private fun reassignOnOtherThread(taskId: String) {
+        val executor = Executors.newSingleThreadExecutor()
+
+        try {
+            executor.submit {
+                AuthContext.runAsSystem { procTaskService.setAssignee(taskId, USER_HARRY) }
+            }.get(20, TimeUnit.SECONDS)
+        } finally {
+            executor.shutdownNow()
+        }
     }
 
     private fun mockUserGroups(userName: String, groups: List<String>) {
