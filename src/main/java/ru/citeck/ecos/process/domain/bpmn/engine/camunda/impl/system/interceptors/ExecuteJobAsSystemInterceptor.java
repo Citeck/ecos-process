@@ -1,7 +1,7 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.system.interceptors;
 
-import com.networknt.schema.utils.StringUtils;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.camunda.bpm.engine.impl.cmd.ExecuteJobsCmd;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.db.entitymanager.DbEntityManager;
