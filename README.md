@@ -19,8 +19,6 @@ To run this application the following applications from Citeck deployment are ne
 * ecos-model
 * ecos-registry
 
-Camunda Spin XML support requires the `javax.xml.bind` API. The application declares `javax.xml.bind:jaxb-api` explicitly alongside its Jakarta JAXB dependencies.
-
 ## Development
 
 To start your application in the dev profile, simply run:

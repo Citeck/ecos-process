@@ -19,8 +19,6 @@
 * ecos-model
 * ecos-registry
 
-Поддержка XML в Camunda Spin требует API `javax.xml.bind`. Приложение явно объявляет зависимость `javax.xml.bind:jaxb-api` наряду с зависимостями Jakarta JAXB.
-
 ## Разработка
 
 Чтобы запустить приложение в режиме разработки (dev), выполните:
