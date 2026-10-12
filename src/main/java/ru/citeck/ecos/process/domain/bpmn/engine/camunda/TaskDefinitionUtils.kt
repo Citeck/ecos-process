@@ -114,16 +114,8 @@ class TaskDefinitionUtils(
             return emptyList()
         }
 
-        val defData =
-            taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
-        val taskDefinition = defData.task ?: return emptyList()
-
-        val roleData = taskDefinition.otherAttributes[BPMN_PROP_ASSIGNEES]
-        if (roleData.isNullOrBlank()) {
-            return emptyList()
-        }
-
-        val rolesFromDef = Json.mapper.readList(roleData, String::class.java)
+        val defData = taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+        val rolesFromDef = extractRoleNames(defData)
         if (rolesFromDef.isEmpty()) {
             return emptyList()
         }
@@ -136,6 +128,34 @@ class TaskDefinitionUtils(
                 roleService.getRoleDef(defData.docType, role).name
             )
         }
+    }
+
+    /**
+     * Role names from the deployed definition, regardless of the current user or assignment mode.
+     */
+    fun getTaskRoleNames(processDefinitionId: String, taskDefinitionKey: String): List<String> {
+        return extractRoleNames(taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey))
+    }
+
+    fun isManualRecipientsMode(processDefinitionId: String, taskDefinitionKey: String): Boolean {
+        return taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+            .task?.otherAttributes?.get(BPMN_PROP_MANUAL_RECIPIENTS_MODE).toBoolean()
+    }
+
+    fun isMultiInstanceAutoMode(processDefinitionId: String, taskDefinitionKey: String): Boolean {
+        return taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+            .task?.otherAttributes?.get(BPMN_PROP_MULTI_INSTANCE_AUTO_MODE).toBoolean()
+    }
+
+    private fun extractRoleNames(defData: CachedTaskDefData): List<String> {
+        val taskDefinition = defData.task ?: return emptyList()
+
+        val roleData = taskDefinition.otherAttributes[BPMN_PROP_ASSIGNEES]
+        if (roleData.isNullOrBlank()) {
+            return emptyList()
+        }
+
+        return Json.mapper.readList(roleData, String::class.java)
     }
 
     fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {

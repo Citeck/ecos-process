@@ -42,6 +42,13 @@ class CacheableTaskConverter(
 
     @Cacheable(cacheNames = [PROC_TASKS_DTO_CONVERTER_CACHE_KEY], key = "#task.id")
     fun convertTask(task: Task): ProcTaskDto {
+        return convertTaskUncached(task)
+    }
+
+    /**
+     * Read the current engine state without consulting or populating the shared DTO cache.
+     */
+    fun convertTaskUncached(task: Task): ProcTaskDto {
         with(task) {
             val links = camundaTaskService.getIdentityLinksForTask(id)
             val variables = camundaTaskService.getVariables(id)
