@@ -110,16 +110,8 @@ class TaskDefinitionUtils(
 
     fun getTaskRoles(document: EntityRef, processDefinitionId: String, taskDefinitionKey: String): List<TaskRole> {
 
-        val defData =
-            taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
-        val taskDefinition = defData.task ?: return emptyList()
-
-        val roleData = taskDefinition.otherAttributes[BPMN_PROP_ASSIGNEES]
-        if (roleData.isNullOrBlank()) {
-            return emptyList()
-        }
-
-        val rolesFromDef = Json.mapper.readList(roleData, String::class.java)
+        val defData = taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+        val rolesFromDef = extractRoleNames(defData)
         if (rolesFromDef.isEmpty()) {
             return emptyList()
         }
@@ -132,6 +124,34 @@ class TaskDefinitionUtils(
                 roleService.getRoleDef(defData.docType, role).name
             )
         }
+    }
+
+    /**
+     * Role names from the deployed definition, regardless of the current user or assignment mode.
+     */
+    fun getTaskRoleNames(processDefinitionId: String, taskDefinitionKey: String): List<String> {
+        return extractRoleNames(taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey))
+    }
+
+    fun isManualRecipientsMode(processDefinitionId: String, taskDefinitionKey: String): Boolean {
+        return taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+            .task?.otherAttributes?.get(BPMN_PROP_MANUAL_RECIPIENTS_MODE).toBoolean()
+    }
+
+    fun isMultiInstanceAutoMode(processDefinitionId: String, taskDefinitionKey: String): Boolean {
+        return taskDeployedCamundaDefCache.get(processDefinitionId to taskDefinitionKey)
+            .task?.otherAttributes?.get(BPMN_PROP_MULTI_INSTANCE_AUTO_MODE).toBoolean()
+    }
+
+    private fun extractRoleNames(defData: CachedTaskDefData): List<String> {
+        val taskDefinition = defData.task ?: return emptyList()
+
+        val roleData = taskDefinition.otherAttributes[BPMN_PROP_ASSIGNEES]
+        if (roleData.isNullOrBlank()) {
+            return emptyList()
+        }
+
+        return Json.mapper.readList(roleData, String::class.java)
     }
 
     fun getTaskRoles(delegateTask: DelegateTask): List<TaskRole> {
@@ -183,18 +203,18 @@ class TaskDefinitionUtils(
                 taskDefinition.otherAttributes[BPMN_PROP_LA_NOTIFICATION_TEMPLATE]
             ),
             laManualNotificationTemplateEnabled =
-                taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
+            taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE_ENABLED].toBoolean(),
             laManualNotificationTemplate = taskDefinition.otherAttributes[BPMN_PROP_LA_MANUAL_NOTIFICATION_TEMPLATE],
             laNotificationAdditionalMeta = getLaNotificationAdditionalMeta(taskDefinition),
             laReportEnabled = taskDefinition.otherAttributes[BPMN_PROP_LA_REPORT_ENABLED].toBoolean(),
             laSuccessReportNotificationTemplate =
-                taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                    EntityRef.valueOf(it)
-                },
+            taskDefinition.otherAttributes[BPMN_PROP_LA_SUCCESS_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                EntityRef.valueOf(it)
+            },
             laErrorReportNotificationTemplate =
-                taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
-                    EntityRef.valueOf(it)
-                }
+            taskDefinition.otherAttributes[BPMN_PROP_LA_ERROR_REPORT_NOTIFICATION_TEMPLATE]?.let {
+                EntityRef.valueOf(it)
+            }
         )
     }
 
