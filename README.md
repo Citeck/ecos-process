@@ -47,6 +47,10 @@ To launch your application's tests, run:
 ./mvnw clean test
 ```
 
+For the release gate, run `./mvnw clean verify` with the JDK pinned in `.gitlab-ci.yml` and Docker available for Testcontainers.
+
+Tests that change user groups should use `EcosAuthoritiesServiceMock.setAuthorities` and restore the groups during cleanup. Avoid `doReturn`/`doThrow` stubbing on this shared authority spy while background audit writes are running: another method can consume the pending stub and receive a value of the wrong type.
+
 #### Code quality
 
 Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
