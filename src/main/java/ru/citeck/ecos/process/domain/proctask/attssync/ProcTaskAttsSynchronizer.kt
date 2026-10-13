@@ -5,10 +5,12 @@ import org.camunda.bpm.engine.delegate.DelegateTask
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.i18n.I18nContext
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.status.constants.StatusConstants
-import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.getDocumentRef
@@ -81,6 +83,7 @@ class ProcTaskAttsSynchronizer(
             }
 
             val typeInfo = ecosTypesRegistry.getTypeInfo(typeRef) ?: error("Type not found: $typeRef")
+            val modelAtts = typeInfo.model.attributes.associateBy { it.id }
 
             val atts = mutableMapOf<String, Any?>()
 
@@ -90,8 +93,18 @@ class ProcTaskAttsSynchronizer(
                 }
 
                 var afterValue = newAttributes[requestAtt]
-                if (isDateAtt(requestAtt, typeInfo) && afterValue is String) {
-                    afterValue = Json.mapper.convert(afterValue, Date::class.java)
+                val modelAtt = modelAtts[requestAtt]
+                when (modelAtt?.type) {
+                    AttributeType.DATE,
+                    AttributeType.DATETIME -> if (afterValue is String) {
+                        afterValue = Json.mapper.convert(afterValue, Date::class.java)
+                    }
+
+                    AttributeType.TEXT -> {
+                        afterValue = resolveTextValue(afterValue, isMultipleSync(taskAtt, modelAtt))
+                    }
+
+                    else -> Unit
                 }
 
                 atts[TASK_DOCUMENT_ATT_PREFIX + taskAtt] = afterValue
@@ -224,10 +237,7 @@ class ProcTaskAttsSynchronizer(
                 }
 
                 typeInfo.model.attributes.find { it.id == requestAtt }?.let { modelAtt ->
-                    var isMultiple = false
-                    if (modelAtt.multiple) {
-                        isMultiple = procTaskAttsSyncService.getTaskSyncAttribute(taskAtt)?.multiple ?: false
-                    }
+                    val isMultiple = isMultipleSync(taskAtt, modelAtt)
                     try {
                         var (attSchema, clazz) = getAttSchemaAndClass(modelAtt.type)
                         if (isMultiple) {
@@ -253,15 +263,19 @@ class ProcTaskAttsSynchronizer(
                 }
             }
 
-            val result = recordsService.getAtts(
-                document,
-                attsToRequest.associate {
-                    it.requestAtt to it.requestAttSchema
-                }
-            ).getAtts()
+            // MLText-backed TEXT attributes are resolved via "?str" in the context locale, so it is fixed
+            // to the default one: otherwise the stored value would depend on who triggered the sync
+            val result = I18nContext.doWithDefaultLocale {
+                recordsService.getAtts(
+                    document,
+                    attsToRequest.associate {
+                        it.taskAtt to it.requestAttSchema
+                    }
+                ).getAtts()
+            }
 
-            attsToRequest.forEach { (taskAtt, requestAtt, _, clazz) ->
-                val resultValue = result[requestAtt]
+            attsToRequest.forEach { (taskAtt, _, _, clazz) ->
+                val resultValue = result[taskAtt]
                 val asObj = Json.mapper.convert(resultValue, clazz)
 
                 newTaskAtts[TASK_DOCUMENT_ATT_PREFIX + taskAtt] = asObj
@@ -327,7 +341,7 @@ class ProcTaskAttsSynchronizer(
                 ".authorityName" to String::class.java
 
             AttributeType.TEXT ->
-                "" to String::class.java
+                "?str" to String::class.java
 
             AttributeType.BOOLEAN -> "?bool!" to Boolean::class.java
 
@@ -342,9 +356,42 @@ class ProcTaskAttsSynchronizer(
         }
     }
 
-    private fun isDateAtt(att: String, typeInfo: TypeInfo): Boolean {
-        val modelType = typeInfo.model.attributes.find { it.id == att }?.type
-        return modelType == AttributeType.DATE || modelType == AttributeType.DATETIME
+    /**
+     * Task attribute holds a list only if both the model attribute and the task sync attribute are multiple
+     */
+    private fun isMultipleSync(taskAtt: String, modelAtt: AttributeDef): Boolean {
+        if (!modelAtt.multiple) {
+            return false
+        }
+        return procTaskAttsSyncService.getTaskSyncAttribute(taskAtt)?.multiple ?: false
+    }
+
+    /**
+     * Converts the event's raw "after" value of a TEXT attribute to the same shape as on task create:
+     * a list of strings for a multiple sync, otherwise a single string (the first one of a list).
+     */
+    private fun resolveTextValue(rawValue: Any?, isMultiple: Boolean): Any? {
+        if (rawValue !is Collection<*>) {
+            val value = resolveMlTextValue(rawValue)
+            return if (isMultiple) listOfNotNull(value) else value
+        }
+        val values = rawValue.map { resolveMlTextValue(it) }
+        return if (isMultiple) values else values.firstOrNull()
+    }
+
+    /**
+     * The event's raw "after" value for an attribute declared as TEXT in the type model may actually
+     * hold MLText, already deserialized as an MLText-shaped object rather than a plain string. Resolve
+     * it to a single display string for the default locale (the same as on task create, see
+     * getNewAttributesForSync); any other value is returned as is.
+     */
+    private fun resolveMlTextValue(rawValue: Any?): Any? {
+        val mlText = when (rawValue) {
+            is MLText -> rawValue
+            is Map<*, *> -> Json.mapper.convert(rawValue, MLText::class.java) ?: return rawValue
+            else -> return rawValue
+        }
+        return MLText.getClosestValue(mlText, I18nContext.getDefaultLocale())
     }
 
     private data class RequestAtt(
