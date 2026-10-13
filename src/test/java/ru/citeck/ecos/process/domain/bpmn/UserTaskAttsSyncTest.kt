@@ -560,6 +560,33 @@ class UserTaskAttsSyncTest {
     }
 
     @Test
+    fun `same document attribute should preserve each task target multiplicity`() {
+        createSyncSettings(subtitleAttribute = "mlTitles")
+        metaDataChangeTaskAttsSyncListener.updateListeners()
+        startProcess()
+
+        val taskId = procTaskService.getTasksByDocument(docRef.toString())[0].id
+        assertThat(procTaskService.getVariableLocal(taskId, "mlTitlesList".withDocPrefix()))
+            .isEqualTo(listOf("First", "Второй"))
+        assertThat(procTaskService.getVariableLocal(taskId, "mlSubtitleFirst".withDocPrefix()))
+            .isEqualTo("First")
+
+        bpmnEventHelper.sendRecordChangedEvent(
+            RecordChangedEventDto(
+                record = docRef,
+                diff = Diff(listOf(ChangedValue("mlTitles"))),
+                after = mapOf("mlTitles" to modifiedDocRecord.mlTitles),
+                typeDef = ecosTypeRegistry.getTypeInfo(docRecord.type)
+            )
+        )
+
+        assertThat(procTaskService.getVariableLocal(taskId, "mlTitlesList".withDocPrefix()))
+            .isEqualTo(listOf("First updated", "Второй обновлён"))
+        assertThat(procTaskService.getVariableLocal(taskId, "mlSubtitleFirst".withDocPrefix()))
+            .isEqualTo("First updated")
+    }
+
+    @Test
     fun `changed plain TEXT attributes that look like JSON should be stored as is`() {
         createSyncSettings()
         metaDataChangeTaskAttsSyncListener.updateListeners()
@@ -973,7 +1000,7 @@ class UserTaskAttsSyncTest {
         )
     }
 
-    private fun createSyncSettings(enabled: Boolean = true) {
+    private fun createSyncSettings(enabled: Boolean = true, subtitleAttribute: String = "mlSubtitles") {
         taskAttsSync.add(
             helper.createAttsSync(
                 id = "test-task-atts-document-record-sync",
@@ -1088,7 +1115,7 @@ class UserTaskAttsSyncTest {
                         ecosTypes = listOf(
                             TaskSyncAttributeType(
                                 typeRef = docRecord.type,
-                                attribute = "mlSubtitles"
+                                attribute = subtitleAttribute
                             )
                         )
                     )

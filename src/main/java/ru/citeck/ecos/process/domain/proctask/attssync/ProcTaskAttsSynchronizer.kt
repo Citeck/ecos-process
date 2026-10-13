@@ -269,13 +269,13 @@ class ProcTaskAttsSynchronizer(
                 recordsService.getAtts(
                     document,
                     attsToRequest.associate {
-                        it.requestAtt to it.requestAttSchema
+                        it.taskAtt to it.requestAttSchema
                     }
                 ).getAtts()
             }
 
-            attsToRequest.forEach { (taskAtt, requestAtt, _, clazz) ->
-                val resultValue = result[requestAtt]
+            attsToRequest.forEach { (taskAtt, _, _, clazz) ->
+                val resultValue = result[taskAtt]
                 val asObj = Json.mapper.convert(resultValue, clazz)
 
                 newTaskAtts[TASK_DOCUMENT_ATT_PREFIX + taskAtt] = asObj
