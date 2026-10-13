@@ -29,9 +29,9 @@ import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.beans.CamundaR
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
 import ru.citeck.ecos.process.domain.proctask.service.ProcTaskService
 import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.spring.context.EcosAuthoritiesServiceMock
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
 import java.util.*
 import java.util.concurrent.Executors
@@ -98,7 +98,7 @@ class ProcTaskCandidatesSyncTest {
     private lateinit var camundaRoleService: CamundaRoleService
 
     @SpyBean
-    private lateinit var authorityService: EcosAuthoritiesApi
+    private lateinit var authorityService: EcosAuthoritiesServiceMock
 
     private lateinit var docRef: EntityRef
 
@@ -120,6 +120,7 @@ class ProcTaskCandidatesSyncTest {
             .forEach { runtimeService.deleteProcessInstance(it.id, "test cleanup") }
 
         helper.cleanDefinitions()
+        authorityService.setAuthorities(USER_HARRY, emptyList())
         Mockito.reset(camundaRoleService, authorityService, bpmnEventEmitter)
     }
 
@@ -518,7 +519,7 @@ class ProcTaskCandidatesSyncTest {
         // the failing task sync fails in the middle: after its stashed candidates are updated,
         // on the check whether the assignee came from the role
         procTaskService.claimTask(failingTaskId, USER_HARRY)
-        Mockito.doThrow(RuntimeException("test failure")).`when`(authorityService).getUserAuthorities(USER_HARRY)
+        Mockito.`when`(authorityService.getUserAuthorities(USER_HARRY)).thenThrow(RuntimeException("test failure"))
 
         mockRoles(users = listOf(USER_IVAN), groups = listOf(GROUP_MANAGER))
 
@@ -630,7 +631,9 @@ class ProcTaskCandidatesSyncTest {
     }
 
     private fun mockUserGroups(userName: String, groups: List<String>) {
-        Mockito.doReturn(groups).`when`(authorityService).getUserAuthorities(userName)
+        // Updating the test service avoids a doReturn stubbing window on this shared spy.
+        // Background audit writes can call getPersonRef while task recipients are being changed.
+        authorityService.setAuthorities(userName, groups)
     }
 
     /**
