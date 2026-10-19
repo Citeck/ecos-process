@@ -1,7 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.conditional
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.CamundaEventSubscriptionFinder
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish.CamundaEventExploder
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
@@ -18,7 +20,16 @@ class BpmnConditionalEventsProcessor(
         private val log = KotlinLogging.logger {}
     }
 
+    @Autowired(required = false)
+    internal var micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
+
     fun processEvent(updated: RecordUpdatedEvent) {
+        return micrometerContext.createObs("ecos.bpmn.conditional.process")
+            .observe { processEventImpl(updated) }
+    }
+
+    private fun processEventImpl(updated: RecordUpdatedEvent) {
+
         val time = measureTimeMillis {
             if (updated.record == null || updated.changed == null) {
                 return

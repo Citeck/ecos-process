@@ -4,14 +4,17 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.RuntimeService
 import org.camunda.bpm.engine.impl.context.Context
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getConditionalEventSubscriptionsByProcessInstanceIds
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getEventSubscriptionsByEventNamesLikeStart
@@ -49,6 +52,9 @@ class CamundaEventSubscriptionFinder(
     companion object {
         private val log = KotlinLogging.logger {}
     }
+
+    @Autowired(required = false)
+    internal var micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
 
     fun findDeployedSubscriptionsData(): DeployedSubscriptionsData {
         val ecosTypes = mutableSetOf<EntityRef>()
@@ -96,6 +102,12 @@ class CamundaEventSubscriptionFinder(
     }
 
     fun getActualCamundaSubscriptions(eventData: IncomingEventData): List<CamundaEventSubscription> {
+        return micrometerContext.createObs(BpmnObsCtx.SubscriptionsFind(eventData))
+            .observe { getActualCamundaSubscriptionsImpl(eventData) }
+    }
+
+    private fun getActualCamundaSubscriptionsImpl(eventData: IncomingEventData): List<CamundaEventSubscription> {
+
         val result: List<CamundaEventSubscription>
         val time = measureTimeMillis {
             val composedEventNames = ComposedEventNameGenerator.generateFromIncomingEcosEvent(eventData)
@@ -143,15 +155,22 @@ class CamundaEventSubscriptionFinder(
     }
 
     fun getActualCamundaConditionalEventsForBusinessKey(businessKey: String): List<CamundaConditionalEvent> {
+        return micrometerContext.createObs("ecos.bpmn.conditional.subscriptions.find")
+            .observe { getActualCamundaConditionalEventsForBusinessKeyImpl(businessKey) }
+    }
+
+    private fun getActualCamundaConditionalEventsForBusinessKeyImpl(businessKey: String): List<CamundaConditionalEvent> {
+
         if (businessKey.isEmpty()) {
             return emptyList()
         }
 
         val result: List<CamundaConditionalEvent>
         val time = measureTimeMillis {
-            val processes = bpmnProcessService.getProcessInstancesForBusinessKey(businessKey).map {
-                it.processInstanceId
-            }
+            val processes = micrometerContext.createObs("ecos.bpmn.conditional.processes.query")
+                .observe { bpmnProcessService.getProcessInstancesForBusinessKey(businessKey) }.map {
+                    it.processInstanceId
+                }
 
             result = camundaRuntimeService.getConditionalEventSubscriptionsByProcessInstanceIds(
                 processes,
@@ -180,6 +199,12 @@ class CamundaEventSubscriptionFinder(
     }
 
     private fun getProcDefDeploymentIdForSubscription(subscription: EventSubscriptionEntity): String {
+        return micrometerContext.createObs(BpmnObsCtx.DeploymentResolve(subscription))
+            .observe { getProcDefDeploymentIdForSubscriptionImpl(subscription) }
+    }
+
+    private fun getProcDefDeploymentIdForSubscriptionImpl(subscription: EventSubscriptionEntity): String {
+
         return if (Context.getCommandContext() != null) {
             subscription.processDefinition?.deploymentId ?: ""
         } else {
@@ -197,6 +222,18 @@ class CamundaEventSubscriptionFinder(
     }
 
     private fun getExactEventSubscription(deploymentId: String, elementId: String): EventSubscription? {
+
+        return micrometerContext.createObs(
+            BpmnObsCtx.Definition(
+                BpmnObsCtx.DefinitionPhase.RESOLVE,
+                deploymentId,
+                elementId
+            )
+        ).observe { getExactEventSubscriptionImpl(deploymentId, elementId) }
+    }
+
+    private fun getExactEventSubscriptionImpl(deploymentId: String, elementId: String): EventSubscription? {
+
         val events = cachedEventSubscriptionProvider.getEventSubscriptionsByDeploymentId(deploymentId)
 
         log.debug { "Events subscriptions by deployment id $deploymentId: \n$events" }
@@ -213,6 +250,18 @@ class CamundaEventSubscriptionFinder(
     }
 
     private fun getExactConditionalEvent(deploymentId: String, elementId: String): ConditionalEvent? {
+
+        return micrometerContext.createObs(
+            BpmnObsCtx.Definition(
+                BpmnObsCtx.DefinitionPhase.CONDITIONAL_RESOLVE,
+                deploymentId,
+                elementId
+            )
+        ).observe { getExactConditionalEventImpl(deploymentId, elementId) }
+    }
+
+    private fun getExactConditionalEventImpl(deploymentId: String, elementId: String): ConditionalEvent? {
+
         val events = cachedEventSubscriptionProvider.getConditionalEventSubscriptionsByDeploymentId(deploymentId)
 
         log.debug { "Conditional events by deployment id $deploymentId: \n$events" }
@@ -247,8 +296,22 @@ class CachedEventSubscriptionProvider(
         private val log = KotlinLogging.logger {}
     }
 
+    @Autowired(required = false)
+    internal var micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
+
     @Cacheable(cacheNames = [BPMN_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME])
     fun getEventSubscriptionsByDeploymentId(deploymentId: String): List<EventSubscription> {
+
+        return micrometerContext.createObs(
+            BpmnObsCtx.Definition(
+                BpmnObsCtx.DefinitionPhase.LOAD,
+                deploymentId
+            )
+        ).observe { getEventSubscriptionsByDeploymentIdImpl(deploymentId) }
+    }
+
+    private fun getEventSubscriptionsByDeploymentIdImpl(deploymentId: String): List<EventSubscription> {
+
         val defRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
         if (defRev == null) {
             log.error { "Process definition revision is null. DeploymentId: $deploymentId" }
@@ -260,6 +323,17 @@ class CachedEventSubscriptionProvider(
 
     @Cacheable(cacheNames = [BPMN_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_DEPLOYMENT_ID_CACHE_NAME])
     fun getConditionalEventSubscriptionsByDeploymentId(deploymentId: String): List<ConditionalEvent> {
+
+        return micrometerContext.createObs(
+            BpmnObsCtx.Definition(
+                BpmnObsCtx.DefinitionPhase.CONDITIONAL_LOAD,
+                deploymentId
+            )
+        ).observe { getConditionalEventSubscriptionsByDeploymentIdImpl(deploymentId) }
+    }
+
+    private fun getConditionalEventSubscriptionsByDeploymentIdImpl(deploymentId: String): List<ConditionalEvent> {
+
         val defRev = procDefService.getProcessDefRevByDeploymentId(deploymentId)
         if (defRev == null) {
             log.error { "Process definition revision is null. DeploymentId: $deploymentId" }

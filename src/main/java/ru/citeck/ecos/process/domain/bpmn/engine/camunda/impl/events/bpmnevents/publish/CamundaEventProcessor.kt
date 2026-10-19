@@ -1,13 +1,16 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.publish
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.TmplUtils
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.model.lib.utils.ModelUtils
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.*
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.subscribe.GeneralEvent
 import ru.citeck.ecos.records2.predicate.PredicateService
@@ -31,7 +34,15 @@ class CamundaEventProcessor(
         private val log = KotlinLogging.logger {}
     }
 
+    @Autowired(required = false)
+    internal var micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
+
     fun processEvent(incomingEvent: GeneralEvent) {
+        return micrometerContext.createObs(BpmnObsCtx.EventProcess(incomingEvent))
+            .observe { processEventImpl(incomingEvent) }
+    }
+
+    private fun processEventImpl(incomingEvent: GeneralEvent) {
 
         val time = measureTimeMillis {
             val incomingEventData = incomingEvent.toIncomingEventData()
@@ -72,8 +83,11 @@ class CamundaEventProcessor(
                 finalEventModel.putAll(attsFromPredicate)
                 finalEventModel.putAll(subscription.event.model)
 
-                val eventAttributes = evaluateAttributes(incomingEvent, finalEventModel)
-                if (eventAttributes.isMatchPredicates(subscription.event.predicate)) {
+                val eventAttributes = micrometerContext.createObs("ecos.bpmn.event.attributes")
+                    .observe { evaluateAttributes(incomingEvent, finalEventModel) }
+                val matches = micrometerContext.createObs(BpmnObsCtx.Predicate(subscription))
+                    .observe { eventAttributes.isMatchPredicates(subscription.event.predicate) }
+                if (matches) {
                     log.debug {
                         "Event match predicates. Predicate: \n${subscription.event.predicate} \nAtts: \n$eventAttributes"
                     }

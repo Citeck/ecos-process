@@ -135,6 +135,7 @@ class BpmnEventSubscriptionService(
     }
 
     private fun addSubscriptionListener(subscription: CombinedEventSubscription) {
+
         val (eventName, attributes) = subscription
 
         val listenerEventNames = let {
@@ -158,6 +159,7 @@ class BpmnEventSubscriptionService(
 
         val addedListeners = listenerEventNames.map { listenerEventName ->
             eventsService.addListener<ObjectData> {
+                withId("bpmn-event:$eventName:$listenerEventName")
                 withDataClass(ObjectData::class.java)
                 withEventType(listenerEventName)
                 withAttributes(attributes.associateBy { it })
@@ -174,6 +176,7 @@ class BpmnEventSubscriptionService(
     }
 
     private fun registerConditionalEventsListeners(ecosTypes: Set<EntityRef>) {
+
         log.debug { "Request to register conditional events for types: $ecosTypes" }
 
         if (conditionalEventListener.size > 1) {
@@ -204,6 +207,7 @@ class BpmnEventSubscriptionService(
         // In future we can just update model - https://citeck.atlassian.net/browse/ECOSENT-2452.
         existingListener?.remove()
         val listener = eventsService.addListener<RecordUpdatedEvent> {
+            withId("bpmn-conditional-record-changed")
             withEventType(RecordChangedEvent.TYPE)
             withDataClass(RecordUpdatedEvent::class.java)
             withFilter(predicateFilterByTypes)

@@ -1,6 +1,9 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script
 
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine
+import io.micrometer.observation.Observation
+import io.micrometer.observation.ObservationHandler
+import io.micrometer.observation.ObservationRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.camunda.bpm.engine.impl.cfg.StandaloneInMemProcessEngineConfiguration
@@ -14,11 +17,16 @@ import org.camunda.bpm.engine.impl.scripting.env.ScriptEnvResolver
 import org.camunda.bpm.engine.impl.scripting.env.ScriptingEnvironment
 import org.graalvm.polyglot.Engine
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
+import ru.citeck.ecos.micrometer.obs.EcosObs
+import ru.citeck.ecos.micrometer.obs.EcosObsContext
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsConvention
 import ru.citeck.ecos.webapp.lib.spring.context.script.EcosGraalJsProps
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -111,6 +119,40 @@ class EcosScriptingEnvironmentTest {
                 if (language == JS) arrayOf(ENV_SCRIPT) else null
             }
         )
+    }
+
+    @Test
+    fun scriptObservationIncludesExecutionAndReportsFailures() {
+
+        val registry = ObservationRegistry.create()
+        val stopped = mutableListOf<Observation.Context>()
+        registry.observationConfig().observationConvention(BpmnObsConvention()).observationHandler(object : ObservationHandler<Observation.Context> {
+            override fun supportsContext(context: Observation.Context): Boolean {
+                return true
+            }
+            override fun onStop(context: Observation.Context) {
+                stopped.add(context)
+            }
+        })
+        val meter = object : EcosMicrometerContext {
+            override fun createObs(name: String): EcosObs {
+                return createObs(EcosObsContext(name))
+            }
+            override fun createObs(context: EcosObsContext): EcosObs {
+                return EcosObs(Observation.createNotStarted(context.name, { context }, registry))
+            }
+        }
+        val env = EcosScriptingEnvironment(ScriptFactory(), envScriptResolvers(), scriptingEngines, meter)
+        assertThat(run(env, "1 + 1")).isEqualTo(2)
+        assertThrows(Exception::class.java) {
+            run(env, "throw new Error('private-script-error')")
+        }
+        assertThat(stopped).hasSize(2)
+        assertThat(stopped[0].name).isEqualTo("ecos.bpmn.script.execute")
+        assertThat(stopped[0].getHighCardinalityKeyValue("script.language")!!.value).isEqualTo(JS)
+        assertThat(stopped[0].error).isNull()
+        assertThat(stopped[1].error).isNotNull()
+        assertThat(registry.currentObservation).isNull()
     }
 
     private fun environment(): EcosScriptingEnvironment {

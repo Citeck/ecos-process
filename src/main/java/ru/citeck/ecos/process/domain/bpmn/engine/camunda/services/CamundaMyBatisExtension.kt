@@ -15,8 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.events.CustomEventSubscriptionManager
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.mybatis.BpmnMyBatisExtendedSessionFactory
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 private const val SELECT_TASKS_BY_IDS = "selectHistoricTaskInstanceByIds"
@@ -44,6 +46,9 @@ class CamundaMyBatisExtension(
     private val processEngineConfiguration: ProcessEngineConfigurationImpl
 ) {
 
+    @Autowired(required = false)
+    internal var micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
+
     private lateinit var factory: BpmnMyBatisExtendedSessionFactory
 
     @Autowired
@@ -70,6 +75,7 @@ class CamundaMyBatisExtension(
     }
 
     internal fun getEventSubscriptionsByEventNames(eventNames: List<String>): List<EventSubscriptionEntity> {
+
         val command = Command {
             val params: Map<String, Any> = mapOf(
                 "eventSubscriptionEventNames" to eventNames
@@ -82,10 +88,12 @@ class CamundaMyBatisExtension(
             ) as List<EventSubscriptionEntity>
         }
 
-        return factory.commandExecutorTxRequired.execute(command)
+        return micrometerContext.createObs(BpmnObsCtx.Query(SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES))
+            .observe { factory.commandExecutorTxRequired.execute(command) }
     }
 
     internal fun getEventSubscriptionsByEventNamesLikeStart(eventNames: List<String>): List<EventSubscriptionEntity> {
+
         val eventNamesWithLikeStartPattern = eventNames.map { "$it%" }
 
         val command = Command {
@@ -100,7 +108,10 @@ class CamundaMyBatisExtension(
             ) as List<EventSubscriptionEntity>
         }
 
-        val subscriptions = ArrayList(factory.commandExecutorTxRequired.execute(command))
+        val subscriptions = ArrayList(
+            micrometerContext.createObs(BpmnObsCtx.Query(SELECT_EVENT_SUBSCRIPTIONS_BY_EVENT_NAMES_LIKE_START))
+                .observe { factory.commandExecutorTxRequired.execute(command) }
+        )
 
         return aggregateEventSubscriptionsFromContext(subscriptions) { subscription ->
             val eventName = subscription.eventName ?: ""
@@ -109,6 +120,7 @@ class CamundaMyBatisExtension(
     }
 
     internal fun getConditionalEventSubscriptionsByProcessInstanceIds(processInstanceIds: List<String>): List<EventSubscriptionEntity> {
+
         if (processInstanceIds.isEmpty()) {
             return emptyList()
         }
@@ -125,7 +137,9 @@ class CamundaMyBatisExtension(
             ) as List<EventSubscriptionEntity>
         }
 
-        val subscriptions = factory.commandExecutorTxRequired.execute(command)
+        val subscriptions = micrometerContext.createObs(
+            BpmnObsCtx.Query(SELECT_CONDITIONAL_EVENT_SUBSCRIPTIONS_BY_PROCESS_INSTANCE_IDS)
+        ).observe { factory.commandExecutorTxRequired.execute(command) }
 
         return aggregateEventSubscriptionsFromContext(subscriptions) { subscription ->
             processInstanceIds.any { id -> id == subscription.processInstanceId }

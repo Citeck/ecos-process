@@ -3,6 +3,8 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config
 import org.camunda.bpm.dmn.engine.impl.DefaultDmnEngineConfiguration
 import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
+import org.springframework.beans.factory.annotation.Autowired
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.EcosDmnScriptEngineResolver
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.EcosScriptingEnvironment
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.GraalScriptEngineResolver
@@ -17,6 +19,9 @@ class EcosCamundaEnginePlugin(
     companion object {
         const val SCRIPT_PROPS_KEY = "ecos.webapp.scripts.graaljs.camunda"
     }
+
+    @Autowired(required = false)
+    internal var micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
 
     override fun preInit(processEngineConfiguration: ProcessEngineConfigurationImpl) {
         initHistoryProps(processEngineConfiguration)
@@ -49,10 +54,12 @@ class EcosCamundaEnginePlugin(
      * [ProcessEngineConfigurationImpl.initScripting], which runs in between.
      */
     override fun postInit(processEngineConfiguration: ProcessEngineConfigurationImpl) {
+
         processEngineConfiguration.scriptingEnvironment = EcosScriptingEnvironment(
             processEngineConfiguration.scriptFactory,
             processEngineConfiguration.envScriptResolvers,
-            processEngineConfiguration.scriptingEngines
+            processEngineConfiguration.scriptingEngines,
+            micrometerContext
         )
     }
 }

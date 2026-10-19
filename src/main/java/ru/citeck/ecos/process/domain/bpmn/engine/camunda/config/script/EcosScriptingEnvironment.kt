@@ -12,6 +12,8 @@ import org.camunda.bpm.engine.impl.scripting.engine.ScriptingEngines
 import org.camunda.bpm.engine.impl.scripting.env.ScriptEnvResolver
 import org.camunda.bpm.engine.impl.scripting.env.ScriptingEnvironment
 import org.graalvm.polyglot.Context
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx
 import javax.script.Bindings
 import javax.script.SimpleBindings
 import org.camunda.bpm.engine.impl.context.Context as CamundaContext
@@ -50,7 +52,8 @@ import org.camunda.bpm.engine.impl.context.Context as CamundaContext
 class EcosScriptingEnvironment(
     scriptFactory: ScriptFactory,
     scriptEnvResolvers: List<ScriptEnvResolver>,
-    scriptingEngines: ScriptingEngines
+    scriptingEngines: ScriptingEngines,
+    private val micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
 ) : ScriptingEnvironment(scriptFactory, scriptEnvResolvers, scriptingEngines) {
 
     companion object {
@@ -58,6 +61,13 @@ class EcosScriptingEnvironment(
     }
 
     override fun execute(script: ExecutableScript, scope: VariableScope?): Any? {
+
+        return micrometerContext.createObs(
+            BpmnObsCtx.Script(script, scope)
+        ).observe { executeObserved(script, scope) }
+    }
+
+    private fun executeObserved(script: ExecutableScript, scope: VariableScope?): Any? {
 
         val scriptEngine = scriptingEngines.getScriptEngineForLanguage(script.language)
 
