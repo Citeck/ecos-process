@@ -25,6 +25,7 @@ class BpmnObsConvention : GlobalEcosObsConvention<BpmnObsCtx> {
             is BpmnObsCtx.SubscriptionsFind -> KeyValues.of("event.type", context.eventData.eventName)
             is BpmnObsCtx.DeploymentResolve -> KeyValues.of("subscription.id", context.subscription.id)
             is BpmnObsCtx.Predicate -> KeyValues.of("subscription.id", context.subscription.id)
+            is BpmnObsCtx.SignalCommand -> KeyValues.of("subscription.id", context.subscriptionId)
             is BpmnObsCtx.Signal -> KeyValues.of("subscription.id", context.subscriptionId)
             is BpmnObsCtx.ConditionalFire -> KeyValues.of("subscription.id", context.subscriptionId)
             is BpmnObsCtx.Definition -> getDefinitionKeyValues(context)

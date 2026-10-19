@@ -9,9 +9,12 @@ import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity
 import org.camunda.bpm.engine.impl.util.EnsureUtil
 import ru.citeck.ecos.bpmn.commons.values.BpmnDataValue
+import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_REF
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_DOCUMENT_TYPE
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.BPMN_EVENT
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx.SignalPhase
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.impl.events.bpmnevents.EcosEventType
 import ru.citeck.ecos.process.domain.bpmn.io.BpmnIO
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefRevDataProvider
@@ -23,7 +26,8 @@ class SendSignalEventByIdCmd(
     eventData: BpmnDataValue,
     private val procDefService: ProcDefService,
     private val procDefRevDataProvider: ProcDefRevDataProvider,
-    private val bpmnIO: BpmnIO
+    private val bpmnIO: BpmnIO,
+    private val micrometerContext: EcosMicrometerContext = EcosMicrometerContext.NOOP
 ) : Command<Unit> {
 
     companion object {
@@ -57,21 +61,43 @@ class SendSignalEventByIdCmd(
     }
 
     override fun execute(commandContext: CommandContext) {
-        sendSignal(commandContext)
+        observePhase(SignalPhase.COMMAND) { sendSignal(commandContext) }
     }
 
     private fun sendSignal(commandContext: CommandContext) {
-        val signalEventSubscriptions = findSignalEventSubscriptions(commandContext)
-        val catchSignalEventSubscription = filterIntermediateSubscriptions(signalEventSubscriptions)
+
+        val signalEventSubscriptions = observePhase(SignalPhase.SUBSCRIPTIONS_FIND) {
+            findSignalEventSubscriptions(commandContext)
+        }
+        val catchSignalEventSubscriptions = filterIntermediateSubscriptions(signalEventSubscriptions)
         val startSignalEventSubscriptions = filterStartSubscriptions(signalEventSubscriptions)
 
-        val processDefinitions: Map<String, ProcessDefinitionEntity> =
+        val processDefinitions = observePhase(SignalPhase.DEFINITIONS_RESOLVE) {
             getProcessDefinitionsOfSubscriptions(startSignalEventSubscriptions)
-        checkAuthorizationOfCatchSignals(commandContext, catchSignalEventSubscription)
-        checkAuthorizationOfStartSignals(commandContext, startSignalEventSubscriptions, processDefinitions)
+        }
 
-        notifyExecutions(catchSignalEventSubscription)
-        startProcessInstances(startSignalEventSubscriptions, processDefinitions)
+        observePhase(SignalPhase.AUTHORIZE_CATCH) {
+            checkAuthorizationOfCatchSignals(commandContext, catchSignalEventSubscriptions)
+        }
+        observePhase(SignalPhase.AUTHORIZE_START) {
+            checkAuthorizationOfStartSignals(commandContext, startSignalEventSubscriptions, processDefinitions)
+        }
+
+        observePhase(SignalPhase.NOTIFY_EXECUTIONS) {
+            notifyExecutions(catchSignalEventSubscriptions)
+        }
+        observePhase(SignalPhase.START_INSTANCES) {
+            startProcessInstances(startSignalEventSubscriptions, processDefinitions)
+        }
+    }
+
+    private fun <T> observePhase(
+        phase: SignalPhase,
+        subscription: EventSubscriptionEntity? = null,
+        action: () -> T
+    ): T {
+        val context = BpmnObsCtx.SignalCommand(signalId, phase, subscription)
+        return micrometerContext.createObs(context).observe(action)
     }
 
     private fun findSignalEventSubscriptions(commandContext: CommandContext): List<EventSubscriptionEntity> {
@@ -158,10 +184,16 @@ class SendSignalEventByIdCmd(
         }
     }
 
-    private fun notifyExecutions(catchSignalEventSubscription: List<EventSubscriptionEntity>) {
-        for (signalEventSubscriptionEntity in catchSignalEventSubscription) {
-            if (isActiveEventSubscription(signalEventSubscriptionEntity)) {
-                signalEventSubscriptionEntity.eventReceived(notifyEventVariables, false)
+    private fun notifyExecutions(catchSignalEventSubscriptions: List<EventSubscriptionEntity>) {
+
+        for (subscription in catchSignalEventSubscriptions) {
+            val active = observePhase(SignalPhase.EXECUTION_CHECK, subscription) {
+                isActiveEventSubscription(subscription)
+            }
+            if (active) {
+                observePhase(SignalPhase.EVENT_RECEIVED, subscription) {
+                    subscription.eventReceived(notifyEventVariables, false)
+                }
             }
         }
     }
@@ -175,15 +207,20 @@ class SendSignalEventByIdCmd(
         startSignalEventSubscriptions: List<EventSubscriptionEntity>,
         processDefinitions: Map<String, ProcessDefinitionEntity>
     ) {
-        for (signalStartEventSubscription in startSignalEventSubscriptions) {
-            val processDefinition = processDefinitions[signalStartEventSubscription.id]
-            if (processDefinition != null) {
-                val signalStartEvent = processDefinition.findActivity(signalStartEventSubscription.activityId)
-                val processInstance = processDefinition.createProcessInstanceForInitial(signalStartEvent)
-                if (processInstance is ExecutionEntity) {
-                    processInstance.businessKey = businessKey
-                }
 
+        for (subscription in startSignalEventSubscriptions) {
+            val processDefinition = processDefinitions[subscription.id] ?: continue
+
+            val processInstance = observePhase(SignalPhase.INSTANCE_CREATE, subscription) {
+                val signalStartEvent = processDefinition.findActivity(subscription.activityId)
+                val instance = processDefinition.createProcessInstanceForInitial(signalStartEvent)
+                if (instance is ExecutionEntity) {
+                    instance.businessKey = businessKey
+                }
+                instance
+            }
+
+            observePhase(SignalPhase.INSTANCE_START, subscription) {
                 processInstance.start(startProcessVariables)
             }
         }

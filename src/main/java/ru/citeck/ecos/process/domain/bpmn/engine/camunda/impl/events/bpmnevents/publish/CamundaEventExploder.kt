@@ -36,7 +36,14 @@ class CamundaEventExploder(
     private fun fireEventImpl(signalId: String, event: BpmnDataValue) {
         log.debug { "Fire signal $signalId with data \n${Json.mapper.toPrettyString(event)}" }
 
-        val signal = SendSignalEventByIdCmd(signalId, event, procDefService, procDefRevDataProvider, bpmnIO)
+        val signal = SendSignalEventByIdCmd(
+            signalId,
+            event,
+            procDefService,
+            procDefRevDataProvider,
+            bpmnIO,
+            micrometerContext
+        )
         camundaCommandExecutor.execute(signal)
     }
 

@@ -30,6 +30,12 @@ sealed class BpmnObsCtx(name: String) : EcosObsContext(name) {
         val subscriptionId: String
     ) : BpmnObsCtx("ecos.bpmn.event.signal")
 
+    class SignalCommand(
+        val subscriptionId: String,
+        val phase: SignalPhase,
+        val subscription: EventSubscriptionEntity? = null
+    ) : BpmnObsCtx(phase.observationName)
+
     class ConditionalFire(
         val subscriptionId: String
     ) : BpmnObsCtx("ecos.bpmn.conditional.fire")
@@ -48,6 +54,20 @@ sealed class BpmnObsCtx(name: String) : EcosObsContext(name) {
         val deploymentId: String,
         val activityId: String? = null
     ) : BpmnObsCtx(phase.observationName)
+
+    enum class SignalPhase(val observationName: String) {
+        COMMAND("ecos.bpmn.event.signal.command"),
+        SUBSCRIPTIONS_FIND("ecos.bpmn.event.signal.subscriptions.find"),
+        DEFINITIONS_RESOLVE("ecos.bpmn.event.signal.definitions.resolve"),
+        AUTHORIZE_CATCH("ecos.bpmn.event.signal.authorize.catch"),
+        AUTHORIZE_START("ecos.bpmn.event.signal.authorize.start"),
+        NOTIFY_EXECUTIONS("ecos.bpmn.event.signal.executions.notify"),
+        EXECUTION_CHECK("ecos.bpmn.event.signal.execution.check"),
+        EVENT_RECEIVED("ecos.bpmn.event.signal.event.receive"),
+        START_INSTANCES("ecos.bpmn.event.signal.instances.start"),
+        INSTANCE_CREATE("ecos.bpmn.event.signal.instance.create"),
+        INSTANCE_START("ecos.bpmn.event.signal.instance.start")
+    }
 
     enum class DefinitionPhase(val observationName: String) {
         RESOLVE("ecos.bpmn.event.definition.resolve"),

@@ -14,7 +14,15 @@ configuration; it does not enable tracing or change event delivery.
 - `ecos.bpmn.event.definition.resolve`: definition cache lookup and element matching.
 - `ecos.bpmn.event.definition.load`: cache miss, revision loading and BPMN parsing.
 - `ecos.bpmn.event.attributes` / `ecos.bpmn.event.predicate`: event projection and predicate evaluation.
-- `ecos.bpmn.event.signal`: signal command, including synchronous downstream process execution.
+- `ecos.bpmn.event.signal`: signal construction and command executor, including synchronous downstream process execution.
+- `ecos.bpmn.event.signal.command`: command body after entering Camunda's interceptor chain.
+- `ecos.bpmn.event.signal.subscriptions.find`: subscription lookup by signal ID.
+- `ecos.bpmn.event.signal.definitions.resolve`: start-event definition/cache resolution and enabled-state parsing.
+- `ecos.bpmn.event.signal.authorize.catch` / `.authorize.start`: authorization before delivery or process creation.
+- `ecos.bpmn.event.signal.executions.notify`: catch subscriptions, with `.execution.check` for lazy execution lookup/state checks
+  and `.event.receive` for synchronous `eventReceived` and downstream execution.
+- `ecos.bpmn.event.signal.instances.start`: start subscriptions, with `.instance.create` for activity lookup/instance creation
+  and `.instance.start` for synchronous execution of the new instance.
 - `ecos.bpmn.conditional.process`, `.subscriptions.find`, `.processes.query`,
   `.definition.resolve`, `.definition.load`, `.fire`: corresponding conditional-event phases.
 - `ecos.bpmn.script.execute`: BPMN script engine lookup, binding/environment setup,
@@ -54,3 +62,12 @@ according to `management.tracing.enabled`. Business code does not add tags direc
 Contexts retain original event, subscription and script/scope objects when available.
 Conventions alone choose their exported fields; primitive arguments such as command
 IDs remain direct context inputs when they are already the operation input.
+
+A gap between the outer signal span and `.command` points to command construction or
+executor/interceptor setup. Time after `.command` ends can include interceptor cleanup
+and database flush; neither gap alone proves a database wait. Within `.command`, the
+phase spans separate lookup, definition resolution, authorization and continuation.
+`.event.receive` and `.instance.start` still include Camunda's downstream execution;
+script spans nest inside them. These boundaries do not identify individual SQL waits
+or every BPMN activity. Subscription IDs remain high-cardinality attributes; observing
+a phase does not resolve execution/process metadata merely to construct tags.
