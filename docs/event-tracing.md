@@ -39,6 +39,18 @@ BPMN listener IDs are `bpmn-event:<eventName>:<listenerEventName>` and
 library spans. Per-listener spans require the accompanying ecos-events change
 to be included in the application's resolved dependencies.
 
+## Shared JDBC and scheduler observations
+
+The webapp parent 3.36.0 supplies `ecos.jdbc.connection.acquire` separately from
+SQL/query/update/batch execution. These child spans help distinguish connection
+acquisition from statement time in Camunda's JDBC path. Result fetching is not
+separately timed, and XAResource-level commit is outside `ecos.jdbc.commit`.
+Bound SQL parameters are not captured.
+
+Scheduled invocations have an `ecos.task.scheduler` parent with `taskId`, including
+Spring `@Scheduled` methods. Transactions started by those tasks retain that parent.
+Camunda's independent job executor still has no automatic command-name observation.
+
 ## Reading a slow trace
 
 Look for the deepest long span. For example, time in `.subscriptions.query`
