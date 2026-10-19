@@ -147,11 +147,24 @@ class EcosScriptingEnvironmentTest {
         assertThrows(Exception::class.java) {
             run(env, "throw new Error('private-script-error')")
         }
-        assertThat(stopped).hasSize(2)
-        assertThat(stopped[0].name).isEqualTo("ecos.bpmn.script.execute")
-        assertThat(stopped[0].getHighCardinalityKeyValue("script.language")!!.value).isEqualTo(JS)
-        assertThat(stopped[0].error).isNull()
-        assertThat(stopped[1].error).isNotNull()
+        val outer = stopped.filter { it.name == "ecos.bpmn.script.execute" }
+        assertThat(outer).hasSize(2)
+        val phases = stopped.filter { it.name != "ecos.bpmn.script.execute" }
+        assertThat(phases.map { it.name }).contains(
+            "ecos.bpmn.script.engine.resolve",
+            "ecos.bpmn.script.bindings.create",
+            "ecos.bpmn.script.environment.execute",
+            "ecos.bpmn.script.evaluate",
+            "ecos.bpmn.script.result.detach"
+        )
+        assertThat(phases).allSatisfy {
+            assertThat(it.parentObservation?.contextView?.name).isEqualTo("ecos.bpmn.script.execute")
+        }
+        assertThat(phases.single { it.name == "ecos.bpmn.script.evaluate" && it.error != null }.error).isNotNull()
+        assertThat(outer[0].name).isEqualTo("ecos.bpmn.script.execute")
+        assertThat(outer[0].getHighCardinalityKeyValue("script.language")!!.value).isEqualTo(JS)
+        assertThat(outer[0].error).isNull()
+        assertThat(outer[1].error).isNotNull()
         assertThat(registry.currentObservation).isNull()
     }
 

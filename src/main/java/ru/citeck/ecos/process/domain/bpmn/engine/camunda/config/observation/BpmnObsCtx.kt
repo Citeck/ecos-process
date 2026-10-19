@@ -1,6 +1,8 @@
 package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation
 
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.delegate.VariableScope
+import org.camunda.bpm.engine.impl.delegate.DelegateInvocation
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity
 import org.camunda.bpm.engine.impl.scripting.ExecutableScript
 import ru.citeck.ecos.micrometer.obs.EcosObsContext
@@ -48,6 +50,27 @@ sealed class BpmnObsCtx(name: String) : EcosObsContext(name) {
         val script: ExecutableScript,
         val scope: VariableScope?
     ) : BpmnObsCtx("ecos.bpmn.script.execute")
+
+    class Delegate(val invocation: DelegateInvocation) : BpmnObsCtx("ecos.bpmn.delegate.invoke") {
+
+        private val execution = invocation.contextExecution as? DelegateExecution
+        val processDefinitionId = execution?.processDefinitionId
+        val activityId = execution?.currentActivityId
+    }
+
+    class ScriptPhase(
+        val script: ExecutableScript,
+        val scope: VariableScope?,
+        val phase: ScriptStage
+    ) : BpmnObsCtx(phase.observationName)
+
+    enum class ScriptStage(val observationName: String) {
+        ENGINE("ecos.bpmn.script.engine.resolve"),
+        BINDINGS("ecos.bpmn.script.bindings.create"),
+        ENVIRONMENT("ecos.bpmn.script.environment.execute"),
+        EVALUATE("ecos.bpmn.script.evaluate"),
+        DETACH("ecos.bpmn.script.result.detach")
+    }
 
     class Definition(
         val phase: DefinitionPhase,

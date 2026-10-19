@@ -3,8 +3,10 @@ package ru.citeck.ecos.process.domain.bpmn.engine.camunda.config
 import org.assertj.core.api.Assertions.assertThat
 import org.camunda.bpm.engine.impl.cfg.StandaloneInMemProcessEngineConfiguration
 import org.camunda.bpm.engine.impl.context.Context
+import org.camunda.bpm.engine.impl.delegate.DefaultDelegateInterceptor
 import org.camunda.bpm.engine.impl.scripting.env.ScriptEnvResolver
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObservationDelegateInterceptor
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.EcosDmnScriptEngineResolver
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.EcosScriptingEnvironment
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.GraalScriptEngineResolver
@@ -82,6 +84,7 @@ class EcosCamundaEnginePluginTest {
         val config = ScriptingConfiguration()
         // camunda's BeansResolver reads this on every bindings lookup and initBeans, which is part of the full
         // init this test deliberately does not run, is what normally gives it an empty map
+        config.delegateInterceptor = DefaultDelegateInterceptor()
         config.beans = mutableMapOf()
         // stands in for the resolver that contributes ecos_env.js to every BPMN script
         config.envScriptResolvers = mutableListOf(
@@ -100,6 +103,7 @@ class EcosCamundaEnginePluginTest {
     fun `the plugin installs the leak-free scripting stack on the engine configuration`() {
         val config = configure()
 
+        assertThat(config.delegateInterceptor).isInstanceOf(BpmnObservationDelegateInterceptor::class.java)
         assertThat(config.scriptEngineResolver)
             .`as`("without this resolver every script evaluation builds - and leaks - its own polyglot Engine")
             .isInstanceOf(GraalScriptEngineResolver::class.java)

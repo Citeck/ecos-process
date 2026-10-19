@@ -25,6 +25,17 @@ configuration; it does not enable tracing or change event delivery.
   and `.instance.start` for synchronous execution of the new instance.
 - `ecos.bpmn.conditional.process`, `.subscriptions.find`, `.processes.query`,
   `.definition.resolve`, `.definition.load`, `.fire`: corresponding conditional-event phases.
+- `ecos.bpmn.delegate.invoke`: the configured Camunda delegate interceptor, including
+  Java delegates, activity behavior invocations and execution/task listeners that use
+  that interceptor. `invocation.type`, the initial `activity.id` and
+  `process.definition.id` identify the entry point without reading variables or
+  resolving additional metadata. The original interceptor still controls authorization,
+  process application context and execution. Synchronous continuation can nest inside
+  an activity behavior; this is elapsed invocation time, not activity CPU time.
+- `ecos.bpmn.script.engine.resolve`, `.bindings.create`, `.environment.execute`,
+  `.evaluate` and `.result.detach`: nested phases separating engine lookup, bindings,
+  environment loading/evaluation, user script execution and Graal result conversion.
+  Environment scripts still share the original bindings and run before the user script.
 - `ecos.bpmn.script.execute`: BPMN script engine lookup, binding/environment setup,
   evaluation, result detachment and inline context cleanup. Transaction-deferred
   cleanup happens after this span. DMN scripts do not use this entry point.
@@ -80,6 +91,17 @@ executor/interceptor setup. Time after `.command` ends can include interceptor c
 and database flush; neither gap alone proves a database wait. Within `.command`, the
 phase spans separate lookup, definition resolution, authorization and continuation.
 `.event.receive` and `.instance.start` still include Camunda's downstream execution;
-script spans nest inside them. These boundaries do not identify individual SQL waits
-or every BPMN activity. Subscription IDs remain high-cardinality attributes; observing
+script and delegate spans nest inside them. These boundaries do not identify individual SQL waits
+or every BPMN activity. Delegate spans now identify interceptor entry points inside
+these continuations, and script phases separate setup from evaluation. Subscription IDs remain high-cardinality attributes; observing
 a phase does not resolve execution/process metadata merely to construct tags.
+
+## Follow-up trace 98cd32495221658d9c7bf83728e8c6fe
+
+The supplied 2026-10-19 export shows a 4.904-second mutation with a roughly
+4-second synchronous eproc call. Within it, subscription SQL takes 427 ms,
+13 Camunda batches take 907 ms, and five script invocations total 964 ms.
+`event.receive` has 1.080 seconds outside its saved children, including two gaps
+of about 438 ms. A calendar activity log occurs in the second gap, but does not
+establish the cause. The added delegate and script phases narrow future gaps;
+they do not retroactively identify waits, CPU, SQL plans or the deployed version.

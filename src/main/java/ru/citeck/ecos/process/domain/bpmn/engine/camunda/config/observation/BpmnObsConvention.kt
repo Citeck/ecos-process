@@ -30,6 +30,8 @@ class BpmnObsConvention : GlobalEcosObsConvention<BpmnObsCtx> {
             is BpmnObsCtx.ConditionalFire -> KeyValues.of("subscription.id", context.subscriptionId)
             is BpmnObsCtx.Definition -> getDefinitionKeyValues(context)
             is BpmnObsCtx.Script -> getScriptKeyValues(context)
+            is BpmnObsCtx.ScriptPhase -> getScriptKeyValues(BpmnObsCtx.Script(context.script, context.scope))
+            is BpmnObsCtx.Delegate -> getDelegateKeyValues(context)
             is BpmnObsCtx.Query -> KeyValues.empty()
         }
     }
@@ -57,6 +59,19 @@ class BpmnObsConvention : GlobalEcosObsConvention<BpmnObsCtx> {
             values = values.and("activity.id", it)
         }
 
+        return values
+    }
+
+    private fun getDelegateKeyValues(context: BpmnObsCtx.Delegate): KeyValues {
+
+        val invocation = context.invocation
+        var values = KeyValues.of("invocation.type", invocation.javaClass.simpleName)
+        context.processDefinitionId?.let {
+            values = values.and("process.definition.id", it)
+        }
+        context.activityId?.let {
+            values = values.and("activity.id", it)
+        }
         return values
     }
 

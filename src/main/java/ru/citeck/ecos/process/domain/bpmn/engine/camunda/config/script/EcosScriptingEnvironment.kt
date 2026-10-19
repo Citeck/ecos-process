@@ -14,7 +14,9 @@ import org.camunda.bpm.engine.impl.scripting.env.ScriptingEnvironment
 import org.graalvm.polyglot.Context
 import ru.citeck.ecos.micrometer.EcosMicrometerContext
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObsCtx.ScriptStage
 import javax.script.Bindings
+import javax.script.ScriptEngine
 import javax.script.SimpleBindings
 import org.camunda.bpm.engine.impl.context.Context as CamundaContext
 
@@ -69,24 +71,46 @@ class EcosScriptingEnvironment(
 
     private fun executeObserved(script: ExecutableScript, scope: VariableScope?): Any? {
 
-        val scriptEngine = scriptingEngines.getScriptEngineForLanguage(script.language)
+        val scriptEngine = observePhase(script, scope, ScriptStage.ENGINE) {
+            scriptingEngines.getScriptEngineForLanguage(script.language)
+        }
+        val bindings = observePhase(script, scope, ScriptStage.BINDINGS) {
+            val base = if (scriptEngine is GraalJSScriptEngine) SimpleBindings() else scriptEngine.createBindings()
+            scriptingEngines.scriptBindingsFactory.createBindings(scope, base)
+        }
 
         if (scriptEngine !is GraalJSScriptEngine) {
-            val bindings = scriptingEngines.scriptBindingsFactory.createBindings(scope, scriptEngine.createBindings())
             return execute(script, scope, bindings, scriptEngine)
         }
 
-        val bindings = scriptingEngines.scriptBindingsFactory.createBindings(scope, SimpleBindings())
-
         var failure: Throwable? = null
         try {
-            return detachFromPolyglotContext(execute(script, scope, bindings, scriptEngine), bindings)
+            val result = execute(script, scope, bindings, scriptEngine)
+            return observePhase(script, scope, ScriptStage.DETACH) {
+                detachFromPolyglotContext(result, bindings)
+            }
         } catch (e: Throwable) {
             failure = e
             throw e
         } finally {
             closeContexts(bindings, failure)
         }
+    }
+
+    override fun execute(script: ExecutableScript, scope: VariableScope?, bindings: Bindings, scriptEngine: ScriptEngine): Any? {
+
+        observePhase(script, scope, ScriptStage.ENVIRONMENT) {
+            for (envScript in getEnvScripts(script, scriptEngine)) {
+                envScript.execute(scriptEngine, scope, bindings)
+            }
+        }
+        return observePhase(script, scope, ScriptStage.EVALUATE) {
+            script.execute(scriptEngine, scope, bindings)
+        }
+    }
+
+    private fun <T> observePhase(script: ExecutableScript, scope: VariableScope?, phase: ScriptStage, action: () -> T): T {
+        return micrometerContext.createObs(BpmnObsCtx.ScriptPhase(script, scope, phase)).observe(action)
     }
 
     /**

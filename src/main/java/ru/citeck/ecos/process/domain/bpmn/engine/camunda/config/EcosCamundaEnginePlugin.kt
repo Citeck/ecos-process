@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.springframework.beans.factory.annotation.Autowired
 import ru.citeck.ecos.micrometer.EcosMicrometerContext
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.observation.BpmnObservationDelegateInterceptor
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.EcosDmnScriptEngineResolver
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.EcosScriptingEnvironment
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.config.script.GraalScriptEngineResolver
@@ -55,6 +56,10 @@ class EcosCamundaEnginePlugin(
      */
     override fun postInit(processEngineConfiguration: ProcessEngineConfigurationImpl) {
 
+        processEngineConfiguration.delegateInterceptor = BpmnObservationDelegateInterceptor(
+            processEngineConfiguration.delegateInterceptor,
+            micrometerContext
+        )
         processEngineConfiguration.scriptingEnvironment = EcosScriptingEnvironment(
             processEngineConfiguration.scriptFactory,
             processEngineConfiguration.envScriptResolvers,
