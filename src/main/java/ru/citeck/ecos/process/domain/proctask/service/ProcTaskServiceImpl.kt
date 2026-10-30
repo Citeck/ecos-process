@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.camunda.bpm.engine.FormService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
+import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity
 import org.springframework.stereotype.Service
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.data.sql.records.utils.DbDateUtils
@@ -204,6 +205,9 @@ class ProcTaskServiceImpl(
             .processVariableValueEquals(BPMN_DOCUMENT_REF, document)
             .initializeFormKeys()
             .list()
+            // A query can return a completed task before its deletion is flushed.
+            // Check the engine entity before conversion can reuse a stale cached DTO.
+            .filterNot { it is TaskEntity && it.isDeleted }
             .map { taskConverter.toProcTask(it) }
     }
 
