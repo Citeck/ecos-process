@@ -165,53 +165,70 @@ class BpmnLazyApprovalService(
         token: String,
         comment: String
     ): LazyApprovalReportDto {
-        val task = procTaskService.getTaskById(taskId)
-
-        if (task == null) {
-            procHistoricTaskService.getHistoricTaskById(taskId)?.let {
-                return if (it.ended != null) {
-                    log.warn { "Task with id = $taskId already completed!" }
-                    fillLazyApprovalReport(MailProcessingCode.TASK_ALREADY_COMPLETED, it)
-                } else {
-                    log.warn { "Task with id = $taskId is inactive but not completed!" }
-                    fillLazyApprovalReport(MailProcessingCode.EXCEPTION, it)
-                }
-            }
-
-            log.warn { "Task with id = $taskId not found!" }
-            return fillLazyApprovalReport(MailProcessingCode.TASK_NOT_FOUND, null)
-        }
-
-        val outcome = task.possibleOutcomes.find { it.id == taskOutcome }
-        if (outcome == null) {
-            log.warn { "Task with id = $taskId has no outcome with id = $taskOutcome!" }
-            return fillLazyApprovalReport(MailProcessingCode.OUTCOME_NOT_FOUND, task)
-        }
-
-        val tokenLA = procTaskService.getVariableLocal(taskId, TASK_TOKEN_NAME).toString()
-        if (token != tokenLA) {
-            log.warn { "Task with id = $taskId has no token = $token! tokenLA = $tokenLA" }
-            return fillLazyApprovalReport(MailProcessingCode.TOKEN_NOT_FOUND, task)
-        }
-
-        val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
-        val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
-        recordAtt.setAtt(outcomeForTask, true)
-        recordAtt.setAtt(BPMN_COMMENT, clearNbsp(comment))
-        recordAtt.setAtt(BPMN_LA_COMPLETE_KEY, true)
-
+        var task: ProcTaskDto? = null
+        var report: LazyApprovalReportDto? = null
         return try {
+            // Reads can enlist Camunda resources too. Keep them out of the caller transaction,
+            // which is suspended until this independent completion transaction finishes.
             TxnContext.doInNewTxn {
+                val activeTask = procTaskService.getTaskById(taskId)
+                task = activeTask
+
+                if (activeTask == null) {
+                    val historicTask = procHistoricTaskService.getHistoricTaskById(taskId)
+                    task = historicTask
+                    val code = when {
+                        historicTask == null -> {
+                            log.warn { "Task with id = $taskId not found!" }
+                            MailProcessingCode.TASK_NOT_FOUND
+                        }
+                        historicTask.ended != null -> {
+                            log.warn { "Task with id = $taskId already completed!" }
+                            MailProcessingCode.TASK_ALREADY_COMPLETED
+                        }
+                        else -> {
+                            log.warn { "Task with id = $taskId is inactive but not completed!" }
+                            MailProcessingCode.EXCEPTION
+                        }
+                    }
+                    return@doInNewTxn fillLazyApprovalReport(code, historicTask)
+                }
+
+                val outcome = activeTask.possibleOutcomes.find { it.id == taskOutcome }
+                if (outcome == null) {
+                    log.warn { "Task with id = $taskId has no outcome with id = $taskOutcome!" }
+                    return@doInNewTxn fillLazyApprovalReport(MailProcessingCode.OUTCOME_NOT_FOUND, activeTask)
+                }
+
+                val tokenLA = procTaskService.getVariableLocal(taskId, TASK_TOKEN_NAME).toString()
+                if (token != tokenLA) {
+                    log.warn { "Task with id = $taskId has no token = $token! tokenLA = $tokenLA" }
+                    return@doInNewTxn fillLazyApprovalReport(MailProcessingCode.TOKEN_NOT_FOUND, activeTask)
+                }
+
+                val outcomeForTask = Outcome.OUTCOME_PREFIX + taskOutcome
+                val recordAtt = RecordAtts(EntityRef.create(AppName.EPROC, ProcTaskRecords.ID, taskId))
+                recordAtt.setAtt(outcomeForTask, true)
+                recordAtt.setAtt(BPMN_COMMENT, clearNbsp(comment))
+                recordAtt.setAtt(BPMN_LA_COMPLETE_KEY, true)
+
+                // Resolving report templates may read the process model from the database.
+                // Snapshot them before completion so failure reporting needs no reads after rollback.
+                val successReport = fillLazyApprovalReport(MailProcessingCode.OK, activeTask)
+                report = successReport
                 AuthContext.runAsFull(userId) {
                     recordsService.mutate(recordAtt)
                 }
-
-                fillLazyApprovalReport(MailProcessingCode.OK, task)
+                successReport
             }
         } catch (e: Exception) {
             val message = (ExceptionUtils.getRootCause(e) ?: e).message ?: "empty"
             log.warn(e) { "Task with id = $taskId failed! The following error occurred: $message" }
-            fillLazyApprovalReport(MailProcessingCode.EXCEPTION, message, task)
+            val failureReport = report ?: LazyApprovalReportDto(
+                documentRef = task?.documentRef,
+                taskName = task?.name
+            )
+            failureReport.copy(processingCode = MailProcessingCode.EXCEPTION, errorMessage = message)
         }
     }
 
