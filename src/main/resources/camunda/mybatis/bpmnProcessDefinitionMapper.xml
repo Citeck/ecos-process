@@ -36,6 +36,7 @@
     <select id="selectLatestBpmnDefsByWsSysId" parameterType="map" resultMap="processDefinitionResultMap">
         select * from ${prefix}ACT_RE_PROCDEF DEF
         <include refid="latestBpmnDefsByWsSysIdSql"/>
+        ORDER BY DEF.KEY_, DEF.ID_
         LIMIT #{maxItems} OFFSET #{skipCount}
     </select>
 
@@ -56,9 +57,7 @@
                     </otherwise>
                 </choose>
             </foreach>
-            <if test="keyLike != null">
-                and RES.KEY_ like #{keyLike} ESCAPE ${escapeChar}
-            </if>
+            and ${filter.sql}
             and DEF.version_ = (select max(version_) from ${prefix}ACT_RE_PROCDEF where key_ = DEF.key_)
         </where>
     </sql>
