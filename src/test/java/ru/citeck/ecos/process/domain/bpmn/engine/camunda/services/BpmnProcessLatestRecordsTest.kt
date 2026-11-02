@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
 import ru.citeck.ecos.process.domain.bpmn.api.records.BpmnProcessLatestRecords
 import ru.citeck.ecos.process.domain.procdef.dto.ProcDefDto
@@ -82,9 +83,9 @@ class BpmnProcessLatestRecordsTest {
     }
 
     @Test
-    fun deniedOrEmptyWorkspaceScopeDoesNotQueryDefinitionsOrEngine() {
+    fun deniedWorkspaceScopeDoesNotQueryDefinitionsOrEngine() {
 
-        `when`(workspaces.getAvailableWorkspacesToQuery(any(), anyList())).thenReturn(emptySet())
+        `when`(workspaces.getAvailableWorkspacesToQuery(any(), anyList())).thenReturn(null)
 
         val query = RecordsQuery.create()
             .withQuery(Predicates.contains("definition", "assign"))
@@ -93,6 +94,19 @@ class BpmnProcessLatestRecordsTest {
 
         assertTrue(result.getRecords().isEmpty())
         verifyNoInteractions(definitions, extension)
+    }
+
+    @Test
+    fun systemAllWorkspaceScopeReachesEngineWithoutWorkspaceRestriction() {
+
+        `when`(workspaces.getAvailableWorkspacesToQuery(any(), anyList())).thenReturn(emptySet())
+        `when`(extension.getCountOfLatestBpmnDefsByWsSysId(anyList(), any())).thenReturn(0L)
+
+        val result = dao.queryRecords(RecordsQuery.create().withQuery(Predicates.alwaysTrue()).build())
+
+        verify(extension).getCountOfLatestBpmnDefsByWsSysId(eq(emptyList()), any())
+        verifyNoInteractions(definitions)
+        assertTrue(result.getRecords().isEmpty())
     }
 
     @Test

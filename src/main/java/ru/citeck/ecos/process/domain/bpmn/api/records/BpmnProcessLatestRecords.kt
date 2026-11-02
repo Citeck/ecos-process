@@ -61,10 +61,7 @@ class BpmnProcessLatestRecords(
             recsQuery.workspaces
         )?.map { workspaceService.getWorkspaceSystemId(it) } ?: return RecsQueryRes()
 
-        if (wsSysIdsToFilter.isEmpty()) {
-            return RecsQueryRes()
-        }
-
+        // An empty scope means all workspaces for system queries; null above means denied.
         val predicate = recsQuery.getQuery(Predicate::class.java)
         val filter = BpmnProcessLatestFilter.create(predicate) { valuePredicate ->
             findDefinitionResources(valuePredicate, recsQuery.workspaces)
