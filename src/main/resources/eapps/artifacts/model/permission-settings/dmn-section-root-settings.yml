@@ -19,4 +19,4 @@ settings:
       - GROUP_bp-developer
     permissions:
       - emodel/permission-def@read
-      - emodel/permission-def@bpmn-process-def-deploy
+      - emodel/permission-def@dmn-def-deploy

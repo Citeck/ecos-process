@@ -225,12 +225,12 @@ class CamundaMyBatisExtension(
 
     fun getCountOfLatestBpmnDefsByWsSysId(
         workspacesSysId: List<String>,
-        definitionKeyLike: String?
+        filter: BpmnProcessLatestFilter
     ): Long {
         return selectCount(
             SELECT_COUNT_OF_LATEST_BPMN_DEFS_BY_WS_SYS_ID,
             mapOf(
-                "keyLike" to definitionKeyLike,
+                "filter" to filter,
                 "workspacesSysId" to workspacesSysId
             )
         )
@@ -238,7 +238,7 @@ class CamundaMyBatisExtension(
 
     fun getLatestBpmnDefsByWorkspacesSysId(
         workspacesSysId: List<String>,
-        definitionKeyLike: String?,
+        filter: BpmnProcessLatestFilter,
         skipCount: Int,
         maxItems: Int
     ): List<ProcessDefinitionEntity> {
@@ -246,7 +246,7 @@ class CamundaMyBatisExtension(
             SELECT_LATEST_BPMN_DEFS_BY_WS_SYS_ID,
             mapOf(
                 "workspacesSysId" to workspacesSysId,
-                "keyLike" to definitionKeyLike,
+                "filter" to filter,
                 "skipCount" to skipCount,
                 "maxItems" to maxItems
             )

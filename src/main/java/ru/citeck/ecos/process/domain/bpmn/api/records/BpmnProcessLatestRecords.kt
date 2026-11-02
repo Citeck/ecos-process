@@ -7,14 +7,17 @@ import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.workspace.IdInWs
 import ru.citeck.ecos.model.lib.workspace.WorkspaceService
+import ru.citeck.ecos.process.domain.bpmn.BPMN_PROC_TYPE
 import ru.citeck.ecos.process.domain.bpmn.BPMN_RESOURCE_NAME_POSTFIX
+import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.BpmnProcessLatestFilter
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.CamundaMyBatisExtension
 import ru.citeck.ecos.process.domain.bpmn.engine.camunda.services.getLatestProcessDefinitionsByKeys
 import ru.citeck.ecos.process.domain.bpmn.utils.ProcUtils
 import ru.citeck.ecos.process.domain.procdef.service.ProcDefService
 import ru.citeck.ecos.records2.RecordConstants
-import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.Predicates
+import ru.citeck.ecos.records2.predicate.model.ValuePredicate
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.AbstractRecordsDao
 import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
@@ -24,7 +27,7 @@ import ru.citeck.ecos.records3.record.dao.query.dto.res.RecsQueryRes
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
-// TODO: permissions and tests
+// TODO: permissions
 /**
  * The source is used to select deployed process in engine.
  *
@@ -43,6 +46,7 @@ class BpmnProcessLatestRecords(
     RecordsAttsDao {
 
     companion object {
+
         const val ID = "bpmn-proc-latest"
     }
 
@@ -57,25 +61,24 @@ class BpmnProcessLatestRecords(
             recsQuery.workspaces
         )?.map { workspaceService.getWorkspaceSystemId(it) } ?: return RecsQueryRes()
 
+        // An empty scope means all workspaces for system queries; null above means denied.
         val predicate = recsQuery.getQuery(Predicate::class.java)
-        val query = PredicateUtils.convertToDto(predicate, ProcessLatestQuery::class.java)
-
-        var procDefKeyLike: String? = null
-        if (query.definition.isNotBlank()) {
-            procDefKeyLike = "%${query.definition}%"
+        val filter = BpmnProcessLatestFilter.create(predicate) { valuePredicate ->
+            findDefinitionResources(valuePredicate, recsQuery.workspaces)
         }
 
         val totalCount = camundaMyBatisExtension.getCountOfLatestBpmnDefsByWsSysId(
             wsSysIdsToFilter,
-            procDefKeyLike
+            filter
         )
+
         if (totalCount == 0L) {
             return RecsQueryRes()
         }
 
         val processes = camundaMyBatisExtension.getLatestBpmnDefsByWorkspacesSysId(
             wsSysIdsToFilter,
-            procDefKeyLike,
+            filter,
             recsQuery.page.skipCount,
             recsQuery.page.maxItems
         ).map { EntityRef.create(AppName.EPROC, ID, it.key) }
@@ -148,7 +151,32 @@ class BpmnProcessLatestRecords(
         }
     }
 
-    data class ProcessLatestQuery(
-        var definition: String = ""
-    )
+    private fun findDefinitionResources(
+        predicate: ValuePredicate,
+        workspaces: List<String>
+    ): List<String> {
+
+        // The picker displays the model's localized name, not Camunda's (often empty) NAME_.
+        // Limit name matches before constraining the engine query, without scanning all models.
+        val namePredicate = Predicates.and(
+            Predicates.eq("procType", BPMN_PROC_TYPE),
+            Predicates.eq("enabled", true),
+            Predicates.or(
+                ValuePredicate("name", predicate.getType(), predicate.getValue()),
+                ValuePredicate("moduleId", predicate.getType(), predicate.getValue())
+            )
+        )
+
+        val definitions = procDefService.findAll(workspaces, namePredicate, 50, 0)
+
+        return definitions.map { definition ->
+            val prefix = if (workspaceService.isWorkspaceWithGlobalEntities(definition.workspace)) {
+                ""
+            } else {
+                workspaceService.getWorkspaceSystemId(definition.workspace) + ProcUtils.PROC_KEY_WS_DELIM
+            }
+
+            prefix + definition.id + BPMN_RESOURCE_NAME_POSTFIX
+        }
+    }
 }
