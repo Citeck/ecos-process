@@ -123,8 +123,9 @@ class BpmnProcessDefRecords(
             .withoutDefaultComponents()
             .allowAllForAdmins()
             .addComponent(RootSectionPermsComponent())
-            .addComponent(modelRecordPermsComponent)
+            // Model permissions are final; collect explicit grants before evaluating them.
             .addComponent(customRecordPermsComponent)
+            .addComponent(modelRecordPermsComponent)
             .build()
     }
 
@@ -133,9 +134,10 @@ class BpmnProcessDefRecords(
             .withoutDefaultComponents()
             .allowAllForAdmins()
             .addComponent(WorkspacePermsComponent(workspaceService, SectionType.BPMN))
-            .addComponent(modelRecordPermsComponent)
+            // Custom and inherited section rights add to the final model permissions.
             .addComponent(customRecordPermsComponent)
             .addComponent(SectionFallbackPermsComponent(SectionType.BPMN, sectionPermsCalculator))
+            .addComponent(modelRecordPermsComponent)
             .build()
     }
 
