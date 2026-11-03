@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.test.annotation.DirtiesContext
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
@@ -30,15 +33,29 @@ import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.api.entity.toEntityRef
+import ru.citeck.ecos.webapp.lib.lock.EcosAppLockService
 import ru.citeck.ecos.webapp.lib.model.type.dto.TypeDef
 import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
 import ru.citeck.ecos.webapp.lib.spring.test.extension.EcosSpringExtension
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(EcosSpringExtension::class)
-@SpringBootTest(classes = [EprocApp::class])
+@SpringBootTest(
+    classes = [EprocApp::class, UserTaskAttsSyncTest.WorkerConfig::class],
+    properties = ["ecos-process.bpmn.task-atts-sync.job-rate-ms=100"]
+)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class UserTaskAttsSyncTest {
+
+    // The sync scheduler component is disabled in the test profile; exercise the real scheduled
+    // worker here because these cases assert asynchronous updates after queue receipt.
+    @TestConfiguration
+    class WorkerConfig {
+        @Bean
+        fun taskSyncWorker(sync: ProcTaskAttsSynchronizer) = ProcTaskSyncJobScheduler(sync)
+    }
 
     companion object {
         private const val PROC_ID_SIMPLE_TASK = "bpmn-task-atts-document-simple-task-create"
@@ -88,6 +105,9 @@ class UserTaskAttsSyncTest {
 
     @Autowired
     private lateinit var helper: BpmnProcHelper
+
+    @Autowired
+    private lateinit var appLocks: EcosAppLockService
 
     private lateinit var documentRecordsDao: InMemRecordsDao<Any>
     private lateinit var childDocumentRecordsDao: InMemRecordsDao<Any>
@@ -225,9 +245,13 @@ class UserTaskAttsSyncTest {
 
     @AfterEach
     fun clean() {
-        helper.cleanTaskAttsSyncSettings()
-        startedProcesIds.forEach {
-            bpmnProcessService.deleteProcessInstance(it)
+        // The last asserted attribute may be visible before other queued TYPE/FULL
+        // pages finish. Do not delete task entities concurrently with that worker.
+        appLocks.doInSync("task-atts-sync-worker", Duration.ofSeconds(30)) {
+            helper.cleanTaskAttsSyncSettings()
+            startedProcesIds.forEach {
+                bpmnProcessService.deleteProcessInstance(it)
+            }
         }
     }
 
@@ -732,7 +756,7 @@ class UserTaskAttsSyncTest {
         recordsService.mutate(atts)
 
         Awaitility.await().atMost(15, TimeUnit.SECONDS).untilAsserted {
-            val nameAfter = procTaskService.getVariableLocal(taskId, "name".withDocPrefix()) as String
+            val nameAfter = procTaskService.getVariableLocal(taskId, "name".withDocPrefix()) as? String
             assertThat(nameAfter).isEqualTo(docRecordChild.name)
         }
     }

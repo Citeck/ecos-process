@@ -1,11 +1,15 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.annotation.PostConstruct
 import org.camunda.bpm.engine.delegate.DelegateTask
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Lazy
+import org.springframework.jdbc.datasource.DataSourceUtils
 import org.springframework.stereotype.Component
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.status.constants.StatusConstants
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
@@ -17,9 +21,13 @@ import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.ds.RabbitMqConnection
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsService
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.lib.lock.EcosAppLockService
 import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
+import java.sql.Timestamp
+import java.time.Duration
 import java.util.*
 import kotlin.system.measureTimeMillis
 
@@ -30,6 +38,11 @@ class ProcTaskAttsSynchronizer(
     private val recordsService: RecordsService,
     private val ecosTypesRegistry: EcosTypesRegistry,
     private val procTaskAttsSyncService: ProcTaskAttsSyncService,
+    private val syncJobs: ProcTaskSyncJobs,
+    private val locks: EcosAppLockService,
+    @Lazy
+    private val engineConfiguration: ProcessEngineConfigurationImpl,
+    webAppApi: EcosWebAppApi,
     @Qualifier("bpmnRabbitmqConnection")
     private val bpmnRabbitmqConnection: RabbitMqConnection,
 ) {
@@ -45,7 +58,14 @@ class ProcTaskAttsSynchronizer(
 
     private lateinit var outcomeChannel: RabbitMqChannel
 
+    @Volatile private var workerReady = false
+
     init {
+        webAppApi.doWhenAppReady { workerReady = true }
+    }
+
+    @PostConstruct
+    fun initChannels() {
         bpmnRabbitmqConnection.doWithNewChannel { channel ->
             outcomeChannel = channel
             channel.declareQueue(TASK_ATTS_SYNC_QUEUE, true)
@@ -53,7 +73,15 @@ class ProcTaskAttsSynchronizer(
 
         bpmnRabbitmqConnection.doWithNewChannel { channel ->
             channel.addAckedConsumer(TASK_ATTS_SYNC_QUEUE, TaskAttsSyncQueueMessage::class.java) { event, _ ->
-                onSyncRequestReceived(event.getContent())
+                // ACK follows only after this independent, durable registration commits.
+                try {
+                    syncJobs.register(event.getContent())
+                } catch (e: Exception) {
+                    // Propagating a callback exception makes the Java client close this consumer's channel.
+                    // Explicit NACK also prevents the wrapper's subsequent ACK from accepting the delivery.
+                    log.warn(e) { "Failed to register task sync request; returning delivery to RabbitMQ" }
+                    event.nack()
+                }
             }
         }
     }
@@ -128,61 +156,86 @@ class ProcTaskAttsSynchronizer(
         val types = ecosTypesRegistry.getChildren(documentTypeRef) + documentTypeRef
 
         types.forEach { type ->
-            val msg = TaskAttsSyncQueueMessage(type, mode)
+            val msg = TaskAttsSyncQueueMessage(type, mode, UUID.randomUUID().toString())
             outcomeChannel.publishMsg(TASK_ATTS_SYNC_QUEUE, msg)
         }
     }
 
-    private fun onSyncRequestReceived(msg: TaskAttsSyncQueueMessage) {
-        val typeRef = msg.documentTypeRef
-        val syncSettingsTyped = procTaskAttsSyncService.findMappedByType(typeRef) ?: return
-
-        val batchSize = 50
-        var skipCount = 0
-        var totalFound = 0
-
-        log.info { "Start full sync for typeRef <$typeRef>" }
-
-        val syncTime = measureTimeMillis {
-
-            var tasks = procTaskService.getTaskIdsByDocumentType(
-                typeRef.getLocalId(),
-                skipCount,
-                batchSize
-            )
-
-            while (tasks.isNotEmpty()) {
-                log.info { "Found ${tasks.size} for full sync. Skip: $skipCount, total: $totalFound" }
-
-                val time = measureTimeMillis {
-                    tasks.forEach { task ->
-                        val document = procTaskService.getVariable(task, BPMN_DOCUMENT_REF) ?: return@forEach
-                        val documentRef = EntityRef.valueOf(document)
-
-                        val newTaskAtts = getNewAttributesForSync(documentRef, syncSettingsTyped, msg.syncMode)
-
-                        log.trace { "New atts for $task: $newTaskAtts" }
-
-                        procTaskService.setVariablesLocal(task, newTaskAtts)
+    /** One bounded page per pending job; no Rabbit delivery is held while task variables are written. */
+    fun processPendingSyncs() {
+        if (!workerReady) return
+        locks.doInSyncOrSkip("task-atts-sync-worker", Duration.ofMinutes(5)) { lock ->
+            AuthContext.runAsSystem {
+                syncJobs.pending().forEach { job ->
+                    try {
+                        processSyncPage(job) { check(lock.isLocked()) { "Task sync worker lock was lost" } }
+                    } catch (e: Exception) {
+                        // Keep the previous checkpoint. Already committed writes in this page may repeat.
+                        log.warn(e) { "Task sync job ${job.ref} failed after ${job.processed} tasks; retrying from ${job.lastTaskId}" }
+                        if (lock.isLocked()) syncJobs.save(job, error = true)
                     }
-
-                    totalFound += tasks.size
-                    skipCount += batchSize
-
-                    tasks = procTaskService.getTaskIdsByDocumentType(
-                        typeRef.getLocalId(),
-                        skipCount,
-                        batchSize
-                    )
                 }
-
-                log.info { "Processed ${tasks.size} tasks for $time ms" }
             }
         }
+    }
 
+    private fun processSyncPage(job: TaskAttsSyncJob, ensureLock: () -> Unit) {
+        ensureLock()
+        val settings = procTaskAttsSyncService.findMappedByType(job.documentType)
+        if (settings == null) {
+            syncJobs.save(job.copy(completed = true))
+            return
+        }
+        val tasks = findTaskIds(job)
+        val elapsed = measureTimeMillis {
+            tasks.forEach { task ->
+                ensureLock()
+                val document = procTaskService.getVariable(task, BPMN_DOCUMENT_REF) ?: return@forEach
+                val atts = getNewAttributesForSync(EntityRef.valueOf(document), settings, job.syncMode)
+                procTaskService.setVariablesLocal(task, atts)
+            }
+        }
+        val next = job.copy(
+            lastTaskId = tasks.lastOrNull() ?: job.lastTaskId,
+            processed = job.processed + tasks.size,
+            completed = tasks.size < 50
+        )
+        ensureLock()
+        syncJobs.save(next)
         log.info {
-            "Full sync for type <$typeRef> finished. " +
-                "Updated $totalFound tasks. Time: $syncTime ms"
+            "Task sync job ${job.ref} type=${job.documentType} mode=${job.syncMode}: " +
+                "processed=${next.processed}, page=${tasks.size}, time=${elapsed}ms, completed=${next.completed}"
+        }
+    }
+
+    /** Read IDs directly: NativeTaskQuery with an ID-only projection pollutes Camunda's entity cache. */
+    private fun findTaskIds(job: TaskAttsSyncJob): List<String> {
+        val prefix = engineConfiguration.databaseTablePrefix
+        val sql = """
+            SELECT T.ID_ FROM ${prefix}ACT_RU_TASK T
+            WHERE T.ID_ > ? AND T.CREATE_TIME_ <= ?
+              AND EXISTS (
+                SELECT 1 FROM ${prefix}ACT_RU_VARIABLE V
+                WHERE V.PROC_INST_ID_ = T.PROC_INST_ID_ AND V.TASK_ID_ IS NULL
+                  AND V.NAME_ = 'documentType' AND V.TYPE_ = 'string' AND V.TEXT_ = ?
+              )
+            ORDER BY T.ID_ ASC LIMIT 50
+        """.trimIndent()
+        val dataSource = engineConfiguration.dataSource
+        val connection = DataSourceUtils.getConnection(dataSource)
+        try {
+            connection.prepareStatement(sql).use { statement ->
+                statement.setString(1, job.lastTaskId)
+                statement.setTimestamp(2, Timestamp.from(job.createdBefore))
+                statement.setString(3, job.documentType.getLocalId())
+                statement.executeQuery().use { rows ->
+                    val ids = mutableListOf<String>()
+                    while (rows.next()) ids.add(rows.getString(1))
+                    return ids
+                }
+            }
+        } finally {
+            DataSourceUtils.releaseConnection(connection, dataSource)
         }
     }
 
@@ -367,12 +420,13 @@ data class DocumentUpdatedInfo(
     }
 }
 
-private data class TaskAttsSyncQueueMessage(
+data class TaskAttsSyncQueueMessage(
     val documentTypeRef: EntityRef,
-    val syncMode: SyncMode
+    val syncMode: SyncMode = SyncMode.FULL,
+    val requestId: String = ""
 )
 
-private enum class SyncMode {
+enum class SyncMode {
     FULL,
     TYPE,
     RECORD
