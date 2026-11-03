@@ -47,6 +47,8 @@ import ru.citeck.ecos.records3.record.dao.atts.RecordsAttsDao
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.webapp.api.lock.EcosLock
+import ru.citeck.ecos.webapp.api.lock.EcosLockApi
 import ru.citeck.ecos.webapp.lib.lock.EcosAppLockService
 import ru.citeck.ecos.webapp.lib.model.type.dto.TypeDef
 import ru.citeck.ecos.webapp.lib.model.type.registry.EcosTypesRegistry
@@ -92,8 +94,11 @@ class ProcTaskResumableSyncIT {
     fun prepare() = AuthContext.runAsSystem {
         type = "resumable-task-sync-${UUID.randomUUID()}"
         typeRef = EntityRef.valueOf("emodel/type@$type")
+        // Commit initial ecos-data DDL before an async registration races a query in this fixture.
+        jobs.register(TaskAttsSyncQueueMessage(typeRef, SyncMode.FULL, UUID.randomUUID().toString()))
         helper.cleanTaskAttsSyncSettings()
         allJobs().forEach { records.delete(it.ref) }
+        probe.beforeCheckpoint.set(null)
         probe.writes.clear()
         probe.trackedTasks.clear()
         probe.pageAttempts.set(0)
@@ -243,6 +248,59 @@ class ProcTaskResumableSyncIT {
         assertThat(allJobs()).hasSize(5)
     }
 
+    @Test
+    fun `independent registration requests keep coordination state bounded`(): Unit = AuthContext.runAsSystem {
+        val keys = ConcurrentHashMap.newKeySet<String>()
+        val boundedLocks = EcosAppLockService(object : EcosLockApi {
+            override fun getLock(key: String): EcosLock {
+                keys.add(key)
+                return locks.getLock(key)
+            }
+        })
+        val repository = ProcTaskSyncJobs(records, boundedLocks)
+        repeat(20) { repository.register(TaskAttsSyncQueueMessage(typeRef, SyncMode.FULL, UUID.randomUUID().toString())) }
+        assertThat(allJobs()).hasSize(20)
+        // The production ZooKeeper lock API caches every distinct key for the life of the JVM.
+        assertThat(keys).hasSize(1)
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `paused old worker cannot roll back takeover progress on success or error`(oldPageFails: Boolean): Unit = AuthContext.runAsSystem {
+        createTasks(120)
+        createSettings()
+        await().atMost(Duration.ofSeconds(20)).until { allJobs().size == 1 }
+        var completedCursor = ""
+        probe.beforeCheckpoint.set {
+            // Model a new owner while the paused old lease still reports acquired, as in Curator.
+            // Only ownership is injected; both workers use the actual DB, Records and Camunda.
+            val takeover = freshWorker(availableWorkerLocks())
+            repeat(3) { advancePage(takeover) }
+            val completed = allJobs().single()
+            assertThat(completed.completed).isTrue()
+            assertThat(completed.processed).isEqualTo(120)
+            completedCursor = completed.lastTaskId
+            if (oldPageFails) error("injected old-owner failure after takeover")
+        }
+        advancePage(sync)
+        val afterOldWorker = allJobs().single()
+        assertThat(afterOldWorker.completed).isTrue()
+        assertThat(afterOldWorker.processed).isEqualTo(120)
+        assertThat(afterOldWorker.lastTaskId).isEqualTo(completedCursor)
+        assertThat(probe.writes).hasSize(120)
+        assertThat(probe.total.get()).isEqualTo(170)
+    }
+
+    private fun availableWorkerLocks() = EcosAppLockService(object : EcosLockApi {
+        override fun getLock(key: String) = object : EcosLock {
+            override fun getKey() = key
+            override fun acquire(timeout: Duration) = true
+            override fun isAcquiredInThisProcess() = true
+            override fun release() {}
+            override fun dispose() {}
+        }
+    })
+
     private fun createTasks(count: Int) {
         repeat(count) {
             val process = runtime.startProcessInstanceByKey(
@@ -289,8 +347,8 @@ class ProcTaskResumableSyncIT {
         records.mutate(RecordAtts(job.ref).apply { setAtt("nextAttempt", Instant.EPOCH) })
     }
 
-    private fun freshWorker(): ProcTaskAttsSynchronizer = ProcTaskAttsSynchronizer(
-        procTasks, records, types, settings, ProcTaskSyncJobs(records, locks), locks, engine, webApp, rabbit
+    private fun freshWorker(workerLocks: EcosAppLockService = locks): ProcTaskAttsSynchronizer = ProcTaskAttsSynchronizer(
+        procTasks, records, types, settings, ProcTaskSyncJobs(records, locks), workerLocks, engine, webApp, rabbit
     )
 
     /** Ask the actual test broker, not a mocked ACK method or Ready-only AMQP counter. */
@@ -341,6 +399,7 @@ class ProcTaskResumableSyncIT {
         val total = AtomicInteger()
         val failAt = AtomicInteger(-1)
         val failCheckpoint = AtomicBoolean()
+        val beforeCheckpoint = java.util.concurrent.atomic.AtomicReference<(() -> Unit)?>(null)
         val failAfterRegister = java.util.concurrent.atomic.AtomicReference("")
         val failBeforeRegister = AtomicBoolean()
         val registerAttempts = ConcurrentHashMap<String, AtomicInteger>()
@@ -363,6 +422,7 @@ class ProcTaskResumableSyncIT {
             val job = point.args[0] as TaskAttsSyncJob
             if (job.documentType == targetType && job.syncMode == SyncMode.FULL) {
                 pageAttempts.incrementAndGet()
+                beforeCheckpoint.getAndSet(null)?.invoke()
                 if (failCheckpoint.compareAndSet(true, false)) error("injected checkpoint failure")
             }
             return point.proceed()

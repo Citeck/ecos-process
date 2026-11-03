@@ -21,8 +21,18 @@ A scheduled worker processes at most one 50-task page per invocation. Its delay
 is `ecos-process.bpmn.task-atts-sync.job-rate-ms` (default 1000 ms, measured after
 the previous invocation finishes). Application readiness gates startup. The
 existing application distributed lock serializes workers across instances;
-registration uses a separate lock so it does not wait for a full page of task
-work. Lock ownership is checked while processing and before checkpointing.
+registration uses one separate short lock so it does not wait for a full page of
+task work. Its key is constant: the pinned ZooKeeper lock service caches every
+key for JVM lifetime, so request-specific lock names would grow memory without
+bound. Lock ownership is checked while processing and before checkpointing.
+These checks are advisory: Curator's local acquired flag can remain true after
+session expiry. The job snapshot therefore retains ecos-data's original
+`DbEntity.updVersion`. Checkpoint updates use `DbDataService.save` with that
+version, which atomically rejects stale updates. Success, completion and error
+backoff all use copies of the same pre-page snapshot; none refreshes the version
+before saving. Technical checkpoint writes bypass Records mutation/audit/event
+handlers, while registration and public projections still use the Records DAO.
+No new dependency, custom table or SQL migration is needed.
 
 Pagination uses task IDs greater than the saved cursor, ordered ascending,
 instead of OFFSET. Removing previously visited tasks does not shift the next
@@ -67,7 +77,11 @@ PostgreSQL, Records projections and actual Camunda writes. It queries the test
 broker's Ready/Unacked counts, recreates the worker/repository over the same
 durable database, injects failures inside a page and before checkpoint saving,
 deletes already-visited tasks, and tests redelivery after registration before
-ACK plus legacy payloads. Worker recreation is not a Kubernetes pod restart;
+ACK plus legacy payloads. It also checks bounded registration lock-key cardinality
+and pauses an old worker before its checkpoint while another worker completes
+the job; stale success and error saves must preserve the newer progress. The
+ownership false-positive is injected to model the inspected Curator behavior;
+this fixture does not expire an actual ZooKeeper session. Worker recreation is not a Kubernetes pod restart;
 no production deployment or throughput claim follows from the fixture.
 
 The existing `UserTaskAttsSyncTest` explicitly enables the real scheduled worker

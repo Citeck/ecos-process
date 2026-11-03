@@ -166,24 +166,33 @@ class ProcTaskAttsSynchronizer(
         if (!workerReady) return
         locks.doInSyncOrSkip("task-atts-sync-worker", Duration.ofMinutes(5)) { lock ->
             AuthContext.runAsSystem {
-                syncJobs.pending().forEach { job ->
+                syncJobs.pending().forEach { snapshot ->
+                    val job = snapshot.job
                     try {
-                        processSyncPage(job) { check(lock.isLocked()) { "Task sync worker lock was lost" } }
+                        processSyncPage(snapshot) { check(lock.isLocked()) { "Task sync worker lock was lost" } }
                     } catch (e: Exception) {
                         // Keep the previous checkpoint. Already committed writes in this page may repeat.
                         log.warn(e) { "Task sync job ${job.ref} failed after ${job.processed} tasks; retrying from ${job.lastTaskId}" }
-                        if (lock.isLocked()) syncJobs.save(job, error = true)
+                        if (lock.isLocked()) {
+                            try {
+                                syncJobs.save(job, snapshot.entity, error = true)
+                            } catch (retryError: Exception) {
+                                // A takeover can also make this error checkpoint stale. Never refresh its version.
+                                log.warn(retryError) { "Could not save retry checkpoint for ${job.ref}; persisted progress is retained" }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun processSyncPage(job: TaskAttsSyncJob, ensureLock: () -> Unit) {
+    private fun processSyncPage(snapshot: TaskAttsSyncJobSnapshot, ensureLock: () -> Unit) {
+        val job = snapshot.job
         ensureLock()
         val settings = procTaskAttsSyncService.findMappedByType(job.documentType)
         if (settings == null) {
-            syncJobs.save(job.copy(completed = true))
+            syncJobs.save(job.copy(completed = true), snapshot.entity)
             return
         }
         val tasks = findTaskIds(job)
@@ -201,7 +210,7 @@ class ProcTaskAttsSynchronizer(
             completed = tasks.size < 50
         )
         ensureLock()
-        syncJobs.save(next)
+        syncJobs.save(next, snapshot.entity)
         log.info {
             "Task sync job ${job.ref} type=${job.documentType} mode=${job.syncMode}: " +
                 "processed=${next.processed}, page=${tasks.size}, time=${elapsed}ms, completed=${next.completed}"

@@ -1,18 +1,19 @@
 package ru.citeck.ecos.process.domain.proctask.attssync
 
 import org.springframework.stereotype.Component
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
+import ru.citeck.ecos.data.sql.records.DbRecordsDao
+import ru.citeck.ecos.data.sql.repo.entity.DbEntity
 import ru.citeck.ecos.process.domain.proctask.config.TASK_SYNC_JOB_SOURCE
 import ru.citeck.ecos.records2.predicate.model.Predicates
 import ru.citeck.ecos.records3.RecordsService
-import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.dao.query.dto.query.RecordsQuery
 import ru.citeck.ecos.records3.record.dao.query.dto.query.SortBy
 import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 import ru.citeck.ecos.webapp.lib.lock.EcosAppLockService
-import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
@@ -26,7 +27,8 @@ class ProcTaskSyncJobs(
     fun register(request: TaskAttsSyncQueueMessage) {
         // Old producers provide no stable identity: equal payloads can be independent requests.
         val requestId = request.requestId.ifBlank { "legacy:${UUID.randomUUID()}" }
-        locks.doInSync("task-atts-sync-register:${UUID.nameUUIDFromBytes(requestId.toByteArray(StandardCharsets.UTF_8))}", Duration.ofSeconds(10)) {
+        // Lock implementations cache keys: keep registration coordination bounded and separate from task work.
+        locks.doInSync("task-atts-sync-register", Duration.ofSeconds(10)) {
             AuthContext.runAsSystem {
                 TxnContext.doInNewTxn {
                     val existing = records.query(
@@ -56,7 +58,7 @@ class ProcTaskSyncJobs(
         }
     }
 
-    fun pending(): List<TaskAttsSyncJob> = AuthContext.runAsSystem {
+    fun pending(): List<TaskAttsSyncJobSnapshot> = AuthContext.runAsSystem {
         TxnContext.doInNewTxn {
             records.query(
                 RecordsQuery.create {
@@ -69,25 +71,34 @@ class ProcTaskSyncJobs(
                     )
                     withSortBy(SortBy("nextAttempt", true))
                     withMaxItems(1)
-                },
-                TaskAttsSyncJob::class.java
-            ).getRecords()
+                }
+            ).getRecords().mapNotNull { ref ->
+                val entity = dataService.findByExtId(ref.getLocalId()) ?: return@mapNotNull null
+                val job = Json.mapper.convert(entity.attributes, TaskAttsSyncJob::class.java)
+                    ?: error("Invalid task sync job: $ref")
+                if (job.completed) null else TaskAttsSyncJobSnapshot(job.copy(ref = ref), entity)
+            }
         }
     }
 
-    fun save(job: TaskAttsSyncJob, error: Boolean = false) = AuthContext.runAsSystem {
+    // Save the pre-page version, not a newly loaded Records entity: stale owners must not overwrite progress.
+    fun save(job: TaskAttsSyncJob, snapshot: DbEntity, error: Boolean = false) = AuthContext.runAsSystem {
         TxnContext.doInNewTxn {
-            records.mutate(
-                RecordAtts(job.ref).apply {
-                    setAtt("lastTaskId", job.lastTaskId)
-                    setAtt("processed", job.processed)
-                    setAtt("completed", job.completed)
-                    setAtt("nextAttempt", if (error) Instant.now().plusSeconds(30) else Instant.now())
-                }
-            )
+            val updated = snapshot.copy()
+            updated.attributes["lastTaskId"] = job.lastTaskId
+            updated.attributes["processed"] = job.processed
+            updated.attributes["completed"] = job.completed
+            updated.attributes["nextAttempt"] = if (error) Instant.now().plusSeconds(30) else Instant.now()
+            dataService.save(updated)
         }
     }
+
+    private val dataService
+        get() = checkNotNull(records.getRecordsDao(TASK_SYNC_JOB_SOURCE, DbRecordsDao::class.java))
+            .getRecordsDaoCtx().dataService
 }
+
+data class TaskAttsSyncJobSnapshot(val job: TaskAttsSyncJob, val entity: DbEntity)
 
 data class TaskAttsSyncJob(
     @AttName("id") val ref: EntityRef = EntityRef.EMPTY,
