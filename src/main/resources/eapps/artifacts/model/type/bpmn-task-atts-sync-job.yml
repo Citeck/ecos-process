@@ -1,0 +1,32 @@
+---
+id: bpmn-task-atts-sync-job
+name:
+  en: BPMN Task Attribute Synchronization Job
+  ru: Задание синхронизации атрибутов задач BPMN
+sourceId: eproc/bpmn-task-atts-sync-job
+system: true
+defaultCreateVariant: false
+aspects:
+  - ref: emodel/aspect@history-config
+    config:
+      disableHistory: true
+model:
+  attributes:
+    - id: requestId
+      index:
+        enabled: true
+    - id: documentType
+    - id: syncMode
+    - id: lastTaskId
+    - id: processed
+      type: NUMBER
+    - id: completed
+      type: BOOLEAN
+      index:
+        enabled: true
+    - id: createdBefore
+      type: DATETIME
+    - id: nextAttempt
+      type: DATETIME
+      index:
+        enabled: true
