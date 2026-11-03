@@ -217,18 +217,30 @@ class ProcTaskResumableSyncIT {
             channel.publishMsg("bpmn-task-atts-sync", legacy)
         }
         await().atMost(Duration.ofSeconds(20)).untilAsserted {
-            assertThat(allJobs().map { it.requestId }).containsExactlyInAnyOrder(id, "legacy:$typeRef:FULL")
+            assertThat(allJobs()).hasSize(3)
+            assertThat(allJobs().map { it.requestId }).contains(id)
+            assertThat(allJobs().count { it.requestId.startsWith("legacy:") }).isEqualTo(2)
             assertThat(probe.failAfterRegister.get()).isEmpty()
         }
         assertBrokerAcknowledged()
         assertThat(probe.registerAttempts[id]!!.get()).isGreaterThanOrEqualTo(3)
-        assertThat(allJobs().map { it.requestId }).containsExactlyInAnyOrder(id, "legacy:$typeRef:FULL")
-        repeat(2) { advancePage(sync) }
+        assertThat(allJobs()).hasSize(3)
+        assertThat(allJobs().map { it.requestId }).doesNotHaveDuplicates()
+        repeat(3) { advancePage(sync) }
+        assertThat(allJobs().map { it.completed }).containsOnly(true)
+        // Identical legacy payloads carry no delivery identity: a later request must run again.
+        rabbit.doWithNewChannel { channel ->
+            channel.publishMsg("bpmn-task-atts-sync", mapOf("documentTypeRef" to typeRef.toString(), "syncMode" to "FULL"))
+        }
+        await().atMost(Duration.ofSeconds(20)).until { allJobs().size == 4 }
+        assertBrokerAcknowledged()
+        assertThat(allJobs().count { !it.completed }).isEqualTo(1)
+        advancePage(sync)
         assertThat(allJobs().map { it.completed }).containsOnly(true)
         // A new intentional request must still be allowed after an earlier completed run.
         val next = id + "-new"
         jobs.register(TaskAttsSyncQueueMessage(typeRef, SyncMode.FULL, next))
-        assertThat(allJobs()).hasSize(3)
+        assertThat(allJobs()).hasSize(5)
     }
 
     private fun createTasks(count: Int) {

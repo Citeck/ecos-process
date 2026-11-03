@@ -27,7 +27,11 @@ work. Lock ownership is checked while processing and before checkpointing.
 Pagination uses task IDs greater than the saved cursor, ordered ascending,
 instead of OFFSET. Removing previously visited tasks does not shift the next
 page. The creation cutoff bounds the run; tasks created afterwards use the
-existing synchronous task-create projection. The task-ID query uses JDBC,
+existing synchronous task-create projection. As with the previous live scan,
+a task transaction still uncommitted when the cursor passes it is not a snapshot
+member. A task created using old settings that commits late can require a later
+explicit sync; transactionally reconciling such creations is outside this hotfix.
+The task-ID query uses JDBC,
 avoiding incomplete native-query entities in Camunda's command cache.
 
 The worker commits the cursor only after all writes in the page succeed.
@@ -41,10 +45,14 @@ job depends on publishing a continuation message: the database is polled again
 after a restart.
 
 New queue messages include a unique `requestId`; redelivery does not create a
-second job. Legacy messages without that field use a stable type/mode identity,
-coalescing old pending duplicates into one run using current settings. Completed
-job records are retained to recognize redelivery. A later intentional request
-with a new ID still creates a new run. Existing request producers, settings
+second job. Completed job records are retained to recognize that redelivery.
+A later intentional request with a new ID still creates a new run. Legacy
+messages without an ID cannot be distinguished from later independent requests
+with equal type/mode. Each such delivery creates a new job, including after a
+previous legacy run completed. A legacy redelivery after commit but before ACK
+can therefore create an additional full run; no stronger deduplication is
+possible from that old payload alone. Each saved job still resumes its own
+checkpoint. New-version producers always supply IDs. Existing request producers, settings
 lookup and document-change/task-create synchronization retain their behavior;
 this hotfix does not batch attribute reads or filter additional type events.
 Checkpoints cannot recover progress already performed by an older binary which

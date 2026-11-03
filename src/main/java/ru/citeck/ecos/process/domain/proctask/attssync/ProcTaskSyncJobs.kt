@@ -24,8 +24,8 @@ class ProcTaskSyncJobs(
     private val locks: EcosAppLockService
 ) {
     fun register(request: TaskAttsSyncQueueMessage) {
-        // Legacy deliveries contain only type/mode. Coalesce their redeliveries across restarts.
-        val requestId = request.requestId.ifBlank { "legacy:${request.documentTypeRef}:${request.syncMode}" }
+        // Old producers provide no stable identity: equal payloads can be independent requests.
+        val requestId = request.requestId.ifBlank { "legacy:${UUID.randomUUID()}" }
         locks.doInSync("task-atts-sync-register:${UUID.nameUUIDFromBytes(requestId.toByteArray(StandardCharsets.UTF_8))}", Duration.ofSeconds(10)) {
             AuthContext.runAsSystem {
                 TxnContext.doInNewTxn {
