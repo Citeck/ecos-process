@@ -20,15 +20,21 @@ columns:
       ru: Приоритет
     formatter:
       type: workflowPriority
-    searchable: false
-    sortable: false
+    editor:
+      type: select
+      config:
+        options: [ { "label": { "ru": "Высокий", "en": "High" },"value": 1 },
+                   { "label": { "ru": "Средний", "en": "Medium" },"value": 2 },
+                   { "label": { "ru": "Низкий", "en": "Low" },"value": 3 } ]
+    searchable: true
+    sortable: true
 
   - id: name
     name:
       en: Task name
       ru: Название задачи
     sortable: false
-    searchable: false
+    searchable: true
     formatter:
       type: action
       config:
@@ -41,11 +47,18 @@ columns:
     searchable: false
     sortable: false
 
-  - id: _ECM__type
+  - id: documentTypeRef
     name:
       en: Document type
       ru: Тип документа
-    searchable: false
+    type: ASSOC
+    formatter:
+      type: assoc
+    editor:
+      type: journal
+      config:
+        journalId: ecos-types
+    searchable: true
     sortable: false
 
   - id: ended
@@ -53,7 +66,7 @@ columns:
       en: Completion date
       ru: Дата выполнения
     type: DATETIME
-    searchable: false
+    searchable: true
     sortable: true
 
   - id: _created
@@ -62,8 +75,8 @@ columns:
       ru: Дата начала
     visible: false
     type: DATETIME
-    searchable: false
-    sortable: false
+    searchable: true
+    sortable: true
 
   - id: id
     name:

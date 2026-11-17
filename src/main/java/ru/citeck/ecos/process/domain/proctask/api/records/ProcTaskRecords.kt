@@ -415,6 +415,9 @@ class ProcTaskRecords(
         val engineAtts: List<String> = emptyList(),
 
         val historic: Boolean = false,
+        val completedBy: String? = null,
+        val deleteReason: String? = null,
+        val historicVariables: Map<String, Any?> = emptyMap(),
 
         val reassignable: Boolean = false,
         val claimable: Boolean = false,
@@ -544,7 +547,13 @@ class ProcTaskRecords(
                 return documentAtts.getAtt(name.removePrefix(DOCUMENT_FIELD_PREFIX))
             }
 
-            if (name.removePrefix(TASK_DOCUMENT_ATT_PREFIX) == BPMN_DOCUMENT_STATUS) {
+            if (historic && name.startsWith(TASK_DOCUMENT_ATT_PREFIX)) {
+                val value = historicVariables[name]
+                val type = procTaskAttsSyncService.getTaskAttTypeOrTextDefault(name)
+                return if (value is List<*>) value.map { getAttValueByAttType(it, type) } else getAttValueByAttType(value, type)
+            }
+
+            if (!historic && name.removePrefix(TASK_DOCUMENT_ATT_PREFIX) == BPMN_DOCUMENT_STATUS) {
                 val status = procTaskService.getVariable(id, name) as String?
                 val documentType = procTaskService.getVariable(id, BPMN_DOCUMENT_TYPE) as String?
                 if (status.isNullOrBlank() || documentType.isNullOrBlank()) {

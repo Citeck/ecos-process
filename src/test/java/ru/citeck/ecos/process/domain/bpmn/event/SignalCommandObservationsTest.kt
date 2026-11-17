@@ -192,11 +192,13 @@ class SignalCommandObservationsTest {
         command().execute(commandContext)
 
         verify(instance).businessKey = "emodel/activity@record-1"
-        verify(instance).start(check {
-            assertSame(event, it[BPMN_EVENT])
-            assertEquals("emodel/activity@record-1", it[BPMN_DOCUMENT_REF])
-            assertEquals("activity", it[BPMN_DOCUMENT_TYPE])
-        })
+        verify(instance).start(
+            check {
+                assertSame(event, it[BPMN_EVENT])
+                assertEquals("emodel/activity@record-1", it[BPMN_DOCUMENT_REF])
+                assertEquals("activity", it[BPMN_DOCUMENT_TYPE])
+            }
+        )
         assertEquals(SignalPhase.START_INSTANCES.observationName, parents[SignalPhase.INSTANCE_CREATE])
         assertEquals(SignalPhase.START_INSTANCES.observationName, parents[SignalPhase.INSTANCE_START])
         assertNull(registry.currentObservation)

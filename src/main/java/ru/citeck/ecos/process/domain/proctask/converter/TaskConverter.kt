@@ -55,6 +55,9 @@ class TaskConverter(
                 possibleOutcomes = possibleOutcomes,
                 comment = comment,
                 lastComment = lastComment,
+                completedBy = completedBy,
+                deleteReason = deleteReason,
+                historicVariables = historicVariables,
                 definitionKey = definitionKey,
                 documentAtts = let {
                     if (documentRef == EntityRef.EMPTY || EntityRef.valueOf(id).isAlfTaskRef()) {
@@ -66,11 +69,11 @@ class TaskConverter(
                         .map { it.key.removePrefix(DOCUMENT_FIELD_PREFIX) to it.value.removePrefix(DOCUMENT_FIELD_PREFIX) }
                         .toMap()
 
-                    recordsService.getAtts(documentRef, requiredAtts)
+                    if (historic && requiredAtts.isEmpty()) RecordAtts() else recordsService.getAtts(documentRef, requiredAtts)
                 },
                 historic = historic,
                 engineAtts = engineAtts,
-                reassignable = assignee.isNotEmpty(),
+                reassignable = !historic && assignee.isNotEmpty(),
                 claimable = assignee.isEmpty() && (candidateUsers.isNotEmpty() || candidateGroups.isNotEmpty()),
                 unclaimable = assignee.isNotEmpty() &&
                     (candidateUsersOriginal.isNotEmpty() || candidateGroupsOriginal.isNotEmpty()),

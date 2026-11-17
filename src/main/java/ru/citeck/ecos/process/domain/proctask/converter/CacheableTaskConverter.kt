@@ -1,7 +1,6 @@
 package ru.citeck.ecos.process.domain.proctask.converter
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.camunda.bpm.engine.HistoryService
 import org.camunda.bpm.engine.TaskService
 import org.camunda.bpm.engine.history.HistoricTaskInstance
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity
@@ -17,6 +16,7 @@ import ru.citeck.ecos.process.domain.bpmn.model.ecos.task.user.TaskOutcome
 import ru.citeck.ecos.process.domain.proctask.config.PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.config.PROC_TASKS_DTO_CONVERTER_CACHE_KEY
 import ru.citeck.ecos.process.domain.proctask.dto.ProcTaskDto
+import ru.citeck.ecos.process.domain.proctask.service.HistoricTaskLoader
 import ru.citeck.ecos.webapp.api.authority.EcosAuthoritiesApi
 import ru.citeck.ecos.webapp.api.constants.AppName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
@@ -27,7 +27,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 @Component
 class CacheableTaskConverter(
     private val camundaTaskService: TaskService,
-    private val camundaHistoryService: HistoryService,
+    private val historicTaskLoader: HistoricTaskLoader,
     private val authorityService: EcosAuthoritiesApi
 ) {
 
@@ -115,40 +115,11 @@ class CacheableTaskConverter(
     @Cacheable(cacheNames = [PROC_HISTORIC_TASKS_DTO_CONVERTER_CACHE_KEY], key = "#task.id")
     fun convertHistoricTask(task: HistoricTaskInstance): ProcTaskDto {
         with(task) {
-            var nameMl = MLText(name)
-            var documentRef = EntityRef.EMPTY
-            var comment: String? = null
-            var lastComment: String? = null
-
-            camundaHistoryService.createHistoricVariableInstanceQuery()
-                .taskIdIn(id)
-                .variableNameIn(BPMN_NAME_ML, BPMN_TASK_COMMENT_LOCAL, BPMN_LAST_COMMENT_LOCAL)
-                .list()
-                .forEach {
-                    when (it.name) {
-                        BPMN_NAME_ML -> {
-                            nameMl = Json.mapper.convert(it.value, MLText::class.java) ?: MLText(name)
-                        }
-
-                        BPMN_TASK_COMMENT_LOCAL -> {
-                            comment = it.value?.toString()
-                        }
-
-                        BPMN_LAST_COMMENT_LOCAL -> {
-                            lastComment = it.value?.toString()
-                        }
-                    }
-                }
-
-            camundaHistoryService.createHistoricVariableInstanceQuery()
-                .processInstanceId(processInstanceId)
-                .variableNameIn(BPMN_DOCUMENT_REF)
-                .list()
-                .forEach {
-                    if (it.name == BPMN_DOCUMENT_REF) {
-                        documentRef = EntityRef.valueOf(it.value.toString())
-                    }
-                }
+            val (process, local) = historicTaskLoader.variables(task)
+            val nameMl = local[BPMN_NAME_ML]?.let { Json.mapper.convert(it, MLText::class.java) } ?: MLText(name)
+            val documentRef = EntityRef.valueOf(process[BPMN_DOCUMENT_REF]?.toString())
+            val documentType = process[BPMN_DOCUMENT_TYPE] as? String
+            val snapshots = local.filterKeys { it.startsWith("_doc_") }
 
             return ProcTaskDto(
                 id = id,
@@ -159,8 +130,14 @@ class CacheableTaskConverter(
                 ended = endTime?.toInstant(),
                 durationInMillis = durationInMillis,
                 dueDate = dueDate?.toInstant(),
-                comment = comment,
-                lastComment = lastComment,
+                comment = local[BPMN_TASK_COMMENT_LOCAL] as? String,
+                lastComment = local[BPMN_LAST_COMMENT_LOCAL] as? String,
+                assignee = authorityService.getAuthorityRef(assignee),
+                documentType = documentType,
+                documentTypeRef = documentType?.let { EntityRef.create(AppName.EMODEL, "type", it) } ?: EntityRef.EMPTY,
+                completedBy = local[BPMN_TASK_COMPLETED_BY] as? String,
+                deleteReason = deleteReason,
+                historicVariables = snapshots,
                 definitionKey = taskDefinitionKey,
                 processInstanceId = if (processInstanceId.isNullOrBlank()) {
                     EntityRef.EMPTY
